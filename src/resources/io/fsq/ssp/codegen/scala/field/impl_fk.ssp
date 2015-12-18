@@ -1,0 +1,58 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+  private var ${field.varName}Obj: AnyRef = null
+  private var ${field.varName}AlternateObj: AnyRef = null
+  override def ${field.name}Fk[R <: _root_.io.fsq.spindle.runtime.Record[R] with _root_.io.fsq.spindle.runtime.HasPrimaryKey[${field.renderType.text}, R]](meta: _root_.io.fsq.spindle.runtime.MetaRecord[R, _]): Option[R] = {
+    if (${field.isSetName}) {
+      if (${field.varName}Obj != null) {
+        val foreignOpt = meta.ifInstanceFrom(${field.varName}Obj)
+        if (foreignOpt.isDefined) {
+          val foreignObj = foreignOpt.get
+          if (foreignObj.primaryKey == ${field.name}OrThrow) {
+            foreignOpt
+          } else {
+            _root_.io.fsq.spindle.runtime.RuntimeHelpers.fkHooks.mismatchedPrimaryKey(this, this.meta.${field.escapedName}, meta, ${field.name}OrThrow, foreignObj)
+          }
+        } else {
+          _root_.io.fsq.spindle.runtime.RuntimeHelpers.fkHooks.mismatchedInstanceType(this, this.meta.${field.escapedName}, meta, ${field.name}OrThrow, ${field.varName}Obj)
+        }
+      } else {
+        _root_.io.fsq.spindle.runtime.RuntimeHelpers.fkHooks.missingObj(this, this.meta.${field.escapedName}, meta, ${field.name}OrThrow)
+      }
+    } else {
+      _root_.io.fsq.spindle.runtime.RuntimeHelpers.fkHooks.missingKey(this, this.meta.${field.escapedName}, meta)
+    }
+  }
+  override def ${field.name}UntypedFk(meta: _root_.io.fsq.spindle.runtime.UntypedMetaRecord): Option[_root_.io.fsq.spindle.runtime.UntypedRecord with _root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${field.renderType.text}]] = {
+    val foreignOpt = meta.untypedIfInstanceFrom(${field.varName}Obj).asInstanceOf[Option[_root_.io.fsq.spindle.runtime.UntypedRecord with _root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${field.renderType.text}]]]
+    if (${field.isSetName} && foreignOpt.isDefined && foreignOpt.get.primaryKey == ${field.name}OrThrow) {
+      foreignOpt
+    } else {
+      ${field.varName}Obj = null
+      None
+    }
+  }
+  override def ${field.name}GetObj: Option[_root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${field.renderType.text}]] = {
+    if (${field.varName}Obj != null) {
+      Some(${field.varName}Obj.asInstanceOf[_root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${field.renderType.text}]])
+    } else {
+      None
+    }
+  }
+  override def ${field.name}SetObj(x: _root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${field.renderType.text}]): Unit = {
+    ${field.varName}Obj = x
+  }
+  override def ${field.name}AlternateFk: Option[AnyRef] = {
+    if (${field.isSetName} && ${field.varName}AlternateObj != null) {
+      Some(${field.varName}AlternateObj)
+    } else {
+      _root_.io.fsq.spindle.runtime.RuntimeHelpers.fkHooks.missingAlternateObj(this, this.meta.${field.escapedName}, ${field.name}Option)
+    }
+  }
+  override def ${field.name}SetAlternateObj(x: AnyRef): Unit = {
+    ${field.varName}AlternateObj = x
+  }

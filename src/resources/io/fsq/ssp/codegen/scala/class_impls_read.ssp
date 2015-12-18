@@ -1,0 +1,62 @@
+<%@ val cls: _root_.io.fsq.spindle.codegen.runtime.StructLike %>
+  override def read(iprot: org.apache.thrift.protocol.TProtocol) {
+    // Unknown fields in this read go here.
+    var currentUnknownFieldsOpt: Option[_root_.io.fsq.spindle.runtime.UnknownFields] = None
+    def currentUnknownFields(): _root_.io.fsq.spindle.runtime.UnknownFields = currentUnknownFieldsOpt match {
+      case Some(uf) => uf
+      case None => {
+        val uf = new _root_.io.fsq.spindle.runtime.UnknownFields(
+          this,
+          _root_.io.fsq.spindle.runtime.TProtocolInfo.getProtocolName(iprot)
+        )
+        unknownFields = uf :: unknownFields
+        currentUnknownFieldsOpt = Some(uf)
+        uf
+      }
+    }
+    iprot.readStructBegin()
+    var wire_field_header: org.apache.thrift.protocol.TField = iprot.readFieldBegin()
+    while (wire_field_header.`type` != org.apache.thrift.protocol.TType.STOP) {
+      // Some protocols, e.g., BSON and JSON, serialize the field name, not the id. If we don't have the id we use the
+      // name to look up the id and type. This allows us to use those protocols naturally.
+      var field_header: org.apache.thrift.protocol.TField = if (wire_field_header.id < 0) {
+        ${cls.name}.wireNameToTField.getOrElse(wire_field_header.name, wire_field_header)
+      } else {
+        wire_field_header
+      }
+
+      try {
+        field_header.id match {
+#for (field <- cls.fields)
+          case ${field.identifier} => {  // ${field.name}
+#if (field.renderType.isEnum)
+            if (field_header.`type` == org.apache.thrift.protocol.TType.${field.renderType.ttype.name} || field_header.`type` == org.apache.thrift.protocol.TType.ENUM) {
+#else
+            if (field_header.`type` == org.apache.thrift.protocol.TType.${field.renderType.ttype.name}) {
+#end
+<% render(field.renderType.fieldReadTemplate, Map("renderType" -> field.renderType, "lhs" -> (field.varName + " ="), "indent" -> "              ")) %>
+#if (field.renderType.usesSetVar)
+              ${field.isSetVar} = true
+#end
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
+            }
+          }
+#end
+          case _ => {
+            if (io.fsq.spindle.runtime.RuntimeHelpers.preserveUnknownFields(this)) {
+              currentUnknownFields().readUnknownField(iprot, field_header, this)  // May call this method recursively.
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
+            }
+          }
+        }  // end match
+      } catch {
+        case e: org.apache.thrift.TException =>
+          throw new org.apache.thrift.TException("Error reading field %d in structure ${cls.name}".format(field_header.id), e)
+      }
+      iprot.readFieldEnd()
+      wire_field_header = iprot.readFieldBegin()
+    } // end while
+    iprot.readStructEnd()
+  }

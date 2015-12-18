@@ -1,0 +1,79 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+<!--[if lte IE 8]>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.ie.css" />
+<![endif]-->
+<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+  <script src="TileLayer.Common.js"></script>
+  <script src="/static/Wicket/wicket.js"></script>
+  <script src="/static/Wicket/wicket-leaflet.js"></script>
+  <script src="/static/gen-js/geocoder_types.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
+  <style>
+    .highlightedName {
+      font-size:200%;
+    }
+
+    .result {
+      overflow: hidden;
+      border-bottom:thick dotted #ff0000;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      margin-top: 10px;
+    }
+    .json {
+      float: left;
+      width: 400px;
+      height: 600px;
+      overflow: scroll;
+    }
+
+    .map {
+      height: 600px;
+      width: 600px;
+      float: left;
+    }
+
+    div.lookupForm {
+      padding-left: 20px;
+      overflow: hidden;
+    }
+
+    #debugInfo { width: 1000px; white-space: nowrap; overflow: scroll;}
+
+  </style>
+</head>
+<body>
+
+  <form id="searchForm" style="float:left">
+    query: <input name="query" id="query" placeholder="Geocoder Query" size="50"/>
+    ll hint/revgeo: <input name="ll" id="ll" placeholder="lat,lng" size="20"/>
+    <input type="button" id="search" name="Search" value="Search" /></br>
+  </form>
+
+  <div class="lookupForm">
+    <form id="lookupForm">
+      slug: <input name="slug" id="lookup" placeholder="longId or slug" size="20"/>
+      <input type="button" id="lookupButton" name="Lookup slug or id" value="Lookup slug/id" placeholder="Lookup slug or id" width="100"/></br>
+    </form>
+  </div>
+
+  <div id="geocodes"></div>
+
+  <div id="geocodes"></div>
+  <div id="debugInfo"></div>
+
+  <script src="geocoder.js"></script>
+  <script>
+    initPage();
+
+    $(window).on('hashchange', function() {
+      geocode();
+    });
+  </script>
+</body>
+
+

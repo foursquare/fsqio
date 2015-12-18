@@ -1,0 +1,19 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+  override def equals(that: Any): Boolean = that match {
+    case null => false
+    case o: ${cls.name} => this.equals(o)
+    case _ => false
+  }
+
+  def equals(that: ${cls.name}): Boolean = {
+    that != null &&
+#for (field <- cls.fields)
+    (if (this.${field.isSetName}) (that.${field.isSetName} && this.${field.defaultName} == that.${field.defaultName}) else !that.${field.isSetName}) &&
+#end
+    true
+  }

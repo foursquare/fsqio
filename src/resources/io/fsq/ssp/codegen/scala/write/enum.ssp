@@ -1,0 +1,4 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.RenderType %>
+<%@ val valueExpr: String %>
+<%@ val indent: String %>
+${indent}oprot.writeI32(${valueExpr}.getValue())

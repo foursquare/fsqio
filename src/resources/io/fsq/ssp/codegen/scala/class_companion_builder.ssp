@@ -1,0 +1,100 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+
+<%--
+// Builder using phantom types.
+--%>
+<%
+val (requiredFields, optionalFields) = cls.fields.partition(_.builderRequired)
+val hasRequiredFields = requiredFields.nonEmpty
+val requiredTraits = requiredFields.map(field => "Has" + field.name.capitalize)
+%>
+  object Builder {
+#for (trayt <- requiredTraits)
+    sealed trait ${trayt}
+#end
+#if (hasRequiredFields)
+    sealed trait MaybeSpecified
+    sealed class Specified extends MaybeSpecified
+    sealed class Unspecified extends MaybeSpecified
+#end
+
+    type HasAll = ${if (hasRequiredFields) requiredTraits.mkString(" with ") else "Any"}
+    type AllSpecified = Builder[HasAll]
+    type AllUnspecified = Builder[Any]
+  }
+
+  class Builder[+State] private[${cls.name}] (private var obj: Raw${cls.name}) {
+#for ((field, trayt) <- requiredFields zip requiredTraits)
+    def ${field.escapedName}(v: ${field.renderType.text}): ${cls.name}.Builder[State with Builder.${trayt}] = {
+      obj.${field.escapedName}_=(v)
+      this.asInstanceOf[${cls.name}.Builder[State with Builder.${trayt}]]
+    }
+
+#if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType])
+<% val renderType = field.renderType.asInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType] %>
+    def ${field.escapedName}Struct(v: ${renderType.className}): ${cls.name}.Builder[State with Builder.${trayt}] = {
+      obj.${field.escapedName}_=(${renderType.bitfieldWrite}(v))
+      this.asInstanceOf[${cls.name}.Builder[State with Builder.${trayt}]]
+    }
+#end
+#end
+#for (field <- optionalFields)
+
+    def ${field.escapedName}(v: ${field.renderType.text}): ${cls.name}.Builder[State] = {
+      obj.${field.escapedName}_=(v)
+      this
+    }
+
+    def ${field.escapedName}(vOpt: Option[${field.renderType.text}]): ${cls.name}.Builder[State] = {
+      vOpt match {
+        case Some(v) => obj.${field.escapedName}_=(v)
+        case None => obj.${field.name}Unset()
+      }
+      this
+    }
+#if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType])
+<% val renderType = field.renderType.asInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType] %>
+
+    def ${field.escapedName}Struct(v: ${renderType.className}): ${cls.name}.Builder[State] = {
+      obj.${field.escapedName}_=(${renderType.bitfieldWrite}(v))
+      this
+    }
+
+    def ${field.escapedName}Struct(vOpt: Option[${renderType.className}]): ${cls.name}.Builder[State] = {
+      vOpt match {
+        case Some(v) => obj.${field.escapedName}_=(${renderType.bitfieldWrite}(v))
+        case None => obj.${field.name}Unset()
+      }
+      this
+    }
+#end
+#end
+
+<%
+  val paramNames = requiredTraits.indices.map(n => "ev%d".format(n))
+  val paramDecls =
+    for ((trayt, paramName) <- requiredTraits.zip(paramNames)) yield {
+      "%s: State <:< Builder.%s".format(paramName, trayt)
+    }
+  val resultImplicitParams = if (hasRequiredFields) "(implicit %s)".format(paramDecls.mkString(", ")) else ""
+  val resultParams = if (hasRequiredFields) "(%s)".format(paramNames.mkString(", ")) else ""
+%>
+    def resultMutable()${resultImplicitParams}: Mutable${cls.name} = {
+      if (obj != null) {
+        val ret = obj
+        obj = null
+        ret
+      } else {
+        throw new IllegalStateException("${cls.name}.Builder.result invoked multiple times. Use a new Builder.")
+      }
+    }
+
+    def result()${resultImplicitParams}: ${cls.name} = resultMutable()${resultParams}
+  }
+
+  def newBuilder: ${cls.name}.Builder.AllUnspecified = new Builder(${cls.name}.createRawRecord)

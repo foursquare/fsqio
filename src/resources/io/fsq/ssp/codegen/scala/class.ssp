@@ -1,0 +1,13 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+<%@ val clsContainer: String %>
+
+<% render("class_companion.ssp", Map("cls" -> cls, "clsContainer" -> clsContainer)) %>
+
+<% render("class_traits.ssp", Map("cls" -> cls, "clsContainer" -> clsContainer)) %>
+
+<% render("class_impls.ssp", Map("cls" -> cls, "clsContainer" -> clsContainer)) %>

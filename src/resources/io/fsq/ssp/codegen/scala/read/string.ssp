@@ -1,0 +1,6 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.StringRenderType.type %>
+<%@ val lhs: String %>
+<%@ val indent: String %>
+<%@ val wrapLeft: String = "" %>
+<%@ val wrapRight: String = "" %>
+${indent}${lhs} ${wrapLeft}iprot.readString()${wrapRight}

@@ -1,0 +1,13 @@
+<%
+  // Copyright 2014 Foursquare Labs Inc. All Rights Reserved.
+
+  import io.fsq.spindle.codegen.runtime.{PrimitiveRenderType, StructLike}
+%>
+<%@ val cls: StructLike %>
+public static abstract class Java${cls.name}Meta<
+  ${cls.name}T extends io.fsq.spindle.runtime.Record<${cls.name}T>,
+  ${cls.name}Raw extends io.fsq.spindle.runtime.MutableRecord<${cls.name}T>,
+  ${cls.name}Meta extends Java${cls.name}Meta<${cls.name}T, ${cls.name}Raw, ${cls.name}Meta>
+> implements io.fsq.spindle.runtime.MetaRecord<${cls.name}T, ${cls.name}Meta> {
+
+}

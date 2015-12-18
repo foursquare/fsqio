@@ -1,0 +1,8 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+  def ${field.escapedName}_=(x: ${field.renderType.text}): Unit
+  def ${field.name}Unset(): Unit

@@ -1,0 +1,11 @@
+# Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+
+python_library(
+  name = 'spindle_thrift_library',
+  sources = ['spindle_thrift_library.py', '__init__.py'],
+)
+
+python_library(
+  name = 'ssp_template',
+  sources = ['ssp_template.py', '__init__.py'],
+)

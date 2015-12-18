@@ -1,0 +1,5 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.TypesafeIdRenderType %>
+<%@ val valueExpr: String %>
+<%@ val indent: String %>
+<% import renderType.ref %>
+<% render("../" + ref.fieldWriteTemplate, Map("renderType" -> ref, "valueExpr" -> valueExpr, "indent" -> indent)) %>

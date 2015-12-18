@@ -1,0 +1,30 @@
+<%
+  // Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+
+  import io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+  private var ${field.varName}AlternateObj: AnyRef = null
+  override final def ${field.name}Fk[R <: io.fsq.spindle.runtime.Record[R] with io.fsq.spindle.runtime.HasPrimaryKey[${field.renderType.text}, R]](meta: io.fsq.spindle.runtime.MetaRecord[R, _]): Option[R] = {
+    if (${field.isSetName}) {
+      val ${field.varName}Obj = underlyingLift.primedObjFromWireName("${field.wireName}")
+      val foreignOpt = meta.ifInstanceFrom(${field.varName}Obj)
+      if (foreignOpt.isDefined) {
+        val foreignObj = foreignOpt.get
+        if (foreignObj.primaryKey == ${field.name}OrThrow) {
+          foreignOpt
+        } else {
+          _root_.io.fsq.spindle.runtime.RuntimeHelpers.fkHooks.mismatchedPrimaryKey(this, this.meta.${field.escapedName}, meta, ${field.name}OrThrow, foreignObj)
+        }
+      } else {
+        _root_.io.fsq.spindle.runtime.RuntimeHelpers.fkHooks.mismatchedInstanceType(this, this.meta.${field.escapedName}, meta, ${field.name}OrThrow, ${field.varName}Obj)
+      }
+    } else {
+      _root_.io.fsq.spindle.runtime.RuntimeHelpers.fkHooks.missingKey(this, this.meta.${field.escapedName}, meta)
+    }
+  }
+  override final def ${field.name}UntypedFk(meta: io.fsq.spindle.runtime.UntypedMetaRecord): Option[io.fsq.spindle.runtime.UntypedRecord with io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${field.renderType.text}]] = throw new NotImplementedError("TODO")
+  override final def ${field.name}GetObj: Option[io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${field.renderType.text}]] = throw new NotImplementedError("TODO")
+  override final def ${field.name}SetObj(x: io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${field.renderType.text}]): Unit = throw new UnsupportedOperationException("This is a read only adapter")
+  override final def ${field.name}AlternateFk: Option[AnyRef] = if (${field.varName}AlternateObj != null) { Some(${field.varName}AlternateObj) } else { underlyingLift.primedObjFromWireName("${field.wireName}") }
+  override final def ${field.name}SetAlternateObj(x: AnyRef): Unit = { ${field.varName}AlternateObj = x }

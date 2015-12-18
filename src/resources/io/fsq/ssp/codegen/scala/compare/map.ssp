@@ -1,0 +1,7 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+org.apache.thrift.TBaseHelper.compareTo(scala.collection.JavaConverters.mapAsJavaMapConverter(this.${field.escapedName}).asJava, scala.collection.JavaConverters.mapAsJavaMapConverter(that.${field.escapedName}).asJava)

@@ -1,0 +1,39 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+class ${cls.name}LiftAdapter(
+  val underlyingLift: io.fsq.spindle.runtime.LiftAdapter[${cls.primaryKeyField.get.renderType.text}]
+) extends ${cls.name} {
+  override final def meta: ${cls.name}Meta = ${cls.name}
+
+#for (field <- cls.fields)
+<% render(field.renderType.fieldLiftAdapterTemplate, Map("field" -> field, "cls" -> cls)) %>
+#end
+
+  override final def compare(that: ${cls.name}): Int = throw new NotImplementedError("TODO")
+
+  override final def clear(): Unit = throw new UnsupportedOperationException("This is a read only adapter")
+  override final def read(iprot: org.apache.thrift.protocol.TProtocol): Unit = throw new UnsupportedOperationException("This is a read only adapter")
+  override final def write(oprot: org.apache.thrift.protocol.TProtocol): Unit = throw new NotImplementedError("TODO")
+
+  override final def copy(
+      ${cls.fields.map(field => "%s: %s = %sOrNull".format(field.escapedName, field.renderType.boxedText, field.name)).mkString(",\n      ")}
+  ): ${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
+
+  override final def mutableCopy(): Mutable${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
+  override final def mergeCopy(that: ${cls.name}): ${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
+  override final def mutable: Mutable${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
+  override final def deepCopy(): ${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
+
+  override final def fieldForId(id: Int): ${cls.name}._Fields = throw new NotImplementedError("TODO")
+  override final def isSet(field: ${cls.name}._Fields): Boolean = throw new NotImplementedError("TODO")
+  override final def getFieldValue(field: ${cls.name}._Fields): AnyRef = throw new NotImplementedError("TODO")
+  override final def setFieldValue(field: ${cls.name}._Fields, value: AnyRef): Unit = throw new NotImplementedError("TODO")
+
+  override final def hashCode(): Int = underlyingLift.hashCode
+  override final def equals(that: Any): Boolean = underlyingLift.equals(that)
+  override final def toString(): String = underlyingLift.toString
+}

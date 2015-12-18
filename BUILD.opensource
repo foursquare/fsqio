@@ -1,0 +1,75 @@
+# Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+
+def sjar(org, name, rev, url=None):
+  scala_jar_version = '2.10'
+  return jar(org = org, name = '%s_%s' % (name, scala_jar_version), rev = rev, url = url)
+
+scala_version='2.10.4'
+
+jar_library(
+  name = 'zinc',
+  jars = [
+   jar(org = 'org.pantsbuild', name = 'zinc', rev = '1.0.12')
+  ]
+)
+
+SBT_REV = '0.13.9'
+
+jar_library(
+  name = 'compiler-interface',
+  jars = [
+    # We just want the single compiler-interface jar and not its dep on scala-lang
+    jar(org = 'com.typesafe.sbt', name = 'compiler-interface', rev = SBT_REV, classifier='sources', intransitive=True)
+  ]
+)
+
+jar_library(
+  name = 'sbt-interface',
+  jars = [
+    # We just want the single sbt-interface jar and not its dep on scala-lang.
+    jar(org = 'com.typesafe.sbt', name = 'sbt-interface', rev = SBT_REV, intransitive=True)
+  ]
+)
+
+jar_library(
+  name = 'scala-compile-' + scala_version,
+  jars = [
+    jar(org = 'org.scala-lang', name = 'scala-compiler', rev = scala_version),
+    jar(org = 'org.scala-lang', name = 'scala-library', rev = scala_version),
+  ]
+)
+
+jar_library(
+  name = 'scala-library-' + scala_version,
+  jars = [
+    jar(org = 'org.scala-lang', name = 'scala-library', rev = scala_version),
+  ]
+)
+
+
+jar_library(
+  name = 'scala-repl-' + scala_version,
+  jars = [
+    jar(org = 'org.scala-lang', name = 'scala-reflect', rev = scala_version, intransitive = True),
+    jar(org = 'org.scala-lang', name = 'scala-compiler', rev = scala_version, intransitive = True),
+    jar(org = 'org.scala-lang', name = 'scala-library', rev = scala_version, intransitive = True),
+    jar(org = 'org.scala-lang', name = 'jline', rev = scala_version, intransitive = True),
+  ]
+)
+
+jar_library(
+  name = 'soy',
+    jars = [
+  jar(org = 'com.google.closure', name = 'templates', rev = '2014-11-25'),
+  ]
+)
+
+# Keep this version in sync with the spindle version in 3rdparty/BUILD.
+jar_library(
+  name = 'spindle-codegen',
+  jars = [
+    sjar(org = 'com.foursquare', name = 'spindle-codegen-binary', rev = '3.0.0-M15'),
+    jar(org = 'org.scala-lang', name = 'scala-compiler', rev = scala_version),
+    jar(org = 'org.scala-lang', name = 'scala-library', rev = scala_version),
+  ]
+)

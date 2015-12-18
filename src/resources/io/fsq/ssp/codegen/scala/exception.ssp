@@ -1,0 +1,45 @@
+<%
+  // Copyright 2014 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.{ScalaClass, StructLike, TypeReferenceResolver}
+  import _root_.io.fsq.spindle.__shaded_for_spindle_bootstrap__.descriptors.Struct
+%>
+<%@ val cls: StructLike %>
+<%@ val resolver: TypeReferenceResolver %>
+object ${cls.name} {
+<%
+  val rawArgsStruct = Struct.newBuilder.name("Struct").__fields(cls.__fields).__annotations(cls.__annotations).result()
+  val argsStruct = new ScalaClass(rawArgsStruct, resolver) {
+    override val isException: Boolean = true
+    override val generateProxy: Boolean = true
+  }
+  val clsContainer = cls.name
+  render("class.ssp", Map("cls" -> argsStruct, "clsContainer" -> clsContainer))
+%>
+
+  def createRawRecord: ${cls.name} = new ${cls.name}(${cls.name}.Struct.createRawRecord)
+  def newBuilder: Struct.Builder.AllUnspecified = Struct.newBuilder
+}
+class ${cls.name}(msg: String) extends RuntimeException(msg) with ${cls.name}.StructProxy {
+  private var _underlying: ${cls.name}.Struct = ${cls.name}.Struct.createRecord
+  override def underlying: ${cls.name}.Struct = _underlying
+
+  def this() = this(null: String)
+
+  def this(underlying: ${cls.name}.Struct) = {
+    this(underlying.toString)
+    _underlying = underlying
+  }
+
+  def this(msg: String, cause: Throwable) = {
+    this(msg)
+    initCause(cause)
+  }
+
+  def this(cause: Throwable) = {
+    this(if (cause != null) cause.toString() else null)
+    initCause(cause)
+  }
+
+  override def getMessage(): String = _underlying.toString
+}

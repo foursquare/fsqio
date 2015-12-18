@@ -1,0 +1,19 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+#if (field.defaultValueIsSet || field.builderRequired)
+  override def ${field.escapedName}: ${field.renderType.text} = underlying.${field.escapedName}
+#end
+  override def ${field.name}Option: Option[${field.renderType.text}] = underlying.${field.name}Option
+#if (field.defaultValueIsSet)
+  override def ${field.name}OrDefault: ${field.renderType.text} = underlying.${field.name}OrDefault
+#end
+  override def ${field.name}OrNull: ${field.renderType.text} = underlying.${field.name}OrNull
+  override def ${field.name}OrThrow: ${field.renderType.text} = underlying.${field.name}OrThrow
+  override def ${field.isSetName}: Boolean = underlying.${field.isSetName}
+#if (field.isForeignKey)
+<% render("proxy_fk.ssp", Map("field" -> field)) %>
+#end

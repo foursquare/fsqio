@@ -1,0 +1,35 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+  def fieldForId(id: Int): ${cls.name}._Fields = id match {
+#for (f <- cls.fields)
+    case ${f.identifier} => ${cls.name}._Fields.${f.escapedName}
+#end
+    case _ => null
+  }
+
+  def isSet(field: ${cls.name}._Fields): Boolean = field match {
+#for (f <- cls.fields)
+    case ${cls.name}._Fields.${f.escapedName} => ${f.isSetName}
+#end
+    case _ => false
+  }
+
+  def getFieldValue(field: ${cls.name}._Fields): AnyRef = field match {
+#for (f <- cls.fields)
+    case ${cls.name}._Fields.${f.escapedName} => ${f.defaultName}.asInstanceOf[AnyRef]
+#end
+    case _ => throw new IllegalStateException
+  }
+
+  def setFieldValue(field: ${cls.name}._Fields, value: AnyRef) {
+    field match {
+#for (f <- cls.fields)
+      case ${cls.name}._Fields.${f.escapedName} => ${f.escapedName}_=(value.asInstanceOf[${f.renderType.text}])
+#end
+      case _ =>
+    }
+  }

@@ -1,0 +1,12 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+  override def toString: String = {
+    val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
+    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    write(oprot)
+    trans.toString("UTF8")
+  }

@@ -1,0 +1,91 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.ScalaEnum
+%>
+<%@ val enum: ScalaEnum %>
+<%
+def escapeQuotes(str: String): String = str.replace("\"", "\\\"")
+%>\
+<%--
+// Scala Enumeration is awful, so we just generate our own enum-like thing
+// here. Enumeration (and Java's type-safe enums) are just boilerplate-reducing
+// conveniences, and since we're generating code, we don't need that
+// convenience anyway.
+
+// Making enumeration classes 'sealed' and 'abstract' will prevent new
+// instances being defined outside of this file, and will also provide
+// exhaustiveness checking when pattern matching on the enumeration.
+--%>
+sealed abstract class ${enum.name} private (
+    override val id: Int,
+    override val name: String,
+    override val stringValue: String
+) extends _root_.io.fsq.spindle.runtime.Enum[${enum.name}] with Java${enum.name} with org.apache.thrift.TEnum {
+  override def toString: String = stringValue
+  override def getValue: Int = id
+  override def meta = ${enum.name}
+}
+
+object ${enum.name} extends _root_.io.fsq.spindle.runtime.EnumMeta[${enum.name}] {
+<%--
+// Making enumeration instances case objects provides exhaustiveness checking
+// when pattern matching on the enumeration.
+--%>
+#for (elem <- enum.elements)
+  <% val alt = elem.alternateValue.getOrElse(elem.name) %>
+  object ${elem.name} extends ${enum.name}(${elem.value.toString}, "${elem.name}", "${alt}")
+#if (elem.annotations.nonEmpty)\
+  {
+    override val annotations: _root_.io.fsq.spindle.runtime.Annotations =
+      new _root_.io.fsq.spindle.runtime.Annotations(scala.collection.immutable.Vector(
+        ${elem.annotations.toSeq.map(annot => "(\"%s\", \"%s\")".format(annot._1, escapeQuotes(annot._2))).mkString(",\n      ")}
+      ))
+  }
+#end
+#end
+
+  final case class UnknownWireValue(val v: Any) extends ${enum.name}(if (v.isInstanceOf[Int]) v.asInstanceOf[Int] else -1, "?", if (v.isInstanceOf[String]) v.asInstanceOf[String] else "?")
+#if (enum.annotations.nonEmpty)
+  override val annotations: _root_.io.fsq.spindle.runtime.Annotations =
+    new _root_.io.fsq.spindle.runtime.Annotations(scala.collection.immutable.Vector(
+      ${enum.annotations.toSeq.map(annot => "(\"%s\", \"%s\")".format(annot._1, escapeQuotes(annot._2))).mkString(",\n      ")}
+    ))
+#end
+
+  override val values: Vector[${enum.name}] =
+    Vector(
+      ${enum.elements.map(_.name).mkString(",\n      ")}
+    )
+
+  override def findByIdOrNull(id: Int): ${enum.name} = id match {
+#for (elem <- enum.elements)
+    case ${elem.value.toString} => ${elem.name}
+#end
+    case _ => null
+  }
+
+  override def findByIdOrUnknown(id: Int): ${enum.name} = findByIdOrNull(id) match {
+    case null => new UnknownWireValue(id)
+    case x: ${enum.name} => x
+  }
+
+  override def findByNameOrNull(name: String): ${enum.name} = name match {
+#for (elem <- enum.elements)
+    case "${elem.name}" => ${elem.name}
+#end
+    case _ => null
+  }
+
+  override def findByStringValueOrNull(v: String): ${enum.name} = v match {
+#for (elem <- enum.elements)
+    case "${elem.alternateValue.getOrElse(elem.name)}" => ${enum.name}.${elem.name}
+#end
+    case _ => null
+  }
+
+  override def findByStringValueOrUnknown(v: String): ${enum.name} = findByStringValueOrNull(v) match {
+    case null => new UnknownWireValue(v)
+    case x: ${enum.name} => x
+  }
+}

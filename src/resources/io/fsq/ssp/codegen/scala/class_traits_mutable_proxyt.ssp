@@ -1,0 +1,21 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+trait Mutable${cls.name}Proxy extends Mutable${cls.name} with ${cls.name}Proxy {
+  protected def underlying: Mutable${cls.name}
+
+#for (field <- cls.fields)
+<% render(field.renderType.fieldMutableProxyTemplate, Map("field" -> field)) %>
+#end
+
+  override def copy(
+      ${cls.fields.map(field => "%s: %s = %sOrNull".format(field.escapedName, field.renderType.boxedText, field.name)).mkString(",\n      ")}
+  ): Mutable${cls.name} = underlying.copy(
+    ${cls.fields.map(field => "%s = %s".format(field.escapedName, field.escapedName)).mkString(",\n    ")}
+  )
+
+  override def merge(that: ${cls.name}): Unit = underlying.merge(that)
+}

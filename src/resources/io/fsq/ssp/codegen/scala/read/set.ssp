@@ -1,0 +1,18 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.SetRenderType %>
+<%@ val lhs: String %>
+<%@ val indent: String %>
+<%@ val wrapLeft: String = "" %>
+<%@ val wrapRight: String = "" %>
+<% import renderType.elem %>
+${indent}${lhs} ${wrapLeft}{
+${indent}  val tset: org.apache.thrift.protocol.TSet = iprot.readSetBegin()
+${indent}  val builder = scala.collection.immutable.Set.newBuilder[${elem.text}]
+${indent}  var i: Int = tset.size
+${indent}  builder.sizeHint(tset.size)
+${indent}  while (i > 0) {
+<% render("../" + elem.fieldReadTemplate, Map("renderType" -> elem, "lhs" -> "builder +=", "indent" -> (indent + "    "))) %>
+${indent}    i -= 1
+${indent}  }
+${indent}  builder.result()
+${indent}}${wrapRight}
+${indent}iprot.readSetEnd()

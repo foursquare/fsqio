@@ -1,0 +1,47 @@
+ID|Provinsi
+*|Province du
+*|Province of
+*|Province de
+*|Province del
+*|Province of the
+*|Province
+*|Megye
+*|Estado de
+*|Estado del
+*|Estado de la
+*|Estado do
+*|Estado du
+*|State of
+*|State of the
+*|Gemeente
+*|Provincia de
+*|Región de la
+*|Región de
+*|Región du
+*|Región del
+*|Región
+*|Provincie
+*|Област
+*|kraj
+*|Departamento del
+GR|Νομος
+GR|Νομός
+GR|Nomós
+ID|Kota
+BG|Oblast
+*|Obshtina
+ID|Banjar
+*|Община
+*|область|обл
+*|Область|Обл
+*|Fylke
+*|Judeţul
+*|Județul
+*|Provinco
+*|Provinsen
+BG|Община
+BG|Obshtina
+IE|County|Co
+*|Departamento de
+*|Місто|м.
+JP|-ku

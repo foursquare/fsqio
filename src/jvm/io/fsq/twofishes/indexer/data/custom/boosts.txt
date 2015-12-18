@@ -1,0 +1,24 @@
+# Los Angeles (LA) over laos or louisiana
+5368361|10000000
+# Greater London over London City
+2648110|10000000
+# williamsburg nyc boost
+5144580|40000
+# demote Williamsburg, VA
+4793846|-14815000
+# give bali the island a big boost over indian state of bali
+1650534|1000000
+# bump up modeling queens as a city
+5133273|4000000
+# brooklyn city
+5110302|4000000
+# manhattan city
+5125771|4000000
+# new york city as a whole
+5128581|4000000
+# bandung city 1650357 over bandung regency 1650352
+1650352|-4000000
+# boost amherst center (cdp) over amherst
+4929023|1000000
+# boost washington dc over bogota dc
+4138106|10000000

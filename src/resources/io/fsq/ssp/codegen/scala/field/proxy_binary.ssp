@@ -1,0 +1,9 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+<% render("proxy_ref.ssp", Map("field" -> field)) %>
+  override def ${field.name}ByteArray: Array[Byte] = underlying.${field.name}ByteArray
+  override def ${field.name}ByteArrayOption: Option[Array[Byte]] = underlying.${field.name}ByteArrayOption

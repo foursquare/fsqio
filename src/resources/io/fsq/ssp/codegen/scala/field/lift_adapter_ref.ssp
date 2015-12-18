@@ -1,0 +1,22 @@
+<%
+  // Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+
+  import io.fsq.spindle.codegen.runtime.{ScalaField, StructLike}
+%>
+<%@ val cls: StructLike %>
+<%@ val field: ScalaField %>
+#if (field.defaultValueIsSet)
+  override final def ${field.escapedName}: ${field.renderType.text} = this.${field.name}OrDefault
+#elseif (field.builderRequired)
+  override final def ${field.escapedName}: ${field.renderType.text} = this.${field.name}OrThrow
+#end
+  override final def ${field.name}Option: Option[${field.renderType.text}] = underlyingLift.valueFromWireName("${field.wireName}").asInstanceOf[Option[${field.renderType.text}]]
+#for (defaultValue <- field.defaultValueOption)
+  override final def ${field.name}OrDefault: ${field.renderType.text} = this.${field.name}Option.getOrElse(${defaultValue})
+#end
+  override final def ${field.name}OrNull: ${field.renderType.text} = this.${field.name}Option.getOrElse(null)
+  override final def ${field.name}OrThrow: ${field.renderType.text} = this.${field.name}Option.getOrElse(throw new java.lang.NullPointerException("field ${field.escapedName} of ${cls.name} missing"))
+  override final def ${field.isSetName}: Boolean = this.${field.name}Option.isDefined
+#if (field.isForeignKey)
+<% render("lift_adapter_fk.ssp", Map("field" -> field)) %>
+#end

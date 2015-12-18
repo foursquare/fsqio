@@ -1,0 +1,27 @@
+Saint\b|St,Ste
+Saint-|St-,Ste-
+Sint\b|St,Saint
+Sint-|St-,Saint-
+Mountain\b|Mount,Mt,Mtn
+Mount\b|Mt,Mountain,Mtn
+North\b|N
+South\b|S
+East\b|E
+West\b|W
+Air Force Base|AFB
+Township\b|Twp,Charter Township
+kommun\b|Kommune
+Fort\b|Ft
+Boulevard|Blvd
+1eme|1ER ARRONDISSEMENT
+2eme|2nd ARRONDISSEMENT
+3eme|3nd ARRONDISSEMENT
+eme\b|E ARRONDISSEMENT
+eme\b|th ARRONDISSEMENT
+область|обл
+Область|Обл
+St\b|Saint
+Ste\b|Sainte
+# these should probably be italy-only
+d'|di 
+di |d'

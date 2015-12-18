@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!--
+Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+-->
+
+<ivysettings>
+
+  <settings defaultResolver="chain-repos"/>
+
+  <property name="m2.repo.relpath" value="[organisation]/[module]/[revision]"/>
+  <property name="m2.repo.pom" value="${m2.repo.relpath}/[module]-[revision].pom"/>
+  <property name="m2.repo.artifact"
+            value="${m2.repo.relpath}/[artifact](-[classifier])-[revision].[ext]"/>
+  <property name="m2.repo.dir" value="${user.home}/.m2/repository" override="false"/>
+
+  <resolvers>
+
+    <chain name="chain-repos" returnFirst="true">
+      <!-- By default ivy does not require metadata (or successful metadata downloads).
+           This can lead to jars downloading without their transitive deps which leads
+           to confusing failures later when classpaths are constructed and used.
+           We setup the maven central resolver to require successful pom downloads here. -->
+      <ibiblio name="maven-central" m2compatible="true" descriptor="required"/>
+
+      <ibiblio name="maven.twttr.com"
+               m2compatible="true"
+               usepoms="true"
+               root="http://maven.twttr.com/"/>
+
+      <ibiblio name="nexus.prod.foursquare.com"
+               m2compatible="true"
+               usepoms="true"
+               root="http://nexus.prod.foursquare.com/nexus/content/groups/public/"
+               pattern="[organisation]/[module]/[revision]/[artifact]-[revision](-[classifier]).[ext]"
+               />
+
+      <!-- The mvn standard local filesystem repo/cache -->
+      <filesystem name="local.m2" m2compatible="true" local="true" checkmodified="true">
+        <ivy pattern="${m2.repo.dir}/${m2.repo.pom}"/>
+        <artifact pattern="${m2.repo.dir}/${m2.repo.artifact}"/>
+      </filesystem>
+
+    </chain>
+  </resolvers>
+</ivysettings>

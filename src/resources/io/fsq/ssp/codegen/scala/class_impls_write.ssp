@@ -1,0 +1,17 @@
+<%@ val cls: _root_.io.fsq.spindle.codegen.runtime.StructLike  %>
+
+  override def write(oprot: org.apache.thrift.protocol.TProtocol): Unit = {
+    oprot.writeStructBegin(${cls.name}.${cls.tstructName})
+#for (field <- cls.fields)
+    if (${field.isSetName}) {
+      oprot.writeFieldBegin(${cls.name}.${field.tfieldName})
+<% render(field.renderType.fieldWriteTemplate, Map("renderType" -> field.renderType, "valueExpr" -> field.varName, "indent" -> "      ")) %>
+      oprot.writeFieldEnd()
+    }
+#end
+  if (io.fsq.spindle.runtime.RuntimeHelpers.preserveUnknownFields(this)) {
+    unknownFields.reverse foreach { _.write(oprot) }
+  }
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+  }

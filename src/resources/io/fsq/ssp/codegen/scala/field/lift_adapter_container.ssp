@@ -1,0 +1,17 @@
+<%
+  // Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+
+  import io.fsq.spindle.codegen.runtime.{ContainerRenderType, RenderType, ScalaField, TypedefRenderType, StructLike}
+%>
+<%@ val cls: StructLike %>
+<%@ val field: ScalaField %>
+<% val container: String = field.renderType.underlying.asInstanceOf[ContainerRenderType].container %>
+  override final def ${field.escapedName}: ${field.renderType.text} = this.${field.name}OrDefault
+  override final def ${field.name}Option: Option[${field.renderType.text}] = underlyingLift.valueFromWireName("${field.wireName}").asInstanceOf[Option[${field.renderType.text}]]
+  override final def ${field.name}OrDefault: ${field.renderType.text} = this.${field.name}Option.getOrElse(${container}.empty)
+  override final def ${field.name}OrNull: ${field.renderType.text} = this.${field.name}Option.getOrElse(null)
+  override final def ${field.name}OrThrow: ${field.renderType.text} = this.${field.name}Option.getOrElse(throw new java.lang.NullPointerException("field ${field.escapedName} of ${cls.name} missing"))
+  override final def ${field.isSetName}: Boolean = this.${field.name}Option.isDefined
+#if (field.isForeignKey)
+<% render("lift_adapter_fks.ssp", Map("field" -> field)) %>
+#end

@@ -1,0 +1,7 @@
+<%@ val cls: _root_.io.fsq.spindle.codegen.runtime.StructLike %>
+  override def mergeCopy(that: ${cls.name}): ${cls.name} = {
+    val ret = ${cls.name}.createRawRecord
+    ret.merge(this)
+    ret.merge(that)
+    ret
+  }

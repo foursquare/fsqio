@@ -1,0 +1,26 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+  override def compare(that: ${cls.name}): Int = {
+    var cmp: Int = 0
+    if (that == null) {
+      1
+    }
+#for (field <- cls.fields)
+    else if ({
+      cmp = this.${field.isSetName}.compareTo(that.${field.isSetName})
+      cmp != 0 }) cmp
+    else if (this.${field.isSetName} && {
+      cmp = ${render(field.renderType.compareTemplate, Map("field" -> field))}
+      cmp != 0 }) cmp
+#end
+    else 0
+  }
+  override def <(that: ${cls.name}): Boolean = { this.compare(that) < 0 }
+  override def >(that: ${cls.name}): Boolean = { this.compare(that) > 0 }
+  override def <=(that: ${cls.name}): Boolean = { this.compare(that) <= 0 }
+  override def >=(that: ${cls.name}): Boolean = { this.compare(that) >= 0 }
+  override def compareTo(that: ${cls.name}): Int = compare(that)

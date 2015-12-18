@@ -1,0 +1,48 @@
+#!/bin/bash
+# Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+
+# Pass variables to children
+set -a
+
+# Use the presence of the 'scripts/upkeep/tasks' folder to determine if we are in in the Opensource repo.
+if [[ -e scripts/upkeep/tasks ]]; then
+  TASKS='tasks'
+else
+  TASKS='opensource-tasks'
+fi
+
+# Symlink the proper environmental variables script to the buildroot.
+ln -sf scripts/upkeep/"$TASKS"/env.sh environ.sh
+source environ.sh
+
+if [ "$1" == "--help" ]; then
+  echo ""
+  echo "upkeep: ensure tasks required to maintain a working dev env are run when needed."
+  echo ""
+  echo "Usage:"
+  echo " - \`./upkeep\` with no args will check that all required tasks are up-to-date."
+  echo " - \`./upkeep <task>\` will run a particular task and update its status."
+  echo " - \`./upkeep force <task> \"reason\"\` require eveyone to (re-)run <task>."
+  echo ""
+  echo "Tasks are just shell scripts in scripts/upkeep/tasks, found by appending '.sh' to <task>."
+  echo "Each task also has a file in scripts/upkeep/required used to specify when it needs to be run."
+  echo "When a task is run, the current value of its 'required' file is copied to a 'current' file."
+  echo "If 'current' does not match 'required', \`./upkeep\` will run the task."
+  echo "\`./upkeep force <task>\` updates the contents of the task's 'required' file."
+  echo ""
+  echo "Available tasks:"
+  for i in `ls scripts/upkeep/tasks | cut -d. -f1 | sort`; do echo "    $i"; done
+  echo ""
+  exit
+fi
+
+if [ "$1" == "force" ]; then
+  shift
+  exec ./scripts/upkeep/force.sh "$@"
+fi
+
+if [ "$1" != "" ]; then
+  exec ./scripts/upkeep/run.sh "$@"
+fi
+
+exec ./scripts/upkeep/check.sh

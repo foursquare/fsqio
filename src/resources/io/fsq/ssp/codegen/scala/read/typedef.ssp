@@ -1,0 +1,13 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.TypedefRenderType %>
+<%@ val lhs: String %>
+<%@ val indent: String %>
+<%@ val wrapLeft: String = "" %>
+<%@ val wrapRight: String = "" %>
+<% import renderType.ref %>
+<% render("../" + ref.fieldReadTemplate,
+    Map(
+      "renderType" -> renderType.ref,
+      "lhs" -> lhs,
+      "indent" -> indent,
+      "wrapLeft" -> wrapLeft,
+      "wrapRight" -> wrapRight)) %>

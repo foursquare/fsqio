@@ -1,0 +1,15 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%-- We use a fixed seed, for consistency. --%>\
+<%@ val cls: StructLike %>
+  override def hashCode(): Int = {
+    // We use a fixed seed, for consistency.
+    val hasher = new _root_.io.fsq.spindle.runtime.MurmurHash[AnyRef](0)
+#for (field <- cls.fields)
+    if (${field.isSetName}) hasher.append(${field.varName}.##)
+#end
+    hasher.hash
+  }

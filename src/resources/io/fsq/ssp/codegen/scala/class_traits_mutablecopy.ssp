@@ -1,0 +1,17 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+  def mutableCopy(): Mutable${cls.name} = {
+    val ret = ${cls.name}.createRawRecord
+#for (field <- cls.fields)
+#if (field.renderType.isNullable)
+    if (${field.isSetName}) ret.${field.escapedName}_=(${field.name}OrNull)
+#else
+    if (${field.isSetName}) ret.${field.escapedName}_=(${field.name}OrDefault)
+#end
+#end
+    ret
+  }

@@ -1,0 +1,911 @@
+# Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+
+scala_version = '2.10.4'
+
+def sjar(org, name, **kwargs):
+  scala_jar_version = '2.10'
+  return jar(org = org, name = '%s_%s' % (name, scala_jar_version), **kwargs)
+
+jar_library(
+  name = 'akka',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'com.typesafe.akka', name = 'akka-actor', rev = '2.3.11')
+  ],
+)
+
+jar_library(
+  name = 'algebird',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'com.twitter', name = 'algebird-core', rev = '0.11.0'),
+  ],
+)
+
+jar_library(
+  name = 'apache-httpclient',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.apache.httpcomponents', name = 'httpclient', rev = '4.3.5'),
+  ],
+)
+
+jar_library(
+  name = 'argot',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'org.clapper', name = 'argot', rev = '1.0.4')
+  ]
+)
+
+jar_library(
+  name = 'caliper',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.google.caliper', name = 'caliper', rev='0.5-rc1'),
+  ],
+)
+
+jar_library(
+  name = 'casbah',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'org.mongodb', name = 'casbah-core', rev = '2.6.4')
+  ]
+)
+
+cascading_rev = '2.6.3'
+jar_library(
+  name = 'cascading',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'cascading', name = 'cascading-core', rev = cascading_rev),
+    jar(org = 'cascading', name = 'cascading-local', rev = cascading_rev),
+    jar(org = 'cascading', name = 'cascading-hadoop', rev = cascading_rev),
+    jar(org = 'cascading', name = 'cascading-xml', rev = cascading_rev),
+  ],
+)
+
+jar_library(
+  name = 'commons-httpclient',
+  jars = [
+    jar(org = 'commons-httpclient', name = 'commons-httpclient', rev = '3.1', intransitive = True),
+  ],
+)
+
+jar_library(
+  name = 'commons-io',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [ jar(org = 'commons-io', name = 'commons-io', rev = '2.1')
+  ]
+)
+
+jar_library(
+  name = 'commons-lang',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'commons-lang', name = 'commons-lang', rev = '2.4')
+  ]
+)
+
+jar_library(
+  name = 'commons-logging',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'commons-logging', name = 'commons-logging', rev = '1.1.1')
+  ]
+)
+
+jar_library(
+  name = 'commons-math',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.apache.commons', name = 'commons-math', rev = '2.1')
+  ]
+)
+
+jar_library(
+  name = 'commons-net',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'commons-net', name = 'commons-net', rev = '3.0.1')
+  ]
+)
+
+jar_library(
+  name = 'commons-validator',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],  jars = [
+    jar(org = 'commons-validator', name = 'commons-validator', rev = '1.4.0')
+  ]
+)
+
+jar_library(
+  name = 'concurrentlinkedhashmap',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(
+      org = 'com.googlecode.concurrentlinkedhashmap',
+      name = 'concurrentlinkedhashmap-lru',
+      rev = '1.1',
+    ),
+  ],
+)
+
+jar_library(
+  name = 'country-revgeo',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [jar(org = 'com.foursquare', name = 'country_revgeo_2.10', rev = '0.1a')
+  ]
+)
+
+finagle_rev = '6.25.0'
+jar_library(
+  name = 'finagle',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.twitter', name = 'finagle-core_2.10', rev = finagle_rev),
+    jar(org = 'com.twitter', name = 'finagle-http_2.10', rev = finagle_rev),
+    jar(org = 'com.twitter', name = 'finagle-httpx_2.10', rev = finagle_rev),
+    jar(org = 'com.twitter', name = 'finagle-stream_2.10', rev = finagle_rev),
+    jar(org = 'com.twitter', name = 'finagle-kestrel_2.10', rev = finagle_rev),
+    jar(org = 'com.twitter', name = 'finagle-ostrich4_2.10', rev = finagle_rev),
+    jar(org = 'com.twitter', name = 'finagle-serversets_2.10', rev = finagle_rev),
+    jar(org = 'com.twitter', name = 'finagle-thrift_2.10', rev = finagle_rev),
+    jar(org = 'com.twitter', name = 'finagle-memcached_2.10', rev = finagle_rev),
+  ],
+)
+
+geotools_rev = '9.2'
+
+jar_library(
+  name = 'gt-main',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(
+      org = 'org.geotools',
+      name = 'gt-main',
+      rev = geotools_rev,
+      excludes = [
+        exclude(org = 'xerces', name = 'xercesImpl'),
+      ],
+    ),
+  ],
+)
+
+jar_library(
+  name = 'gt-data',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(
+      org = 'org.geotools',
+      name = 'gt-data',
+      rev = geotools_rev,
+      excludes = [
+        exclude(org = 'xerces', name = 'xercesImpl'),
+      ],
+    ),
+  ],
+)
+
+jar_library(
+  name = 'gt-geojson',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(
+      org = 'org.geotools',
+      name = 'gt-geojson',
+      rev = geotools_rev,
+      excludes = [
+        exclude(org = 'xerces', name = 'xercesImpl'),
+      ],
+    ),
+  ],
+)
+
+jar_library(
+  name = 'gt-shapefile',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(
+      org = 'org.geotools',
+      name = 'gt-shapefile',
+      rev = geotools_rev,
+      excludes = [
+        exclude(org = 'xerces', name = 'xercesImpl'),
+      ],
+    ),
+  ],
+)
+
+jar_library(
+  name = 'guava',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.google.guava',name = 'guava', rev = '14.0'),
+  ],
+)
+
+# Keep in sync with 3rdparty/BUILD.
+HADOOP_VERSION = '2.6.0-cdh5.4.3'
+
+jar_library(
+  name = 'hadoop-common',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.apache.hadoop', name = 'hadoop-common', rev = HADOOP_VERSION),
+    # TODO: Figure out how dependency_management keys really work so that we don't
+    # clobber artifact types with "managed" values.
+    # See src/python/foursquare/pants/pom/pom.py
+    jar(org = 'org.apache.hadoop', name = 'hadoop-auth', rev = HADOOP_VERSION),
+  ],
+  dependencies = [
+    ':slf4j-all',
+  ],
+)
+
+jar_library(
+  name = 'hadoop-mapreduce-client',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.apache.hadoop', name = 'hadoop-mapreduce-client-core', rev = HADOOP_VERSION),
+  ],
+  dependencies = [
+    ':hadoop-common',
+  ],
+)
+
+# TODO: This is only here while we transition twofishes to our hfile reader.
+jar_library(
+  name = 'hbase',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.apache.hbase', name = 'hbase', rev = '0.94.6-cdh4.4.0')
+  ]
+)
+
+jar_library(
+  name = 'icu4j',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.ibm.icu', name = 'icu4j', rev = '53.1')
+  ]
+)
+
+jar_library(
+  name = 'jackson',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.codehaus.jackson', name = 'jackson-core-asl', rev = '1.9.8'),
+    jar(org = 'org.codehaus.jackson', name = 'jackson-mapper-asl', rev = '1.9.8'),
+    jar(org = 'org.codehaus.jackson', name = 'jackson-xc', rev = '1.9.8'),
+  ],
+)
+
+jar_library(
+  name = 'jerkson',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.gilt', name = 'jerkson_2.10', rev = '0.6.7'),
+  ],
+)
+
+jar_library(
+  name = 'jline',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [jar(org = 'jline', name = 'jline', rev = '0.9.94')
+  ]
+)
+
+# NOTE: joda-convert is required when compiling against joda-time with scala. See
+# http://www.scala-lang.org/node/10575
+jar_library(
+  name = 'joda-time',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'joda-time', name = 'joda-time', rev = '2.8.2'),
+    jar(org = 'org.joda', name = 'joda-convert', rev = '1.2')
+  ]
+)
+
+jar_library(
+  name = 'json4s',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'org.json4s', name = 'json4s-native', rev = '3.2.10'),
+    sjar(org = 'org.json4s', name = 'json4s-jackson', rev = '3.2.10'),
+  ]
+)
+
+jar_library(
+  name = 'jts',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(
+      org = 'com.vividsolutions',
+      name = 'jts',
+      rev = '1.12',
+      excludes = [
+        exclude(org = 'xerces', name = 'xercesImpl'),
+      ],
+    ),
+  ],
+)
+
+jar_library(
+  name = 'junit',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'junit', name = 'junit', rev = '4.12'),
+    jar(org = 'com.novocode', name = 'junit-interface', rev = '0.7'),
+  ],
+)
+
+jar_library(
+  name = 'language-detect',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.cybozu.labs', name = 'langdetect', rev = '1.1-20120112')
+  ]
+)
+
+jar_library(
+  name = 'logback',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'ch.qos.logback', name = 'logback-classic', rev = '1.1.3'),
+    # This is nominally a dep of logback-classic, but the dependency management of its
+    # parent pom is messed up, so it only pulls in the test jar.  Manually specifying it here
+    # is good enough for now.
+    jar(org = 'ch.qos.logback', name = 'logback-core', rev = '1.1.3'),
+    # This is an optional dependency on logback-core, so we're adding it explicitly.
+    jar(org = 'org.codehaus.janino', name = 'janino',rev = '2.7.8')
+  ],
+)
+
+jar_library(
+  name = 'mail',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'javax.mail', name = 'mail', rev = '1.4.4')
+  ]
+)
+
+
+jar_library(
+  name = 'mockito',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.mockito', name = 'mockito-all', rev = '1.9.0')
+  ]
+)
+
+jar_library(
+  name = 'netty',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],  jars = [
+    jar(org = 'io.netty', name = 'netty', rev = '3.10.1.Final'),
+  ]
+)
+
+jar_library(
+  name = 'ostrich',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'com.twitter', name = 'ostrich', rev = '9.8.0')
+  ]
+)
+
+
+jar_library(
+  name = 'parboiled-scala',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.parboiled', name = 'parboiled-scala_2.10', rev = '1.1.6')
+  ]
+)
+
+jar_library(
+  name = 'phonenumbers',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.googlecode.libphonenumber', name = 'libphonenumber', rev = '7.1.1')
+  ]
+)
+
+jar_library(
+  name = 'reflections',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+   jar(org = 'org.reflections', name = 'reflections', rev = '0.9.9-RC1'),
+  ],
+  # The reflections library optionally depends on servlet but we use the api that needs it. Forcing the dep here.
+  # Pants loads classpaths into the manifest of synthetic jars and reflections needs servlet to take advantage of that.
+  dependencies = [
+    ':servlet',
+  ],
+)
+
+jar_library(
+  name = 'rockymadden',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'com.rockymadden.stringmetric', name = 'stringmetric-core', rev = '0.27.3')
+  ]
+)
+
+jar_library(
+  name = 's2',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.google', name = 's2', rev = '1.0')
+  ]
+)
+
+jar_library(
+  name = 'salat',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'com.novus', name = 'salat', rev = '1.9.6')
+  ]
+)
+
+jar_library(
+  name = 'scala-library-' + scala_version,
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org='org.scala-lang', name = 'scala-library', rev=scala_version)
+  ]
+)
+
+jar_library(
+  name = 'scalate',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.fusesource.scalate', name = 'scalate-core_2.10', rev = '1.6.1')
+  ]
+)
+
+scalding_ver = '0.15.1-RC13'
+jar_library(
+  name = 'scalding',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'com.twitter', name = 'scalding-args', rev = scalding_ver),
+    sjar(org = 'com.twitter', name = 'scalding-commons', rev = scalding_ver),
+    sjar(org = 'com.twitter', name = 'scalding-core', rev = scalding_ver),
+    sjar(org = 'com.twitter', name = 'scalding-date', rev = scalding_ver),
+  ],
+  dependencies = [
+    ':algebird',
+    ':cascading',
+  ],
+)
+
+jar_library(
+  name = 'scalding-repl',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'com.twitter', name = 'scalding-repl', rev = scalding_ver),
+  ]
+)
+
+jar_library(
+  name = 'scopt',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'com.github.scopt', name = 'scopt', rev = '3.2.0', intransitive = True)
+  ]
+)
+
+jar_library(
+  name = 'servlet',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org ='javax.servlet', name='javax.servlet-api', rev='3.0.1')
+  ]
+)
+
+slf4j_rev = '1.7.7'
+jar_library(
+  name = 'slf4j-api',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.slf4j', name = 'slf4j-api', rev = slf4j_rev)
+  ]
+)
+
+jar_library(
+  name = 'slf4j-jcl',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.slf4j', name = 'jcl-over-slf4j', rev = slf4j_rev)
+  ]
+)
+
+jar_library(
+  name = 'slf4j-jul',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.slf4j', name = 'jul-to-slf4j', rev = slf4j_rev)
+  ]
+)
+
+jar_library(
+  name = 'slf4j-log4j',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.slf4j', name = 'log4j-over-slf4j', rev = slf4j_rev),
+  ],
+)
+
+jar_library(
+  name = 'slf4j-nop',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.slf4j', name = 'slf4j-nop', rev = slf4j_rev)
+  ]
+)
+
+target(
+  name = 'slf4j-all',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  dependencies = [
+    ':slf4j-api',
+    ':slf4j-jcl',
+    ':slf4j-jul',
+    ':slf4j-log4j',
+  ],
+)
+
+jar_library(
+  name = 'slf4s',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.weiglewilczek.slf4s', name = 'slf4s_2.9.1', rev = '1.0.7')
+  ]
+)
+
+jar_library(
+  name = 'specs',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'org.scala-tools.testing', name = 'specs', rev = '1.6.11-fs'),
+  ],
+  dependencies = [
+    ':mockito'
+  ],
+)
+
+jar_library(
+  name = 'specs2',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'org.specs2', name = 'specs2', rev = '1.12.3'),
+  ],
+    dependencies = [
+    ':junit',
+  ],
+)
+
+# Keep this version in sync with the spindle version in BUILD.tools.
+spindleVer = '3.0.0-M15'
+
+target(
+  name = 'fscommon-thrift',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  dependencies = [
+    ':fscommon-thrift-base',
+    ':fscommon-thrift-bson',
+    ':fscommon-thrift-json',
+  ],
+)
+
+jar_library(
+  name = 'fscommon-thrift-base',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.foursquare', name = 'common-thrift-base', rev = spindleVer, intransitive = True),
+  ],
+  dependencies = [
+    ':joda-time',
+    ':thrift',
+  ],
+)
+
+jar_library(
+  name = 'fscommon-thrift-bson',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.foursquare', name = 'common-thrift-bson', rev = spindleVer, intransitive = True),
+  ],
+  dependencies = [
+    ':fscommon-thrift-base',
+    '3rdparty:mongodb',
+    ':thrift',
+  ],
+)
+
+jar_library(
+  name = 'fscommon-thrift-json',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+      jar(org = 'com.foursquare', name = 'common-thrift-json', rev = spindleVer, intransitive = True),
+  ],
+  dependencies = [
+    ':fscommon-thrift-base',
+    ':jackson',
+    ':thrift',
+  ],
+)
+
+jar_library(
+  name = 'thrift',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(
+      org = 'org.apache.thrift',
+      name = 'libthrift',
+      rev = '0.9.0',
+      excludes = [
+        exclude(org='org.apache.httpcomponents', name='httpclient'),  # Depends on a bad version.
+      ],
+    ),
+  ],
+
+  dependencies = [
+    ':apache-httpclient'
+  ],
+)
+
+jar_library(
+  name = 'thrift-text',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.twitter.common', name = 'thrift-text', rev = '0.0.1')
+  ],
+)
+
+twitter_util_rev = '6.24.0'
+jar_library(
+  name = 'twitter-util',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.twitter', name = 'util-codec_2.10', rev = twitter_util_rev),
+    jar(org = 'com.twitter', name = 'util-core_2.10', rev = twitter_util_rev),
+    jar(org = 'com.twitter', name = 'util-eval_2.10', rev = twitter_util_rev),
+    jar(org = 'com.twitter', name = 'util-hashing_2.10', rev = twitter_util_rev),
+    jar(org = 'com.twitter', name = 'util-logging_2.10', rev = twitter_util_rev),
+  ],
+)
+
+jar_library(
+  name = 'twitter-util-async',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'com.foursquare', name = 'twitter-util-async', rev = '1.2.0'),
+  ],
+)
+
+jar_library(
+  name = 'typesafe-config',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'com.typesafe', name = 'config', rev = '1.3.0')
+  ]
+)
+
+jar_library(name = 'zookeeper',
+  jars = [
+    jar(org = 'org.apache.zookeeper', name = 'zookeeper', rev = '3.4.6', intransitive = True),
+  ],
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  dependencies = [
+    ':slf4j-log4j',
+  ],
+)

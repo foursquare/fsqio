@@ -1,0 +1,4 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.BSONObjectRenderType %>
+<%@ val valueExpr: String %>
+<%@ val indent: String %>
+${indent}oprot.writeBinary(java.nio.ByteBuffer.wrap(new org.bson.BasicBSONEncoder().encode(${valueExpr})))

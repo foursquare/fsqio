@@ -1,0 +1,14 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.{ScalaConst}
+%>
+<%@ val constants: Seq[ScalaConst] %>
+<%@ val baseName: String %>
+
+object ${baseName}Constants {
+  #for (const <- constants)
+  <% val value = const.valueOption.map{v => "val %s: %s = %s".format(const.name, const.renderType.text, v)} %>
+  <%=value.getOrElse("// %s not rendered, %s not a supported const type".format(const.name, const.renderType.text)) %>
+  #end
+}

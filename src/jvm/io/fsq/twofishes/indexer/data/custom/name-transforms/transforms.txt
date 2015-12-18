@@ -1,0 +1,240 @@
+6941775	en|Brooklyn
+5110302	en|Brooklyn
+5128594	en|New York
+5133268	en|Queens
+5133273 en|Queens
+5139559	en|Staten Island
+5139568	en|Staten Island
+5110266	en|Bronx
+1279685 en|Tibet
+3688689 es|Bogotá
+2177478 en|Australian Capital Territory
+2155400 en|New South Wales
+2064513 en|Northern Territory
+2152274 en|Queensland
+2061327 en|South Australia
+2147291 en|Tasmania
+2145234 en|Victoria
+2058645 en|Western Australia
+3337388 en|Flanders
+2638785 en|St Helens
+# UK unitary authorities, renamed to their historical county
+2633351 en|North Yorkshire
+3333183 en|Hampshire
+3333196 en|Hampshire
+3333207 en|Swindon
+3333204 en|Staffordshire
+3333172 en|Middlesbrough
+3333127 en|Lancashire
+# MX states from http://www.statoids.com/umx.html
+4019231 abbr|AGS|ABBREVIATION,PREFERRED
+4019231 abbr|AGU|ABBREVIATION
+4019231 abbr|AG|ABBREVIATION
+4017700 abbr|BCN|ABBREVIATION,PREFERRED
+4017700 abbr|BN|ABBREVIATION
+4017698 abbr|BCS|ABBREVIATION,PREFERRED
+4017698 abbr|BS|ABBREVIATION
+3531730 abbr|CAMP|ABBREVIATION,PREFERRED
+3531730 abbr|CAM|ABBREVIATION
+3531730 abbr|CM|ABBREVIATION
+3531011 abbr|CHIS|ABBREVIATION,PREFERRED
+3531011 abbr|CHP|ABBREVIATION
+3531011 abbr|CP|ABBREVIATION
+4014336 abbr|CHIH|ABBREVIATION,PREFERRED
+4014336 abbr|CHH|ABBREVIATION
+4014336 abbr|CH|ABBREVIATION
+4013674 abbr|COAH|ABBREVIATION,PREFERRED
+4013674 abbr|COA|ABBREVIATION
+4013674 abbr|CA|ABBREVIATION
+4013513 abbr|COL|ABBREVIATION,PREFERRED
+4013513 abbr|CL|ABBREVIATION
+3527646 abbr|DF|ABBREVIATION,PREFERRED
+3527646 abbr|DIF|ABBREVIATION
+4011741 abbr|DGO|ABBREVIATION,PREFERRED
+4011741 abbr|DUR|ABBREVIATION
+4011741 abbr|DU|ABBREVIATION
+4005267 abbr|GTO|ABBREVIATION,PREFERRED
+4005267 abbr|GUA|ABBREVIATION
+4005267 abbr|GJ|ABBREVIATION
+3527213 abbr|GRO|ABBREVIATION,PREFERRED
+3527213 abbr|GR|ABBREVIATION
+3527115 abbr|HGO|ABBREVIATION,PREFERRED
+3527115 abbr|HID|ABBREVIATION
+3527115 abbr|HI|ABBREVIATION
+4004156 abbr|JAL|ABBREVIATION,PREFERRED
+4004156 abbr|JA|ABBREVIATION
+3523272 abbr|MEX|ABBREVIATION,PREFERRED
+3523272 abbr|MX|ABBREVIATION
+3995955 abbr|MICH|ABBREVIATION,PREFERRED
+3995955 abbr|MIC|ABBREVIATION
+3995955 abbr|MC|ABBREVIATION
+3522961 abbr|MOR|ABBREVIATION,PREFERRED
+3522961 abbr|MR|ABBREVIATION
+3995012 abbr|NAY|ABBREVIATION,PREFERRED
+3995012 abbr|NA|ABBREVIATION
+3522542 abbr|NLE|ABBREVIATION,PREFERRED
+3522542 abbr|NL|ABBREVIATION
+3522509 abbr|OAX|ABBREVIATION,PREFERRED
+3522509 abbr|OA|ABBREVIATION
+3521082 abbr|PUE|ABBREVIATION,PREFERRED
+3521082 abbr|PU|ABBREVIATION
+3520914 abbr|QRO|ABBREVIATION
+3520914 abbr|QUE|ABBREVIATION,PREFERRED
+3520914 abbr|QE|ABBREVIATION
+3520887 abbr|QR|ABBREVIATION,PREFERRED
+3520887 abbr|ROO|ABBREVIATION
+3520887 abbr|QR|ABBREVIATION
+3985605 abbr|SLP|ABBREVIATION,PREFERRED
+3985605 abbr|SL|ABBREVIATION
+3983035 abbr|SIN|ABBREVIATION,PREFERRED
+3983035 abbr|SI|ABBREVIATION
+3982846 abbr|SON|ABBREVIATION,PREFERRED
+3982846 abbr|SO|ABBREVIATION
+3516458 abbr|TAB|ABBREVIATION,PREFERRED
+3516458 abbr|TB|ABBREVIATION
+3516391 abbr|TAMPS|ABBREVIATION,PREFERRED
+3516391 abbr|TAM|ABBREVIATION
+3516391 abbr|TM|ABBREVIATION
+3515359 abbr|TLAX|ABBREVIATION,PREFERRED
+3515359 abbr|TLA|ABBREVIATION,PREFERRED
+3515359 abbr|TL|ABBREVIATION
+3514780 abbr|VER|ABBREVIATION,PREFERRED
+3514780 abbr|VE|ABBREVIATION
+3514211 abbr|YUC|ABBREVIATION,PREFERRED
+3514211 abbr|YU|ABBREVIATION
+3979840 abbr|ZAC|ABBREVIATION,PREFERRED
+3979840 abbr|ZA|ABBREVIATION
+# has a terrible name in geonames
+443093 en|Katzrin|PREFERRED
+443093 en|Qatzrin
+443093 en|Katsrin
+443093 en|Qatsrin
+443093 he|קַצְרִין
+# From 4sq superusers
+2673723 en|Stockholm Municipality
+255683 el|Πάτρα
+1621176 id|DI Yogyakarta
+1607982 th|ปทุมธานี
+2886242 en|Cologne
+255524 el|Περιστέρι
+3448433 pt|São Paulo
+2160746 en|Lake Macquarie City
+254505 el|Ψυχικό
+1636884 id|Magelang
+536203 ru|Санкт-Петербург
+3448439 pt|São Paulo
+1621177 id|Yogyakarta
+3463504 en|Federal District
+498817 ru|Санкт-Петербург
+3448439 pt|São Paulo
+6321162 pt|Belo Horizonte
+630336 ru|Беларусь
+1621176 id|DI Yogyakarta
+1607982 en|Pathum Thani
+255319 el|Πικέρμι
+1609350 th|พระนคร
+625142 ru|Минская область
+1621176 en|DI Yogyakarta
+725992 bg|Велико Търново
+1619278 th|บางรัก
+536203 ru|Санкт-Петербург
+1609348 th|กรุงเทพมหานคร
+536203 ru|Санкт-Петербург
+630336 ru|Беларусь
+1625822 id|Surabaya
+463835 ru|Зеленодольск
+620134 be|Віцебская вобласць
+727522 bg|Русе
+481964 ru|Тосно
+265502 en|Aegina
+3461786 pt|Guarulhos
+625142 be|Мiнская вобласць
+620134 en|Vitebskaya oblast’
+1607530 en|Phra Nakhon Si Ayutthaya
+265502 en|Aigina
+554668 ru|с. Кабардинка
+536203 ru|Санкт-Петербург
+2950157 en|Berlin
+2743698 en|South Holland
+254352 el|Ρέθυμνο
+498817 ru|Санкт-Петербург
+262036 el|Γλυφάδα
+262719 el|Ελληνικό
+1627896 id|Semarang
+3448439 pt|São Paulo
+703447 uk|м. Київ
+3448439 pt|São Paulo
+1621176 en|DI Yogyakarta
+1607530 th|พระนครศรีอยุธยา
+536199 ru|Ленинградская обл.
+1621176 id|DI Yogyakarta
+3448439 pt|São Paulo
+536199 ru|Ленинградская обл.
+698738 en|Odeska Oblast
+1625822 id|Surabaya
+1621176 en|DI Yogyakarta
+2886242 en|Cologne
+2864118 en|Neuss
+1496745 ru|Новосибирская обл.
+1607532 th|พระนครศรีอยุธยา
+536203 ru|Санкт-Петербург
+628281 ru|Гомельская обл.
+262036 el|Γλυφάδα
+264353 en|Attica
+498817 ru|Санкт-Петербург
+580969 ru|с. Архипо-Осиповка
+2886242 en|Cologne
+1627896 id|Semarang
+1621177 id|Yogyakarta
+620134 ru|Витебская обл.
+536203 ru|Санкт-Петербург
+625142 be|Мiнская вобласць
+1636884 id|Magelang
+1627896 id|Semarang
+1607532 en|Phra Nakhon Si Ayutthaya
+2686469 sv|Örnsköldsvik
+798549 ro|România
+1636884 id|Magelang
+536203 en|Saint-Petersburg
+536203 ru|Санкт-Петербург
+2686469 sv|Örnsköldsvik
+524925 ru|Московская обл.
+702549 uk|Львівська обл.
+498817 ru|Санкт-Петербург
+3333128 en|Lancashire
+702549 ru|Львовская обл.
+315807 tr|Elazığ
+536203 ru|Санкт-Петербург
+1606146 en|Songkhla
+1215638 en|Aceh
+1621176 en|DI Yogyakarta
+1606146 th|สงขลา
+3333125 en|West Midlands
+1605651 th|ประเทศไทย
+703447 ru|г. Киев
+1621176 id|DI Yogyakarta
+472454 ru|Вологодская обл.
+1636884 id|Magelang
+261779 el|Ιωάννινα
+255524 el|Περιστέρι
+703446 uk|Київська обл.
+1636884 id|Magelang
+703446 ru|Киевская обл.
+2747351 nl|'s-Hertogenbosch
+536203 ru|Санкт-Петербург
+2712414 sv|Gävle
+675809 en|Iași
+687869 uk|Закарпатська область
+2712414 sv|Gävle
+512566 ru|п. Парголово
+536203 ru|Санкт-Петербург
+698738 ru|Одесская обл.
+498817 ru|Санкт-Петербург
+698738 uk|Одеська обл.
+687869 en|Zakarpats'ka Oblast’
+498817 en|Saint Petersburg
+261745 el|Ηράκλειο
+1620919 en|Bang Bo District
+1215638 en|Aceh|PREFERRED,SHORT_NAME
+1215638 id|Aceh|PREFERRED,SHORT_NAME
+1631727 en|Pelaihari

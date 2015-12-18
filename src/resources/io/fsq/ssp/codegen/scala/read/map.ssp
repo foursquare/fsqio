@@ -1,0 +1,20 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.MapRenderType %>
+<%@ val lhs: String %>
+<%@ val indent: String %>
+<%@ val wrapLeft: String = "" %>
+<%@ val wrapRight: String = "" %>
+<% import renderType.{elem1, elem2} %>
+${indent}${lhs} ${wrapLeft}{
+${indent}  val tmap: org.apache.thrift.protocol.TMap = iprot.readMapBegin()
+${indent}  val builder = scala.collection.immutable.Map.newBuilder[${elem1.text}, ${elem2.text}]
+${indent}  builder.sizeHint(tmap.size)
+${indent}  var i: Int = tmap.size
+${indent}  while (i > 0) {
+<% render("../" + elem1.fieldReadTemplate, Map("renderType" -> elem1, "lhs" -> "val k =", "indent" -> (indent + "    "))) %>
+<% render("../" + elem2.fieldReadTemplate, Map("renderType" -> elem2, "lhs" -> "val v =", "indent" -> (indent + "    "))) %>
+${indent}    builder += ((k, v))
+${indent}    i -= 1
+${indent}  }
+${indent}  builder.result()
+${indent}}${wrapRight}
+${indent}iprot.readMapEnd()

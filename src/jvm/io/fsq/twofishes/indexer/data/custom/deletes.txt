@@ -1,0 +1,74 @@
+Township
+Township of
+County
+County of
+District of
+Distrito
+Distrito de
+Cantón
+Canton
+Municipio
+Municipio de
+kraj
+Kraj
+Oblast
+Village of
+Borough of
+Town of
+Kotamadya
+область
+Gemeinde
+(rhld.)
+am main
+stadt
+Province of
+Province
+# we really need to strip these on query parsing as well
+# japanese attached suffixes
+# city
+市
+# ward / ku / district
+区
+# prefecture
+県
+# chinese!
+# township
+鄉
+# estonia
+Küla
+küla
+# independent city
+городской округ
+# borough
+городской округ
+# parish
+seniūnija
+# rural settlement
+сельское поселение
+сельсовет
+# polish "commune"
+gmina
+# russian village council
+сельсовет
+# district
+район
+# village
+сільська
+parish
+# parish
+parroquia
+seniūnija
+# council
+совет
+municipality
+municipality of
+# municipality
+Δήμος
+# urban settlement
+городское поселение
+# management community
+verwaltungsgemeinschaft
+# haiti
+Commnune
+Commune
+

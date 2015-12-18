@@ -1,0 +1,15 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+  override def copy(
+      ${cls.fields.map(field => "%s: %s = %sOrNull".format(field.escapedName, field.renderType.boxedText, field.name)).mkString(",\n      ")}
+  ): Raw${cls.name} = {
+    val ret = new Raw${cls.name}
+#for (field <- cls.fields)
+    if (${field.escapedName} != null) ret.${field.escapedName}_=(${field.escapedName})
+#end
+    ret
+  }

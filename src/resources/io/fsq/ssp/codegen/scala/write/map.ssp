@@ -1,0 +1,10 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.MapRenderType %>
+<%@ val valueExpr: String %>
+<%@ val indent: String %>
+<% import renderType.{elem1, elem2} %>
+${indent}oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.${elem1.ttype.name}, org.apache.thrift.protocol.TType.${elem2.ttype.name}, ${valueExpr}.size))
+${indent}${valueExpr}.foreach(item => {
+<% render("../" + elem1.fieldWriteTemplate, Map("renderType" -> elem1, "valueExpr" -> "item._1", "indent" -> (indent + "  "))) %>
+<% render("../" + elem2.fieldWriteTemplate, Map("renderType" -> elem2, "valueExpr" -> "item._2", "indent" -> (indent + "  "))) %>
+${indent}})
+${indent}oprot.writeMapEnd()

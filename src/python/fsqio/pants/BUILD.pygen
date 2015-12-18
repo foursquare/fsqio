@@ -1,0 +1,14 @@
+# Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+
+python_library(
+  name = 'register',
+  sources = ['register.py', '__init__.py'],
+  dependencies = [
+    'src/python/fsqio/pants/pom:ivy_diff',
+    'src/python/fsqio/pants/pom:pom_resolve',
+    'src/python/fsqio/pants/spindle/targets:spindle_thrift_library',
+    'src/python/fsqio/pants/spindle/targets:ssp_template',
+    'src/python/fsqio/pants/spindle/tasks:build_spindle',
+    'src/python/fsqio/pants/spindle/tasks:spindle_gen',
+  ],
+)

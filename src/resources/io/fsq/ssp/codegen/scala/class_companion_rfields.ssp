@@ -1,0 +1,79 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+  // Spindle Descriptors.
+<%--
+  // These look very much like the Thrift Descriptors, but they include type parameters
+  // which will be useful for Rogue. Maybe there's a way to merge the two?
+--%>
+#for (field <- cls.fields)
+
+  val ${field.escapedName} =
+#if (field.isForeignKey && field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.Container1RenderType])
+<% val elem = field.renderType.asInstanceOf[_root_.io.fsq.spindle.codegen.runtime.Container1RenderType].elem %>
+    new _root_.io.fsq.spindle.runtime.ForeignKeySeqFieldDescriptor[${elem.text}, ${cls.name}, ${cls.name}Meta](
+#elseif (field.isForeignKey && !field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.ContainerRenderType])
+    new _root_.io.fsq.spindle.runtime.ForeignKeyFieldDescriptor[${field.renderType.text}, ${cls.name}, ${cls.name}Meta](
+#elseif (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType])
+<% val structName = field.renderType.asInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType].className %>
+    new _root_.io.fsq.spindle.runtime.BitfieldFieldDescriptor[${field.renderType.text}, ${cls.name}, ${cls.name}Meta, ${structName}, ${structName}Meta](
+#elseif (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.ExceptionRenderType])
+    new _root_.io.fsq.spindle.runtime.ExceptionFieldDescriptor[${cls.name}, ${cls.name}Meta, ${field.renderType.text}.Struct, ${field.renderType.text}.StructMeta, ${field.renderType.text}](
+#elseif (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.StructRenderType])
+    new _root_.io.fsq.spindle.runtime.StructFieldDescriptor[${cls.name}, ${cls.name}Meta, ${field.renderType.text}, ${field.renderType.text}Meta](
+#elseif (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.EnumRenderType])
+    new _root_.io.fsq.spindle.runtime.OptionalFieldDescriptor[${field.renderType.text}, ${cls.name}, ${cls.name}Meta](
+#else
+    new _root_.io.fsq.spindle.runtime.OptionalFieldDescriptor[${field.renderType.text}, ${cls.name}, ${cls.name}Meta](
+#end
+      name = "${field.wireName}",
+      longName = "${field.name}",
+      id = ${field.identifier},
+      annotations = Map(${field.annotations.toSeq.map(at => "\"%s\" -> \"%s\"".format(at._1, at._2)).mkString(", ")}),
+      owner = this,
+#if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType])
+<% val structName = field.renderType.asInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType].className %>
+      structMeta = ${structName},
+#elseif (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.ExceptionRenderType])
+      structMeta = ${field.renderType.text}.Struct,
+#elseif (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.StructRenderType])
+      structMeta = ${field.renderType.text},
+#end
+      manifest = manifest[${field.renderType.text}]
+    )
+#if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.EnumRenderType])
+    with _root_.io.fsq.spindle.runtime.EnumField
+#end
+    {
+      override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[${cls.name}]): Unit = { r.asInstanceOf[Raw${cls.name}].${field.name}Unset() }
+      override def getter(r: ${cls.name}): Option[${field.renderType.text}] = r.${field.name}Option()
+      override def setterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[${cls.name}], v: ${field.renderType.text}): Unit = { r.asInstanceOf[Raw${cls.name}].${field.escapedName}_=(v) }
+#if (field.isForeignKey && field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.Container1RenderType])
+<% val elem = field.renderType.asInstanceOf[_root_.io.fsq.spindle.codegen.runtime.Container1RenderType].elem %>
+      override def objSetter(r: ${cls.name}, obj: Seq[_root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]]): Unit = { r.${field.name}SetObj(obj) }
+      override def objGetter(r: ${cls.name}, m: _root_.io.fsq.spindle.runtime.UntypedMetaRecord): Seq[_root_.io.fsq.spindle.runtime.UntypedRecord with _root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]] =  { r.${field.name}UntypedFks(m) }
+      override def unsafeObjGetter(r: Any): Seq[Any] = { r.asInstanceOf[${cls.name}].${field.name}GetObj }
+      override def alternateObjSetter(r: ${cls.name}, obj: Seq[AnyRef]): Unit = { r.${field.name}SetAlternateObj(obj) }
+      override def alternateObjGetter(r: ${cls.name}): Seq[AnyRef] = { r.${field.name}AlternateFks }
+#elseif (field.isForeignKey && !field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.ContainerRenderType])
+      override def objSetter(r: ${cls.name}, obj: _root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${field.renderType.text}]): Unit = { r.${field.name}SetObj(obj) }
+      override def objGetter(r: ${cls.name}, m: _root_.io.fsq.spindle.runtime.UntypedMetaRecord): Option[_root_.io.fsq.spindle.runtime.UntypedRecord with _root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${field.renderType.text}]] = { r.${field.name}UntypedFk(m) }
+      override def unsafeObjGetter(r: Any): Option[Any] = { r.asInstanceOf[${cls.name}].${field.name}GetObj }
+      override def alternateObjSetter(r: ${cls.name}, obj: AnyRef): Unit = { r.${field.name}SetAlternateObj(obj) }
+      override def alternateObjGetter(r: ${cls.name}): Option[AnyRef] = { r.${field.name}AlternateFk }
+#end
+
+#if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.EnumRenderType])
+      override def enumMeta: _root_.io.fsq.spindle.runtime.EnumMeta[_] = ${field.renderType.text}
+#end
+    }
+#end
+
+  override def untypedFields: Seq[_root_.io.fsq.spindle.runtime.UntypedFieldDescriptor] = fields
+  override val fields: Seq[_root_.io.fsq.spindle.runtime.FieldDescriptor[_, ${cls.name}, ${cls.name}Meta]] =
+    Vector[_root_.io.fsq.spindle.runtime.FieldDescriptor[_, ${cls.name}, ${cls.name}Meta]](
+      ${cls.fields.map(_.escapedName).mkString(",\n      ")}
+    )

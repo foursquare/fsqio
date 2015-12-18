@@ -1,0 +1,72 @@
+# Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+
+python_library(
+  name = 'coordinate',
+  sources = ['coordinate.py', '__init__.py'],
+)
+
+python_library(
+  name = 'dependency',
+  sources = ['dependency.py', '__init__.py'],
+  dependencies = [
+    ':coordinate',
+  ],
+)
+
+python_library(
+  name = 'fetcher',
+  sources = ['fetcher.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:requests',
+    ':coordinate',
+  ],
+)
+
+python_library(
+  name = 'ivy_diff',
+  sources = ['ivy_diff.py', '__init__.py'],
+)
+
+python_library(
+  name = 'maven_dependency_graph',
+  sources = ['maven_dependency_graph.py', '__init__.py'],
+  dependencies = [
+    ':sort_projects',
+  ],
+)
+
+python_library(
+  name = 'maven_version',
+  sources = ['maven_version.py', '__init__.py'],
+)
+
+python_library(
+  name = 'pom',
+  sources = ['pom.py', '__init__.py'],
+  dependencies = [
+    ':coordinate',
+    ':dependency',
+  ],
+)
+
+python_library(
+  name = 'pom_resolve',
+  sources = ['pom_resolve.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:requests',
+    '3rdparty/python:requests-futures',
+    ':coordinate',
+    ':dependency',
+    ':fetcher',
+    ':maven_dependency_graph',
+    ':maven_version',
+    ':pom',
+    ':sort_projects',
+    'src/python/fsqio/pants/util',
+  ],
+)
+
+python_library(
+  name = 'sort_projects',
+  sources = ['sort_projects.py', '__init__.py'],
+)

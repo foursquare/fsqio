@@ -1,0 +1,11 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.{BitfieldStructRenderType, ScalaField}
+%>
+<%@ val field: ScalaField %>
+<%
+  val renderType = field.renderType.asInstanceOf[BitfieldStructRenderType]
+  render("../" + renderType.ref.fieldProxyTemplate, Map("field" -> field))
+%>
+  override def ${field.name}Struct: ${renderType.className} = underlying.${field.name}Struct

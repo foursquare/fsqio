@@ -1,0 +1,7 @@
+
+
+python_library(
+  name = 'spindle',
+  sources = globs('*.py'),
+)
+

@@ -1,0 +1,9 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.SetRenderType %>
+<%@ val valueExpr: String %>
+<%@ val indent: String %>
+<% import renderType.elem %>
+${indent}oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.${elem.ttype.name}, ${valueExpr}.size))
+${indent}${valueExpr}.foreach(element => {
+<% render("../" + elem.fieldWriteTemplate, Map("renderType" -> elem, "valueExpr" -> "element", "indent" -> (indent + "  "))) %>
+${indent}})
+${indent}oprot.writeSetEnd()

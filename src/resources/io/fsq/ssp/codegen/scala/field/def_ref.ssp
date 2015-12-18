@@ -1,0 +1,9 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+#if (field.isForeignKey)
+<% render("def_fk.ssp", Map("field" -> field)) %>
+#end

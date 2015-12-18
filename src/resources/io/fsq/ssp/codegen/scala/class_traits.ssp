@@ -1,0 +1,57 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+<%@ val clsContainer: String %>
+
+<% val brace = if (!cls.primaryKeyField.isDefined) "{" else "" %>
+trait ${cls.name}
+    extends #if(clsContainer.nonEmpty)Java${clsContainer}.#endJava${cls.name}[#if (cls.typeParameterFields.nonEmpty)${cls.typeParameterFields.map(_.text).distinct.mkString(", ")},#end<%----%>
+      ${cls.name}, Raw${cls.name}, ${cls.name}Meta
+    ]
+#for (pkField <- cls.primaryKeyField)
+    with _root_.io.fsq.spindle.runtime.HasPrimaryKey[${pkField.renderType.text}, ${cls.name}]
+#end
+    with org.apache.thrift.TBase[${cls.name}, ${cls.name}._Fields] {
+
+  override def meta: ${cls.name}Meta
+
+#for (field <- cls.fields)
+<% render(field.renderType.fieldDefTemplate, Map("field" -> field)) %>
+#end
+#for (pkField <- cls.primaryKeyField)
+  // Implementation of HasPrimaryKey.
+  override def primaryKey = this.${pkField.defaultName}
+
+#end
+<% render("class_traits_compare.ssp", Map("cls" -> cls)) %>
+
+  def write(oprot: org.apache.thrift.protocol.TProtocol): Unit
+
+<% render("class_traits_copy.ssp", Map("cls" -> cls)) %>
+
+<% render("class_traits_mutablecopy.ssp", Map("cls" -> cls)) %>
+
+<% render("class_traits_mutable.ssp", Map("cls" -> cls)) %>
+
+<% render("class_traits_tobuilder.ssp", Map("cls" -> cls)) %>
+
+<% render("class_traits_mergecopy.ssp", Map("cls" -> cls)) %>
+
+#if (cls.isException)
+  def toException: ${clsContainer} = new ${clsContainer}(this)
+#end
+}
+
+<% render("class_traits_mutablet.ssp", Map("cls" -> cls)) %>
+
+#if (cls.generateProxy)
+<% render("class_traits_proxyt.ssp", Map("cls" -> cls)) %>
+<% render("class_traits_mutable_proxyt.ssp", Map("cls" -> cls)) %>
+#end
+
+#if (cls.generateLiftAdapter)
+<% render("class_traits_lift_adaptert.ssp", Map("cls" -> cls)) %>
+#end

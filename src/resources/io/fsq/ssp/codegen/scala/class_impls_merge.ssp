@@ -1,0 +1,12 @@
+<%@ val cls: _root_.io.fsq.spindle.codegen.runtime.StructLike %>
+  override def merge(that: ${cls.name}): Unit = {
+#for (field <- cls.fields)
+    if (that.${field.isSetName} && !this.${field.isSetName}) {
+      this.${field.escapedName}_=(that.${field.defaultName})
+#if (field.renderType.isContainer)
+    } else if (that.${field.isSetName} && this.${field.isSetName}) {
+      this.${field.escapedName}_=(this.${field.escapedName} ++ that.${field.escapedName})
+#end
+    }
+#end
+  }

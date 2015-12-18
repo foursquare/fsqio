@@ -1,0 +1,18 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.SeqRenderType %>
+<%@ val lhs: String %>
+<%@ val indent: String %>
+<%@ val wrapLeft: String = "" %>
+<%@ val wrapRight: String = "" %>
+<% import renderType.elem %>
+${indent}${lhs} ${wrapLeft}{
+${indent}  val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
+${indent}  val builder = scala.collection.immutable.Vector.newBuilder[${elem.text}]
+${indent}  var i: Int = tlist.size
+${indent}  builder.sizeHint(tlist.size)
+${indent}  while (i > 0) {
+<% render("../" + elem.fieldReadTemplate, Map("renderType" -> elem, "lhs" -> "builder +=", "indent" -> (indent + "    "))) %>
+${indent}    i -= 1
+${indent}  }
+${indent}  builder.result()
+${indent}}${wrapRight}
+${indent}iprot.readListEnd()

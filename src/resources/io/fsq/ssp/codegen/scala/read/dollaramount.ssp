@@ -1,0 +1,12 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.DollarAmountRenderType %>
+<%@ val lhs: String %>
+<%@ val indent: String %>
+<%@ val wrapLeft: String = "" %>
+<%@ val wrapRight: String = "" %>
+<% render("../" + renderType.ref.fieldReadTemplate,
+    Map(
+      "renderType" -> renderType.ref,
+      "lhs" -> lhs,
+      "indent" -> indent,
+      "wrapLeft" -> (wrapLeft + "com.foursquare.common.base.DollarAmount.fromMicros("),
+      "wrapRight" -> (")" + wrapRight))) %>

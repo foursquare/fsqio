@@ -1,0 +1,15 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+  override def deepCopy(): Raw${cls.name} = {
+    // May not be the most efficient way to create a deep copy, but we don't expect to use this intensively.
+    val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
+    val prot = new org.apache.thrift.protocol.TBinaryProtocol.Factory().getProtocol(trans)
+    write(prot)
+    val ret = ${cls.name}.createRawRecord
+    ret.read(prot)
+    ret
+  }

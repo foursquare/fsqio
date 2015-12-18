@@ -1,0 +1,4 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.PrimitiveRenderType %>
+<%@ val valueExpr: String %>
+<%@ val indent: String %>
+${indent}oprot.write${renderType.tprotocolSuffix}(${valueExpr})

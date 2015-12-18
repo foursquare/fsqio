@@ -1,0 +1,319 @@
+{namespace Exceptionator.Soy}
+
+
+/**
+ * a bucket link
+ * @param kw keyword term
+ */
+{template .kwLink}
+  <a class="bucketLink" href="/search/?q={$kw}">
+    {$kw}
+  </a>
+{/template}
+
+/**
+ * a bucket link
+ * @param b bucket
+ */
+{template .bucketLink}
+  <a class="bucketLink" href="/notices/{$b.nm_uri}/{$b.k_uri}" title="{$b.k}">
+    {$b.k |truncate:13} {if $b.n}({$b.n}){/if}
+  </a>
+{/template}
+
+/**
+ * an exception bucket
+ * @param b The exception bucket
+ */
+{template .bucketBody}
+  <div class="header">First seen at</div>
+  <div class="items"><div class="item">{$b.df_fmt}</div></div>
+  <div class="header">First seen version</div>
+  <div class="items"><div class="item">{$b.vf}</div></div>
+{/template}
+
+/**
+ * an exception notice
+ * @param n The exception notice
+ */
+{template .noticeBody}
+  <div class="header">Message list</div>
+  <div class="items">
+  {foreach $i in $n.msgs}
+    <div class="item">{$i} {if not isLast($i)} Caused by: {/if}</div>
+  {/foreach}
+  </div>
+  <div class="header">Exception list</div>
+  <div class="items">
+  {foreach $i in $n.excs}
+    <div class="item">{$i} {if not isLast($i)} Caused by: {/if}</div>
+  {/foreach}
+  </div>
+  <div class="header">Backtrace</div>
+  <div class="items">
+  {foreach $bt in $n.bt}
+    {foreach $i in $bt}
+      <div class="item">{$i}</div>
+    {/foreach}
+  {/foreach}
+  </div>
+  <div class="header">
+    Matching buckets:
+  </div>
+  <div class="items">
+    {foreach $k in keys($n.bkts)}
+    {if $k != 'all' } 
+    <div class="item">
+      {$n.bkts[$k].friendlyName} - {sp}
+      {call .bucketLink}
+        {param b: $n.bkts[$k] /}
+      {/call}
+    </div>
+    {/if}
+    {/foreach}
+  </div>
+  {if $n.h}
+    <div class="header">Host</div>
+    <div class="items"><div class="item">{$n.h}</div></div>
+  {/if}
+  <div class="header">Version</div>
+  <div class="items"><div class="item">{$n.v}</div></div>
+  <div class="header">Session</div>
+  <div class="items">
+  {foreach $k in keys($n.sess)}
+    <div class="item">{$k}: {$n.sess[$k]}</div>
+  {/foreach}
+  </div>
+  <div class="header">Environment</div>
+  <div class="items">
+  {foreach $k in keys($n.env)}
+    <div class="item">{$k}: {$n.env[$k]}</div>
+  {/foreach}
+  </div>
+  <div class="header">Keywords</div>
+  <div class="items">
+    <div class="item">
+    {foreach $kw in $n.kw}
+      {call .kwLink}
+        {param kw: $kw /}
+      {/call} {sp}
+    {/foreach}
+    </div>
+  </div>
+{/template}
+
+/**
+ * a notice header
+ * @param n The exception notice
+ */
+{template .noticeHeader}
+  <div class="exc_header">
+    {foreach $k in keys($n.bkts)}
+    {if $k != 'all'}
+    <div class="exc_n">
+      {$n.bkts[$k].friendlyName} - {sp}
+      {call .bucketLink}
+        {param b: $n.bkts[$k] /}
+      {/call}
+    </div>
+    {/if}
+    {/foreach}
+    <div class="timehost">{$n.d_fmt} {if $n.h} on {$n.h}</div> {/if} {$n.msgs[0]}
+  </div>
+{/template}
+
+/**
+ * a notice
+ * @param n The exception
+ */
+{template .notice}
+  {call .noticeHeader data="all" /}
+  <div class="exc_detail" >
+    {call .noticeBody data="all" /}
+  </div>
+{/template}
+
+
+
+
+/**
+ * a sentinel notice for empty results
+ * @param text
+ */
+{template .emptyNotice}
+  <div class="exc_header" style="text-align:center;border-bottom-width:1px;border-bottom-style:solid">
+   {$text}
+  </div>
+{/template}
+
+/**
+ * a notice list template
+ * @param id
+ * @param showGraph
+ * @param showList
+ * @param title
+ */
+{template .noticeList}
+  <div id="outer_{$id}">
+    <div class="row">
+      <div class="span12">
+        <h4 id="title_{$id}">{$title}</h4>
+      </div>
+    </div>
+    {if $showGraph}
+    <div class="row">
+      <div class="span12">
+        <div id="plot_{$id}" style="width:940px;height:170px">
+        </div>
+      </div>
+    </div>
+    {/if}
+    {if $showList}
+    <div class="row">
+      <div class="span12">
+        <div id="{$id}">
+        </div>
+      </div>
+    </div>
+    {/if}
+  </div>
+{/template} 
+
+
+/** a user filter
+ * @param f
+ * @param u
+ */
+{template .userFilter}
+  <form>
+    <fieldset>
+      <legend></legend>
+      {if $f._id}
+      <input type="hidden" name="_id" value="{$f._id}" />
+      {/if}
+
+      <label>Name</label>
+      <input type="text" name="n" value="{if $f.n}{$f.n}{/if}" class="liveTitle" />
+
+      <label>Owner: {if $f.u}{$f.u}{else}{$u}{/if}</label>
+      <input type="hidden" name="u" value="{if $f.u}{$f.u}{/if}" />
+
+      {if $f.lm and $f.lm_fmt}
+      <label>
+      Last matched: {$f.lm_fmt}
+      </label>
+      {/if}
+
+      {if $f.mute_fmt}
+      <label>
+        Muted until: {$f.mute_fmt} &nbsp;
+        <button type="button" class="btn" value="mute_0">
+          Unmute
+        </button>
+      </label>
+      {/if}
+      {if $f._id}
+      <label> Mute: &nbsp;
+        <button type="button" class="btn" value="mute_60">
+          1 hour
+        </button>
+        &nbsp;<button type="button" class="btn" value="mute_1440">
+          1 day
+        </button>
+      </label>
+      {/if}
+
+      <label>CC (one per line)</label>
+      <textarea rows="3" name="cc">
+      {if $f.cc}
+        {foreach $cc in $f.cc}
+          {$cc}{print '\n'}
+        {/foreach}
+      {/if}
+      </textarea>
+
+      <label>Alert condition</label>
+      <select name="ft">
+        <option value="kw" {if $f.ft == 'kw'} selected="selected" {/if}>keywords</option>
+        <!--<option value="b" {if $f.ft == 'b'} selected="selected" {/if}>buckets</option>-->
+      </select>
+
+      <label>Criteria to match (conjunct of space-separated terms)</label>
+      <textarea rows="3" name="c">
+        {if $f.c}
+        {foreach $crit in $f.c}
+          {$crit}{print ' '}
+        {/foreach}
+        {/if}
+      </textarea>
+
+      <label>Alert condition</label>
+      <select name="tt" class="triggerType">
+        <option value="always" {if $f.tt == 'always'} selected="selected" {/if}>always</option>
+        <option value="never" {if $f.tt == 'never'} selected="selected" {/if}>never (I'm here for the bucket)</option>
+        <option value="pwr2" {if $f.tt == 'pwr2'} selected="selected" {/if}>on powers of 2</option>
+        <option value="threshold" {if $f.tt == 'threshold'} selected="selected" {/if}>threshold is crossed</option>
+      </select>
+      <div class="thresholdCfg" style="display:none;">
+        <label>Threshold</label>
+        If the exception rate exceeds
+        &nbsp;<input type="text" name="tl" value="{if $f.tl or $f.tl == 0}{$f.tl}{/if}" style="width: 6em;"/> exceptions per minute,
+        &nbsp;<input type="text" name="tc" value="{if $f.tc or $f.tc == 0}{$f.tc}{/if}"  style="width: 4em;"/> (&lt;=60) times in the last
+        &nbsp;<input type="text" name="p" value="{if $f.p or $f.p == 0}{$f.p}{/if}" style="width: 4em;"/> (&lt;=60) minutes, send an alert.
+      </div>
+      <div>
+      {if $f._id}
+        <button type="button" class="btn" value="update">
+          Update
+        </button>
+        <button type="button" class="btn" value="delete">
+          Delete
+        </button>
+      {else}
+        <button type="button" class="btn" value="save">
+          Save
+        </button>
+      {/if}
+      </div>
+    </fieldset>
+  </form>
+{/template}
+
+
+/** a compact, listview version of a filter
+ * @param f
+ */
+{template .userFilterCompact}
+{if $f.n}{$f.n}{/if} -
+{if $f._id}
+  {if $f.lm}
+    &nbsp; matched: {$f.lm_fmt} -
+  {/if}
+  &nbsp; <a class="bucketLink" onclick="Exceptionator.Router.navigate('/notices/uf/{$f._id}', {literal}{trigger: true}{/literal})">
+    view bucket
+  </a> -
+  &nbsp;<a class="bucketLink" onclick="Exceptionator.Router.navigate('/filters/{$f._id}', {literal}{trigger: true}{/literal})">
+    edit
+  </a>
+{/if}
+{/template}
+
+/** a user filter list
+ * @param u
+ */
+{template .userFilterList}
+  <div>
+    <h4>{if $u}{$u}'s{/if} filters</h4>
+    <p>
+      You can use filters to define buckets for one or more search terms,
+      and receive an email based on the rate of occurance.  Buckets are a unit of aggregation
+      for notices.  Their primary purpose is to provide a histogram so that the rate of occurance
+      can be tracked.
+    </p>
+    <div class="filters">
+    </div>
+    <button class="btn filterAdd" value="add">
+      add a new filter
+    </button>
+  </div>
+{/template}

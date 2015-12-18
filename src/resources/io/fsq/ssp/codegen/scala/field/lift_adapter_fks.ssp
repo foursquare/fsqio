@@ -1,0 +1,35 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+#if (field.isForeignKey && field.renderType.isInstanceOf[io.fsq.spindle.codegen.runtime.Container1RenderType])
+<% val elem = field.renderType.asInstanceOf[io.fsq.spindle.codegen.runtime.Container1RenderType].elem %>
+  private var ${field.varName}AlternateObjSeq: Seq[AnyRef] = null
+  override final def ${field.name}Fks[R <: _root_.io.fsq.spindle.runtime.Record[R] with _root_.io.fsq.spindle.runtime.HasPrimaryKey[${elem.text}, R]](meta: _root_.io.fsq.spindle.runtime.MetaRecord[R, _]): Seq[R] = {
+    if (${field.isSetName}) {
+      val ${field.varName}ObjSeq = underlyingLift.primedObjSeqFromWireName("${field.wireName}")
+      ${field.varName}ObjSeq.flatMap(${field.varName}Obj => {
+        val foreignOpt = meta.ifInstanceFrom(${field.varName}Obj)
+        if (foreignOpt.isDefined) {
+          val foreignObj = foreignOpt.get
+          if (${field.name}OrThrow.contains(foreignObj.primaryKey)) {
+            foreignOpt
+          } else {
+            _root_.io.fsq.spindle.runtime.RuntimeHelpers.fkHooks.mismatchedPrimaryKeySeq(this, this.meta.${field.escapedName}, meta, ${field.name}OrThrow, foreignObj)
+          }
+        } else {
+          _root_.io.fsq.spindle.runtime.RuntimeHelpers.fkHooks.mismatchedInstanceTypeSeq(this, this.meta.${field.escapedName}, meta, ${field.name}OrThrow, ${field.varName}ObjSeq)
+        }
+      })
+    } else {
+      _root_.io.fsq.spindle.runtime.RuntimeHelpers.fkHooks.missingKeySeq(this, this.meta.${field.escapedName}, meta)
+    }
+  }
+  override final def ${field.name}UntypedFks(meta: _root_.io.fsq.spindle.runtime.UntypedMetaRecord): Seq[_root_.io.fsq.spindle.runtime.UntypedRecord with _root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]] = throw new NotImplementedError("TODO")
+  override final def ${field.name}GetObj: Seq[_root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]] = throw new NotImplementedError("TODO")
+  override final def ${field.name}SetObj(x: Seq[_root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]]): Unit = throw new UnsupportedOperationException("This is a read only adapter")
+  override final def ${field.name}AlternateFks: Seq[AnyRef] = if (${field.varName}AlternateObjSeq != null) { ${field.varName}AlternateObjSeq } else { underlyingLift.primedObjSeqFromWireName("${field.wireName}") }
+  override final def ${field.name}SetAlternateObj(x: Seq[AnyRef]): Unit = { ${field.varName}AlternateObjSeq = x }
+#end

@@ -1,0 +1,6 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.ThriftJsonRenderType %>
+<%@ val lhs: String %>
+<%@ val indent: String %>
+<%@ val wrapLeft: String = "" %>
+<%@ val wrapRight: String = "" %>
+${indent}${lhs} ${wrapLeft}com.foursquare.common.types.ThriftJsonHelper.readJson(iprot)${wrapRight}

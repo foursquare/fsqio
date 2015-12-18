@@ -1,0 +1,21 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import io.fsq.spindle.codegen.runtime.{ScalaConst}
+%>
+<%@ val constants: Seq[ScalaConst] %>
+<%@ val pkg: Option[String] %>
+<%@ val baseName: String %>
+
+// eg com.fourSq.ActionConstants
+
+fourSq.namespace("${pkg}");
+
+${pkg.map(_ + ".").getOrElse("") + baseName}Constants = {
+
+  <%=constants.flatMap(const => const.jsValueOption.map{v => "%s: %s".format(const.name, v)}).mkString(",\n") %>
+
+};
+
+
+

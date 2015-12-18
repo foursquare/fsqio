@@ -1,0 +1,47 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+<%@ val clsContainer: String %>
+final class Raw${cls.name} extends #if(clsContainer.nonEmpty)Java${clsContainer}.#endJava${cls.name}Raw[#if (cls.typeParameterFields.nonEmpty)${cls.typeParameterFields.map(_.text).distinct.mkString(", ")},#end<%----%>
+      ${cls.name}, Raw${cls.name}, ${cls.name}Meta
+    ]
+    with Mutable${cls.name} {
+  override def meta: ${cls.name}Meta = ${cls.name}
+
+  // fields
+#for (field <- cls.fields)
+<% render(field.renderType.fieldImplTemplate, Map("field" -> field, "cls" -> cls)) %>
+#end
+  // end fields
+
+<%-- A list, because we may read a single record from multiple protocols: Unknown fields serialized
+    using protocol P1 may contain nested unknown fields previously serialized using protocol P2. --%>
+  private var unknownFields: List[_root_.io.fsq.spindle.runtime.UnknownFields] = Nil
+
+<% render("class_impls_write.ssp", Map("cls" -> cls)) %>
+
+<% render("class_impls_read.ssp", Map("cls" -> cls)) %>
+
+<% render("class_impls_merge.ssp", Map("cls" -> cls)) %>
+
+<% render("class_impls_mergecopy.ssp", Map("cls" -> cls)) %>
+
+<% render("class_impls_equals.ssp", Map("cls" -> cls)) %>
+
+<% render("class_impls_hashcode.ssp", Map("cls" -> cls)) %>
+
+<% render("class_impls_getsetfields.ssp", Map("cls" -> cls)) %>
+
+<% render("class_impls_clear.ssp", Map("cls" -> cls)) %>
+
+<% render("class_impls_thrift_introspection.ssp", Map("cls" -> cls)) %>
+
+<% render("class_impls_deepcopy.ssp", Map("cls" -> cls)) %>
+
+<% render("class_impls_copy.ssp", Map("cls" -> cls)) %>
+
+<% render("class_impls_tostring.ssp", Map("cls" -> cls)) %>
+}

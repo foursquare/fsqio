@@ -1,0 +1,19 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+  /** Returns a pointer to a Mutable version of this record.
+    *
+    * If the underlying implementation is mutable, `this` will be returned.
+    * If the underlying implementation is immutable, a mutable copy will be returned.
+    *
+    * After mutating the instance returned by this method, the original instance
+    * (on which `mutable` was called) will be in an undefined state. It may or may
+    * not have been modified, depending on whether it was immutable or not.
+    *
+    * This is included as an optimization for when we want access to a Mutable record
+    * but don't want to pay the cost of copying every time.
+    */
+  def mutable: Mutable${cls.name}

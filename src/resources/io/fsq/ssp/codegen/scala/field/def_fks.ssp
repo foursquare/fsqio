@@ -1,0 +1,15 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+#if (field.isForeignKey && field.renderType.isInstanceOf[io.fsq.spindle.codegen.runtime.Container1RenderType])
+<% val elem = field.renderType.asInstanceOf[io.fsq.spindle.codegen.runtime.Container1RenderType].elem %>
+  def ${field.name}Fks[R <: _root_.io.fsq.spindle.runtime.Record[R] with _root_.io.fsq.spindle.runtime.HasPrimaryKey[${elem.text}, R]](meta: _root_.io.fsq.spindle.runtime.MetaRecord[R, _]): Seq[R]
+  def ${field.name}UntypedFks(meta: _root_.io.fsq.spindle.runtime.UntypedMetaRecord): Seq[_root_.io.fsq.spindle.runtime.UntypedRecord with _root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]]
+  def ${field.name}GetObj: Seq[_root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]]
+  def ${field.name}SetObj(x: Seq[_root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]]): Unit
+  def ${field.name}AlternateFks: Seq[AnyRef]
+  def ${field.name}SetAlternateObj(x: Seq[AnyRef]): Unit
+#end

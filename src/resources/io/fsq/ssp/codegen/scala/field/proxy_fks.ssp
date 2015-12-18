@@ -1,0 +1,15 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+#if (field.isForeignKey && field.renderType.isInstanceOf[io.fsq.spindle.codegen.runtime.Container1RenderType])
+<% val elem = field.renderType.asInstanceOf[io.fsq.spindle.codegen.runtime.Container1RenderType].elem %>
+  override def ${field.name}Fks[R <: _root_.io.fsq.spindle.runtime.Record[R] with _root_.io.fsq.spindle.runtime.HasPrimaryKey[${elem.text}, R]](meta: _root_.io.fsq.spindle.runtime.MetaRecord[R, _]): Seq[R] = underlying.${field.name}Fks(meta)
+  override def ${field.name}UntypedFks(meta: _root_.io.fsq.spindle.runtime.UntypedMetaRecord): Seq[_root_.io.fsq.spindle.runtime.UntypedRecord with _root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]] = underlying.${field.name}UntypedFks(meta)
+  override def ${field.name}GetObj: Seq[_root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]] = underlying.${field.name}GetObj
+  override def ${field.name}SetObj(x: Seq[_root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]]): Unit = underlying.${field.name}SetObj(x)
+  override def ${field.name}AlternateFks: Seq[AnyRef] = underlying.${field.name}AlternateFks
+  override def ${field.name}SetAlternateObj(x: Seq[AnyRef]): Unit = underlying.${field.name}SetAlternateObj(x)
+#end

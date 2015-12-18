@@ -1,0 +1,13 @@
+<%
+  // Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+<% render("def_primitive.ssp", Map("field" -> field)) %>
+  def ${field.name}CellId: com.google.common.geometry.S2CellId
+  def ${field.name}CellIdOption: Option[com.google.common.geometry.S2CellId]
+#if (field.annotations.contains("latlnghacc"))
+  def ${field.name}LatLngHacc: io.fsq.spindle.enhanced.LatLngHacc
+  def ${field.name}LatLngHaccOption: Option[io.fsq.spindle.enhanced.LatLngHacc]
+#end

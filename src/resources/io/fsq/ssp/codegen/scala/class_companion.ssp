@@ -1,0 +1,68 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.{PrimitiveRenderType, StructLike}
+%>
+<%@ val cls: StructLike %>
+<%@ val clsContainer: String %>
+<%
+def escapeQuotes(str: String): String = str.replace("\"", "\\\"")
+%>\
+
+object ${cls.name} extends ${cls.name}Meta {
+<% render("class_companion_builder.ssp", Map("cls" -> cls)) %>
+
+  implicit val companionProvider: ${cls.name}CompanionProvider = new ${cls.name}CompanionProvider
+}
+
+class ${cls.name}Meta
+    extends #if(clsContainer.nonEmpty)Java${clsContainer}.#endJava${cls.name}Meta[${cls.name}, Raw${cls.name}, ${cls.name}Meta]
+#for (pkField <- cls.primaryKeyField)
+    with _root_.io.fsq.spindle.runtime.HasMetaPrimaryKey[${pkField.renderType.text}, ${cls.name}]
+#end
+    with _root_.io.fsq.spindle.runtime.RecordProvider[${cls.name}] \
+{
+  override def recordName: String = "${cls.name}"
+
+<% render("class_companion_tfields.ssp", Map("cls" -> cls)) %>
+
+  override def createUntypedRawRecord: _root_.io.fsq.spindle.runtime.UntypedRecord = createRawRecord
+  override def createRecord: ${cls.name} = createRawRecord
+  override def createRawRecord: Raw${cls.name} = new Raw${cls.name}
+
+  override def untypedIfInstanceFrom(x: AnyRef): Option[_root_.io.fsq.spindle.runtime.UntypedRecord] = ifInstanceFrom(x)
+  override def ifInstanceFrom(x: AnyRef): Option[${cls.name}] = {
+    if (x.isInstanceOf[${cls.name}]) Some(x.asInstanceOf[${cls.name}]) else None
+  }
+
+  override val annotations: _root_.io.fsq.spindle.runtime.Annotations =
+#if (cls.annotations.nonEmpty)
+    new _root_.io.fsq.spindle.runtime.Annotations(scala.collection.immutable.Vector(
+      ${cls.annotations.toSeq.map(annot => "(\"%s\", \"%s\")".format(annot._1, escapeQuotes(annot._2))).mkString(",\n      ")}
+    ))
+#else
+    _root_.io.fsq.spindle.runtime.Annotations.empty
+#end
+
+<% render("class_companion_rfields.ssp", Map("cls" -> cls)) %>
+
+#for (pkField <- cls.primaryKeyField)
+  override def primaryKey: _root_.io.fsq.spindle.runtime.FieldDescriptor[${pkField.renderType.text}, ${cls.name}, ${cls.name}Meta] = this.${pkField.name}
+#end
+\
+
+  def apply(
+      ${cls.fields.map(field => "%s: %s".format(field.escapedName, field.renderType.text)).mkString(",\n      ")}
+  ): ${cls.name} = {
+    val ret = this.createRawRecord
+#for (field <- cls.fields)
+    ret.${field.escapedName}_=(${field.escapedName})
+#end
+    ret
+  }
+}
+
+class ${cls.name}CompanionProvider extends _root_.io.fsq.spindle.runtime.CompanionProvider[${cls.name}] {
+  type CompanionT = ${cls.name}Meta
+  override def provide: ${cls.name}Meta = ${cls.name}
+}

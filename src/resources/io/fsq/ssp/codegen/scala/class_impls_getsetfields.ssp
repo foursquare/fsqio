@@ -1,0 +1,14 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+  // Returns the values of the set fields on this object, in id order.
+  def getSetFields: Seq[Any] = {
+    var ret: List[Any] = Nil
+#for (field <- cls.fields)
+    if (${field.isSetName}) ret = ${field.defaultName} :: ret
+#end
+    ret.reverse
+  }

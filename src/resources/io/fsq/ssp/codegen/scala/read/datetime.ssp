@@ -1,0 +1,12 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.DateTimeRenderType %>
+<%@ val lhs: String %>
+<%@ val indent: String %>
+<%@ val wrapLeft: String = "" %>
+<%@ val wrapRight: String = "" %>
+<% render("../" + renderType.ref.fieldReadTemplate,
+    Map(
+      "renderType" -> renderType.ref,
+      "lhs" -> lhs,
+      "indent" -> indent,
+      "wrapLeft" -> (wrapLeft + "com.foursquare.common.thrift.base.ThriftDateTimeHelper.read(iprot, "),
+      "wrapRight" -> (")" + wrapRight))) %>

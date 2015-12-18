@@ -1,0 +1,51 @@
+.exc {
+  border-style: solid;
+  border-width: 1px 1px 0 1px;
+}
+
+.exc_header {
+  font-size: 1.1em;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow: hidden;
+  height: 3.5em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
+.exc_header:hover {
+  background: gray;
+  color: white;
+  cursor: pointer;
+}
+
+.exc_header .timehost {
+  font-weight: bold;
+}
+
+.exc_header .exc_n {
+  padding-right: 0.5em;
+  padding-left: 0.5em;
+  float: right;
+  font-weight: bold;
+}
+
+.exc_detail {
+  padding-left: 5px;
+}
+
+.exc_detail .header {
+  font-weight: bold;
+}
+
+.exc_detail .items {
+  padding: 5px;
+}
+
+.exc_hidden .exc_detail {
+  display: None;
+}
+
+a {
+  cursor: pointer;
+}

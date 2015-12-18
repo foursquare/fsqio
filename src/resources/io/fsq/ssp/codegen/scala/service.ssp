@@ -1,0 +1,513 @@
+<%
+// Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+import _root_.io.fsq.spindle.codegen.runtime.{RenderType, ScalaClass, ScalaFunction, ScalaService,
+  TypeReferenceResolver}
+import _root_.io.fsq.spindle.__shaded_for_spindle_bootstrap__.descriptors.{Annotation, Field, Requiredness, Struct}
+%>
+<%@ val service: ScalaService %>
+<%@ val resolver: TypeReferenceResolver %>
+<%
+val parentServiceName = service.parentServiceName.getOrElse("")
+%>\
+trait Has${service.name} {
+  def get${service.name}: ${service.name}.ServiceIface
+}
+
+object ${service.name} extends _root_.io.fsq.spindle.runtime.ServiceDescriptor {
+<%--  Synchronous client interface --%>
+  trait Iface #if (parentServiceName != "")extends ${parentServiceName}.Iface #(end){
+#for (function <- service.functions)
+    <% render("service_funcsig.ssp", Map("function" -> function, "resolver" -> resolver)) %>
+
+#end
+  }
+
+<%-- Asynchronous client interface --%>
+  trait AsyncIface #if (parentServiceName != "")extends ${parentServiceName}.AsyncIface #(end){
+#for (function <- service.functions)
+    <% render("service_funcsig.ssp", Map(
+         "function" -> function,
+         "resolver" -> resolver,
+         "addResultHandlerArg" -> true,
+         "forceReturnTypeToUnit" -> true,
+         "checkedExceptions" -> Seq("org.apache.thrift.TException"))) %>
+
+#end
+  }
+
+<%-- Service interface (uses com.twitter.util.Future). --%>
+  trait ServiceIface #if (parentServiceName != "")extends ${parentServiceName}.ServiceIface #(end){
+#for (function <- service.functions)
+    <% render("service_funcsig.ssp", Map(
+         "function" -> function,
+         "resolver" -> resolver,
+         "wrapReturnTypeInFuture" -> true)) %>
+
+#end
+  }
+
+<%-- Client implementation that can call this service. --%>
+  class Client(iprot: org.apache.thrift.protocol.TProtocol, oprot: org.apache.thrift.protocol.TProtocol) extends #if (parentServiceName != "")${parentServiceName}.Client#(else)org.apache.thrift.TServiceClient#(end)(iprot, oprot) with Iface {
+    def this(prot: org.apache.thrift.protocol.TProtocol) = this(prot, prot)
+#for (function <- service.functions)
+    override <% render("service_funcsig.ssp", Map("function" -> function, "resolver" -> resolver)) %> = {
+      send_${function.name}(${function.argz.map(_.name).mkString(", ")})
+#if (!function.oneWayOption.getOrElse(false))
+      recv_${function.name}()
+#end
+    }
+
+    <% render("service_funcsig.ssp", Map("function" -> function, "resolver" -> resolver, "namePrefix" -> "send_",
+         "forceReturnTypeToUnit" -> true)) %> {
+      val args = ${service.name}_${function.name}_args.createRawRecord
+#for (argument <- function.argz)
+      args.${argument.name}_=(${argument.name})
+#end
+      sendBase("${function.name}", args)
+    }
+
+#if (!function.oneWayOption.getOrElse(false))
+<%-- NOTE: Unlike the regular Thrift compiler, we do not generate a @throws clause for recv_FOO methods. --%>
+    def recv_${function.name}()${function.returnRenderType.map(rt => ": %s = {" format rt.text).getOrElse(" {")}
+      val result = ${service.name}_${function.name}_result.createRawRecord
+      receiveBase(result, "${function.name}")
+#for (field <- function.successField)
+      if (result.${field.isSetName}) {
+        result.${field.defaultName}
+      }
+#end
+<% var firstException = true %>
+#for (exception <- function.throwz)
+      #if (firstException) ${if (function.returnRenderType.isDefined) "else if" else "if"} #(else) else if #(end)
+       <% firstException = false %>(result.${exception.defaultName} != null) {
+        throw result.${exception.defaultName}
+      }
+#end
+#if (function.returnRenderType.isDefined)
+      else {
+        throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "${function.name} failed: unknown result")
+      }
+#end
+    }
+#end
+
+#end
+  }
+
+  object Client {
+    class Factory extends org.apache.thrift.TServiceClientFactory[Client] {
+      override def getClient(prot: org.apache.thrift.protocol.TProtocol): Client = new Client(prot)
+      override def getClient(iprot: org.apache.thrift.protocol.TProtocol, oprot: org.apache.thrift.protocol.TProtocol): Client = new Client(iprot, oprot)
+    }
+  }
+
+<%-- Asynchronous client --%>
+  class AsyncClient(
+      protocolFactory: org.apache.thrift.protocol.TProtocolFactory,
+      clientManager: org.apache.thrift.async.TAsyncClientManager,
+      transport: org.apache.thrift.transport.TNonblockingTransport
+  ) extends #if (parentServiceName != "")${parentServiceName}.AsyncClient#(else)org.apache.thrift.async.TAsyncClient#(end)(protocolFactory, clientManager, transport) with AsyncIface {
+#for (function <- service.functions)
+<% val argumentNames = function.argz.map(_.name) ++ Seq("resultHandler", "this", "___protocolFactory", "___transport") %>
+
+    override <% render("service_funcsig.ssp", Map("function" -> function, "resolver" -> resolver,
+                    "addResultHandlerArg" -> true, "forceReturnTypeToUnit" -> true)) %> {
+      checkReady()
+      val method_call = new AsyncClient.${function.name}_call(${argumentNames.mkString(", ")})
+      this.___currentMethod = method_call
+      ___manager.call(method_call)
+    }
+#end
+  }
+
+  object AsyncClient {
+    class Factory(
+      clientManager: org.apache.thrift.async.TAsyncClientManager,
+      protocolFactory: org.apache.thrift.protocol.TProtocolFactory
+    ) extends org.apache.thrift.async.TAsyncClientFactory[AsyncClient] {
+      def getAsyncClient(transport: org.apache.thrift.transport.TNonblockingTransport): AsyncClient =
+        new AsyncClient(protocolFactory, clientManager, transport)
+    }
+#for (function <- service.functions)
+
+<%
+  val callConstructorArgs: String = (function.argz.map(arg => (arg.name, arg.renderType.text)) ++ Seq(
+      ("resultHandler", "org.apache.thrift.async.AsyncMethodCallback[AsyncClient.%s_call]" format function.name),
+      ("client", "org.apache.thrift.async.TAsyncClient"),
+      ("protocolFactory", "org.apache.thrift.protocol.TProtocolFactory"),
+      ("transport", "org.apache.thrift.transport.TNonblockingTransport")
+  )).map({ case (n, p) => "%s: %s" format (n, p) }).mkString(", ")
+%>
+    class ${function.name}_call(${callConstructorArgs})
+      extends org.apache.thrift.async.TAsyncMethodCall[${function.name}_call](client, protocolFactory, transport, resultHandler, #if (function.oneWayOption.getOrElse(false))true#(else)false#(end)) {
+
+      @throws(classOf[org.apache.thrift.TException])
+      def write_args(prot: org.apache.thrift.protocol.TProtocol) {
+<%-- NOTE: Thrift compiler sets the sequence ID (third argument) always to 0. See notes in thrift compiler. --%>\
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("${function.name}", org.apache.thrift.protocol.TMessageType.CALL, 0))
+        val args = ${service.name}_${function.name}_args.createRawRecord
+#for (argument <- function.argz)
+        args.${argument.name}_=(${argument.name})
+#end
+        args.write(prot)
+        prot.writeMessageEnd()
+      }
+
+<%-- NOTE: Unlike the Thrift compiler, we do not add declared exceptions to the getResult @throws clause. --%>\
+#if (function.returnRenderType.isDefined && !function.oneWayOption.getOrElse(false))\
+      @throws(classOf[org.apache.thrift.TException])
+      def getResult: ${function.returnRenderType.map(_.text).getOrElse(throw new IllegalStateException("Unexpected None value"))} = {
+#else
+      @throws(classOf[org.apache.thrift.TException])
+      def getResult {
+#end
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!")
+        }
+        val memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array())
+        val prot = client.getProtocolFactory().getProtocol(memoryTransport)
+#if (!function.oneWayOption.getOrElse(false))
+        (new Client(prot)).recv_${function.name}()
+#end
+      }
+    }
+#end
+  }
+
+<%-- ServiceToClient adapter --%>\
+  class ServiceToClient(
+      service: com.twitter.finagle.Service[com.twitter.finagle.thrift.ThriftClientRequest, Array[Byte]],
+      protocolFactory: org.apache.thrift.protocol.TProtocolFactory,
+      deserializationPoolOpt: Option[com.twitter.util.FuturePool]
+  ) extends #if (parentServiceName != "")${parentServiceName}.ServiceToClient(service, protocolFactory) with ServiceIface #(else)ServiceIface#(end) {
+    <%-- Note: Can't use default param because Twitter's
+    finagle Thrift Iface constructor finder expects 2 args  --%>
+    def this(
+      service: com.twitter.finagle.Service[com.twitter.finagle.thrift.ThriftClientRequest, Array[Byte]],
+      protocolFactory: org.apache.thrift.protocol.TProtocolFactory
+    ) = this(service, protocolFactory, None)
+
+#for (function <- service.functions)
+
+    override <% render("service_funcsig.ssp", Map("function" -> function, "resolver" -> resolver,
+                  "wrapReturnTypeInFuture" -> true)) %> = {
+      try {
+        // TODO: size
+        val __memoryTransport__ = new org.apache.thrift.transport.TMemoryBuffer(512)
+        val __prot__ = this.protocolFactory.getProtocol(__memoryTransport__)
+        __prot__.writeMessageBegin(new org.apache.thrift.protocol.TMessage("${function.name}", org.apache.thrift.protocol.TMessageType.CALL, 0))
+        val __args__ = ${service.name}_${function.name}_args.createRawRecord
+#for (argument <- function.argz)
+        __args__.${argument.name}_=(${argument.name})
+#end
+        __args__.write(__prot__)
+        __prot__.writeMessageEnd()
+
+        val __buffer__ = new Array[Byte](__memoryTransport__.length())
+        Array.copy(__memoryTransport__.getArray(), 0, __buffer__, 0, __memoryTransport__.length())
+        val __request__ = new com.twitter.finagle.thrift.ThriftClientRequest(__buffer__, #if (function.oneWayOption.getOrElse(false))true#(else)false#(end))
+        val __done__ = this.service.apply(__request__)
+        __done__.flatMap { __buffer__ =>
+          val __memoryTransport__ = new org.apache.thrift.transport.TMemoryInputTransport(__buffer__)
+          val __prot__ = protocolFactory.getProtocol(__memoryTransport__)
+          try {
+#if (function.oneWayOption.getOrElse(false)) <%-- Nothing to read if oneway --%>
+            com.twitter.util.Future.value(Unit)
+#elseif (!function.returnTypeIdIsSet)  <%-- if void return type, receive empty struct but return null --%>
+            (new Client(__prot__)).recv_${function.name}()
+            com.twitter.util.Future.value(Unit)
+#else
+            val __client__ = (new Client(__prot__))
+            deserializationPoolOpt.map(__deserializationPool__ =>
+              __deserializationPool__.apply(__client__.recv_${function.name}())
+            ).getOrElse(
+              com.twitter.util.Future.apply(__client__.recv_${function.name}())
+            )
+#end
+          } catch {
+            case e: Exception => com.twitter.util.Future.exception(e)
+          }
+        }
+      } catch {
+        case e: org.apache.thrift.TException => com.twitter.util.Future.exception(e)
+      }
+    }
+#end
+  }
+
+<%-- ServiceToProtocolClient adapter --%>\
+  class ServiceToProtocolClient(
+      service: com.twitter.finagle.Service[(org.apache.thrift.protocol.TMessage, org.apache.thrift.TBase[_, _], Boolean), org.apache.thrift.protocol.TProtocol],
+      deserializationPoolOpt: Option[com.twitter.util.FuturePool]
+  ) extends #if (parentServiceName != "")${parentServiceName}.ServiceToProtocolClient(service, deserializationPoolOpt) with ServiceIface #(else)ServiceIface#(end) {
+#for (function <- service.functions)
+
+    override <% render("service_funcsig.ssp", Map("function" -> function, "resolver" -> resolver,
+                  "wrapReturnTypeInFuture" -> true)) %> = {
+      try {
+        val __message__ = new org.apache.thrift.protocol.TMessage("${function.name}", org.apache.thrift.protocol.TMessageType.CALL, 0)
+        val __args__ = ${service.name}_${function.name}_args.createRawRecord
+#for (argument <- function.argz)
+        __args__.${argument.name}_=(${argument.name})
+#end
+
+        val __request__ = (__message__, __args__, #if (function.oneWayOption.getOrElse(false))true#(else)false#(end))
+        val __responseF__ = this.service.apply(__request__)
+        __responseF__.flatMap { __prot__ =>
+          try {
+#if (function.oneWayOption.getOrElse(false)) <%-- Nothing to read if oneway --%>
+            com.twitter.util.Future.value(Unit)
+#elseif (!function.returnTypeIdIsSet)  <%-- if void return type, receive empty struct but return null --%>
+            (new Client(__prot__)).recv_${function.name}()
+            com.twitter.util.Future.value(Unit)
+#else
+            val __client__ = (new Client(__prot__))
+            deserializationPoolOpt.map(__deserializationPool__ =>
+              __deserializationPool__.apply(__client__.recv_${function.name}())
+            ).getOrElse(
+              com.twitter.util.Future.apply(__client__.recv_${function.name}())
+            )
+#end
+          } catch {
+            case e: Exception => com.twitter.util.Future.exception(e)
+          }
+        }
+      } catch {
+        case e: org.apache.thrift.TException => com.twitter.util.Future.exception(e)
+      }
+    }
+#end
+  }
+
+<%-- Processor - processes requests --%>
+  class Processor[I <: Iface] protected (
+      iface: I,
+      processMap: java.util.Map[java.lang.String, org.apache.thrift.ProcessFunction[I, _ <: org.apache.thrift.TBase[_ <: org.apache.thrift.TBase[_, _], _ <: org.apache.thrift.TFieldIdEnum]]]
+  ) extends #if (parentServiceName != "")${parentServiceName}.Processor[I]#(else)org.apache.thrift.TBaseProcessor[I]#(end)(iface, processMap) with org.apache.thrift.TProcessor {
+<%-- NOTE: Thrift compiler includes a LOGGER member here, but it appears to be unused. I omitted it. --%>
+
+    def this(iface: I) = {
+      this(iface, Processor.getProcessMap(new java.util.HashMap[java.lang.String,org.apache.thrift.ProcessFunction[I, _ <: org.apache.thrift.TBase[_ <: org.apache.thrift.TBase[_, _], _ <: org.apache.thrift.TFieldIdEnum]]]()))
+    }
+
+<%-- NOTE: This constructor was generated for Java by the Thrift compiler. It results, however, in a
+     double definition of the constructor. But we'd need a way to call Processor.getProcessMap before calling this
+     constructor. Revisit if something actually needs it.
+    protected def this(iface: I, processMap: java.util.Map[String, org.apache.thrift.ProcessFunction[I, _ <: org.apache.thrift.TBase[_,_]]]) = {
+      this(iface, Processor.getProcessMap(processMap))
+    }
+--%>
+  }
+
+  object Processor {
+    protected[Processor] def getProcessMap[I <: Iface](processMap: java.util.Map[java.lang.String,org.apache.thrift.ProcessFunction[I, _ <: org.apache.thrift.TBase[_ <: org.apache.thrift.TBase[_, _], _ <: org.apache.thrift.TFieldIdEnum]]]): java.util.Map[java.lang.String,org.apache.thrift.ProcessFunction[I, _ <: org.apache.thrift.TBase[_ <: org.apache.thrift.TBase[_, _], _ <: org.apache.thrift.TFieldIdEnum]]] = {
+#for (function <- service.functions)
+      processMap.put("${function.name}", new ${function.name})
+#end
+      processMap
+    }
+
+<%-- Generate an org.apache.thrift.ProcessFunction for each of the service's functions. --%>
+#for (function <- service.functions)
+
+    class ${function.name}[I <: Iface] extends org.apache.thrift.ProcessFunction[I, ${service.name}_${function.name}_args]("${function.name}") {
+      override protected def getEmptyArgsInstance = ${service.name}_${function.name}_args.createRawRecord
+
+      override protected def isOneway = ${function.oneWayOption.getOrElse(false)}
+
+      override protected def getResult(
+        iface: I,
+        args: ${service.name}_${function.name}_args
+      ): #if (function.oneWayOption.getOrElse(false))org.apache.thrift.TBase[_ <: org.apache.thrift.TBase[_, _], _ <: org.apache.thrift.TFieldIdEnum]#(else)${service.name}_${function.name}_result#(end) = {
+#if (!function.oneWayOption.getOrElse(false))
+        val result = ${service.name}_${function.name}_result.createRawRecord
+#if (function.throwz.nonEmpty)
+        try {
+#end
+            val rv = iface.${function.name}(${function.argz.map(arg => "args." + arg.defaultName).mkString(", ")})
+#if (function.returnRenderType.isDefined)
+            result.success_=(rv)
+#end
+#if (function.throwz.nonEmpty)
+        } catch {
+#for (ex <- function.throwz)
+          case ex: ${ex.renderType.text} => result.${ex.name}_=(ex)
+#end
+        }
+#end
+        result
+#else <%-- oneway function (just call it and return null like the thrift compiler does) --%>
+        iface.${function.name}(${function.argz.map(arg => "args." + arg.defaultName).mkString(", ")})
+        null
+#end
+      }
+    }
+#end <%-- for --%>
+  }<%-- object Processor --%>
+
+<%-- Finagle Service
+     Unlike the Thrift compiler, we do not create a Map[String, (TProtocol, Integer) => Array[Byte]] because it is
+     easy enough in Scala to use match.
+--%>
+  class Service(
+      iface: ServiceIface,
+      protocolFactory: org.apache.thrift.protocol.TProtocolFactory
+  ) extends #if (parentServiceName != "")${parentServiceName}.Service(iface, protocolFactory)#(else)com.twitter.finagle.Service[Array[Byte], Array[Byte]]#(end) with _root_.io.fsq.spindle.runtime.ServiceDescriptor {
+  override def serviceName = ${service.name}.serviceName
+  override def functionDescriptors: Seq[_root_.io.fsq.spindle.runtime.FunctionDescriptor[_,_]] = ${service.name}.functionDescriptors
+
+#for (function <- service.functions)
+
+    private def process_${function.name}(iprot: org.apache.thrift.protocol.TProtocol, seqid: Int): com.twitter.util.Future[Array[Byte]] = {
+      try {
+        val args = ${service.name}_${function.name}_args.createRawRecord
+        var earlyResponse: com.twitter.util.Future[Array[Byte]] = null
+
+        try {
+          args.read(iprot)
+        } catch {
+          case e: org.apache.thrift.protocol.TProtocolException =>
+            iprot.readMessageEnd()
+            val x = new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.PROTOCOL_ERROR, e.getMessage())
+            val memoryBuffer = new org.apache.thrift.transport.TMemoryBuffer(512)
+            val oprot = protocolFactory.getProtocol(memoryBuffer)
+
+            oprot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("${function.name}", org.apache.thrift.protocol.TMessageType.EXCEPTION, seqid))
+            x.write(oprot)
+            oprot.writeMessageEnd()
+            oprot.getTransport().flush()
+            val buffer = new Array[Byte](memoryBuffer.length())
+            Array.copy(memoryBuffer.getArray(), 0, buffer, 0, memoryBuffer.length())
+            earlyResponse = com.twitter.util.Future.value(buffer)
+        }
+
+        if (earlyResponse == null) {
+          iprot.readMessageEnd()
+
+<%-- HACK: Substitute "text" for "boxedText" once diff compatibility is no longer a concern --%>
+          val future: com.twitter.util.Future[${function.returnRenderType.filterNot(_ => function.oneWayOption.getOrElse(false)).map(_.text).getOrElse("Unit")}] = try {
+            iface.${function.name}(${function.argz.map(arg => "args.%s" format arg.defaultName).mkString(", ")})
+          } catch {
+            case e: Exception => com.twitter.util.Future.exception(e)
+          }
+
+#if (function.oneWayOption.getOrElse(false))
+          future.map { value => new Array[Byte](0) }
+#else
+          future.flatMap { value =>
+            val result = ${service.name}_${function.name}_result.createRawRecord
+            #if(!function.oneWayOption.getOrElse(false) && function.returnRenderType.isDefined)result.success_=(value)#(end)
+<%-- // result.setSuccessIsSet(true)  // NOTE: Not applicable to our Scala version of Thrift data. --%>
+
+            try {
+              val memoryBuffer = new org.apache.thrift.transport.TMemoryBuffer(512)
+              val oprot = protocolFactory.getProtocol(memoryBuffer)
+
+              oprot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("${function.name}", org.apache.thrift.protocol.TMessageType.REPLY, seqid))
+              result.write(oprot)
+              oprot.writeMessageEnd()
+
+              val arrayCopy = new Array[Byte](memoryBuffer.length)
+              Array.copy(memoryBuffer.getArray(), 0, arrayCopy, 0, memoryBuffer.length)
+              com.twitter.util.Future.value(arrayCopy)
+            } catch {
+              case e: Exception => com.twitter.util.Future.exception(e)
+            }
+          } rescue { case throwable: Throwable =>
+#if (!function.oneWayOption.getOrElse(false) && function.throwz.nonEmpty)
+            try {
+              val result = ${service.name}_${function.name}_result.createRawRecord
+              throwable match {
+#for (exception <- function.throwz)
+                case ex: ${exception.renderType.text} => result.${exception.name}_=(ex)
+#end
+                case ex => throw ex  // Allow the enclosing try block to capture this exception.
+              }
+
+              val memoryBuffer = new org.apache.thrift.transport.TMemoryBuffer(512)
+              val oprot = protocolFactory.getProtocol(memoryBuffer)
+              oprot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("${function.name}", org.apache.thrift.protocol.TMessageType.REPLY, seqid))
+              result.write(oprot)
+              oprot.writeMessageEnd()
+              oprot.getTransport().flush()
+              val arrayCopy = new Array[Byte](memoryBuffer.length)
+              Array.copy(memoryBuffer.getArray(), 0, arrayCopy, 0, memoryBuffer.length)
+              com.twitter.util.Future.value(arrayCopy)
+            } catch {
+              case e: Exception => com.twitter.util.Future.exception(e)
+            }
+#else
+            com.twitter.util.Future.exception(throwable)
+#end
+          }
+#end
+        } else {
+          earlyResponse
+        }
+      } catch {
+        case e: Exception => com.twitter.util.Future.exception(e)
+      }
+    }
+#end
+
+    override def apply(request: Array[Byte]): com.twitter.util.Future[Array[Byte]] = {
+      try {
+        val inputTransport = new org.apache.thrift.transport.TMemoryInputTransport(request)
+        val iprot = protocolFactory.getProtocol(inputTransport)
+        val msg = iprot.readMessageBegin()
+        msg.name match {
+#for (function <- service.functions)
+          case "${function.name}" => this.process_${function.name}(iprot, msg.seqid)
+#end
+          case _ => {
+            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, org.apache.thrift.protocol.TType.STRUCT)
+            iprot.readMessageEnd()
+            val x = new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.UNKNOWN_METHOD, "Invalid method name: '%s'" format msg.name)
+            val memoryBuffer = new org.apache.thrift.transport.TMemoryBuffer(512)
+            val oprot = protocolFactory.getProtocol(memoryBuffer)
+            oprot.writeMessageBegin(new org.apache.thrift.protocol.TMessage(msg.name, org.apache.thrift.protocol.TMessageType.EXCEPTION, msg.seqid))
+            x.write(oprot)
+            oprot.writeMessageEnd()
+            oprot.getTransport().flush()
+            val arrayCopy = new Array[Byte](memoryBuffer.length())
+            Array.copy(memoryBuffer.getArray(), 0, arrayCopy, 0, memoryBuffer.length())
+            com.twitter.util.Future.value(arrayCopy)
+          }
+        }
+      } catch {
+        case e: Exception => com.twitter.util.Future.exception(e)
+      }
+    }
+  }
+
+<%-- Output the NAME_args and NAME_result structures. --%>
+#for (function <- service.functions)
+<%
+  // Dynamically generate a ScalaStruct for NAME_args, then emit Scala code for it.
+  val rawArgsStruct = Struct.newBuilder.name("%s_%s_args".format(service.name, function.name)).__fields(function.argz).result()
+  val argsStruct = new ScalaClass(rawArgsStruct, resolver)
+  render("class.ssp", Map("cls" -> argsStruct, "clsContainer" -> "")) // TODO: Capture and indent properly.
+
+  // Dynamically generate a ScalaStruct for NAME_result, then emit Scala code for it. For one-way functions,
+  // this is purely so functionDescriptors has a class to reference.
+  val rawResultStruct = Struct.newBuilder.name("%s_%s_result".format(service.name, function.name)).__fields(function.fields).result()
+  val resultStruct = new ScalaClass(rawResultStruct, resolver)
+  render("class.ssp", Map("cls" -> resultStruct, "clsContainer" -> "")) // TODO: Capture and indent properly.
+%>
+#end
+
+<%-- Output the ServiceDescriptor and FunctionDescriptors. --%>
+  override val serviceName: String = "${service.name}"
+  override val functionDescriptors: Seq[_root_.io.fsq.spindle.runtime.FunctionDescriptor[_,_]] = #if (parentServiceName != "")${parentServiceName}.functionDescriptors ++ #(end)Seq(
+<% val items = for (function <- service.functions) yield ("""    new _root_.io.fsq.spindle.runtime.FunctionDescriptor[%s_%s_args, %s_%s_result] {
+      override val functionName = "%s"
+      override val requestMetaRecord = %s_%s_args
+      override val responseMetaRecord = %s_%s_result
+    }""".format(service.name, function.name, service.name, function.name, function.name, service.name, function.name, service.name, function.name)
+    )
+%>
+<%= items.mkString(",\n") %>
+  )
+
+}

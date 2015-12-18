@@ -1,0 +1,10 @@
+<%
+  // Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+
+  import io.fsq.spindle.codegen.runtime.{ScalaField, StructLike}
+%>
+<%@ val cls: StructLike %>
+<%@ val field: ScalaField %>
+<% render("lift_adapter_ref.ssp", Map("field" -> field)) %>
+  override final def ${field.name}ByteArray: Array[Byte] = throw new NotImplementedError("TODO")
+  override final def ${field.name}ByteArrayOption: Option[Array[Byte]] = throw new NotImplementedError("TODO")

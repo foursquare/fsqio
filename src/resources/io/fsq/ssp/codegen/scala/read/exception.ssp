@@ -1,0 +1,10 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.RenderType %>
+<%@ val lhs: String %>
+<%@ val indent: String %>
+<%@ val wrapLeft: String = "" %>
+<%@ val wrapRight: String = "" %>
+${indent}${lhs} ${wrapLeft}({
+${indent}  val s = ${renderType.text}.createRawRecord
+${indent}  s.read(iprot)
+${indent}  s
+${indent}})${wrapRight}

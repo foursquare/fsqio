@@ -1,0 +1,49 @@
+<%
+// Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+import _root_.io.fsq.spindle.__shaded_for_spindle_bootstrap__.runtime.Annotations
+import _root_.io.fsq.spindle.codegen.runtime.{RenderType, ScalaFunction, TypeReferenceResolver}
+%>
+<%@ val function: ScalaFunction %>
+<%@ val resolver: TypeReferenceResolver %>
+<%@ val namePrefix: String = "" %>
+<%@ val wrapReturnTypeInFuture: Boolean = false %>
+<%@ val forceReturnTypeToUnit: Boolean = false %>
+<%@ val addResultHandlerArg: Boolean = false %>
+<%@ val checkedExceptions: Seq[String] = Seq.empty[String] %>
+<%
+val arguments = function.argz.map(arg => (arg.name, arg.renderType.text)) ++
+  (if (addResultHandlerArg)
+    Seq(("resultHandler", "org.apache.thrift.async.AsyncMethodCallback[AsyncClient.%s_call]" format function.name))
+   else
+     Seq.empty
+  )
+
+val argumentsText = arguments.map { case (n, t) => "%s: %s" format (n, t) }.mkString(", ")
+
+val returnRenderType: Option[RenderType] = (function
+  .returnTypeIdOption
+  .flatMap(resolver.typeForTypeId(_).right.toOption)
+  .map(_._1)
+  .flatMap(resolver.resolveType(_).right.toOption)
+  .map(RenderType(_, Annotations.empty)))
+
+val returnTypeText = {
+ if (wrapReturnTypeInFuture) {
+   if (returnRenderType.isDefined && !function.oneWayOption.exists(x => x)) {
+     ": com.twitter.util.Future[%s]" format returnRenderType.map(_.text).getOrElse(throw new IllegalStateException("Unexpected None value"))
+   } else {
+     ": com.twitter.util.Future[Unit]"
+   }
+ } else {
+   if (returnRenderType.isDefined && !function.oneWayOption.exists(x => x) && !forceReturnTypeToUnit) {
+     ": %s" format returnRenderType.map(_.text).getOrElse(throw new IllegalStateException("Unexpected None value"))
+   } else {
+     ""
+   }
+ }
+}
+%>
+#if (checkedExceptions.nonEmpty)
+@throws(<%= checkedExceptions.map(x => "classOf[%s]" format x).mkString(", ") %>)
+#end
+def ${namePrefix}${function.name}(${argumentsText})${returnTypeText}

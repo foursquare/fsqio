@@ -1,0 +1,7 @@
+
+
+python_library(
+  name = 'python',
+  sources = globs('*.py'),
+)
+
