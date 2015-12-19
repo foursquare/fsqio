@@ -1847,7 +1847,7 @@ final class RawBaseType extends JavaBaseTypeRaw[com.twitter.thrift.descriptors.A
   override def __annotations: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = annotationsOrDefault
   override def __annotations_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]): Unit = { _annotations = x }
   override def annotationsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]] = if (annotationsIsSet) Some(_annotations) else None
-  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.Seq.empty
+  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.immutable.Vector.empty
   override def annotationsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = _annotations
   override def annotationsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else throw new java.lang.NullPointerException("field __annotations of BaseType missing")
   override def annotationsIsSet: Boolean = _annotations != null
@@ -3667,7 +3667,7 @@ final class RawContainerType extends JavaContainerTypeRaw[com.twitter.thrift.des
   override def __annotations: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = annotationsOrDefault
   override def __annotations_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]): Unit = { _annotations = x }
   override def annotationsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]] = if (annotationsIsSet) Some(_annotations) else None
-  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.Seq.empty
+  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.immutable.Vector.empty
   override def annotationsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = _annotations
   override def annotationsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else throw new java.lang.NullPointerException("field __annotations of ContainerType missing")
   override def annotationsIsSet: Boolean = _annotations != null
@@ -5240,7 +5240,7 @@ final class RawTypedef extends JavaTypedefRaw[com.twitter.thrift.descriptors.Ann
   override def __annotations: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = annotationsOrDefault
   override def __annotations_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]): Unit = { _annotations = x }
   override def annotationsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]] = if (annotationsIsSet) Some(_annotations) else None
-  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.Seq.empty
+  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.immutable.Vector.empty
   override def annotationsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = _annotations
   override def annotationsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else throw new java.lang.NullPointerException("field __annotations of Typedef missing")
   override def annotationsIsSet: Boolean = _annotations != null
@@ -7144,7 +7144,7 @@ final class RawEnumElement extends JavaEnumElementRaw[com.twitter.thrift.descrip
   override def __annotations: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = annotationsOrDefault
   override def __annotations_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]): Unit = { _annotations = x }
   override def annotationsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]] = if (annotationsIsSet) Some(_annotations) else None
-  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.Seq.empty
+  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.immutable.Vector.empty
   override def annotationsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = _annotations
   override def annotationsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else throw new java.lang.NullPointerException("field __annotations of EnumElement missing")
   override def annotationsIsSet: Boolean = _annotations != null
@@ -7833,7 +7833,7 @@ final class RawEnum extends JavaEnumRaw[com.twitter.thrift.descriptors.Annotatio
   override def elements: scala.collection.Seq[com.twitter.thrift.descriptors.EnumElement] = elementsOrDefault
   override def elements_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.EnumElement]): Unit = { _elements = x }
   override def elementsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.EnumElement]] = if (elementsIsSet) Some(_elements) else None
-  override def elementsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.EnumElement] = if (elementsIsSet) _elements else scala.collection.Seq.empty
+  override def elementsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.EnumElement] = if (elementsIsSet) _elements else scala.collection.immutable.Vector.empty
   override def elementsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.EnumElement] = _elements
   override def elementsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.EnumElement] = if (elementsIsSet) _elements else throw new java.lang.NullPointerException("field elements of Enum missing")
   override def elementsIsSet: Boolean = _elements != null
@@ -7843,7 +7843,7 @@ final class RawEnum extends JavaEnumRaw[com.twitter.thrift.descriptors.Annotatio
   override def __annotations: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = annotationsOrDefault
   override def __annotations_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]): Unit = { _annotations = x }
   override def annotationsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]] = if (annotationsIsSet) Some(_annotations) else None
-  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.Seq.empty
+  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.immutable.Vector.empty
   override def annotationsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = _annotations
   override def annotationsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else throw new java.lang.NullPointerException("field __annotations of Enum missing")
   override def annotationsIsSet: Boolean = _annotations != null
@@ -8802,7 +8802,7 @@ final class RawField extends JavaFieldRaw[com.twitter.thrift.descriptors.Annotat
   override def __annotations: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = annotationsOrDefault
   override def __annotations_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]): Unit = { _annotations = x }
   override def annotationsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]] = if (annotationsIsSet) Some(_annotations) else None
-  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.Seq.empty
+  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.immutable.Vector.empty
   override def annotationsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = _annotations
   override def annotationsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else throw new java.lang.NullPointerException("field __annotations of Field missing")
   override def annotationsIsSet: Boolean = _annotations != null
@@ -9569,7 +9569,7 @@ final class RawStruct extends JavaStructRaw[com.twitter.thrift.descriptors.Annot
   override def __fields: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = fieldsOrDefault
   override def __fields_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Field]): Unit = { _fields = x }
   override def fieldsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Field]] = if (fieldsIsSet) Some(_fields) else None
-  override def fieldsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (fieldsIsSet) _fields else scala.collection.Seq.empty
+  override def fieldsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (fieldsIsSet) _fields else scala.collection.immutable.Vector.empty
   override def fieldsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = _fields
   override def fieldsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (fieldsIsSet) _fields else throw new java.lang.NullPointerException("field __fields of Struct missing")
   override def fieldsIsSet: Boolean = _fields != null
@@ -9579,7 +9579,7 @@ final class RawStruct extends JavaStructRaw[com.twitter.thrift.descriptors.Annot
   override def __annotations: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = annotationsOrDefault
   override def __annotations_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]): Unit = { _annotations = x }
   override def annotationsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]] = if (annotationsIsSet) Some(_annotations) else None
-  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.Seq.empty
+  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.immutable.Vector.empty
   override def annotationsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = _annotations
   override def annotationsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else throw new java.lang.NullPointerException("field __annotations of Struct missing")
   override def annotationsIsSet: Boolean = _annotations != null
@@ -10288,7 +10288,7 @@ final class RawUnion extends JavaUnionRaw[com.twitter.thrift.descriptors.Annotat
   override def __fields: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = fieldsOrDefault
   override def __fields_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Field]): Unit = { _fields = x }
   override def fieldsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Field]] = if (fieldsIsSet) Some(_fields) else None
-  override def fieldsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (fieldsIsSet) _fields else scala.collection.Seq.empty
+  override def fieldsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (fieldsIsSet) _fields else scala.collection.immutable.Vector.empty
   override def fieldsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = _fields
   override def fieldsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (fieldsIsSet) _fields else throw new java.lang.NullPointerException("field __fields of Union missing")
   override def fieldsIsSet: Boolean = _fields != null
@@ -10298,7 +10298,7 @@ final class RawUnion extends JavaUnionRaw[com.twitter.thrift.descriptors.Annotat
   override def __annotations: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = annotationsOrDefault
   override def __annotations_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]): Unit = { _annotations = x }
   override def annotationsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]] = if (annotationsIsSet) Some(_annotations) else None
-  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.Seq.empty
+  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.immutable.Vector.empty
   override def annotationsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = _annotations
   override def annotationsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else throw new java.lang.NullPointerException("field __annotations of Union missing")
   override def annotationsIsSet: Boolean = _annotations != null
@@ -11007,7 +11007,7 @@ final class RawException extends JavaExceptionRaw[com.twitter.thrift.descriptors
   override def __fields: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = fieldsOrDefault
   override def __fields_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Field]): Unit = { _fields = x }
   override def fieldsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Field]] = if (fieldsIsSet) Some(_fields) else None
-  override def fieldsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (fieldsIsSet) _fields else scala.collection.Seq.empty
+  override def fieldsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (fieldsIsSet) _fields else scala.collection.immutable.Vector.empty
   override def fieldsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = _fields
   override def fieldsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (fieldsIsSet) _fields else throw new java.lang.NullPointerException("field __fields of Exception missing")
   override def fieldsIsSet: Boolean = _fields != null
@@ -11017,7 +11017,7 @@ final class RawException extends JavaExceptionRaw[com.twitter.thrift.descriptors
   override def __annotations: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = annotationsOrDefault
   override def __annotations_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]): Unit = { _annotations = x }
   override def annotationsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]] = if (annotationsIsSet) Some(_annotations) else None
-  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.Seq.empty
+  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.immutable.Vector.empty
   override def annotationsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = _annotations
   override def annotationsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else throw new java.lang.NullPointerException("field __annotations of Exception missing")
   override def annotationsIsSet: Boolean = _annotations != null
@@ -11958,7 +11958,7 @@ final class RawFunction extends JavaFunctionRaw[com.twitter.thrift.descriptors.A
   override def argz: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = argzOrDefault
   override def argz_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Field]): Unit = { _argz = x }
   override def argzOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Field]] = if (argzIsSet) Some(_argz) else None
-  override def argzOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (argzIsSet) _argz else scala.collection.Seq.empty
+  override def argzOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (argzIsSet) _argz else scala.collection.immutable.Vector.empty
   override def argzOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = _argz
   override def argzOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (argzIsSet) _argz else throw new java.lang.NullPointerException("field argz of Function missing")
   override def argzIsSet: Boolean = _argz != null
@@ -11968,7 +11968,7 @@ final class RawFunction extends JavaFunctionRaw[com.twitter.thrift.descriptors.A
   override def throwz: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = throwzOrDefault
   override def throwz_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Field]): Unit = { _throwz = x }
   override def throwzOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Field]] = if (throwzIsSet) Some(_throwz) else None
-  override def throwzOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (throwzIsSet) _throwz else scala.collection.Seq.empty
+  override def throwzOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (throwzIsSet) _throwz else scala.collection.immutable.Vector.empty
   override def throwzOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = _throwz
   override def throwzOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Field] = if (throwzIsSet) _throwz else throw new java.lang.NullPointerException("field throwz of Function missing")
   override def throwzIsSet: Boolean = _throwz != null
@@ -11978,7 +11978,7 @@ final class RawFunction extends JavaFunctionRaw[com.twitter.thrift.descriptors.A
   override def __annotations: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = annotationsOrDefault
   override def __annotations_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]): Unit = { _annotations = x }
   override def annotationsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]] = if (annotationsIsSet) Some(_annotations) else None
-  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.Seq.empty
+  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.immutable.Vector.empty
   override def annotationsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = _annotations
   override def annotationsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else throw new java.lang.NullPointerException("field __annotations of Function missing")
   override def annotationsIsSet: Boolean = _annotations != null
@@ -12869,7 +12869,7 @@ final class RawService extends JavaServiceRaw[com.twitter.thrift.descriptors.Ann
   override def functions: scala.collection.Seq[com.twitter.thrift.descriptors.Function] = functionsOrDefault
   override def functions_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Function]): Unit = { _functions = x }
   override def functionsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Function]] = if (functionsIsSet) Some(_functions) else None
-  override def functionsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Function] = if (functionsIsSet) _functions else scala.collection.Seq.empty
+  override def functionsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Function] = if (functionsIsSet) _functions else scala.collection.immutable.Vector.empty
   override def functionsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Function] = _functions
   override def functionsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Function] = if (functionsIsSet) _functions else throw new java.lang.NullPointerException("field functions of Service missing")
   override def functionsIsSet: Boolean = _functions != null
@@ -12879,7 +12879,7 @@ final class RawService extends JavaServiceRaw[com.twitter.thrift.descriptors.Ann
   override def __annotations: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = annotationsOrDefault
   override def __annotations_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]): Unit = { _annotations = x }
   override def annotationsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Annotation]] = if (annotationsIsSet) Some(_annotations) else None
-  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.Seq.empty
+  override def annotationsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else scala.collection.immutable.Vector.empty
   override def annotationsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = _annotations
   override def annotationsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Annotation] = if (annotationsIsSet) _annotations else throw new java.lang.NullPointerException("field __annotations of Service missing")
   override def annotationsIsSet: Boolean = _annotations != null
@@ -14130,7 +14130,7 @@ final class RawProgram extends JavaProgramRaw[com.twitter.thrift.descriptors.Con
   override def namespaces: scala.collection.Seq[com.twitter.thrift.descriptors.Namespace] = namespacesOrDefault
   override def namespaces_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Namespace]): Unit = { _namespaces = x }
   override def namespacesOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Namespace]] = if (namespacesIsSet) Some(_namespaces) else None
-  override def namespacesOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Namespace] = if (namespacesIsSet) _namespaces else scala.collection.Seq.empty
+  override def namespacesOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Namespace] = if (namespacesIsSet) _namespaces else scala.collection.immutable.Vector.empty
   override def namespacesOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Namespace] = _namespaces
   override def namespacesOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Namespace] = if (namespacesIsSet) _namespaces else throw new java.lang.NullPointerException("field namespaces of Program missing")
   override def namespacesIsSet: Boolean = _namespaces != null
@@ -14140,7 +14140,7 @@ final class RawProgram extends JavaProgramRaw[com.twitter.thrift.descriptors.Con
   override def includes: scala.collection.Seq[com.twitter.thrift.descriptors.Include] = includesOrDefault
   override def includes_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Include]): Unit = { _includes = x }
   override def includesOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Include]] = if (includesIsSet) Some(_includes) else None
-  override def includesOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Include] = if (includesIsSet) _includes else scala.collection.Seq.empty
+  override def includesOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Include] = if (includesIsSet) _includes else scala.collection.immutable.Vector.empty
   override def includesOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Include] = _includes
   override def includesOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Include] = if (includesIsSet) _includes else throw new java.lang.NullPointerException("field includes of Program missing")
   override def includesIsSet: Boolean = _includes != null
@@ -14150,7 +14150,7 @@ final class RawProgram extends JavaProgramRaw[com.twitter.thrift.descriptors.Con
   override def constants: scala.collection.Seq[com.twitter.thrift.descriptors.Const] = constantsOrDefault
   override def constants_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Const]): Unit = { _constants = x }
   override def constantsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Const]] = if (constantsIsSet) Some(_constants) else None
-  override def constantsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Const] = if (constantsIsSet) _constants else scala.collection.Seq.empty
+  override def constantsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Const] = if (constantsIsSet) _constants else scala.collection.immutable.Vector.empty
   override def constantsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Const] = _constants
   override def constantsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Const] = if (constantsIsSet) _constants else throw new java.lang.NullPointerException("field constants of Program missing")
   override def constantsIsSet: Boolean = _constants != null
@@ -14160,7 +14160,7 @@ final class RawProgram extends JavaProgramRaw[com.twitter.thrift.descriptors.Con
   override def enums: scala.collection.Seq[com.twitter.thrift.descriptors.Enum] = enumsOrDefault
   override def enums_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Enum]): Unit = { _enums = x }
   override def enumsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Enum]] = if (enumsIsSet) Some(_enums) else None
-  override def enumsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Enum] = if (enumsIsSet) _enums else scala.collection.Seq.empty
+  override def enumsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Enum] = if (enumsIsSet) _enums else scala.collection.immutable.Vector.empty
   override def enumsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Enum] = _enums
   override def enumsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Enum] = if (enumsIsSet) _enums else throw new java.lang.NullPointerException("field enums of Program missing")
   override def enumsIsSet: Boolean = _enums != null
@@ -14170,7 +14170,7 @@ final class RawProgram extends JavaProgramRaw[com.twitter.thrift.descriptors.Con
   override def typedefs: scala.collection.Seq[com.twitter.thrift.descriptors.Typedef] = typedefsOrDefault
   override def typedefs_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Typedef]): Unit = { _typedefs = x }
   override def typedefsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Typedef]] = if (typedefsIsSet) Some(_typedefs) else None
-  override def typedefsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Typedef] = if (typedefsIsSet) _typedefs else scala.collection.Seq.empty
+  override def typedefsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Typedef] = if (typedefsIsSet) _typedefs else scala.collection.immutable.Vector.empty
   override def typedefsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Typedef] = _typedefs
   override def typedefsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Typedef] = if (typedefsIsSet) _typedefs else throw new java.lang.NullPointerException("field typedefs of Program missing")
   override def typedefsIsSet: Boolean = _typedefs != null
@@ -14180,7 +14180,7 @@ final class RawProgram extends JavaProgramRaw[com.twitter.thrift.descriptors.Con
   override def structs: scala.collection.Seq[com.twitter.thrift.descriptors.Struct] = structsOrDefault
   override def structs_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Struct]): Unit = { _structs = x }
   override def structsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Struct]] = if (structsIsSet) Some(_structs) else None
-  override def structsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Struct] = if (structsIsSet) _structs else scala.collection.Seq.empty
+  override def structsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Struct] = if (structsIsSet) _structs else scala.collection.immutable.Vector.empty
   override def structsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Struct] = _structs
   override def structsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Struct] = if (structsIsSet) _structs else throw new java.lang.NullPointerException("field structs of Program missing")
   override def structsIsSet: Boolean = _structs != null
@@ -14190,7 +14190,7 @@ final class RawProgram extends JavaProgramRaw[com.twitter.thrift.descriptors.Con
   override def unions: scala.collection.Seq[com.twitter.thrift.descriptors.Union] = unionsOrDefault
   override def unions_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Union]): Unit = { _unions = x }
   override def unionsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Union]] = if (unionsIsSet) Some(_unions) else None
-  override def unionsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Union] = if (unionsIsSet) _unions else scala.collection.Seq.empty
+  override def unionsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Union] = if (unionsIsSet) _unions else scala.collection.immutable.Vector.empty
   override def unionsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Union] = _unions
   override def unionsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Union] = if (unionsIsSet) _unions else throw new java.lang.NullPointerException("field unions of Program missing")
   override def unionsIsSet: Boolean = _unions != null
@@ -14200,7 +14200,7 @@ final class RawProgram extends JavaProgramRaw[com.twitter.thrift.descriptors.Con
   override def exceptions: scala.collection.Seq[com.twitter.thrift.descriptors.Exception] = exceptionsOrDefault
   override def exceptions_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Exception]): Unit = { _exceptions = x }
   override def exceptionsOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Exception]] = if (exceptionsIsSet) Some(_exceptions) else None
-  override def exceptionsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Exception] = if (exceptionsIsSet) _exceptions else scala.collection.Seq.empty
+  override def exceptionsOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Exception] = if (exceptionsIsSet) _exceptions else scala.collection.immutable.Vector.empty
   override def exceptionsOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Exception] = _exceptions
   override def exceptionsOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Exception] = if (exceptionsIsSet) _exceptions else throw new java.lang.NullPointerException("field exceptions of Program missing")
   override def exceptionsIsSet: Boolean = _exceptions != null
@@ -14210,7 +14210,7 @@ final class RawProgram extends JavaProgramRaw[com.twitter.thrift.descriptors.Con
   override def services: scala.collection.Seq[com.twitter.thrift.descriptors.Service] = servicesOrDefault
   override def services_=(x: scala.collection.Seq[com.twitter.thrift.descriptors.Service]): Unit = { _services = x }
   override def servicesOption: Option[scala.collection.Seq[com.twitter.thrift.descriptors.Service]] = if (servicesIsSet) Some(_services) else None
-  override def servicesOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Service] = if (servicesIsSet) _services else scala.collection.Seq.empty
+  override def servicesOrDefault: scala.collection.Seq[com.twitter.thrift.descriptors.Service] = if (servicesIsSet) _services else scala.collection.immutable.Vector.empty
   override def servicesOrNull: scala.collection.Seq[com.twitter.thrift.descriptors.Service] = _services
   override def servicesOrThrow: scala.collection.Seq[com.twitter.thrift.descriptors.Service] = if (servicesIsSet) _services else throw new java.lang.NullPointerException("field services of Program missing")
   override def servicesIsSet: Boolean = _services != null

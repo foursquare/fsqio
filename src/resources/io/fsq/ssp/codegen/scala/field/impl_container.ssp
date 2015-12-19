@@ -6,12 +6,13 @@
 <%@ val cls: StructLike %>
 <%@ val field: ScalaField %>
 <% val container: String = field.renderType.underlying.asInstanceOf[ContainerRenderType].container %>
+<% val emptyContainer: String = field.renderType.underlying.asInstanceOf[ContainerRenderType].emptyContainer %>
   // Field #${field.identifier} - ${field.name}
   private var ${field.varName}: ${field.renderType.text} = ${field.renderType.defaultText}  // Underlying type: ${field.renderType.underlying.text}
   override def ${field.escapedName}: ${field.renderType.text} = ${field.name}OrDefault
   override def ${field.escapedName}_=(x: ${field.renderType.text}): Unit = { ${field.varName} = x }
   override def ${field.name}Option: Option[${field.renderType.text}] = if (${field.isSetName}) Some(${field.varName}) else None
-  override def ${field.name}OrDefault: ${field.renderType.text} = if (${field.isSetName}) ${field.varName} else ${container}.empty
+  override def ${field.name}OrDefault: ${field.renderType.text} = if (${field.isSetName}) ${field.varName} else ${emptyContainer}.empty
   override def ${field.name}OrNull: ${field.renderType.text} = ${field.varName}
   override def ${field.name}OrThrow: ${field.renderType.text} = if (${field.isSetName}) ${field.varName} else throw new java.lang.NullPointerException("field ${field.escapedName} of ${cls.name} missing")
   override def ${field.isSetName}: Boolean = ${field.varName} != null

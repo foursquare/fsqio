@@ -175,6 +175,7 @@ case class ThriftJsonRenderType(ref: RenderType) extends RefRenderType with Enha
 
 trait ContainerRenderType extends RefRenderType {
   def container: String
+  def emptyContainer: String = container // In cases where a SubClass is preferred for creating an empty container
   override def fieldDefTemplate: String = "field/def_container.ssp"
   override def fieldImplTemplate: String = "field/impl_container.ssp"
   override def fieldProxyTemplate: String = "field/proxy_container.ssp"
@@ -183,7 +184,11 @@ trait ContainerRenderType extends RefRenderType {
   override def hasOrdering: Boolean = false
 }
 
-abstract class Container1RenderType(override val container: String, val elem: RenderType) extends ContainerRenderType {
+abstract class Container1RenderType(
+  override val container: String,
+  override val emptyContainer: String,
+  val elem: RenderType
+) extends ContainerRenderType {
   override def text: String = "%s[%s]".format(container, elem.text)
   override def javaText: String = "%s<%s>".format(container, elem.javaContainerText)
   override def javaTypeParameters: Seq[RenderType] = elem.javaTypeParameters
@@ -191,7 +196,11 @@ abstract class Container1RenderType(override val container: String, val elem: Re
 }
 
 // TODO: Make this immutable.Seq
-case class SeqRenderType(e1: RenderType) extends Container1RenderType("scala.collection.Seq", e1) {
+case class SeqRenderType(e1: RenderType) extends Container1RenderType(
+  "scala.collection.Seq",
+  "scala.collection.immutable.Vector",
+  e1
+) {
   override def ttype: TType = TType.LIST
   override def compareTemplate: String = "compare/seq.ssp"
   override def fieldWriteTemplate: String = "write/seq.ssp"
@@ -213,7 +222,11 @@ case class SeqRenderType(e1: RenderType) extends Container1RenderType("scala.col
   }
 }
 
-case class SetRenderType(e1: RenderType) extends Container1RenderType("scala.collection.immutable.Set", e1) {
+case class SetRenderType(e1: RenderType) extends Container1RenderType(
+  "scala.collection.immutable.Set",
+  "scala.collection.immutable.Set",
+  e1
+) {
   override def ttype: TType = TType.SET
   override def compareTemplate: String = "compare/set.ssp"
   override def fieldWriteTemplate: String = "write/set.ssp"
