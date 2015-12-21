@@ -1,0 +1,19 @@
+<%
+  // Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+trait ${cls.name}LiftAdapterMutable extends Mutable${cls.name} {
+  self: ${cls.name}LiftAdapter =>
+
+#for (field <- cls.fields)
+<% render(field.renderType.fieldLiftAdapterMutableTemplate, Map("field" -> field)) %>
+#end
+
+  override def copy(
+      ${cls.fields.map(field => "%s: %s = %sOrNull".format(field.escapedName, field.renderType.boxedText, field.name)).mkString(",\n      ")}
+  ): ${cls.name}LiftAdapterMutable = throw new NotImplementedError("TODO")
+
+  override def merge(that: ${cls.name}): Unit = throw new NotImplementedError("TODO")
+}

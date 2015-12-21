@@ -6,4 +6,7 @@ trait LiftAdapter[Id] {
   def valueFromWireName(name: String): Option[Any]
   def primedObjFromWireName(name: String): Option[AnyRef]
   def primedObjSeqFromWireName(name: String): Seq[AnyRef]
+
+  def setValueFromWireName(name: String, value: Any): Unit
+  def clearValueFromWireName(name: String): Unit
 }

@@ -22,6 +22,7 @@ trait RenderType {
   def fieldImplTemplate: String
   def fieldProxyTemplate: String
   def fieldLiftAdapterTemplate: String
+  def fieldLiftAdapterMutableTemplate: String = "field/lift_adapter_mutable.ssp"
   def fieldMutableTemplate: String // = "field/mutable.ssp"
   def fieldMutableProxyTemplate: String // = "field/mutableproxy.ssp"
   def fieldWriteTemplate: String
@@ -64,6 +65,7 @@ case class PrimitiveRenderType(
   override def fieldImplTemplate: String = "field/impl_primitive.ssp"
   override def fieldProxyTemplate: String = "field/proxy_primitive.ssp"
   override def fieldLiftAdapterTemplate: String = "field/lift_adapter_primitive.ssp"
+  override def fieldLiftAdapterMutableTemplate: String = "field/lift_adapter_mutable.ssp"
   override def fieldMutableTemplate: String = "field/mutable.ssp"
   override def fieldMutableProxyTemplate: String = "field/mutableproxy.ssp"
   override def fieldWriteTemplate: String = "write/primitive.ssp"
@@ -109,6 +111,7 @@ case object BinaryRenderType extends RefRenderType {
   override def fieldImplTemplate: String = "field/impl_binary.ssp"
   override def fieldProxyTemplate: String = "field/proxy_binary.ssp"
   override def fieldLiftAdapterTemplate: String = "field/lift_adapter_binary.ssp"
+  override def fieldLiftAdapterMutableTemplate: String = "field/lift_adapter_mutable_binary.ssp"
   override def fieldMutableTemplate: String = "field/mutable_binary.ssp"
   override def fieldMutableProxyTemplate: String = "field/mutableproxy_binary.ssp"
   override def fieldWriteTemplate: String = "write/binary.ssp"

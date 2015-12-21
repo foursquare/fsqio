@@ -19,13 +19,13 @@ class ${cls.name}LiftAdapter(
   override final def read(iprot: org.apache.thrift.protocol.TProtocol): Unit = throw new UnsupportedOperationException("This is a read only adapter")
   override final def write(oprot: org.apache.thrift.protocol.TProtocol): Unit = throw new NotImplementedError("TODO")
 
-  override final def copy(
+  override def copy(
       ${cls.fields.map(field => "%s: %s = %sOrNull".format(field.escapedName, field.renderType.boxedText, field.name)).mkString(",\n      ")}
   ): ${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
 
   override final def mutableCopy(): Mutable${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
   override final def mergeCopy(that: ${cls.name}): ${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
-  override final def mutable: Mutable${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
+  override def mutable: Mutable${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
   override final def deepCopy(): ${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
 
   override final def fieldForId(id: Int): ${cls.name}._Fields = throw new NotImplementedError("TODO")

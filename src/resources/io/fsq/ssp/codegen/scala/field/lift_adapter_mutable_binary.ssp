@@ -1,0 +1,8 @@
+<%
+  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+<% render("lift_adapter_mutable.ssp", Map("field" -> field)) %>
+  override final def ${field.name}ByteArray_=(x: Array[Byte]): Unit = throw new NotImplementedError("TODO")

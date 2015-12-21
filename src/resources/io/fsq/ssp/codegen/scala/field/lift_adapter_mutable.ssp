@@ -1,0 +1,8 @@
+<%
+  // Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+  override final def ${field.escapedName}_=(x: ${field.renderType.text}): Unit = underlyingLift.setValueFromWireName("${field.wireName}", x)
+  override final def ${field.name}Unset(): Unit = underlyingLift.clearValueFromWireName("${field.wireName}")
