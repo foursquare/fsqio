@@ -98,7 +98,8 @@ class Pom(object):
 
   @classmethod
   def resolve(cls, groupId, artifactId, version, fetcher):
-    pom_xml = fetcher.get_pom(groupId, artifactId, version)
+    response = fetcher.get_pom(groupId, artifactId, version)
+    pom_xml = response.content
     # See http://bugs.python.org/issue18304
     pom_xml = re.sub(r"<project(.|\s)*?>", '<project>', pom_xml, 1)
     tree = ElementTree.fromstring(pom_xml)
@@ -114,7 +115,7 @@ class Pom(object):
 
     packaging = tree.findtext('packaging', default='jar')
     classifier = tree.findtext('classifier')
-    coordinate = Coordinate(groupId, artifactId, version, packaging, classifier)
+    coordinate = Coordinate(groupId, artifactId, version, packaging, classifier, fetcher.repo)
     properties = Pom.calculate_properties(coordinate, tree, parent_pom)
     tree = Pom.interpolate_properties(tree, properties)
 

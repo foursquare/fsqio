@@ -36,12 +36,11 @@ from pants.base.payload_field import stable_json_sha1
 from pants.invalidation.cache_manager import VersionedTargetSet
 from pants.option.custom_types import dict_option, list_option
 from pants.task.task import Task
-import requests
 from requests_futures.sessions import FuturesSession
 
 from fsqio.pants.pom.coordinate import Coordinate
 from fsqio.pants.pom.dependency import Dependency
-from fsqio.pants.pom.fetcher import ArtifactFetcher, NEXUS_PUBLIC
+from fsqio.pants.pom.fetcher import ChainedFetcher
 from fsqio.pants.pom.maven_dependency_graph import MavenDependencyGraph
 from fsqio.pants.pom.maven_version import MavenVersion, MavenVersionRangeRef
 from fsqio.pants.pom.pom import Pom
@@ -72,6 +71,7 @@ def file_contents_equal(path1, path2):
 
 def traverse_project_graph(
   maven_dep,
+  fetchers,
   global_pinned_versions,
   local_pinned_versions,
   global_exclusions,
@@ -97,7 +97,6 @@ def traverse_project_graph(
   if maven_dep.unversioned_coordinate in unversioned_dep_chain:
     raise CycleException(unversioned_dep_chain + (maven_dep.unversioned_coordinate,))
 
-  fetcher = ArtifactFetcher.instance()
   if '(' in maven_dep.version or '[' in maven_dep.version:
     # These range refs are fairly rare, and where they do happen we should probably just
     # be conservative and have a global pin of that dep.  Here, we just choose the latest
@@ -116,30 +115,32 @@ def traverse_project_graph(
 
   dep_graph = MavenDependencyGraph()
   dep_graph.ensure_node(maven_dep.coordinate)
-  try:
-    pom_str = fetcher.get_pom(maven_dep.groupId, maven_dep.artifactId, maven_dep.version)
-  except requests.exceptions.HTTPError as e:
-    if fetcher.resource_exists(maven_dep.coordinate):
-      logger.debug(
-        'Pom did not exist for dependency: {}.\n'
-        'But a resource matching that spec did, treating it as an intransitive resource.'
-        .format(maven_dep.coordinate))
-      dep_graph.add_provided_artifacts(maven_dep.coordinate, [maven_dep.coordinate])
-      return dep_graph
-    else:
-      raise Exception('Failed to fetch maven pom or resource: {}'.format(maven_dep.coordinate))
 
+  fetcher, pom_str = fetchers.resolve_pom(maven_dep.groupId, maven_dep.artifactId,
+                                      maven_dep.version, jar_coordinate=maven_dep.coordinate)
+  if fetcher is None:
+    raise MissingResourceException('Failed to fetch maven pom or resource: {}'.format(maven_dep.coordinate))
+  if pom_str is None:
+    logger.debug(
+      'Pom did not exist for dependency: {}.\n'
+      'But a resource matching that spec did, treating it as an intransitive resource.'
+      .format(maven_dep))
+    dep_graph.add_provided_artifacts(maven_dep.coordinate, fetcher.repo, [maven_dep.coordinate])
+    return dep_graph
+
+  logger.debug('{} found by fetcher: {}.\n' .format(maven_dep.coordinate, fetcher.name))
   pom = Pom.resolve(maven_dep.groupId, maven_dep.artifactId, maven_dep.version, fetcher)
 
   if pom.coordinate.packaging == 'pom':
     # Check to see if this is an aggregation pom that happens to also provide a jar.
     # Ivy in this circumstance will treat that jar as an artifact of the project, but
     # if the jar isn't there it doesn't consider it an error.
+
     jar_coord = pom.coordinate._replace(packaging='jar')
     if fetcher.resource_exists(jar_coord):
-      dep_graph.add_provided_artifacts(maven_dep.coordinate, [jar_coord])
+      dep_graph.add_provided_artifacts(maven_dep.coordinate, fetcher.repo, [jar_coord])
     else:
-      dep_graph.add_provided_artifacts(maven_dep.coordinate, [])
+      dep_graph.add_provided_artifacts(maven_dep.coordinate, fetcher.repo, [])
   elif pom.coordinate.packaging in ('bundle', 'jar'):
     # Always treat this as a jar
     if maven_dep.type != 'jar':
@@ -147,7 +148,7 @@ def traverse_project_graph(
         'When resolving {}, the pom packaging was "{}", which does not match the'
         ' requested dep type ("{}")'
         .format(maven_dep, pom.coordinate.packaging, maven_dep.type))
-    dep_graph.add_provided_artifacts(maven_dep.coordinate, [maven_dep.coordinate])
+    dep_graph.add_provided_artifacts(maven_dep.coordinate, fetcher.repo, [maven_dep.coordinate])
   else:
     raise Exception('Unsupported pom packaging type: {}'.format(pom.coordinate))
 
@@ -221,6 +222,7 @@ def traverse_project_graph(
 
     child_dep_graph = traverse_project_graph(
       maven_dep=dep,
+      fetchers=fetchers,
       global_pinned_versions=global_pinned_versions,
       local_pinned_versions=new_local_pinned_versions,
       global_exclusions=global_exclusions,
@@ -237,11 +239,12 @@ def resolve_maven_deps(args):
   This is intended to be run within a multiprocessing worker pool, so all inputs and outputs
   are pickleable and the args are a single argument for convenience of calling `Pool.imap`.
   """
-  maven_deps, global_pinned_versions, global_exclusions = args
+  maven_deps, fetchers, global_pinned_versions, global_exclusions = args
   dep_graph = MavenDependencyGraph()
   for maven_dep in maven_deps:
     local_dep_graph = traverse_project_graph(
       maven_dep,
+      fetchers,
       global_pinned_versions=global_pinned_versions,
       local_pinned_versions={},
       global_exclusions=global_exclusions,
@@ -250,6 +253,10 @@ def resolve_maven_deps(args):
     dep_graph.merge(local_dep_graph)
   sys.stderr.write('.')
   return dep_graph
+
+
+class MissingResourceException(Exception):
+  """Indicates that no resource matching that maven coordinate was found."""
 
 
 class PomResolveFingerprintStrategy(FingerprintStrategy):
@@ -278,6 +285,7 @@ class PomResolveFingerprintStrategy(FingerprintStrategy):
 
 
 class PomResolve(Task):
+
   @classmethod
   def register_options(cls, register):
     super(PomResolve, cls).register_options(register)
@@ -330,6 +338,12 @@ class PomResolve(Task):
       default=None,
       help='Write JSON describing the global classpath to the specified file.',
     )
+    register(
+      '--maven-repos',
+      type=list_option,
+      advanced=False,
+      help='A list of maps {name: url} that point to maven-style repos, preference is left-to-right.',
+    )
 
   @classmethod
   def prepare(cls, options, round_manager):
@@ -371,7 +385,7 @@ class PomResolve(Task):
   def pom_cache_dir(self):
     return os.path.expanduser(self.get_options().cache_dir)
 
-  def resolve_dependency_graphs(self, all_jar_libs, global_exclusions, global_pinned_versions):
+  def resolve_dependency_graphs(self, all_jar_libs, fetchers, global_exclusions, global_pinned_versions):
     """Resolve a {jar_lib: subgraph} map and a merged global graph for all jar libs."""
 
     global_pinned_versions = deepcopy(global_pinned_versions)
@@ -402,7 +416,7 @@ class PomResolve(Task):
           systemPath=None,
           optional=False,
         ))
-      resolve_maven_deps_args.append((maven_deps, global_pinned_versions, global_exclusions))
+      resolve_maven_deps_args.append((maven_deps, fetchers, global_pinned_versions, global_exclusions))
 
 
     def resolve_deps_in_process():
@@ -410,8 +424,9 @@ class PomResolve(Task):
         yield resolve_maven_deps(args)
 
     pool = Pool()
+    # PROTIP: Use the in_process dep_graph_iterator to debug.
     dep_graph_iterator = pool.imap(resolve_maven_deps, resolve_maven_deps_args)
-    # dep_graph_iterator = resolve_deps_in_process()
+    #dep_graph_iterator = resolve_deps_in_process()
 
     global_dep_graph = MavenDependencyGraph()
     target_to_dep_graph = {}
@@ -519,6 +534,7 @@ class PomResolve(Task):
     global_exclusions = frozenset(self.get_options().global_exclusions)
     global_pinned_versions = dict(self.get_options().global_pinned_versions)
     local_override_versions = self.get_options().local_override_versions
+    fetchers = ChainedFetcher(self.get_options().maven_repos)
 
     fingerprint_strategy = PomResolveFingerprintStrategy(global_exclusions, global_pinned_versions)
 
@@ -539,6 +555,7 @@ class PomResolve(Task):
         with self.context.new_workunit('traverse-pom-graph'):
           global_dep_graph, target_to_dep_graph = self.resolve_dependency_graphs(
             self.all_jar_libs,
+            fetchers,
             global_exclusions,
             global_pinned_versions,
           )
@@ -620,7 +637,7 @@ class PomResolve(Task):
           global_vts.cache_key.hash,
         )
         if not os.path.exists(symlink_dir):
-          self._fetch_source_jars(symlink_dir)
+          self._fetch_source_jars(fetchers, symlink_dir)
         stderr('\nFetched source jars to {}'.format(symlink_dir))
 
     classpath_info_filename = self.get_options().write_classpath_info_to_file
@@ -675,11 +692,9 @@ class PomResolve(Task):
             cache_path=os.path.join(self.pom_cache_dir, artifact_path),
           )
           resolved_jars.append(resolved_jar)
-
       compile_classpath.add_jars_for_targets([target], 'default', resolved_jars)
 
-  def _fetch_source_jars(self, symlink_dir):
-    fetcher = ArtifactFetcher.instance()
+  def _fetch_source_jars(self, fetchers, symlink_dir):
     future_session = FuturesSession(max_workers=4)
     coords = set(
       Coordinate(*t)
@@ -695,11 +710,16 @@ class PomResolve(Task):
           already_downloaded = os.path.exists(cached_source_jar_path)
           artifacts_to_symlink.add(artifact)
           if not already_downloaded:
-            if fetcher.resource_exists(source_jar):
-              artifacts_to_symlink.add(source_jar)
-              artifacts_to_download.add(source_jar)
+            # TODO(mateo): This probably should be a ChainedFetcher method instead of iterating over fetchers here.
+            for fetcher in fetchers:
+              if fetcher.resource_exists(source_jar):
+                source_jar = source_jar._replace(repo_url=fetcher.repo)
+                artifacts_to_symlink.add(source_jar)
+                artifacts_to_download.add(source_jar)
+                break
           else:
             artifacts_to_symlink.add(source_jar)
+
     with self.context.new_workunit('download-source-jars'):
       self._download_artifacts(artifacts_to_download)
     with self.context.new_workunit('symlink-source-jars'):
@@ -741,10 +761,10 @@ class PomResolve(Task):
     future_session = FuturesSession(max_workers=4)
     response_futures = []
     for artifact in artifacts:
-      nexus_artifact_url = '/'.join([NEXUS_PUBLIC, artifact.artifact_path])
+      artifact_url = '/'.join([artifact.repo_url, artifact.artifact_path])
       streaming_callback = functools.partial(self._background_stream, artifact)
       response_future = future_session.get(
-        nexus_artifact_url,
+        artifact_url,
         stream=True,
         background_callback=streaming_callback,
       )
@@ -757,12 +777,11 @@ class PomResolve(Task):
         future.result()
       except Exception as e:
         print("Failed to download artifact: {}".format(future._artifact))
-        import pdb; pdb.set_trace()
         raise e
       sys.stderr.write('.')
 
   def _fetch_artifacts(self, local_override_versions):
-    """Download jars from nexus into the artifact cache dir, then symlink them into our workdir."""
+    """Download jars from maven repo into the artifact cache dir, then symlink them into our workdir."""
 
     products = self.context.products
     # Coordinate -> set(relative path to symlink of artifact in symlink farm)
@@ -776,6 +795,10 @@ class PomResolve(Task):
     artifacts_to_download = set()
     for coord in coords:
       for artifact in self.maven_coordinate_to_provided_artifacts[coord]:
+        # Sanity check. At this point, all artifacts mapped to a coord should be fully resolved, location included.
+        if artifact.repo_url is None:
+          raise Exception("Something went wrong! {} was mapped to an artifact with no "
+                          "associated repo: ".format(coord, artifact))
         cached_artifact_path = os.path.join(self.pom_cache_dir, artifact.artifact_path)
         if not os.path.exists(cached_artifact_path):
           artifacts_to_download.add(artifact)

@@ -111,6 +111,7 @@ class Dependency(namedtuple('Dependency', dependency_attrs)):
       version=self.version,
       packaging=self.type,
       classifier=self.classifier,
+      repo_url=None,
     )
 
   @property

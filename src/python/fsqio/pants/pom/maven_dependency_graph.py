@@ -54,7 +54,10 @@ class MavenDependencyGraph(object):
     dependee_versioned_deps = self._coord_to_versioned_deps[dependee_coord.unversioned]
     dependee_versioned_deps[dependee_coord.version].add(dependency)
 
-  def add_provided_artifacts(self, coord, artifact_coords):
+  def add_provided_artifacts(self, coord, fetcher_url, artifact_coords):
+    """"Map the coordinate to its provided artifact, indicating the url of the repo where the artifact was found."""
+    if artifact_coords:
+      artifact_coords = [artifact_coords[0]._replace(repo_url=fetcher_url)]
     self._coord_to_provided_artifacts[coord].update(artifact_coords)
 
   def artifacts_provided_by_coord(self, coord):

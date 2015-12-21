@@ -12,6 +12,7 @@ coordinate_attrs = [
   'version',
   'packaging',
   'classifier',
+  'repo_url',
 ]
 
 class Coordinate(namedtuple('Coordinate', coordinate_attrs)):

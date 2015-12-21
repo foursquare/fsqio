@@ -18,10 +18,8 @@ import requests
 from fsqio.pants.pom.coordinate import Coordinate
 
 
+logging.getLogger('fsqio.pants.pom').setLevel(logging.WARN)
 logger = logging.getLogger(__name__)
-
-
-NEXUS_PUBLIC = 'http://nexus.prod.foursquare.com/nexus/content/groups/public'
 
 
 class ArtifactFetcher(object):
@@ -39,28 +37,23 @@ class ArtifactFetcher(object):
     '{version}',
     '{artifact}-{version}-{classifier}.{ext}',
   ])
-  NEXUS_MAVEN_METADATA_XML_URL = '/'.join([
+  MAVEN_METADATA_XML_URL = '/'.join([
     '{repo}',
     '{group}',
     '{artifact}',
     'maven-metadata.xml',
   ])
 
-  def __init__(self):
+  def __init__(self, name, repo):
     self._cache = {}
-
-  _instance = None
-  @classmethod
-  def instance(cls):
-    if cls._instance is None:
-      cls._instance = cls()
-    return cls._instance
+    self.name = name
+    self.repo = repo
 
   def get_pom(self, groupId, artifactId, version):
-    coordinate = Coordinate(groupId, artifactId, version, 'pom', None)
+    coordinate = Coordinate(groupId, artifactId, version, 'pom', None, self.repo)
     if coordinate not in self._cache:
       pom_url = self.BASIC_ARTIFACT_PATH.format(
-        repo=NEXUS_PUBLIC,
+        repo=self.repo,
         group=groupId.replace('.', '/'),
         artifact=artifactId,
         version=version,
@@ -69,14 +62,13 @@ class ArtifactFetcher(object):
       response = requests.get(pom_url)
       self._cache[coordinate] = response
     response = self._cache[coordinate]
-    response.raise_for_status()
-    return response.content
+    return response
 
   def get_maven_metadata_xml(self, groupId, artifactId):
     coordinate = Coordinate(groupId, artifactId, None, 'xml', None)
     if coordinate not in self._cache:
-      metadata_url = self.NEXUS_MAVEN_METADATA_XML_URL.format(
-        repo=NEXUS_PUBLIC,
+      metadata_url = self.MAVEN_METADATA_XML_URL.format(
+        repo=self.repo,
         group=groupId.replace('.', '/'),
         artifact=artifactId,
       )
@@ -90,7 +82,7 @@ class ArtifactFetcher(object):
     if coordinate not in self._cache:
       if coordinate.classifier:
         resource_url = self.CLASSIFIER_ARTIFACT_PATH.format(
-          repo=NEXUS_PUBLIC,
+          repo=self.repo,
           group=coordinate.groupId.replace('.', '/'),
           artifact=coordinate.artifactId,
           version=coordinate.version,
@@ -99,7 +91,7 @@ class ArtifactFetcher(object):
         )
       else:
         resource_url = self.BASIC_ARTIFACT_PATH.format(
-          repo=NEXUS_PUBLIC,
+          repo=self.repo,
           group=coordinate.groupId.replace('.', '/'),
           artifact=coordinate.artifactId,
           version=coordinate.version,
@@ -107,4 +99,48 @@ class ArtifactFetcher(object):
         )
       response = requests.head(resource_url)
       self._cache[coordinate] = response
-    return self._cache[coordinate].status_code == 200
+    # Allow 200 or 302 (see https://github.com/kennethreitz/requests/blob/master/requests/status_codes.py)
+    return self._cache[coordinate].status_code in (requests.codes.ok, requests.codes.found)
+
+
+class ChainedFetcher(ArtifactFetcher):
+
+  _cache = {}
+
+  def __init__(self, fetchers):
+    self._fetchers = []
+    for fetcher in fetchers:
+      for name, repo_url in fetcher.items():
+        if name not in self._cache:
+          self._cache[name] = ArtifactFetcher(name, repo_url)
+        self._fetchers.append(self._cache[name])
+
+  def __iter__(self):
+    i = 0
+    while i < len(self._fetchers):
+      yield self._fetchers[i]
+      i += 1
+
+  def resolve_pom(self, groupId, artifactId, version, jar_coordinate=None):
+    """Descend the list of fetchers until a pom or resource is found.
+
+    If sucessful, returns the fetcher and pom_contents. If either of those two are missing,
+    return None in its place.
+
+    :returns: tuple(ArtifactFetcher, string)
+    """
+
+    coordinate = Coordinate(groupId, artifactId, version, 'pom', None, None)
+    for fetcher in self._fetchers:
+      logger.debug('Attempting to get {} pom from fetcher: {}.\n'.format(coordinate, fetcher.name))
+      response = fetcher.get_pom(groupId, artifactId, version)
+      try:
+        response.raise_for_status()
+        return fetcher, response.content
+      except requests.exceptions.HTTPError as e:
+        if jar_coordinate:
+          # No pom, but there is a resource found. Signify an instransitive dependency.
+          if fetcher.resource_exists(jar_coordinate):
+            return fetcher, None
+
+    return None, None

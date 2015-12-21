@@ -43,3 +43,4 @@ dependencies/*
 dist
 environ.sh
 log/*
+target/
