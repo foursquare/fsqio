@@ -3,6 +3,8 @@
 package io.fsq.spindle.runtime
 
 trait LiftAdapter[Id] {
+  def create: AnyRef
+
   def valueFromWireName(name: String): Option[Any]
   def primedObjFromWireName(name: String): Option[AnyRef]
   def primedObjSeqFromWireName(name: String): Seq[AnyRef]

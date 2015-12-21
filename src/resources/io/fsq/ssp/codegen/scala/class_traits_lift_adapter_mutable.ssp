@@ -6,14 +6,61 @@
 <%@ val cls: StructLike %>
 trait ${cls.name}LiftAdapterMutable extends Mutable${cls.name} {
   self: ${cls.name}LiftAdapter =>
+  def underlyingLift: _root_.io.fsq.spindle.runtime.LiftAdapter[${cls.primaryKeyField.get.renderType.text}]
 
 #for (field <- cls.fields)
 <% render(field.renderType.fieldLiftAdapterMutableTemplate, Map("field" -> field)) %>
 #end
 
-  override def copy(
-      ${cls.fields.map(field => "%s: %s = %sOrNull".format(field.escapedName, field.renderType.boxedText, field.name)).mkString(",\n      ")}
-  ): ${cls.name}LiftAdapterMutable = throw new NotImplementedError("TODO")
+  override final def clear(): Unit = {
+#for (field <- cls.fields)
+    ${field.name}Unset()
+#end
+  }
+  override final def read(iprot: org.apache.thrift.protocol.TProtocol): Unit = throw new NotImplementedError("TODO")
+  override final def write(oprot: org.apache.thrift.protocol.TProtocol): Unit = throw new NotImplementedError("TODO")
 
-  override def merge(that: ${cls.name}): Unit = throw new NotImplementedError("TODO")
+  override final def copy(
+      ${cls.fields.map(field => "%s: %s = %sOrNull".format(field.escapedName, field.renderType.boxedText, field.name)).mkString(",\n      ")}
+  ): ${cls.name}LiftAdapterMutable = {
+    val newUnderlyingLift = underlyingLift.create.asInstanceOf[_root_.io.fsq.spindle.runtime.LiftAdapter[${cls.primaryKeyField.get.renderType.text}]]
+    val ret = new ${cls.name}LiftAdapter(newUnderlyingLift) with ${cls.name}LiftAdapterMutable
+#for (field <- cls.fields)
+    if (${field.escapedName} != null) ret.${field.escapedName}_=(${field.escapedName})
+#end
+    ret
+  }
+
+  override final def merge(that: ${cls.name}): Unit = {
+#for (field <- cls.fields)
+    if (that.${field.isSetName} && !this.${field.isSetName}) {
+      this.${field.escapedName}_=(that.${field.defaultName})
+#if (field.renderType.isContainer)
+    } else if (that.${field.isSetName} && this.${field.isSetName}) {
+      this.${field.escapedName}_=(this.${field.escapedName} ++ that.${field.escapedName})
+#end
+    }
+#end
+  }
+  override final def mutableCopy(): ${cls.name}LiftAdapterMutable = {
+    val newUnderlyingLift = underlyingLift.create.asInstanceOf[_root_.io.fsq.spindle.runtime.LiftAdapter[${cls.primaryKeyField.get.renderType.text}]]
+    val ret = new ${cls.name}LiftAdapter(newUnderlyingLift) with ${cls.name}LiftAdapterMutable
+#for (field <- cls.fields)
+#if (field.renderType.isNullable)
+    if (${field.isSetName}) ret.${field.escapedName}_=(${field.name}OrNull)
+#else
+    if (${field.isSetName}) ret.${field.escapedName}_=(${field.name}OrDefault)
+#end
+#end
+    ret
+  }
+  override final def mergeCopy(that: ${cls.name}): ${cls.name}LiftAdapterMutable = {
+    val newUnderlyingLift = underlyingLift.create.asInstanceOf[_root_.io.fsq.spindle.runtime.LiftAdapter[${cls.primaryKeyField.get.renderType.text}]]
+    val ret = new ${cls.name}LiftAdapter(newUnderlyingLift) with ${cls.name}LiftAdapterMutable
+    ret.merge(this)
+    ret.merge(that)
+    ret
+  }
+  override final def mutable: ${cls.name}LiftAdapterMutable = this
+  override final def deepCopy(): ${cls.name} = throw new NotImplementedError("TODO")
 }
