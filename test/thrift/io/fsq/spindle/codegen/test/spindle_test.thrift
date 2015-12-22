@@ -3,7 +3,7 @@
 namespace java io.fsq.spindle.codegen.test.gen
 
 typedef binary MyBinary
-
+typedef binary (enhanced_types="bson:ObjectId") ObjectId
 
 struct StructWithNoFields {
 } (
@@ -45,6 +45,12 @@ struct InnerStructNoI32RetiredFields {
   retired_ids="2"
   retired_wire_names="anInt"
 )
+
+struct TestStructOidList {
+  1: optional bool aBool
+  2: optional list<ObjectId> anObjectIdList
+  3: optional i32 anI32
+}
 
 // A struct with a field of each type.
 

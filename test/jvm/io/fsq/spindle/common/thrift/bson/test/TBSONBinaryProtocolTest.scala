@@ -8,8 +8,10 @@ import io.fsq.spindle.common.thrift.bson.{TBSONBinaryProtocol, TBSONObjectProtoc
 import io.fsq.spindle.runtime.UntypedRecord
 import java.io.ByteArrayInputStream
 import java.nio.ByteBuffer
+import java.util.Arrays
 import org.apache.thrift.TException
 import org.bson.BasicBSONEncoder
+import org.bson.types.ObjectId
 import org.junit._
 
 class TBSONBinaryProtocolTest {
@@ -63,6 +65,23 @@ class TBSONBinaryProtocolTest {
       )).result()
 
     assertRoundTrip(struct)
+  }
+
+  @Test
+  def testObjectIdListField {
+    val oid1 = new ObjectId()
+    val oid2 = new ObjectId()
+    val dbo: DBObject = BasicDBObjectBuilder.start()
+      .add("anObjectIdList", Arrays.asList(oid1, oid2))
+      .add("anI32", 123)
+      .get
+
+    val newRecord = new RawTestStructOidList()
+    val protocol = new TBSONBinaryProtocol()
+    protocol.setSource(new ByteArrayInputStream(encodeDboToBytes(dbo)))
+    newRecord.read(protocol)
+    Assert.assertEquals(List(oid1, oid2), newRecord.anObjectIdList)
+    Assert.assertEquals(123, newRecord.anI32)
   }
 
   @Test
