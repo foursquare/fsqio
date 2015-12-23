@@ -15,7 +15,7 @@ VENV_VERSION=13.1.0
 VENV_PACKAGE=virtualenv-${VENV_VERSION}
 VENV_TARBALL=${VENV_PACKAGE}.tar.gz
 
-FOURSQUARE_REQUIREMENTS="3rdparty/python/opensource-requirements.txt"
+FOURSQUARE_REQUIREMENTS="3rdparty/python/requirements.txt"
 
 # The high-level flow:
 # 1.) Grab pants version from pants.ini or default to latest.
