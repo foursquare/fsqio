@@ -18,7 +18,7 @@ class LegacyQueryExecutorTest extends JUnitMustMatchers {
   object Dummy extends Dummy with MongoMetaRecord[Dummy] {
   }
 
-  @Ignore @Test
+  @Test @Ignore("TODO(mateo): The public version of lift 2.6.2 causes an infinite recursion. FIXME")
   // Test ignored because it is broken when using OSS version of lift.
   def testExceptionInRunCommandIsDecorated {
     val query = Query[Dummy.type, Dummy, InitialState](
