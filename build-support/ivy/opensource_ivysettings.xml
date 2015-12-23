@@ -16,16 +16,7 @@ Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
   <resolvers>
 
     <chain name="chain-repos" returnFirst="true">
-      <!-- By default ivy does not require metadata (or successful metadata downloads).
-           This can lead to jars downloading without their transitive deps which leads
-           to confusing failures later when classpaths are constructed and used.
-           We setup the maven central resolver to require successful pom downloads here. -->
       <ibiblio name="maven-central" m2compatible="true" descriptor="required"/>
-
-      <ibiblio name="maven.twttr.com"
-               m2compatible="true"
-               usepoms="true"
-               root="http://maven.twttr.com/"/>
 
       <!-- The mvn standard local filesystem repo/cache -->
       <filesystem name="local.m2" m2compatible="true" local="true" checkmodified="true">
