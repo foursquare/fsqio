@@ -37,11 +37,3 @@ jar_library(
     jar(org = 'org.scala-lang', name = 'jline', rev = scala_version, intransitive = True),
   ]
 )
-
-
-jar_library(
-  name = 'soy',
-    jars = [
-  jar(org = 'com.google.closure', name = 'templates', rev = '2014-11-25'),
-  ]
-)
