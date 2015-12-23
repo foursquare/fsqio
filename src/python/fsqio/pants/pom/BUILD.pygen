@@ -53,7 +53,6 @@ python_library(
   name = 'pom_resolve',
   sources = ['pom_resolve.py', '__init__.py'],
   dependencies = [
-    '3rdparty/python:requests',
     '3rdparty/python:requests-futures',
     ':coordinate',
     ':dependency',
