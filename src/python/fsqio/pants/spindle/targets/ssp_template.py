@@ -11,7 +11,7 @@ from __future__ import (
   with_statement,
 )
 
-from pants.build_graph.resources import Resources
+from pants.backend.core.targets.resources import Resources
 
 
 class SspTemplate(Resources):
