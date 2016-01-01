@@ -30,7 +30,9 @@ A coarse, splitting geocoder and reverse geocoder in Scala
 
 * JDK 1.8 (1.8.0_40 preferred)
 * python2.6+ (2.7 preferred)
+* postgresql
 * [monogdb server](https://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/) (required to pass some tests)
+* An increased number of file descriptors (we use 32768)
 
 Internally we use OSX Yosemite or later. Other OS may work but are officially unsupported.
 
