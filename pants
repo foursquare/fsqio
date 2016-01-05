@@ -15,18 +15,6 @@ fi
 # Copied to root by upkeep.
 source environ.sh
 
-# This is being left in as a backstop but needs to be removed prior to open sourcing.
-if [ "$(uname)" == "Darwin" ]; then
-  export JDK_HOME=$(/usr/libexec/java_home -v 1.8.0_40)
-else
-  if [ ! -f /data/loko/infrastructure-jdk8/current/bin/java ]; then
-    echo "Pants must have the infrastructure-jdk8 loko package installed in order"
-    echo " to run on linux."
-    exit 1
-  fi
-  export JAVA_HOME="/data/loko/infrastructure-jdk8/current"
-fi
-
 # If the PANTS_INI was set above, then override the default PANTS_CONFIG_OVERRIDE in environ.sh.
 if [ -n "$PANTS_INI" ]; then
   export PANTS_CONFIG_OVERRIDE="$PANTS_INI"
