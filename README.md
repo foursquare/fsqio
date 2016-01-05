@@ -1,14 +1,14 @@
 # Foursquare Fsq.io
-### All of Foursquare's opensource code in a single repo.
+### All of Foursquare's open source code in a single repo.
 
 All Foursquare code lives in a single repository, an architecture generally called a monorepo.
-`Fsq.io` is a subset of that internal monorepo. `Fsq.io` is a single repo that holds many of Foursquare's
-opensource projects that had previously lived in their own separate Github repos. Foursquare contributes
+`Fsq.io` is a subset of that internal monorepo. `Fsq.io` holds many of Foursquare's
+open source projects that had previously lived in their own separate Github repos. Foursquare contributes
 to a build tool specifically designed to work with monorepos called [Pants](https://pantsbuild.github.io/).
 The entire `Fsq.io` repo is is built and tested by Pants.
 
-Deploying directly from our monorepo has some nice advantages, for consumers of our opensource projects as
-well as Foursquare itself. The entire repo is built daily by our CIs and internal contributions are opensourced
+Deploying directly from our monorepo has some nice advantages, for consumers of our open source projects as
+well as Foursquare itself. The entire repo is built daily by our CIs and internal contributions are open sourced
 automatically without the overhead of publishing. This repo will always contain the latest code that we use
 internally, all of the tools can be built just as we use them, directly from HEAD.
 
@@ -54,17 +54,23 @@ in this README we will just touch on how to compile and test the code.
 
 
 ## Compiling and Testing
+#### First Run
+The first run will take a long time as
+[pom-resolve](https://github.com/foursquare/fsqio/tree/master/src/python/fsqio/pants/pom)
+(our custom resolver for 3rdparty dependencies) computes the project graph and downloads the dependencies.
+Maybe as long as 15-20 mins! A good first run is to get this out of the way:
+
+     ./pants pom-resolve
+
 #### Targets and BUILD files
 Targets are adressable project or dependency level modules that can be built by Pants. `BUILD` files are
 configuration files that define targets that can be built by Pants. Each target has a name and can be built
 by running a Pants task against the target's name and location.
 
 For example, Fsq.io's JVM projects live under `src/jvm`
-[here](https://github.com/foursquare/fsqio/tree/master/src/jvm/io/fsq). You can bundle the Twofishes server by running:
+[here](https://github.com/foursquare/fsqio/tree/master/src/jvm/io/fsq). You can compile Rogue by running:
 
-     ./pants run src/jvm/io/fsq/twofishes/server:server-bin
-
-Built artifacts can be found under `dist/`.
+     ./pants compile src/jvm/io/fsq/rogue:rogue
 
 #### Build and Test every project
 Adding a `::` to a path will glob every target under that location. So to compile every target in Fsq.io:
@@ -76,8 +82,6 @@ Similarly, to run all the tests, (after starting the mongodb server):
     ./pants test test::
 
 Projects aspirationally have READMEs at the project root.
-
-
 
 ## Discussion
 
