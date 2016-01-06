@@ -4,12 +4,12 @@ This document describes the various input files that are read in the process of 
 
 They are grouped into semi-logical directories:
 
-- data/downloaded -- this is where data downloaded from geonames and natural earth is saved. The download-country.sh and download-world.sh scripts save data here
+- data/downloaded -- this is where data downloaded from geonames and natural earth is saved. The src/jvm/io/fsq/twofishes/scripts/download-country.sh and src/jvm/io/fsq/twofishes/scripts/download-world.sh scripts save data here
 - data/custom -- various transforms on the geonames data that is checked into git
 - data/private is a mirror of much of the file structure of data/custom and data/downloaded for files that the developer doesn't want checked into git. It is listed in .gitignore
 
 ## data/downloaded
-The scripts download-country.sh and download-world.sh populate this directory with data from geonames (and one datafile from natural earth that isn't quite working).
+The scripts src/jvm/io/fsq/twofishes/scripts/download-country.sh and src/jvm/io/fsq/twofishes/scripts/download-world.sh populate this directory with data from geonames (and one datafile from natural earth that isn't quite working).
 
 The formats for geonames files can be found at <http://download.geonames.org/export/dump/readme.txt>
 
@@ -21,12 +21,12 @@ from geonames:
 - admin1CodesASCII.txt
 - countryInfo.txt
 
-download-country.sh is used if you want to build twofishes for only one country. 
+src/jvm/io/fsq/twofishes/scripts/download-country.sh is used if you want to build twofishes for only one country. 
 
 - downloaded/[COUNTRYCODE].txt 
 - downloaded/zip/[COUNTRYCODE].txt
 
-download-world.sh is the default case, build the entire world index. 
+src/jvm/io/fsq/twofishes/scripts/download-world.sh is the default case, build the entire world index. 
 
 - downloaded/allCountries.txt 
 - downloaded/zip/allCountries.txt

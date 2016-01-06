@@ -1,13 +1,13 @@
 # Twofishes Requests
 
-The fastest way to interact with twofishes is to do it via thrift, which is defined and documented at <https://github.com/foursquare/twofishes/blob/master/interface/src/main/thrift/geocoder.thrift>
+The fastest way to interact with twofishes is to do it via thrift, which is defined and documented at <https://github.com/foursquare/fsqio/blob/master/src/thrift/io/fsq/twofishes/geocoder.thrift>
 
 The json interfaces are slower, maybe by 20%? (it turns out that string serialization is slow). They mostly mirror the thrift interface.
 
 There are two json interfaces:
 
 1. The combined REST-y interface at /?[parameters]
-2. The GET or POST thrift-json interface at /search/[method], one for each method defined in the [thrift service](https://github.com/foursquare/twofishes/blob/master/interface/src/main/thrift/geocoder.thrift#L350)
+2. The GET or POST thrift-json interface at /search/[method], one for each method defined in the [thrift service](https://github.com/foursquare/fsqio/blob/master/src/thrift/io/fsq/twofishes/geocoder.thrift#L464)
     1. /search/geocode
     2. /search/reverseGeocode
     3. /search/bulkReverseGeocode
@@ -23,15 +23,15 @@ And, there is the thrift interface. Almost all of the descriptions below apply t
 
 When booting up the Geocoder server, note that the JSON API is accessed
 from `$HOSTNAME:$API_PORT` where `$API_PORT` tends to be `1 + $PORT` from
-running: `./serve.py $HFILE_DIR -p $PORT`. For example, if your command
-was `./serve.py $HFILE_DIR -p 6000`, it'll probably be on port 6001.
+running: `./src/jvm/io/fsq/twofishes/scripts/serve.py $HFILE_DIR -p $PORT`. For example, if your command
+was `./src/jvm/io/fsq/twofishes/scripts/serve.py $HFILE_DIR -p 6000`, it'll probably be on port 6001.
 Verify this by looking for where http/json gets initialized in the log
 file. For example, in the case of $PORT = 6000 above:
 
 `[info] 18:20:40.103 [main] INFO  c.f.twofishes.GeocodeFinagleServer$ - serving http/json on port 6001`
 
 ## The Combined & Debug Interfaces
-Almost every parameter in [GeocodeRequest](https://github.com/foursquare/twofishes/blob/master/interface/src/main/thrift/geocoder.thrift#L243) is implemented as a GET parameter.
+Almost every parameter in [GeocodeRequest](https://github.com/foursquare/fsqio/blob/master/src/thrift/io/fsq/twofishes/geocoder.thrift#L309) is implemented as a GET parameter.
 
 The combined json interface allows you to construct queries out of these parameters like <http://demo.twofishes.net/?query=new%20york&lang=es&maxInterpretations=4>
 
@@ -48,7 +48,7 @@ These queries also work as parameters to the debug interface either after the ? 
     - in reverse geocode mode, 0 or unset means 'unlimited'
     - in autocomplete mode, 0 or unset means 3
     - in geocode mode, 0 or unset means 1
-- woeHint=[comma separated list of YahooWoeType integers or enum names] - ie woeHint=7,10 or woeHint=TOWN,ADMIN3 - look at the [YahooWoeType enum](https://github.com/foursquare/twofishes/blob/master/interface/src/main/thrift/geocoder.thrift#L3) for total range of values. Biases the geocoder to prefer features of these types
+- woeHint=[comma separated list of YahooWoeType integers or enum names] - ie woeHint=7,10 or woeHint=TOWN,ADMIN3 - look at the [YahooWoeType enum](https://github.com/foursquare/fsqio/blob/master/src/thrift/io/fsq/twofishes/geocoder.thrift#L9) for total range of values. Biases the geocoder to prefer features of these types
 - woeRestrict=[comma separated list of YahooWoeType integers or enum names] - same arguments as woeHint. Geocoder will *only* return features of these types.
 - responseIncludes=[comma separated list of ResponseIncludes integers or enum names] - ie responseIncludes=PARENTS,ALL_NAMES - influences what is contained within the returned interpretations. Most of these make the response slightly slower.
     - EVERYTHING - includes everything listed below

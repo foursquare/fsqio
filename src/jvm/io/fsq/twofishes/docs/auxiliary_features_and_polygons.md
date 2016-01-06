@@ -23,13 +23,13 @@ If you put a geojson (or shapefile) in data/private/polygons, along with a .mapp
 - Build an index! with `--create_unmatched_features true`
   
   ```sh
-    ./parse.py output/ --  --create_unmatched_features true
+    ./src/jvm/io/fsq/twofishes/scripts/parse.py output/ --  --create_unmatched_features true
   ```  
     
 - Serve it!
 
   ```sh
-    ./serve.py output/
+    ./src/jvm/io/fsq/twofishes/scripts/serve.py output/
   ```
 - View it!  http://localhost:8081/static/geocoder.html 
 
