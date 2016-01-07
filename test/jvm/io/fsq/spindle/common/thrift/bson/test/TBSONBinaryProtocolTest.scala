@@ -6,13 +6,14 @@ import com.mongodb.{BasicDBObjectBuilder, DBObject}
 import io.fsq.spindle.codegen.test.gen._
 import io.fsq.spindle.common.thrift.bson.{TBSONBinaryProtocol, TBSONObjectProtocol}
 import io.fsq.spindle.runtime.UntypedRecord
-import java.io.ByteArrayInputStream
+import java.io.{ByteArrayInputStream, InputStream}
 import java.nio.ByteBuffer
 import java.util.Arrays
 import org.apache.thrift.TException
 import org.bson.BasicBSONEncoder
 import org.bson.types.ObjectId
 import org.junit._
+import scala.util.Random
 
 class TBSONBinaryProtocolTest {
 
@@ -79,6 +80,31 @@ class TBSONBinaryProtocolTest {
     val newRecord = new RawTestStructOidList()
     val protocol = new TBSONBinaryProtocol()
     protocol.setSource(new ByteArrayInputStream(encodeDboToBytes(dbo)))
+    newRecord.read(protocol)
+    Assert.assertEquals(List(oid1, oid2), newRecord.anObjectIdList)
+    Assert.assertEquals(123, newRecord.anI32)
+  }
+
+  class RandomReadLengthInputStream(is: InputStream) extends InputStream {
+    override def available: Int = is.available
+    override def read: Int = is.read
+    override def read(b: Array[Byte], off: Int, len: Int): Int = {
+      is.read(b, off, Random.nextInt(len + 1))
+    }
+  }
+
+  @Test
+  def testInputStreamDoesntReadFully {
+    val oid1 = new ObjectId()
+    val oid2 = new ObjectId()
+    val dbo: DBObject = BasicDBObjectBuilder.start()
+      .add("anObjectIdList", Arrays.asList(oid1, oid2))
+      .add("anI32", 123)
+      .get
+
+    val newRecord = new RawTestStructOidList()
+    val protocol = new TBSONBinaryProtocol()
+    protocol.setSource(new RandomReadLengthInputStream(new ByteArrayInputStream(encodeDboToBytes(dbo))))
     newRecord.read(protocol)
     Assert.assertEquals(List(oid1, oid2), newRecord.anObjectIdList)
     Assert.assertEquals(123, newRecord.anI32)

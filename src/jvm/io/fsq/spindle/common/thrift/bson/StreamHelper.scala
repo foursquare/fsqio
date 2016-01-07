@@ -2,7 +2,7 @@
 
 package io.fsq.spindle.common.thrift.bson
 
-import java.io.InputStream
+import java.io.{EOFException, InputStream}
 
 /**
  * some helper functions for reading and writing little endian numbers from streams
@@ -42,5 +42,22 @@ object StreamHelper {
       (ch8 << 56) + (ch7 << 48) + (ch6 << 40) + (ch5 << 32) +
       (ch4 << 24) + (ch3 << 16) + (ch2 << 8) + (ch1 << 0)
     )
+  }
+
+  def readFully(is: InputStream, bytes: Array[Byte], startOffset: Int, length: Int): Unit = {
+    if (bytes.length < length + startOffset) {
+      throw new IllegalArgumentException("Buffer is too small")
+    }
+
+    var offset = startOffset;
+    var toRead = length
+    while ( toRead > 0 ) {
+      val bytesRead = is.read(bytes, offset, toRead)
+      if (bytesRead < 0) {
+        throw new EOFException()
+      }
+      toRead -= bytesRead
+      offset += bytesRead
+    }
   }
 }

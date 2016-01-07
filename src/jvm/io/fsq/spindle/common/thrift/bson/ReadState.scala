@@ -159,7 +159,7 @@ class StructReadState(inputStream: InputStream, buffer: ByteStringBuilder) exten
         val size = StreamHelper.readInt(inputStream)
         enforceSize(size)
         val bytes = new Array[Byte](size)
-        inputStream.read(bytes, 4, size - 4)
+        StreamHelper.readFully(inputStream, bytes, 4, size - 4)
         StreamHelper.writeInt(bytes, 0, size)
         new BranchingInputStream(bytes, 0, size)
     }
@@ -226,7 +226,7 @@ class StructReadState(inputStream: InputStream, buffer: ByteStringBuilder) exten
   private def buildByteBuffer(length: Int): ByteBuffer = {
     val bytes = new Array[Byte](length)
     bytesRead += length
-    inputStream.read(bytes, 0, length)
+    StreamHelper.readFully(inputStream, bytes, 0, length)
     ByteBuffer.wrap(bytes)
   }
 
