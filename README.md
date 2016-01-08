@@ -83,6 +83,12 @@ Similarly, to run all the tests, (after starting the mongodb server):
 
 Projects aspirationally have READMEs at the project root.
 
+## Acknowledgements
+
+* Thanks to the great community supporting [Pants](https://github.com/pantsbuild/pants).
+* Fsq.io is split from commits to our internal monorepo by [Sapling](https://github.com/jsirois/sapling),
+a git porcelain tool by @jsirois.
+
 ## Discussion
 
 Please open an issue if you have any questions or concerns.
