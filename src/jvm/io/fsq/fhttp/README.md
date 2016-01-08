@@ -11,20 +11,18 @@ Like [scalaj-http](https://github.com/scalaj/scalaj-http), it supports multipart
 You will probably want to override FHttpClient.service to add your own logging and tracing filters.
 
 ##How to Build##
-    ./sbt compile
-    ./sbt test
+    ./pants compile src/jvm/io/fsq/fhttp/
+    ./pants test test/jvm/io/fsq/fhttp/test/
 
-##[API Docs](http://foursquare.github.com/foursquare-fhttp/api/)##
-
-## Adding FHttp to your build ##
-The project is cross-compiled for scala 2.9.2 and scala 2.10.3. In your build.sbt, add:
-
-    "com.foursquare" %% "foursquare-fhttp" % "0.1.14"
+##[API Docs](http://foursquare.github.io.fsq.fhttp/api/)##
 
 
 ## Some Simple Examples ##
-    import com.foursquare.fhttp._
-    import com.foursquare.fhttp.FHttpRequest._
+you can try these in `./pants repl src/jvm/io/fsq/fhttp/`
+
+
+    import io.fsq.fhttp._
+    import io.fsq.fhttp.FHttpRequest._
     import com.twitter.conversions.storage._
     import com.twitter.conversions.time._
     import com.twitter.finagle.builder.ClientBuilder
@@ -56,8 +54,8 @@ The project is cross-compiled for scala 2.9.2 and scala 2.10.3. In your build.sb
 
 
 ## OAuth Example ##
-    import com.foursquare.fhttp._
-    import com.foursquare.fhttp.FHttpRequest._
+    import io.fsq.fhttp._
+    import io.fsq.fhttp.FHttpRequest._
 
     // Create the singleton client object using a default client spec
     val client = new FHttpClient("oauth", "oauthbin.appspot.com:80")
@@ -77,8 +75,8 @@ The project is cross-compiled for scala 2.9.2 and scala 2.10.3. In your build.sb
 ## Dropbox OAuth Example ##
 Here's a slightly more complicated oauth (and HTTPS) example, using a [Dropbox API](https://www.dropbox.com/developers/apps) account.
 
-    import com.foursquare.fhttp._
-    import com.foursquare.fhttp.FHttpRequest._
+    import io.fsq.fhttp._
+    import io.fsq.fhttp.FHttpRequest._
     import com.twitter.conversions.storage._
     import com.twitter.conversions.time._
     import com.twitter.finagle.builder.ClientBuilder
