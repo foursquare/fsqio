@@ -183,7 +183,7 @@ jar_library(
   ]
 )
 
-curator_rev = '2.9.0'
+curator_rev = '2.9.1'
 jar_library(
   name = 'curator',
   tags = [
