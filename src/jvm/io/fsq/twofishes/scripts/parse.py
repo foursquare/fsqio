@@ -30,6 +30,7 @@ parser.add_option("--noreload", dest="reload_data",  action="store_false", help=
 parser.add_option("--yes-i-am-sure", dest="yes_i_am_sure",  action="store_true", default=False, help="skip asking about reloading")
 parser.add_option("-g", "--geonamesonly", dest="geonamesonly", action="store_true",  default=False,
   help="geonames is the canonical gazetteer and gets id namespace 0")
+parser.add_option("--mongo", dest="mongo", default=None, help="host:port of mongo")
 
 (options, args) = parser.parse_args()
 
@@ -80,6 +81,9 @@ passBoolOpt('reload_data', options.reload_data)
 jvm_args = ['-Dlogback.configurationFile=src/jvm/io/fsq/twofishes/indexer/data/logback.xml']
 if options.geonamesonly:
   jvm_args.append("-DgeonameidNamespace=0")
+
+if options.mongo:
+  jvm_args.append('-Dmongodb.server=' + options.mongo)
 
 if options.reload_data and not options.yes_i_am_sure:
   if raw_input('Are you suuuuuure you want to drop your mongo data? Type "yes" to continue: ') != 'yes':

@@ -2,7 +2,6 @@
 package io.fsq.twofishes.indexer.mongo
 
 import com.mongodb.casbah.Imports._
-import com.mongodb.casbah.MongoConnection
 import com.novus.salat._
 import com.novus.salat.annotations._
 import com.novus.salat.dao._
@@ -14,6 +13,6 @@ case class S2CoveringIndex(
 )
 
 object S2CoveringIndexDAO extends SalatDAO[S2CoveringIndex, String](
-  collection = MongoConnection()("geocoder")("s2_covering_index")) {
+  collection = MongoIndexerConnection()("geocoder")("s2_covering_index")) {
   def makeIndexes() {}
 }

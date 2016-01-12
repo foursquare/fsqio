@@ -2,7 +2,6 @@
 package io.fsq.twofishes.indexer.mongo
 
 import com.mongodb.casbah.Imports._
-import com.mongodb.casbah.MongoConnection
 import com.novus.salat._
 import com.novus.salat.annotations._
 import com.novus.salat.dao._
@@ -15,6 +14,6 @@ case class PolygonIndex(
 )
 
 object PolygonIndexDAO extends SalatDAO[PolygonIndex, String](
-  collection = MongoConnection()("geocoder")("polygon_index")) {
+  collection = MongoIndexerConnection()("geocoder")("polygon_index")) {
   def makeIndexes() {}
 }
