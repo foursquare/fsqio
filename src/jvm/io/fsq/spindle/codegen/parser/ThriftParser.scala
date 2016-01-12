@@ -190,7 +190,7 @@ class ThriftParser extends Parser {
           }
 
         val nums = numberedElems.map(_.value)
-        assert(nums.size == nums.distinct.size)
+        assert(nums.size == nums.distinct.size, "Enum appears to have duplicate IDs")
 
         (ThriftEnum
           .newBuilder
