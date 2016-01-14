@@ -1,0 +1,101 @@
+{
+  "incoming": {
+    "filters": [
+      {
+        "order": ["filterNot", "allow"],
+        "filterNot": {
+          "bt": [
+            "^sun.reflect.Generated"
+          ]
+        },
+        "allow": {
+          "msgs": [".*"]
+        }
+      }
+    ],
+
+    "savefilters": [
+      "io.fsq.exceptionator.filter.concrete.ConfiguredIncomingFilter",
+      "io.fsq.exceptionator.filter.concrete.IncomingTagsFilter",
+      "io.fsq.exceptionator.filter.concrete.AllBucketFilter",
+      "io.fsq.exceptionator.filter.concrete.StackBucketFilter",
+      "io.fsq.exceptionator.filter.concrete.StackPrefixBucketFilter",
+      "io.fsq.exceptionator.filter.concrete.VersionBucketFilter",
+      "io.fsq.exceptionator.filter.concrete.SignificantKeywordsFilter",
+      "io.fsq.exceptionator.filter.concrete.TagsKeywordFilter",
+      "io.fsq.exceptionator.filter.concrete.BucketsKeywordFilter"
+    ],
+
+    "postSaveActions": [
+      "io.fsq.exceptionator.actions.concrete.EmailFreshExceptionBackgroundAction",
+      "io.fsq.exceptionator.actions.concrete.ApplyUserFiltersBackgroundAction"
+    ]
+
+  },
+
+  "history": {
+    "flushPeriod": 60,
+    "sampleRate": 50,
+    "sampleWindowSeconds": 30
+  },
+
+  "rollingRank": {
+    "tokenizers": "(?:\\s|[=?&./,:\"{}$\\-\\(\\)\\[\\]]|%[0-9A-Fa-f][0-9A-Fa-f])+",
+    "filterNot": "\\d{1,4}|^\\W*$"
+  },
+
+  "backtrace": {
+    "interesting": {
+      "filter": [
+        "^io.fsq"
+      ],
+      "filterNot": [
+        "^io.fsq.rogue"
+      ]
+    }
+  },
+
+  "email": {
+    "test": true,
+    "nInteresting": 5,
+    "tls": "true",
+    "host": "smtp.gmail.com",
+    "from": "exceptionator@example.com",
+    "user": "exceptionator@example.com",
+    "routes": [
+      {
+        "order": ["allow"],
+        "allow": {
+          "msgs": [
+            ".*"
+          ]
+        },
+        "to": [
+          "fallback@example.com"
+        ],
+        "cc": []
+      }
+    ]
+  },
+
+  "git": {
+    "repo": "../fsqio"
+  },
+
+  "web": {
+    "homepage": [
+      {
+        "list": {"bucketName": "all"},
+        "view": {"showList": false}
+      },
+      {
+        "list": {"bucketName": "s"}
+      },
+      {
+        "list": {"query": "500"}
+      }
+    ],
+    "pathPrefix": "/io/fsq"
+  }
+}
+

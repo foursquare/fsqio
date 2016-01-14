@@ -12,8 +12,9 @@ object Config extends Logger {
       logger.info("Using config from " + configFile.toString)
       ConfigFactory.parseFile(configFile).withFallback(ConfigFactory.load())
     } else {
-      logger.warning("Using default empty config!")
-      ConfigFactory.load()
+      val configResource = "io/fsq/exceptionator/config/config.json"
+      logger.warning("No config specified, loading defaults from /io/fsq/exceptionator/config/config.json")
+      ConfigFactory.load(configResource)
     })
   }
   var config: Option[com.typesafe.config.Config] = None

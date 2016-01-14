@@ -13,5 +13,6 @@ scala_library(
     '3rdparty:ostrich',
     '3rdparty:twitter-util',
     '3rdparty:typesafe-config',
+    'src/resources/io/fsq/exceptionator/config',
   ],
 )
