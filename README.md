@@ -34,7 +34,8 @@ A coarse, splitting geocoder and reverse geocoder in Scala
 * [monogdb server](https://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/) (required to pass some tests)
 * An increased number of file descriptors (we use 32768)
 
-Internally we use OSX Yosemite or later. Other OS may work but are officially unsupported.
+Internally we use OSX Yosemite or later. Other OS may work but are officially unsupported. (_Unofficially_, if
+building on Linux you should install `python-dev`, `build-essential`, and `libpq-dev` in addition to the above).
 
 
 ## Pants build system
