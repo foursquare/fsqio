@@ -1,8 +1,6 @@
 #!/bin/bash
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
-DIR=$(dirname ${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]})
-
 export PANTS_CONFIG_OVERRIDE="['pants.ini']"
 
 # The script below runs the pants bootstrap task and exports PANTSBINARY. Basically a noop if the pants_version

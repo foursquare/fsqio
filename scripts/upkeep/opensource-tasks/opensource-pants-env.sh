@@ -7,8 +7,8 @@ set -ex
 
 PYTHON=${PYTHON:-$(which python2.7)}
 
-PANTS_HOME="${PANTS_HOME:-${HOME}/.cache/pants/setup}"
-PANTS_BOOTSTRAP="${PANTS_HOME}/bootstrap"
+FSQIO_HOME="${FSQIO_HOME:-${HOME}/.cache/fsqio/setup}"
+PANTS_BOOTSTRAP="${FSQIO_HOME}/bootstrap"
 
 VENV_VERSION=13.1.2
 
