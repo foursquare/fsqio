@@ -19,7 +19,7 @@ object LatLngHacc {
   def toCellId(v: Long): S2CellId = new S2CellId(v & ~HaccMask)
 
   def toLatLong(v: Long): LatLong = {
-    val center = new S2LatLng(new S2Cell(new S2CellId(v).parent(Level)).getCenter)
+    val center = new S2LatLng(new S2Cell(toCellId(v).parent(Level)).getCenter)
     LatLong(center.latDegrees, center.lngDegrees)
   }
 
