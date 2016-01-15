@@ -54,10 +54,10 @@ command_args = [
 ]
 
 if (len(options.hotfix) > 0):
-  args += ['--hotfix_basepath', options.hotfix]
+  command_args += ['--hotfix_basepath', options.hotfix]
 
 if options.vm_map_count:
-  args += ['--vm_map_count', options.vm_map_count]
+  command_args += ['--vm_map_count', options.vm_map_count]
 
 cmd = './pants %s src/jvm/io/fsq/twofishes/server:server-bin %s' % (
   goal,

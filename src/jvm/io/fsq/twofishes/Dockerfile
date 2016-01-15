@@ -21,9 +21,13 @@ RUN $BUILD_DIR/docker-mongo-hack.sh $TEST_DATA_DIR ./pants compile test :: && rm
 
 # TODO(dan): Everything before this point is the fsqio/fsqio image. Consider using that as the base.
 
-ENV DATA_DIR /data/exceptionator
+ENV DATA_DIR /data/twofishes
+ENV TWOFISHES_LATEST_PREBUILT_INDEX 2015-03-05.zip
 RUN mkdir -p $DATA_DIR
-VOLUME $DATA_DIR
+RUN curl http://twofishes.net/indexes/revgeo/$TWOFISHES_LATEST_PREBUILT_INDEX > $DATA_DIR/$TWOFISHES_LATEST_PREBUILT_INDEX \
+  && unzip $DATA_DIR/$TWOFISHES_LATEST_PREBUILT_INDEX -d $DATA_DIR \
+  && rm $DATA_DIR/$TWOFISHES_LATEST_PREBUILT_INDEX
 
 EXPOSE 8080
-ENTRYPOINT ["$BUILD_DIR/docker-mongo-hack.sh", "$DATA_DIR", "./pants", "run", "src/jvm/io/fsq/exceptionator"]
+# TODO(dan): It'd be nice if the prebuilt index didn't have this funky subfolder.
+CMD ["./src/jvm/io/fsq/twofishes/scripts/serve.py", "-p", "8080", "$DATA_DIR/2015-03-05-20-05-30.753698"]
