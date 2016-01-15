@@ -78,10 +78,6 @@
     ]
   },
 
-  "git": {
-    "repo": "../fsqio"
-  },
-
   "web": {
     "homepage": [
       {
@@ -98,4 +94,3 @@
     "pathPrefix": "/io/fsq"
   }
 }
-
