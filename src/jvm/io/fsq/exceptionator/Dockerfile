@@ -19,4 +19,11 @@ ENV TEST_DATA_DIR /testdata
 RUN mkdir -p $TEST_DATA_DIR && rm -rf $TEST_DATA_DIR/*
 RUN $BUILD_DIR/docker-mongo-hack.sh $TEST_DATA_DIR ./pants compile test :: && rm -rf $TEST_DATA_DIR
 
-ENTRYPOINT ["./pants", "compile", "::"]
+# TODO(dan): Everything before this point is the fsqio/fsqio image. Consider using that as the base.
+
+ENV DATA_DIR /data/exceptionator
+RUN mkdir -p $DATA_DIR
+VOLUME $DATA_DIR
+
+EXPOSE 8080
+ENTRYPOINT $BUILD_DIR/docker-mongo-hack.sh $DATA_DIR ./pants run src/jvm/io/fsq/exceptionator
