@@ -91,6 +91,6 @@
         "list": {"query": "500"}
       }
     ],
-    "pathPrefix": "/io/fsq"
+    "pathPrefix": "/io/fsq/exceptionator"
   }
 }

@@ -53,10 +53,10 @@ class StaticFileService(prefix: String) extends Service[ExceptionatorRequest, Re
 
 
   def apply(request: ExceptionatorRequest) = {
-    val path = if (request.path.matches("^/(?:css|html|js)/exceptionator/.*")) {
+    val path = if (request.path.matches("^/(?:css|html|js)/.*")) {
       request.path
     } else {
-      "/html/exceptionator/index.html"
+      "/html/index.html"
     }
     val resourcePath = prefix + path
 

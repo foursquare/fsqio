@@ -24,10 +24,8 @@ scala_library(
     'src/jvm/io/fsq/exceptionator/model/io',
     'src/jvm/io/fsq/exceptionator/util',
     'src/jvm/io/fsq/rogue',
-    'src/resources/io/fsq/css/exceptionator',
-    'src/resources/io/fsq/css/exceptionator/bootstrap/css',
-    'src/resources/io/fsq/html/exceptionator',
-    'src/resources/io/fsq/js/exceptionator',
-    'src/resources/io/fsq/soy/exceptionator',
+    'src/resources/io/fsq/exceptionator/css',
+    'src/resources/io/fsq/exceptionator/html',
+    'src/resources/io/fsq/exceptionator/js',
   ],
 )
