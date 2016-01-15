@@ -119,7 +119,9 @@ case object BinaryRenderType extends RefRenderType {
   override def hasOrdering: Boolean = false
 }
 
-case class EnumRenderType(override val text: String) extends RefRenderType {
+trait EnumRenderType
+
+case class EnumIntRenderType(override val text: String) extends RefRenderType with EnumRenderType {
   override def ttype: TType = TType.I32
   override def fieldWriteTemplate: String = "write/enum.ssp"
   override def fieldReadTemplate: String = "read/enum.ssp"
@@ -129,7 +131,7 @@ case class EnumRenderType(override val text: String) extends RefRenderType {
   override def renderValue(v: String) = Some(v)
 }
 
-case class EnumStringRenderType(override val text: String) extends RefRenderType {
+case class EnumStringRenderType(override val text: String) extends RefRenderType with EnumRenderType {
   override def ttype: TType = TType.STRING
   override def fieldWriteTemplate: String = "write/enum_string.ssp"
   override def fieldReadTemplate: String = "read/enum_string.ssp"
@@ -470,7 +472,7 @@ object RenderType {
       case MapRef(key, value) => MapRenderType(RenderType(key, annotations), RenderType(value, annotations))
       case EnumRef(name) => annotations.get("serialize_as") match {
         case Some("string") => EnumStringRenderType(name)
-        case _ => EnumRenderType(name)
+        case _ => EnumIntRenderType(name)
       }
       case StructRef(name) => StructRenderType(name)
       case UnionRef(name) => StructRenderType(name)
