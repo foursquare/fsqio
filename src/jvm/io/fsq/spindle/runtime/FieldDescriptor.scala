@@ -73,6 +73,8 @@ trait StructField[ER <: Record[ER], EM <: MetaRecord[ER, EM]] extends UntypedStr
 trait EnumField {
   def enumMeta: EnumMeta[_]
 }
+trait EnumIntField
+trait EnumStringField
 
 abstract class OptionalFieldDescriptor[F, R <: Record[R], M <: MetaRecord[R, M]](
     override val name: String,

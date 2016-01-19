@@ -4,17 +4,25 @@ package io.fsq.rogue.spindle
 
 import io.fsq.field.Field
 import io.fsq.rogue.{BSONType, Rogue}
-import io.fsq.spindle.runtime.{Enum, MetaRecord, Record}
+import io.fsq.spindle.runtime.{Enum, EnumIntField, EnumStringField, MetaRecord, Record}
 
 trait SpindleRogue {
-  implicit def enumFieldToSpindleEnumQueryField[M <: MetaRecord[_, _], F <: Enum[F]](f: Field[F, M]): SpindleEnumQueryField[M, F] =
-    new SpindleEnumQueryField(f)
-  implicit def enumListFieldToSpindleEnumListQueryField[M <: MetaRecord[_, _], F <: Enum[F]](f: Field[Seq[F], M]): SpindleEnumListQueryField[M, F] =
-    new SpindleEnumListQueryField(f)
-  implicit def enumFieldToSpindleEnumModifyField[M <: MetaRecord[_, _], F <: Enum[F]](f: Field[F, M]): SpindleEnumModifyField[M, F] =
-    new SpindleEnumModifyField(f)  
-  implicit def enumFieldToSpindleEnumListModifyField[M <: MetaRecord[_, _], F <: Enum[F]](f: Field[Seq[F], M]): SpindleEnumListModifyField[M, F] =
-    new SpindleEnumListModifyField(f)  
+  implicit def enumFieldToSpindleEnumIntQueryField[M <: MetaRecord[_, _], F <: Enum[F]](f: Field[F, M] with EnumIntField): SpindleEnumIntQueryField[M, F] =
+    new SpindleEnumIntQueryField(f)
+  implicit def enumListFieldToSpindleEnumIntListQueryField[M <: MetaRecord[_, _], F <: Enum[F]](f: Field[Seq[F], M] with EnumIntField): SpindleEnumIntListQueryField[M, F] =
+    new SpindleEnumIntListQueryField(f)
+  implicit def enumFieldToSpindleEnumIntModifyField[M <: MetaRecord[_, _], F <: Enum[F]](f: Field[F, M] with EnumIntField): SpindleEnumIntModifyField[M, F] =
+    new SpindleEnumIntModifyField(f)
+  implicit def enumFieldToSpindleEnumIntListModifyField[M <: MetaRecord[_, _], F <: Enum[F]](f: Field[Seq[F], M] with EnumIntField): SpindleEnumIntListModifyField[M, F] =
+    new SpindleEnumIntListModifyField(f)
+  implicit def enumFieldToSpindleEnumStringQueryField[M <: MetaRecord[_, _], F <: Enum[F]](f: Field[F, M] with EnumStringField): SpindleEnumStringQueryField[M, F] =
+    new SpindleEnumStringQueryField(f)
+  implicit def enumListFieldToSpindleEnumStringListQueryField[M <: MetaRecord[_, _], F <: Enum[F]](f: Field[Seq[F], M] with EnumStringField): SpindleEnumStringListQueryField[M, F] =
+    new SpindleEnumStringListQueryField(f)
+  implicit def enumFieldToSpindleEnumStringModifyField[M <: MetaRecord[_, _], F <: Enum[F]](f: Field[F, M] with EnumStringField): SpindleEnumStringModifyField[M, F] =
+    new SpindleEnumStringModifyField(f)
+  implicit def enumFieldToSpindleEnumStringListModifyField[M <: MetaRecord[_, _], F <: Enum[F]](f: Field[Seq[F], M] with EnumStringField): SpindleEnumStringListModifyField[M, F] =
+    new SpindleEnumStringListModifyField(f)
 
   implicit def embeddedFieldToSpindleEmbeddedRecordQueryField[
       R <: Record[_],

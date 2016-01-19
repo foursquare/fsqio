@@ -66,6 +66,7 @@ class QueryTest extends JUnitMustMatchers {
     Q(ThriftVenueClaim).where(_.reason eqs ThriftRejectReason.tooManyClaims).toString() must_== """db.venueclaims.find({ "reason" : 0})"""
     Q(ThriftVenueClaim).where(_.reason eqs ThriftRejectReason.cheater).toString() must_== """db.venueclaims.find({ "reason" : 1})"""
     Q(ThriftVenueClaim).where(_.reason eqs ThriftRejectReason.wrongCode).toString() must_== """db.venueclaims.find({ "reason" : 2})"""
+    Q(ThriftVenueClaim).where(_.reasonString eqs ThriftRejectReason.cheater).toString() must_== """db.venueclaims.find({ "reasonString" : "cheater"})"""
 
     // Comparison operators on arbitrary fields.
     // Warning: arbitraryFieldToQueryField is dangerous if T is not a serializable type by DBObject
@@ -282,6 +283,8 @@ class QueryTest extends JUnitMustMatchers {
     val query2 = """db.venueclaims.update({ "uid" : 1}, """
     Q(ThriftVenueClaim).where(_.userid eqs 1).modify(_.status setTo ThriftClaimStatus.approved).toString() must_== query2 + """{ "$set" : { "status" : "Approved"}}""" + suffix
     */
+    Q(ThriftVenueClaim).modify(_.reason setTo ThriftRejectReason.cheater).toString() must_== """db.venueclaims.update({ }, { "$set" : { "reason" : 1}}, false, false)"""
+    Q(ThriftVenueClaim).modify(_.reasonString setTo ThriftRejectReason.cheater).toString() must_== """db.venueclaims.update({ }, { "$set" : { "reasonString" : "cheater"}}, false, false)"""
 
     // Calendar
     Q(ThriftVenue).where(_.legacyid eqs 1).modify(_.last_updated setTo d1).toString() must_== query + """{ "$set" : { "last_updated" : { "$date" : "2010-05-01T00:00:00.000Z"}}}""" + suffix
@@ -423,8 +426,11 @@ class QueryTest extends JUnitMustMatchers {
     */
 
     // Enumeration list
-    Q(ThriftOAuthConsumer).where(_.privileges contains ThriftConsumerPrivilege.awardBadges).signature() must_== """db.oauthconsumers.find({ "privileges" : 0})"""
-    Q(ThriftOAuthConsumer).where(_.privileges at 0 eqs ThriftConsumerPrivilege.awardBadges).signature() must_== """db.oauthconsumers.find({ "privileges.0" : 0})"""
+    Q(ThriftOAuthConsumer).where(_.privileges contains ThriftConsumerPrivilege.awardBadges).toString() must_== """db.oauthconsumers.find({ "privileges" : 0})"""
+    Q(ThriftOAuthConsumer).where(_.privileges in Seq(ThriftConsumerPrivilege.awardBadges)).toString() must_== """db.oauthconsumers.find({ "privileges" : { "$in" : [ 0]}})"""
+    Q(ThriftVenue).where(_.lastClaim.sub.enumIntField(_.status) in Seq(ThriftClaimStatus.approved)).toString() must_== """db.venues.find({ "last_claim.status" : { "$in" : [ 1]}})"""
+    // TODO(dan): Fix this.
+    // Q(ThriftOAuthConsumer).where(_.privileges at 0 eqs ThriftConsumerPrivilege.awardBadges).signature() must_== """db.oauthconsumers.find({ "privileges.0" : 0})"""
 
     // Field type
     Q(ThriftVenue).where(_.legacyid hastype MongoType.String).signature() must_== """db.venues.find({ "legid" : { "$type" : 0}})"""

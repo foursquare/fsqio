@@ -21,6 +21,7 @@ struct ThriftVenueClaim {
   4: optional ids.UserId userId (wire_name="uid")
   5: optional venue.ThriftClaimStatus status (wire_name="status")
   6: optional ThriftRejectReason reason (wire_name="reason")
+  7: optional ThriftRejectReason reasonString (wire_name="reasonString", serialize_as="string")
 } (
   primary_key="id"
   foreign_key="venueId"
