@@ -17,7 +17,7 @@ RUN ./pants pom-resolve
 
 ENV TEST_DATA_DIR /testdata
 RUN mkdir -p $TEST_DATA_DIR && rm -rf $TEST_DATA_DIR/*
-RUN $BUILD_DIR/docker-mongo-hack.sh $TEST_DATA_DIR ./pants compile test :: && rm -rf $TEST_DATA_DIR
+RUN $BUILD_DIR/docker/docker-mongo-hack.sh $TEST_DATA_DIR ./pants compile test :: && rm -rf $TEST_DATA_DIR
 
 # TODO(dan): Everything before this point is the fsqio/fsqio image. Consider using that as the base.
 
