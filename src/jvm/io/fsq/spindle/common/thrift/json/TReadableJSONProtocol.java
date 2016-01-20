@@ -77,6 +77,10 @@ public class TReadableJSONProtocol extends TProtocol implements SerializeDatesAs
   //     and oid is the hex-encoded ASCII representation of the ObjectId.
   private boolean bareObjectIds = false;
 
+  // If true number values will be serialized as "foo"
+  // Javascript only supports 54 bit number so sending down longs (geoIds, dateTimes) will result in loss of precision and bugs
+  private boolean numbersAsStrings = false;
+
   // For reading.
   private JsonParser jp = null;
   private final Stack<ReadContext> readContextStack = new Stack<ReadContext>();
@@ -90,12 +94,15 @@ public class TReadableJSONProtocol extends TProtocol implements SerializeDatesAs
   }
 
   public TReadableJSONProtocol(TTransport trans, PrettyPrinter pp, JsonParser jp) {
-    this(trans, pp, jp, false, false);
+    this(trans, pp, jp, false, false, false);
   }
   public TReadableJSONProtocol(TTransport trans, PrettyPrinter pp, JsonParser jp, boolean coerceMapKeys) {
-    this(trans, pp, jp, coerceMapKeys, false);
+    this(trans, pp, jp, coerceMapKeys, false, false);
   }
   public TReadableJSONProtocol(TTransport trans, PrettyPrinter pp, JsonParser jp, boolean coerceMapKeys, boolean bareObjectIds) {
+    this(trans, pp, jp, coerceMapKeys, bareObjectIds, false);
+  }
+  public TReadableJSONProtocol(TTransport trans, PrettyPrinter pp, JsonParser jp, boolean coerceMapKeys, boolean bareObjectIds, boolean numbersAsStrings) {
     super(trans);
 
     prettyPrinter = pp;
@@ -107,6 +114,7 @@ public class TReadableJSONProtocol extends TProtocol implements SerializeDatesAs
     }
     this.coerceMapKeys = coerceMapKeys;
     this.bareObjectIds = bareObjectIds;
+    this.numbersAsStrings = numbersAsStrings;
   }
 
   public static byte getElemTypeFromToken(JsonToken token) throws TException {
@@ -161,27 +169,37 @@ public class TReadableJSONProtocol extends TProtocol implements SerializeDatesAs
   public static class Factory implements TProtocolFactory {
     private final boolean prettyPrint;
     private final boolean bareObjectIds;
+    private boolean numbersAsStrings;
     private final JsonParser parser;
 
     public Factory() {
-      this(false, false, null);
+      this(false, false, false, null);
     }
 
     public Factory(boolean prettyPrint) {
-      this(prettyPrint, false, null);
+      this(prettyPrint, false, false, null);
     }
 
     public Factory(boolean prettyPrint, JsonParser parser) {
-      this(prettyPrint, false, parser);
+      this(prettyPrint, false, false, parser);
     }
 
     public Factory(boolean prettyPrint, boolean bareObjectIds) {
-      this(prettyPrint, bareObjectIds, null);
+      this(prettyPrint, bareObjectIds, false, null);
+    }
+
+    public Factory(boolean prettyPrint, boolean bareObjectIds, boolean numbersAsStrings) {
+      this(prettyPrint, bareObjectIds, numbersAsStrings, null);
     }
 
     public Factory(boolean prettyPrint, boolean bareObjectIds, JsonParser parser) {
+      this(prettyPrint, bareObjectIds, false, parser);
+    }
+
+    public Factory(boolean prettyPrint, boolean bareObjectIds, boolean numbersAsStrings, JsonParser parser) {
       this.prettyPrint = prettyPrint;
       this.bareObjectIds = bareObjectIds;
+      this.numbersAsStrings = numbersAsStrings;
       this.parser = parser;
     }
 
@@ -196,7 +214,7 @@ public class TReadableJSONProtocol extends TProtocol implements SerializeDatesAs
 
     @Override
     public TProtocol getProtocol(TTransport trans) {
-      return new TReadableJSONProtocol(trans, prettyPrinter(), parser, coerceMapKeys(), bareObjectIds);
+      return new TReadableJSONProtocol(trans, prettyPrinter(), parser, coerceMapKeys(), bareObjectIds, numbersAsStrings);
     }
   }
 
@@ -388,7 +406,11 @@ public class TReadableJSONProtocol extends TProtocol implements SerializeDatesAs
           throw new NonStringMapKeyException(i);
         }
       } else {
-        jg.writeNumber((int)i);
+        if (numbersAsStrings) {
+          jg.writeString(Integer.toString((int)i));
+        } else {
+          jg.writeNumber((int)i);
+        }
       }
     } catch (IOException e) {
       wrapIOException(e, i);
@@ -405,7 +427,11 @@ public class TReadableJSONProtocol extends TProtocol implements SerializeDatesAs
           throw new NonStringMapKeyException(i);
         }
       } else {
-        jg.writeNumber(i);
+        if (numbersAsStrings) {
+          jg.writeString(Integer.toString(i));
+        } else {
+          jg.writeNumber(i);
+        }
       }
     } catch (IOException e) {
       wrapIOException(e, i);
@@ -422,7 +448,11 @@ public class TReadableJSONProtocol extends TProtocol implements SerializeDatesAs
           throw new NonStringMapKeyException(l);
         }
       } else {
-        jg.writeNumber(l);
+        if (numbersAsStrings) {
+          jg.writeString(Long.toString(l));
+        } else {
+          jg.writeNumber(l);
+        }
       }
     } catch (IOException e) {
       wrapIOException(e, l);
@@ -439,7 +469,11 @@ public class TReadableJSONProtocol extends TProtocol implements SerializeDatesAs
           throw new NonStringMapKeyException(v);
         }
       } else {
-        jg.writeNumber(v);
+        if (numbersAsStrings) {
+          jg.writeString(Double.toString(v));
+        } else {
+          jg.writeNumber(v);
+        }
       }
     } catch (IOException e) {
       wrapIOException(e, v);
