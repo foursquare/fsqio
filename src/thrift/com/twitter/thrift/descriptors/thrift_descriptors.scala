@@ -205,7 +205,7 @@ class IncludeMeta
   val INCLUDE_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Include")
 
   val PATH_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "path",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -550,7 +550,7 @@ final class RawInclude extends JavaIncludeRaw[
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -613,7 +613,7 @@ class NamespaceMeta
   val NAMESPACE_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Namespace")
 
   val LANGUAGE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "language",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -623,7 +623,7 @@ class NamespaceMeta
       }
     )
   val NAME_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "name",
       org.apache.thrift.protocol.TType.STRING,
       2,
@@ -1040,7 +1040,7 @@ final class RawNamespace extends JavaNamespaceRaw[
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -1103,7 +1103,7 @@ class AnnotationMeta
   val ANNOTATION_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Annotation")
 
   val KEY_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "key",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -1113,7 +1113,7 @@ class AnnotationMeta
       }
     )
   val VALUE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "value",
       org.apache.thrift.protocol.TType.STRING,
       2,
@@ -1530,7 +1530,7 @@ final class RawAnnotation extends JavaAnnotationRaw[
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -1600,7 +1600,7 @@ class BaseTypeMeta
   val BASETYPE_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("BaseType")
 
   val SIMPLEBASETYPE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "simpleBaseType",
       org.apache.thrift.protocol.TType.I32,
       1,
@@ -1610,7 +1610,7 @@ class BaseTypeMeta
       }
     )
   val ANNOTATIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "annotations",
       org.apache.thrift.protocol.TType.LIST,
       99,
@@ -2054,7 +2054,7 @@ final class RawBaseType extends JavaBaseTypeRaw[com.twitter.thrift.descriptors.A
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -2111,7 +2111,7 @@ class ListTypeMeta
   val LISTTYPE_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("ListType")
 
   val ELEMENTTYPEID_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "elementTypeId",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -2456,7 +2456,7 @@ final class RawListType extends JavaListTypeRaw[
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -2513,7 +2513,7 @@ class SetTypeMeta
   val SETTYPE_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("SetType")
 
   val ELEMENTTYPEID_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "elementTypeId",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -2858,7 +2858,7 @@ final class RawSetType extends JavaSetTypeRaw[
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -2921,7 +2921,7 @@ class MapTypeMeta
   val MAPTYPE_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("MapType")
 
   val KEYTYPEID_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "keyTypeId",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -2931,7 +2931,7 @@ class MapTypeMeta
       }
     )
   val VALUETYPEID_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "valueTypeId",
       org.apache.thrift.protocol.TType.STRING,
       2,
@@ -3348,7 +3348,7 @@ final class RawMapType extends JavaMapTypeRaw[
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -3418,7 +3418,7 @@ class ContainerTypeMeta
   val CONTAINERTYPE_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("ContainerType")
 
   val SIMPLECONTAINERTYPE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "simpleContainerType",
       org.apache.thrift.protocol.TType.STRUCT,
       1,
@@ -3428,7 +3428,7 @@ class ContainerTypeMeta
       }
     )
   val ANNOTATIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "annotations",
       org.apache.thrift.protocol.TType.LIST,
       99,
@@ -3872,7 +3872,7 @@ final class RawContainerType extends JavaContainerTypeRaw[com.twitter.thrift.des
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -3929,7 +3929,7 @@ class TyperefMeta
   val TYPEREF_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Typeref")
 
   val TYPEALIAS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "typeAlias",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -4274,7 +4274,7 @@ final class RawTyperef extends JavaTyperefRaw[
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -4337,7 +4337,7 @@ class TypeMeta
   val TYPE_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Type")
 
   val ID_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "id",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -4347,7 +4347,7 @@ class TypeMeta
       }
     )
   val SIMPLETYPE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "simpleType",
       org.apache.thrift.protocol.TType.STRUCT,
       2,
@@ -4768,7 +4768,7 @@ final class RawType extends JavaTypeRaw[com.twitter.thrift.descriptors.SimpleTyp
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -4844,7 +4844,7 @@ class TypedefMeta
   val TYPEDEF_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Typedef")
 
   val TYPEID_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "typeId",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -4854,7 +4854,7 @@ class TypedefMeta
       }
     )
   val TYPEALIAS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "typeAlias",
       org.apache.thrift.protocol.TType.STRING,
       2,
@@ -4864,7 +4864,7 @@ class TypedefMeta
       }
     )
   val ANNOTATIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "annotations",
       org.apache.thrift.protocol.TType.LIST,
       99,
@@ -5461,7 +5461,7 @@ final class RawTypedef extends JavaTypedefRaw[com.twitter.thrift.descriptors.Ann
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -5524,7 +5524,7 @@ class TypeRegistryMeta
   val TYPEREGISTRY_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("TypeRegistry")
 
   val IDTOTYPE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "idToType",
       org.apache.thrift.protocol.TType.MAP,
       1,
@@ -5534,7 +5534,7 @@ class TypeRegistryMeta
       }
     )
   val ALIASTOTYPEID_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "aliasToTypeId",
       org.apache.thrift.protocol.TType.MAP,
       2,
@@ -5999,7 +5999,7 @@ final class RawTypeRegistry extends JavaTypeRegistryRaw[com.twitter.thrift.descr
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -6068,7 +6068,7 @@ class ConstMeta
   val CONST_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Const")
 
   val TYPEID_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "typeId",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -6078,7 +6078,7 @@ class ConstMeta
       }
     )
   val NAME_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "name",
       org.apache.thrift.protocol.TType.STRING,
       2,
@@ -6088,7 +6088,7 @@ class ConstMeta
       }
     )
   val VALUE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "value",
       org.apache.thrift.protocol.TType.STRING,
       3,
@@ -6662,7 +6662,7 @@ final class RawConst extends JavaConstRaw[
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -6738,7 +6738,7 @@ class EnumElementMeta
   val ENUMELEMENT_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("EnumElement")
 
   val NAME_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "name",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -6748,7 +6748,7 @@ class EnumElementMeta
       }
     )
   val VALUE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "value",
       org.apache.thrift.protocol.TType.I32,
       2,
@@ -6758,7 +6758,7 @@ class EnumElementMeta
       }
     )
   val ANNOTATIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "annotations",
       org.apache.thrift.protocol.TType.LIST,
       99,
@@ -7359,7 +7359,7 @@ final class RawEnumElement extends JavaEnumElementRaw[com.twitter.thrift.descrip
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -7435,7 +7435,7 @@ class EnumMeta
   val ENUM_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Enum")
 
   val NAME_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "name",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -7445,7 +7445,7 @@ class EnumMeta
       }
     )
   val ELEMENTS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "elements",
       org.apache.thrift.protocol.TType.LIST,
       2,
@@ -7455,7 +7455,7 @@ class EnumMeta
       }
     )
   val ANNOTATIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "annotations",
       org.apache.thrift.protocol.TType.LIST,
       99,
@@ -8075,7 +8075,7 @@ final class RawEnum extends JavaEnumRaw[com.twitter.thrift.descriptors.Annotatio
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -8183,7 +8183,7 @@ class FieldMeta
   val FIELD_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Field")
 
   val IDENTIFIER_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "identifier",
       org.apache.thrift.protocol.TType.I16,
       1,
@@ -8193,7 +8193,7 @@ class FieldMeta
       }
     )
   val NAME_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "name",
       org.apache.thrift.protocol.TType.STRING,
       2,
@@ -8203,7 +8203,7 @@ class FieldMeta
       }
     )
   val TYPEID_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "typeId",
       org.apache.thrift.protocol.TType.STRING,
       3,
@@ -8213,7 +8213,7 @@ class FieldMeta
       }
     )
   val REQUIREDNESS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "requiredness",
       org.apache.thrift.protocol.TType.I32,
       4,
@@ -8223,7 +8223,7 @@ class FieldMeta
       }
     )
   val DEFAULTVALUE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "defaultValue",
       org.apache.thrift.protocol.TType.STRING,
       5,
@@ -8233,7 +8233,7 @@ class FieldMeta
       }
     )
   val ANNOTATIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "annotations",
       org.apache.thrift.protocol.TType.LIST,
       99,
@@ -9087,7 +9087,7 @@ final class RawField extends JavaFieldRaw[com.twitter.thrift.descriptors.Annotat
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -9163,7 +9163,7 @@ class StructMeta
   val STRUCT_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Struct")
 
   val NAME_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "name",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -9173,7 +9173,7 @@ class StructMeta
       }
     )
   val FIELDS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "fields",
       org.apache.thrift.protocol.TType.LIST,
       2,
@@ -9183,7 +9183,7 @@ class StructMeta
       }
     )
   val ANNOTATIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "annotations",
       org.apache.thrift.protocol.TType.LIST,
       99,
@@ -9803,7 +9803,7 @@ final class RawStruct extends JavaStructRaw[com.twitter.thrift.descriptors.Annot
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -9879,7 +9879,7 @@ class UnionMeta
   val UNION_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Union")
 
   val NAME_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "name",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -9889,7 +9889,7 @@ class UnionMeta
       }
     )
   val FIELDS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "fields",
       org.apache.thrift.protocol.TType.LIST,
       2,
@@ -9899,7 +9899,7 @@ class UnionMeta
       }
     )
   val ANNOTATIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "annotations",
       org.apache.thrift.protocol.TType.LIST,
       99,
@@ -10519,7 +10519,7 @@ final class RawUnion extends JavaUnionRaw[com.twitter.thrift.descriptors.Annotat
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -10595,7 +10595,7 @@ class ExceptionMeta
   val EXCEPTION_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Exception")
 
   val NAME_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "name",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -10605,7 +10605,7 @@ class ExceptionMeta
       }
     )
   val FIELDS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "fields",
       org.apache.thrift.protocol.TType.LIST,
       2,
@@ -10615,7 +10615,7 @@ class ExceptionMeta
       }
     )
   val ANNOTATIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "annotations",
       org.apache.thrift.protocol.TType.LIST,
       99,
@@ -11235,7 +11235,7 @@ final class RawException extends JavaExceptionRaw[com.twitter.thrift.descriptors
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -11343,7 +11343,7 @@ class FunctionMeta
   val FUNCTION_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Function")
 
   val NAME_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "name",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -11353,7 +11353,7 @@ class FunctionMeta
       }
     )
   val RETURNTYPEID_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "returnTypeId",
       org.apache.thrift.protocol.TType.STRING,
       2,
@@ -11363,7 +11363,7 @@ class FunctionMeta
       }
     )
   val ONEWAY_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "oneWay",
       org.apache.thrift.protocol.TType.BOOL,
       3,
@@ -11373,7 +11373,7 @@ class FunctionMeta
       }
     )
   val ARGZ_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "argz",
       org.apache.thrift.protocol.TType.LIST,
       4,
@@ -11383,7 +11383,7 @@ class FunctionMeta
       }
     )
   val THROWZ_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "throwz",
       org.apache.thrift.protocol.TType.LIST,
       5,
@@ -11393,7 +11393,7 @@ class FunctionMeta
       }
     )
   val ANNOTATIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "annotations",
       org.apache.thrift.protocol.TType.LIST,
       99,
@@ -12292,7 +12292,7 @@ final class RawFunction extends JavaFunctionRaw[com.twitter.thrift.descriptors.A
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -12381,7 +12381,7 @@ class ServiceMeta
   val SERVICE_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Service")
 
   val NAME_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "name",
       org.apache.thrift.protocol.TType.STRING,
       1,
@@ -12391,7 +12391,7 @@ class ServiceMeta
       }
     )
   val EXTENDZ_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "extendz",
       org.apache.thrift.protocol.TType.STRING,
       2,
@@ -12401,7 +12401,7 @@ class ServiceMeta
       }
     )
   val FUNCTIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "functions",
       org.apache.thrift.protocol.TType.LIST,
       3,
@@ -12411,7 +12411,7 @@ class ServiceMeta
       }
     )
   val ANNOTATIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "annotations",
       org.apache.thrift.protocol.TType.LIST,
       99,
@@ -13113,7 +13113,7 @@ final class RawService extends JavaServiceRaw[com.twitter.thrift.descriptors.Ann
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -13287,7 +13287,7 @@ class ProgramMeta
   val PROGRAM_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("Program")
 
   val NAMESPACES_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "namespaces",
       org.apache.thrift.protocol.TType.LIST,
       1,
@@ -13297,7 +13297,7 @@ class ProgramMeta
       }
     )
   val INCLUDES_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "includes",
       org.apache.thrift.protocol.TType.LIST,
       2,
@@ -13307,7 +13307,7 @@ class ProgramMeta
       }
     )
   val CONSTANTS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "constants",
       org.apache.thrift.protocol.TType.LIST,
       3,
@@ -13317,7 +13317,7 @@ class ProgramMeta
       }
     )
   val ENUMS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "enums",
       org.apache.thrift.protocol.TType.LIST,
       4,
@@ -13327,7 +13327,7 @@ class ProgramMeta
       }
     )
   val TYPEDEFS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "typedefs",
       org.apache.thrift.protocol.TType.LIST,
       5,
@@ -13337,7 +13337,7 @@ class ProgramMeta
       }
     )
   val STRUCTS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "structs",
       org.apache.thrift.protocol.TType.LIST,
       6,
@@ -13347,7 +13347,7 @@ class ProgramMeta
       }
     )
   val UNIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "unions",
       org.apache.thrift.protocol.TType.LIST,
       7,
@@ -13357,7 +13357,7 @@ class ProgramMeta
       }
     )
   val EXCEPTIONS_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "exceptions",
       org.apache.thrift.protocol.TType.LIST,
       8,
@@ -13367,7 +13367,7 @@ class ProgramMeta
       }
     )
   val SERVICES_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "services",
       org.apache.thrift.protocol.TType.LIST,
       9,
@@ -13377,7 +13377,7 @@ class ProgramMeta
       }
     )
   val TYPEREGISTRY_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "typeRegistry",
       org.apache.thrift.protocol.TType.STRUCT,
       98,
@@ -14757,7 +14757,7 @@ final class RawProgram extends JavaProgramRaw[com.twitter.thrift.descriptors.Con
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -14845,7 +14845,7 @@ class SimpleContainerTypeMeta
   val SIMPLECONTAINERTYPE_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("SimpleContainerType")
 
   val LISTTYPE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "listType",
       org.apache.thrift.protocol.TType.STRUCT,
       1,
@@ -14855,7 +14855,7 @@ class SimpleContainerTypeMeta
       }
     )
   val SETTYPE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "setType",
       org.apache.thrift.protocol.TType.STRUCT,
       2,
@@ -14865,7 +14865,7 @@ class SimpleContainerTypeMeta
       }
     )
   val MAPTYPE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "mapType",
       org.apache.thrift.protocol.TType.STRUCT,
       3,
@@ -15363,7 +15363,7 @@ final class RawSimpleContainerType extends JavaSimpleContainerTypeRaw[com.twitte
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }
@@ -15450,7 +15450,7 @@ class SimpleTypeMeta
   val SIMPLETYPE_SDESC: org.apache.thrift.protocol.TStruct = new org.apache.thrift.protocol.TStruct("SimpleType")
 
   val BASETYPE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "baseType",
       org.apache.thrift.protocol.TType.STRUCT,
       1,
@@ -15460,7 +15460,7 @@ class SimpleTypeMeta
       }
     )
   val CONTAINERTYPE_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "containerType",
       org.apache.thrift.protocol.TType.STRUCT,
       2,
@@ -15470,7 +15470,7 @@ class SimpleTypeMeta
       }
     )
   val TYPEREF_FDESC: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "typeref",
       org.apache.thrift.protocol.TType.STRUCT,
       3,
@@ -15968,7 +15968,7 @@ final class RawSimpleType extends JavaSimpleTypeRaw[com.twitter.thrift.descripto
 
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }

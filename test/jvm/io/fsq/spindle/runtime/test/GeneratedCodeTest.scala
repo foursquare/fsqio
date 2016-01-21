@@ -2,9 +2,9 @@
 
 package io.fsq.spindle.runtime.test
 
-import com.foursquare.common.thrift.bson.TBSONProtocol
-import com.foursquare.common.thrift.json.TReadableJSONProtocol
 import com.google.i18n.phonenumbers.PhoneNumberUtil
+import io.fsq.spindle.common.thrift.bson.TBSONProtocol
+import io.fsq.spindle.common.thrift.json.TReadableJSONProtocol
 import io.fsq.spindle.thriftexample.av.gen.Movie
 import io.fsq.spindle.thriftexample.av.gen.MovieTypedefs.{MinutesId, MovieId}
 import io.fsq.spindle.thriftexample.gen.{Content, MutableTvListingEntry, TvListingEntry}

@@ -6,7 +6,7 @@
 <%@ val cls: StructLike %>
   override def toString: String = {
     val trans = new org.apache.thrift.transport.TMemoryBuffer(1024)
-    val oprot = new com.foursquare.common.thrift.base.TStringProtocol(trans)
+    val oprot = new _root_.io.fsq.spindle.common.thrift.base.TStringProtocol(trans)
     write(oprot)
     trans.toString("UTF8")
   }

@@ -8,5 +8,5 @@
       "renderType" -> renderType.ref,
       "lhs" -> lhs,
       "indent" -> indent,
-      "wrapLeft" -> (wrapLeft + "com.foursquare.common.thrift.base.ThriftDateTimeHelper.read(iprot, "),
+      "wrapLeft" -> (wrapLeft + "_root_.io.fsq.spindle.common.thrift.base.ThriftDateTimeHelper.read(iprot, "),
       "wrapRight" -> (")" + wrapRight))) %>

@@ -2,8 +2,8 @@
 
 package io.fsq.spindle.runtime.test
 
-import com.foursquare.common.thrift.json.TReadableJSONProtocol
 import io.fsq.spindle.codegen.test.gen._
+import io.fsq.spindle.common.thrift.json.TReadableJSONProtocol
 import io.fsq.spindle.runtime.{KnownTProtocolNames, MetaRecord, TProtocolInfo}
 import java.nio.ByteBuffer
 import net.liftweb.json.{Diff, JsonAST, JsonParser, Printer}

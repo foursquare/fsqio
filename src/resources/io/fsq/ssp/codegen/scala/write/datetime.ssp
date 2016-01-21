@@ -1,4 +1,4 @@
 <%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.DateTimeRenderType %>
 <%@ val valueExpr: String %>
 <%@ val indent: String %>
-${indent}com.foursquare.common.thrift.base.ThriftDateTimeHelper.write(oprot, ${valueExpr})
+${indent}_root_.io.fsq.spindle.common.thrift.base.ThriftDateTimeHelper.write(oprot, ${valueExpr})

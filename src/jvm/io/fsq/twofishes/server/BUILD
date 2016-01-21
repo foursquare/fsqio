@@ -6,7 +6,6 @@ scala_library(
   dependencies = [
     '3rdparty:country-revgeo',
     '3rdparty:finagle',
-    '3rdparty:fscommon-thrift-json',
     '3rdparty:gt-geojson',
     '3rdparty:hadoop-common',
     '3rdparty:hbase',  # TODO: This is only here while we transition twofishes to our hfile reader.
@@ -20,6 +19,7 @@ scala_library(
     '3rdparty:slf4s',
     '3rdparty:thrift',
     '3rdparty:twitter-util',
+    'src/jvm/io/fsq/spindle/common/thrift/json',
     'src/jvm/io/fsq/spindle/runtime',
     'src/jvm/io/fsq/twofishes/core',
     'src/jvm/io/fsq/twofishes/country',

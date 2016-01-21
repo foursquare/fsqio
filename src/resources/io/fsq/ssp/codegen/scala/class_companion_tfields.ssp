@@ -10,7 +10,7 @@
 
 #for (field <- cls.fields)
   val ${field.tfieldName}: org.apache.thrift.protocol.TField =
-    new com.foursquare.common.thrift.base.EnhancedTField(
+    new _root_.io.fsq.spindle.common.thrift.base.EnhancedTField(
       "${field.wireName}",
       org.apache.thrift.protocol.TType.${field.renderType.ttype.name},
       ${field.identifier},
