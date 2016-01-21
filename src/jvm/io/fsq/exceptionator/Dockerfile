@@ -5,4 +5,4 @@ RUN mkdir -p $DATA_DIR
 VOLUME $DATA_DIR
 
 EXPOSE 8080
-ENTRYPOINT ["$BUILD_DIR/docker-mongo-hack.sh", "$DATA_DIR", "./pants", "run", "src/jvm/io/fsq/exceptionator"]
+ENTRYPOINT ["/app/fsqio/docker/docker-mongo-hack.sh", "/data/exceptionator", "./pants", "run", "src/jvm/io/fsq/exceptionator"]
