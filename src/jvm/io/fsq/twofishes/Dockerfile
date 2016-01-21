@@ -1,4 +1,4 @@
-FROM fsqio:fsqio
+FROM fsqio/fsqio
 
 ENV DATA_DIR /data/twofishes
 ENV TWOFISHES_LATEST_PREBUILT_INDEX 2015-03-05.zip

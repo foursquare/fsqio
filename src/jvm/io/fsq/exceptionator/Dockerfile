@@ -1,4 +1,4 @@
-FROM fsqio:fsqio
+FROM fsqio/fsqio
 
 ENV DATA_DIR /data/exceptionator
 RUN mkdir -p $DATA_DIR
