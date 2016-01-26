@@ -717,69 +717,6 @@ jar_library(
   ],
 )
 
-# Keep this version in sync with the spindle version in BUILD.tools.
-spindleVer = '3.0.0-M15'
-
-target(
-  name = 'fscommon-thrift',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  dependencies = [
-    ':fscommon-thrift-base',
-    ':fscommon-thrift-bson',
-    ':fscommon-thrift-json',
-  ],
-)
-
-jar_library(
-  name = 'fscommon-thrift-base',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    jar(org = 'com.foursquare', name = 'common-thrift-base', rev = spindleVer, intransitive = True),
-  ],
-  dependencies = [
-    ':joda-time',
-    ':thrift',
-  ],
-)
-
-jar_library(
-  name = 'fscommon-thrift-bson',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    jar(org = 'com.foursquare', name = 'common-thrift-bson', rev = spindleVer, intransitive = True),
-  ],
-  dependencies = [
-    ':fscommon-thrift-base',
-    '3rdparty:mongodb',
-    ':thrift',
-  ],
-)
-
-jar_library(
-  name = 'fscommon-thrift-json',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-      jar(org = 'com.foursquare', name = 'common-thrift-json', rev = spindleVer, intransitive = True),
-  ],
-  dependencies = [
-    ':fscommon-thrift-base',
-    ':jackson',
-    ':thrift',
-  ],
-)
-
 jar_library(
   name = 'thrift',
   tags = [

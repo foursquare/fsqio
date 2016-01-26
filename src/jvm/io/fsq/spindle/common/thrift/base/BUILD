@@ -4,9 +4,6 @@ java_library(
   name = 'base',
   sources = globs('*.java'),
   dependencies = [
-    '3rdparty:fscommon-thrift-base',    # Force the jar dep as we deprecate com.foursquare.spindle for io.fsq.
-    '3rdparty:fscommon-thrift-bson',    # Force the jar dep as we deprecate com.foursquare.spindle for io.fsq.
-    '3rdparty:fscommon-thrift-json',    # Force the jar dep as we deprecate com.foursquare.spindle for io.fsq.
     '3rdparty:thrift',
     '3rdparty:joda-time',
   ],
