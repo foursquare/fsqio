@@ -4,7 +4,7 @@ package io.fsq
 
 package object rogue {
 
-  type InitialState = Unordered with Unselected with Unlimited with Unskipped with HasNoOrClause with ShardKeyNotSpecified
+  type InitialState = Unordered with Unselected with Unlimited with Unskipped with HasNoOrClause with Unhinted with ShardKeyNotSpecified
   type OrderedState = Ordered with Unselected with Unlimited with Unskipped with HasNoOrClause with ShardKeyNotSpecified
 
   type SimpleQuery[M] = Query[M, M, InitialState]

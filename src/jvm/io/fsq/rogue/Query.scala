@@ -270,7 +270,9 @@ case class Query[M, R, +State](
    */
   def setReadPreference(r: ReadPreference): Query[M, R, State] = this.copy(readPreference = Some(r))
 
-  def hint(index: MongoIndex[M]): Query[M, R, State] = this.copy(hint = Some(index.asListMap))
+  def hint[S2](index: MongoIndex[M])(implicit ev: AddHint[State, S2]): Query[M, R, S2] = {
+    this.copy(hint = Some(index.asListMap))
+  }
 
   /**
    * Adds a select clause to the query. The use of this method constrains the type
