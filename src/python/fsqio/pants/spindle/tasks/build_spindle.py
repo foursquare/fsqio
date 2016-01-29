@@ -74,18 +74,6 @@ class BuildSpindle(SpindleTask):
   def product_types(cls):
     return ['spindle_binary']
 
-  @classmethod
-  def prepare(cls, options, round_manager):
-    super(BuildSpindle, cls).prepare(options, round_manager)
-    # We depend on `compile_classpath` to force pom resolve to run first so that
-    # pom resolve never runs uncached in a subshell to build the spindle binary.
-    #
-    # Because pom resolve always operates over all of 3rdparty::, we don't have
-    # to worry about any synthetic target injection done by codegen because the
-    # transitive third party dependencies will be picked up correctly at compile
-    # time and aren't needed at codegen time.
-    round_manager.require('compile_classpath')
-
   @property
   def cache_target_dirs(self):
     return True

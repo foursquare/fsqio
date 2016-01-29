@@ -346,6 +346,17 @@ class PomResolve(Task):
     )
 
   @classmethod
+  def prepare(cls, options, round_manager):
+    super(PomResolve, cls).prepare(options, round_manager)
+    # Since we populate the compile_classpath product in terms of individual target closures,
+    # we need to make sure that codegen has run and injected the synthetic dependencies on
+    # runtime jars, e.g. the spindle runtime.
+    # This does not affect actual resolution, only the product population that happens every
+    # run.
+    round_manager.require_data('java')
+    round_manager.require_data('scala')
+
+  @classmethod
   def product_types(cls):
     return [
       'compile_classpath',
