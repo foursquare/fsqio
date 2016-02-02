@@ -191,7 +191,7 @@ jvm_third_party_map = {
       'logging': 'twitter-util',
       'ostrich': 'ostrich',
       'parrot': 'iago',
-      'penguin': 'korean-text-scala-2.10',
+      'penguin': 'korean-text',
       'scalding': 'scalding',
       'thrift': {
         'ServiceInstance': 'zookeeper-lock',
@@ -498,7 +498,14 @@ jvm_third_party_map = {
       'jedis': 'jedis',
     },
   },
-  'scala': 'SKIP',
+  'scala': {
+    'util': {
+      'parsing': 'scala-parser-combinators',
+      'DEFAULT': 'SKIP',
+    },
+    'xml': 'scala-xml',
+    'DEFAULT': 'SKIP',
+  },
   'scalaj': {
     'http': 'scalaj-http',
   },

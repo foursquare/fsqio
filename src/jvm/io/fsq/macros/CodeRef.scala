@@ -4,7 +4,7 @@ package io.fsq.macros
 
 import java.io.File
 import scala.language.experimental.macros  // Scala made me do it.
-import scala.reflect.macros.Context
+import scala.reflect.macros.blackbox.Context
 
 /**
  * Holder for file relative to the compiler

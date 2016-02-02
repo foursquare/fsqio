@@ -11,7 +11,7 @@ pom_target(
   ],
   provides = artifact(
     org = 'io.fsq',
-    name = 'buildgen-emit-exported-symbols_2.10',
+    name = 'buildgen-emit-exported-symbols_2.11',
     repo = oss_sonatype_repo,
   ),
 )
@@ -26,7 +26,7 @@ pom_target(
   ],
   provides = artifact(
     org = 'io.fsq',
-    name = 'buildgen-emit-used-symbols_2.10',
+    name = 'buildgen-emit-used-symbols_2.11',
     repo = oss_sonatype_repo,
   ),
 )
@@ -44,7 +44,7 @@ pom_target(
   ],
   provides = artifact(
     org = 'io.fsq',
-    name = 'common_2.10',
+    name = 'common_2.11',
     repo = oss_sonatype_repo,
   ),
 )
@@ -75,7 +75,7 @@ pom_target(
   ],
   provides = artifact(
     org = 'io.fsq',
-    name = 'exceptionator_2.10',
+    name = 'exceptionator_2.11',
     repo = oss_sonatype_repo,
   ),
 )
@@ -90,7 +90,7 @@ pom_target(
   ],
   provides = artifact(
     org = 'io.fsq',
-    name = 'fhttp_2.10',
+    name = 'fhttp_2.11',
     repo = oss_sonatype_repo,
   ),
 )
@@ -105,7 +105,7 @@ pom_target(
   ],
   provides = artifact(
     org = 'io.fsq',
-    name = 'field_2.10',
+    name = 'field_2.11',
     repo = oss_sonatype_repo,
   ),
 )
@@ -120,7 +120,7 @@ pom_target(
   ],
   provides = artifact(
     org = 'io.fsq',
-    name = 'macros_2.10',
+    name = 'macros_2.11',
     repo = oss_sonatype_repo,
   ),
 )
@@ -142,7 +142,7 @@ pom_target(
   ],
   provides = artifact(
     org = 'io.fsq',
-    name = 'rogue_2.10',
+    name = 'rogue_2.11',
     repo = oss_sonatype_repo,
   ),
 )
@@ -167,7 +167,7 @@ pom_target(
   ],
   provides = artifact(
     org = 'io.fsq',
-    name = 'spindle_2.10',
+    name = 'spindle_2.11',
     repo = oss_sonatype_repo,
   ),
 )
@@ -203,7 +203,7 @@ pom_target(
   ],
   provides = artifact(
     org = 'io.fsq',
-    name = 'twofishes_2.10',
+    name = 'twofishes_2.11',
     repo = oss_sonatype_repo,
   ),
 )

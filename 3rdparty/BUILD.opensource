@@ -1,9 +1,9 @@
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
-scala_version = '2.10.4'
+scala_version = '2.11.8'
 
 def sjar(org, name, **kwargs):
-  scala_jar_version = '2.10'
+  scala_jar_version = '2.11'
   return jar(org = org, name = '%s_%s' % (name, scala_jar_version), **kwargs)
 
 jar_library(
@@ -544,7 +544,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.rockymadden.stringmetric', name = 'stringmetric-core', rev = '0.27.3')
+    sjar(org = 'com.rockymadden.stringmetric', name = 'stringmetric-core', rev = '0.27.4')
   ]
 )
 
@@ -557,42 +557,6 @@ jar_library(
   jars = [
     sjar(org = 'com.novus', name = 'salat', rev = '1.9.9')
   ]
-)
-
-jar_library(
-  name = 'scala-library-' + scala_version,
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    jar(org='org.scala-lang', name = 'scala-library', rev=scala_version)
-  ],
-)
-
-jar_library(
-  name = 'scala-compiler-' + scala_version,
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    jar(org='org.scala-lang', name = 'scala-compiler', rev=scala_version),
-  ],
-)
-
-jar_library(
-  name = 'scala-reflect-' + scala_version,
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    jar(org = 'org.scala-lang', name = 'scala-reflect', rev = scala_version),
-  ],
-  dependencies = [
-    '//:scalcamacros-quasiquotes',
-  ],
 )
 
 jar_library(
@@ -618,13 +582,35 @@ jar_library(
 )
 
 jar_library(
+  name = 'scala-parser-combinators',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'org.scala-lang.modules', name = 'scala-parser-combinators', rev = '1.0.4'),
+  ],
+)
+
+jar_library(
+  name = 'scala-xml',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'org.scala-lang.modules', name = 'scala-xml', rev = '1.0.5'),
+  ],
+)
+
+jar_library(
   name = 'scalate',
   tags = [
     'opensource',
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.fusesource.scalate', name = 'scalate-core', rev = '1.6.1')
+    sjar(org = 'org.scalatra.scalate', name = 'scalate-core', rev = '1.7.1')
   ]
 )
 

@@ -1,9 +1,42 @@
 # Copyright 2016 Foursquare Labs Inc. All Rights Reserved.
 
+scala_version = '2.11.8'
 
 def sjar(org, name, rev, url=None):
   scala_jar_version = '2.10'
   return jar(org = org, name = '%s_%s' % (name, scala_jar_version), rev = rev, url = url)
+
+
+jar_library(
+  name = 'scalac',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org='org.scala-lang', name = 'scala-compiler', rev=scala_version),
+  ],
+)
+
+
+jar_library(
+  name = 'scala-library',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org='org.scala-lang', name = 'scala-library', rev=scala_version)
+  ],
+)
+
+
+target(
+  name = 'scala-repl',
+  dependencies = [
+    ':scalac',
+  ],
+)
 
 
 jar_library(
@@ -19,32 +52,4 @@ jar_library(
  jars = [
    sjar(org = 'io.fsq', name = 'buildgen-emit-exported-symbols', rev = '1.1.0'),
  ],
-)
-
-
-jar_library(
-  name = 'scalcamacros-quasiquotes',
-  jars = [
-    sjar(org = 'org.scalamacros', name = 'quasiquotes', rev = '2.1.0'),
-  ],
-)
-
-
-jar_library(
-  name = 'scalac-macro-paradise-plugin',
-  jars = [
-    jar(org = 'org.scalamacros', name = 'paradise_2.10.4', rev = '2.1.0'),
-  ],
-  dependencies = [
-    ':scalcamacros-quasiquotes'
-  ],
-)
-
-
-# Add compiler plugins to this list to enable for Fsq.io only.
-target(
-  name = 'fsqio-plugin-jars',
-  dependencies = [
-    ':scalac-macro-paradise-plugin',
-  ],
 )
