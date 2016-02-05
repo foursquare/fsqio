@@ -560,6 +560,17 @@ jar_library(
 )
 
 jar_library(
+  name = 'scalacheck',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'org.scalacheck', name = 'scalacheck', rev = '1.10.1')
+  ]
+)
+
+jar_library(
   name = 'scalate',
   tags = [
     'opensource',
