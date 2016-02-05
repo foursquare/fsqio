@@ -4,10 +4,10 @@ package io.fsq.twofishes.server
 import com.foursquare.geo.quadtree.CountryRevGeo
 import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.Geometry
+import io.fsq.common.scala.Identity._
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.gen.{CommonGeocodeRequestParams, GeocodePoint, GeocodeRequest, ResponseIncludes}
 import io.fsq.twofishes.util.GeoTools
-import io.fsq.twofishes.util.Identity._
-import io.fsq.twofishes.util.Lists.Implicits._
 import scala.collection.JavaConverters._
 
 object GeocodeRequestUtils {

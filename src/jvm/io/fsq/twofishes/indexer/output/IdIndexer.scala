@@ -6,10 +6,10 @@ import com.novus.salat._
 import com.novus.salat.annotations._
 import com.novus.salat.dao._
 import com.novus.salat.global._
+import io.fsq.common.scala.Identity._
 import io.fsq.twofishes.core.Indexes
 import io.fsq.twofishes.indexer.mongo.MongoGeocodeDAO
 import io.fsq.twofishes.indexer.util.SlugEntryMap
-import io.fsq.twofishes.util.Identity._
 import io.fsq.twofishes.util.StoredFeatureId
 import java.io._
 import org.apache.hadoop.hbase.util.Bytes._

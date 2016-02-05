@@ -2,9 +2,9 @@
 package io.fsq.twofishes.indexer.scalding
 
 import com.twitter.scalding.filecache.CachedFile
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.gen.FeatureNameFlags
 import io.fsq.twofishes.indexer.importers.geonames.ShortenInfo
-import io.fsq.twofishes.util.Lists.Implicits._
 import scala.io.Source
 import scala.util.matching.Regex
 

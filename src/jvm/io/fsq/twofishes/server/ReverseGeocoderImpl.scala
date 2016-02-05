@@ -3,13 +3,13 @@ package io.fsq.twofishes.server
 
 import com.vividsolutions.jts.geom.{Coordinate, Geometry, GeometryFactory, Point => JTSPoint}
 import com.vividsolutions.jts.io.WKBReader
+import io.fsq.common.scala.Identity._
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.core.YahooWoeTypes
 import io.fsq.twofishes.gen.{BulkReverseGeocodeRequest, BulkReverseGeocodeResponse, CellGeometry,
     CommonGeocodeRequestParams, GeocodeFeature, GeocodeInterpretation, GeocodeRequest, GeocodeResponse,
     GeocodeServingFeature, InterpretationScoringFeatures, ResponseIncludes, YahooWoeType}
 import io.fsq.twofishes.util.{GeoTools, GeometryUtils, StoredFeatureId}
-import io.fsq.twofishes.util.Identity._
-import io.fsq.twofishes.util.Lists.Implicits._
 import org.apache.thrift.TBaseHelper
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer

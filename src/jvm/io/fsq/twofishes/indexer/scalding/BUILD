@@ -14,6 +14,7 @@ scala_library(
     '3rdparty:jts',
     '3rdparty:rockymadden',
     '3rdparty:scalding',
+    'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/twofishes/indexer/importers/geonames',
     'src/jvm/io/fsq/twofishes/indexer/output',
     'src/jvm/io/fsq/twofishes/indexer/util',

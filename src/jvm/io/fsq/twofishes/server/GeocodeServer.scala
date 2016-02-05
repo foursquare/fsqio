@@ -12,15 +12,14 @@ import com.twitter.ostrich.stats.Stats
 import com.twitter.util.{Await, Future, FuturePool}
 import com.vividsolutions.jts.io.WKTWriter
 import com.weiglewilczek.slf4s.Logging
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.spindle.common.thrift.json.TReadableJSONProtocol
 import io.fsq.spindle.runtime.{MetaRecord, Record}
 import io.fsq.twofishes.gen.{AutocompleteBias, BulkReverseGeocodeRequest, BulkReverseGeocodeResponse,
     BulkSlugLookupRequest, BulkSlugLookupResponse, CommonGeocodeRequestParams, GeocodePoint, GeocodeRequest,
     GeocodeResponse, Geocoder, RefreshStoreRequest, RefreshStoreResponse, ResponseIncludes, S2CellIdInfo,
     S2CellInfoRequest, S2CellInfoResponse, YahooWoeType}
-import io.fsq.twofishes.util.{Helpers, RingBuffer}
-import io.fsq.twofishes.util.Lists.Implicits._
-import io.fsq.twofishes.util.ShapefileS2Util
+import io.fsq.twofishes.util.{Helpers, RingBuffer, ShapefileS2Util}
 import java.io.{ByteArrayOutputStream, InputStream}
 import java.net.InetSocketAddress
 import java.nio.charset.Charset

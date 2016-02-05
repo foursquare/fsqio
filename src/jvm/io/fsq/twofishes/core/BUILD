@@ -10,6 +10,7 @@ scala_library(
     '3rdparty:jts',
     '3rdparty:mongodb',
     '3rdparty:thrift',
+    'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/twofishes/util',
     'src/thrift/io/fsq/twofishes',
   ],

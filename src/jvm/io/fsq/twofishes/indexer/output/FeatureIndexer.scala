@@ -7,12 +7,12 @@ import com.novus.salat.annotations._
 import com.novus.salat.dao._
 import com.novus.salat.global._
 import com.vividsolutions.jts.io.WKBReader
+import io.fsq.common.scala.Identity._
 import io.fsq.twofishes.core.Indexes
 import io.fsq.twofishes.gen.{GeocodeServingFeature, YahooWoeType}
 import io.fsq.twofishes.indexer.mongo.{MongoGeocodeDAO, PolygonIndex, PolygonIndexDAO, RevGeoIndexDAO}
 import io.fsq.twofishes.indexer.util.GeocodeRecord
 import io.fsq.twofishes.util.{GeoTools, GeometryUtils, StoredFeatureId}
-import io.fsq.twofishes.util.Identity._
 import java.io._
 import org.apache.hadoop.hbase.util.Bytes._
 import scala.collection.JavaConverters._

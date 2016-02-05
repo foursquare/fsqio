@@ -1,8 +1,8 @@
 package io.fsq.twofishes.server
 
+import io.fsq.common.scala.Identity._
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.gen.{GeocodeFeature, GeocodeInterpretation}
-import io.fsq.twofishes.util.Identity._
-import io.fsq.twofishes.util.Lists.Implicits._
 import io.fsq.twofishes.util.StoredFeatureId
 import scala.collection.JavaConverters._
 

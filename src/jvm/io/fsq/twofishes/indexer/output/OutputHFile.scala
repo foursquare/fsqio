@@ -7,10 +7,10 @@ import com.novus.salat.annotations._
 import com.novus.salat.dao._
 import com.novus.salat.global._
 import com.twitter.util.{Await, Future, FuturePool}
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.indexer.mongo.MongoGeocodeDAO
 import io.fsq.twofishes.indexer.util.SlugEntryMap
 import io.fsq.twofishes.util.DurationUtils
-import io.fsq.twofishes.util.Lists.Implicits._
 import java.io._
 import java.util.concurrent.{CountDownLatch, Executors}
 import org.apache.hadoop.hbase.util.Bytes._

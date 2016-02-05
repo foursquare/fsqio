@@ -3,9 +3,9 @@ package io.fsq.twofishes.indexer.importers.geonames
 
 import com.vividsolutions.jts.io.WKBWriter
 import com.weiglewilczek.slf4s.Logging
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.indexer.util.{DisplayName, FsqSimpleFeature, GeoJsonIterator, ShapeIterator, ShapefileIterator}
 import io.fsq.twofishes.util.{FeatureNamespace, GeonamesNamespace, Helpers, StoredFeatureId}
-import io.fsq.twofishes.util.Lists.Implicits._
 import java.io.{File, FileWriter, Writer}
 import org.apache.commons.net.util.Base64
 

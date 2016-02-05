@@ -1,12 +1,11 @@
 //  Copyright 2012 Foursquare Labs Inc. All Rights Reserved
 package io.fsq.twofishes.server
 
+import io.fsq.common.scala.Identity._
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.gen.{DebugScoreComponent, FeatureName, GeocodeFeature, GeocodeServingFeature,
     InterpretationScoringFeatures}
-import io.fsq.twofishes.util.{GeoTools, StoredFeatureId}
-import io.fsq.twofishes.util.Identity._
-import io.fsq.twofishes.util.Lists.Implicits._
-import io.fsq.twofishes.util.NameUtils
+import io.fsq.twofishes.util.{GeoTools, NameUtils, StoredFeatureId}
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 

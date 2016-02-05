@@ -12,6 +12,7 @@ scala_library(
     '3rdparty:s2',
     '3rdparty:slf4s',
     '3rdparty:twitter-util',
+    'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/twofishes/util/data',
     'src/thrift/io/fsq/twofishes',
   ],

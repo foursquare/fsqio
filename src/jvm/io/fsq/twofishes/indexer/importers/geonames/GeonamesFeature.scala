@@ -2,10 +2,10 @@
 package io.fsq.twofishes.indexer.importers.geonames
 
 import com.weiglewilczek.slf4s.Logging
+import io.fsq.common.scala.Identity._
 import io.fsq.twofishes.gen.YahooWoeType
 import io.fsq.twofishes.util.{GeonamesNamespace, GeonamesZip, StoredFeatureId}
 import io.fsq.twofishes.util.Helpers._
-import io.fsq.twofishes.util.Identity._
 
 
 object GeonamesFeatureColumns extends Enumeration {

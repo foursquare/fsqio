@@ -5,7 +5,7 @@ package io.fsq.twofishes.util
 import com.google.caliper.{Runner, SimpleBenchmark}
 import com.vividsolutions.jts.geom.Coordinate
 import com.vividsolutions.jts.util.GeometricShapeFactory
-import io.fsq.twofishes.util.Lists.Implicits._
+import io.fsq.common.scala.Lists.Implicits._
 //import org.bson.types.ObjectId
 import scala.util.Random
 

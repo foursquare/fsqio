@@ -1,9 +1,25 @@
 # Copyright 2016 Foursquare Labs, Inc. All Rights Reserved.
 
 pom_target(
+  name = 'common',
+  prefixes = [
+    'src/jvm/io/fsq/common',
+  ],
+  dependencies = [
+    'src/jvm/io/fsq/common/scala',
+  ],
+  provides = artifact(
+    org = 'com.foursquare.test',
+    name = 'common',
+    repo = internal_repo,
+  ),
+)
+
+pom_target(
   name = 'exceptionator',
   prefixes = [
     'src/jvm/io/fsq/exceptionator',
+    'src/resources/io/fsq/exceptionator',
   ],
   dependencies = [
     ':rogue',
@@ -18,6 +34,10 @@ pom_target(
     'src/jvm/io/fsq/exceptionator/model/io',
     'src/jvm/io/fsq/exceptionator/service',
     'src/jvm/io/fsq/exceptionator/util',
+    'src/resources/io/fsq/exceptionator/config',
+    'src/resources/io/fsq/exceptionator/css',
+    'src/resources/io/fsq/exceptionator/html',
+    'src/resources/io/fsq/exceptionator/js',
   ],
   provides = artifact(
     org = 'com.foursquare.test',
@@ -120,8 +140,10 @@ pom_target(
   name = 'twofishes',
   prefixes = [
     'src/jvm/io/fsq/twofishes',
+    'src/thrift/io/fsq/twofishes',
   ],
   dependencies = [
+    ':common',
     ':spindle',
     'src/jvm/io/fsq/twofishes/core',
     'src/jvm/io/fsq/twofishes/country',

@@ -1,13 +1,13 @@
 //  Copyright 2012 Foursquare Labs Inc. All Rights Reserved
 package io.fsq.twofishes.server
 
+import io.fsq.common.scala.Identity._
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.country.DependentCountryInfo
 import io.fsq.twofishes.gen.{AutocompleteBias, FeatureName, FeatureNameFlags, GeocodeFeature, GeocodeRequest,
     GeocodeResponse, GeocodeServingFeature, YahooWoeType}
 import io.fsq.twofishes.gen.AutocompleteBias.UnknownWireValue
 import io.fsq.twofishes.util.{GeoTools, GeonamesId, NameNormalizer, NameUtils, StoredFeatureId}
-import io.fsq.twofishes.util.Identity._
-import io.fsq.twofishes.util.Lists.Implicits._
 import io.fsq.twofishes.util.NameUtils.BestNameMatch
 import scala.collection.JavaConverters._
 import scala.collection.mutable.HashMap

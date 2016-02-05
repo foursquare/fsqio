@@ -14,6 +14,7 @@ scala_library(
     '3rdparty:scalding',
     '3rdparty:slf4j-log4j',  # Runtime dep.
     '3rdparty:thrift',
+    'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/spindle/runtime',
     'src/jvm/io/fsq/twofishes/core',
     'src/jvm/io/fsq/twofishes/util',

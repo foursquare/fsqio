@@ -3,10 +3,10 @@ package io.fsq.twofishes.indexer.scalding
 
 import com.twitter.scalding._
 import com.twitter.scalding.typed.TypedSink
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.gen._
 import io.fsq.twofishes.indexer.util.SpindleSequenceFileSource
 import io.fsq.twofishes.util.GeometryUtils
-import io.fsq.twofishes.util.Lists.Implicits._
 import org.apache.hadoop.io.LongWritable
 
 class BaseFeatureCenterS2CellIntermediateJob(

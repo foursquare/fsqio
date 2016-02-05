@@ -5,13 +5,13 @@ import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBWriter, WKTWriter}
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier
+import io.fsq.common.scala.Identity._
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.core.YahooWoeTypes
 import io.fsq.twofishes.gen.{CommonGeocodeRequestParams, FeatureName, FeatureNameFlags, GeocodeFeature,
     GeocodeInterpretation, GeocodeResponse, GeocodeServingFeature, MutableGeocodeFeature, ResponseIncludes,
     YahooWoeType}
 import io.fsq.twofishes.util.{NameUtils, StoredFeatureId}
-import io.fsq.twofishes.util.Identity._
-import io.fsq.twofishes.util.Lists.Implicits._
 import io.fsq.twofishes.util.NameUtils.BestNameMatch
 import java.nio.ByteBuffer
 import scala.collection.JavaConverters._

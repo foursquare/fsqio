@@ -3,13 +3,13 @@ package io.fsq.twofishes.server.test
 
 import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBWriter, WKTReader}
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.gen.{CellGeometry, FeatureGeometry, FeatureName, FeatureNameFlags, GeocodeFeature,
     GeocodePoint, GeocodeRequest, GeocodeServingFeature, MutableGeocodeServingFeature, ResponseIncludes,
     ScoringFeatures, YahooWoeType}
 import io.fsq.twofishes.server.{GeocodeRequestDispatcher, GeocodeServerConfigSingleton, GeocodeStorageReadService,
     ReverseGeocoderImpl}
 import io.fsq.twofishes.util.{GeometryUtils, GeonamesId, NameNormalizer, ShapefileS2Util, StoredFeatureId}
-import io.fsq.twofishes.util.Lists.Implicits._
 import java.nio.ByteBuffer
 import org.specs2.mutable.SpecificationWithJUnit
 import scala.collection.JavaConverters._

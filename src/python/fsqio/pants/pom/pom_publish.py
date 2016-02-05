@@ -271,12 +271,13 @@ class PomPublish(PomWriter, JarBuilderTask):
     published = []
     pom_targets = [t for t in self.context.targets() if isinstance(t, PomTarget)]
     for tgt in pom_targets:
+      self.check_target(tgt)
+
+    for tgt in pom_targets:
       try:
         repo = self.repos[tgt.provides.repo.name]
       except KeyError:
         raise TaskError('Repository {0} has no entry in the --repos option.'.format(tgt.provides.repo.name))
-
-      self.check_target(tgt)
 
       jar = JarDependency(org=tgt.provides.org, name=tgt.provides.name, rev=None)
       published.append(jar)

@@ -12,6 +12,8 @@ import com.rockymadden.stringmetric.transform._
 import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBReader, WKBWriter}
+import io.fsq.common.scala.Identity._
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.country.CountryInfo
 import io.fsq.twofishes.gen._
 import io.fsq.twofishes.indexer.mongo.{GeocodeStorageWriteService, MongoGeocodeDAO, PolygonIndex, PolygonIndexDAO,
@@ -21,8 +23,6 @@ import io.fsq.twofishes.indexer.util.{DisplayName, FsqSimpleFeature, GeoJsonIter
 import io.fsq.twofishes.util.{AdHocId, DurationUtils, FeatureNamespace, GeonamesNamespace, Helpers, NameNormalizer,
     StoredFeatureId}
 import io.fsq.twofishes.util.Helpers._
-import io.fsq.twofishes.util.Identity._
-import io.fsq.twofishes.util.Lists.Implicits._
 import java.io.{File, FileWriter, Writer}
 import java.nio.charset.Charset
 import org.bson.types.ObjectId

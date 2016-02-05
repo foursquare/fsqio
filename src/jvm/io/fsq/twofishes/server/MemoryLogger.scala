@@ -2,10 +2,10 @@
 package io.fsq.twofishes.server
 
 import com.twitter.ostrich.stats.Stats
+import io.fsq.common.scala.Identity._
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.gen.{CommonGeocodeRequestParams, GeocodeRequest}
 import io.fsq.twofishes.util.{DurationUtils, TwofishesLogger}
-import io.fsq.twofishes.util.Identity._
-import io.fsq.twofishes.util.Lists.Implicits._
 import java.util.Date
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer

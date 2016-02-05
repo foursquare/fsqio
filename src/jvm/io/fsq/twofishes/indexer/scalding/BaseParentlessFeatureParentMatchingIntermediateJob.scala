@@ -5,10 +5,10 @@ import com.twitter.scalding._
 import com.twitter.scalding.typed.TypedSink
 import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory
 import com.vividsolutions.jts.io.WKBReader
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.gen._
 import io.fsq.twofishes.indexer.util.SpindleSequenceFileSource
 import io.fsq.twofishes.util.GeoTools
-import io.fsq.twofishes.util.Lists.Implicits._
 import org.apache.hadoop.io.LongWritable
 
 class BaseParentlessFeatureParentMatchingIntermediateJob(

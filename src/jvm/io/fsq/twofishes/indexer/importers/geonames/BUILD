@@ -20,6 +20,7 @@ scala_library(
     '3rdparty:salat',
     '3rdparty:scopt',
     '3rdparty:slf4s',
+    'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/twofishes/core',
     'src/jvm/io/fsq/twofishes/country',
     'src/jvm/io/fsq/twofishes/indexer/data:langdetect',

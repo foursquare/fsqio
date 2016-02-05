@@ -3,8 +3,8 @@ package io.fsq.twofishes.server
 
 import com.vividsolutions.jts.geom.Geometry
 import com.weiglewilczek.slf4s.Logging
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.gen.{CellGeometry, GeocodeServingFeature}
-import io.fsq.twofishes.util.Lists.Implicits._
 import io.fsq.twofishes.util.StoredFeatureId
 
 class HotfixableGeocodeStorageService(

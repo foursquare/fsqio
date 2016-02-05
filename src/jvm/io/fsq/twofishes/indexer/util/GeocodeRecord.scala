@@ -3,10 +3,10 @@ package io.fsq.twofishes.indexer.util
 
 import com.vividsolutions.jts.geom.{Coordinate, GeometryFactory}
 import com.vividsolutions.jts.io.WKBReader
+import io.fsq.common.scala.Identity._
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.core.YahooWoeTypes
 import io.fsq.twofishes.gen._
-import io.fsq.twofishes.util.Identity._
-import io.fsq.twofishes.util.Lists.Implicits._
 import io.fsq.twofishes.util.StoredFeatureId
 import java.nio.ByteBuffer
 import org.apache.thrift.{TDeserializer, TSerializer}
