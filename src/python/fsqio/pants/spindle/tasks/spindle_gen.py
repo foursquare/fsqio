@@ -118,8 +118,8 @@ class SpindleGen(NailgunTask, SpindleTask):
     ]
 
   def _run_spindle(self, args):
-    spindle_binary = next(self.build_spindle_product())
     try:
+      spindle_binary = next(self.build_spindle_product())
       os.path.isfile(spindle_binary)
     except Exception as e:
       raise TaskError("Could not find the spindle binary at {}:\n{}".format(spindle_binary, e))
