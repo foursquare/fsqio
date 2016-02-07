@@ -1,0 +1,12 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.UUIDRenderType %>
+<%@ val lhs: String %>
+<%@ val indent: String %>
+<%@ val wrapLeft: String = "" %>
+<%@ val wrapRight: String = "" %>
+<% render("../" + renderType.ref.fieldReadTemplate,
+    Map(
+      "renderType" -> renderType.ref,
+      "lhs" -> lhs,
+      "indent" -> indent,
+      "wrapLeft" -> (wrapLeft + "{ val bb: java.nio.ByteBuffer = "),
+      "wrapRight" -> ("; new java.util.UUID(bb.getLong(), bb.getLong()) }" + wrapRight))) %>

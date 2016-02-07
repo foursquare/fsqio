@@ -339,6 +339,15 @@ case class ObjectIdRenderType(ref: RenderType) extends RefRenderType with Enhanc
   override def renderValue(v: String) = Some("new org.bson.types.ObjectId(%s)".format(v))
 }
 
+case class UUIDRenderType(ref: RenderType) extends RefRenderType with EnhancedRenderType {
+  override def text: String = "java.util.UUID"
+  override def fieldWriteTemplate: String = "write/uuid.ssp"
+  override def fieldReadTemplate: String = "read/uuid.ssp"
+  override def underlying: RenderType = ref.underlying
+  override def ttype: TType = TType.STRING
+  override def hasOrdering: Boolean = false
+}
+
 case class BSONObjectRenderType(ref: RenderType) extends RefRenderType with EnhancedRenderType {
   override def text: String = "org.bson.BSONObject"
   override def fieldWriteTemplate: String = "write/bsonobject.ssp"
@@ -485,6 +494,7 @@ object RenderType {
       case EnhancedTypeRef("bson:BSONObject", ref @ BinaryRef) => BSONObjectRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("bson:DateTime", ref @ I64Ref) => DateTimeRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("java:Date", ref @ StringRef) => JavaDateRenderType(RenderType(ref, annotations))
+      case EnhancedTypeRef("java:UUID", ref @ BinaryRef) => UUIDRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("fs:DollarAmount", ref @ I64Ref) => DollarAmountRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef(JsonEnhancedType(suffix), ref @ StringRef) => ThriftJsonRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("fs:MessageSet", ref: StructRef) => MessageSetRenderType(RenderType(ref, annotations))

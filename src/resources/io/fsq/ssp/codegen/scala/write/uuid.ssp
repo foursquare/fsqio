@@ -1,0 +1,4 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.UUIDRenderType %>
+<%@ val valueExpr: String %>
+<%@ val indent: String %>
+${indent}val b = java.nio.ByteBuffer.allocate(16).putLong(${valueExpr}.getMostSignificantBits()).putLong(${valueExpr}.getLeastSignificantBits()); b.rewind(); oprot.writeBinary(b)
