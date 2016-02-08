@@ -7,9 +7,4 @@ java_library(
     '3rdparty:thrift',
     '3rdparty:joda-time',
   ],
-  provides = artifact(
-    org='com.foursquare',
-    name='common-thrift-base',
-    repo=internal_repo,
-  ),
 )

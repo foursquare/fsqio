@@ -1,0 +1,28 @@
+# Copyright 2016 Foursquare Labs Inc. All Rights Reserved.
+
+import netrc
+import os
+
+class Netrc(object):
+ def __init__(self, host):
+   self._netrc = netrc.netrc(os.path.expanduser("~/.netrc.nexus"))
+   self._authenticators = self._netrc.authenticators(host)
+   if self._authenticators is None:
+     raise Exception("No information for %s in ~/.netrc.nexus" % host)
+
+ def getusername(self):
+   return self._authenticators[0]
+
+ def getpassword(self):
+   return self._authenticators[2]
+
+public_nexus_host = 'oss.sonatype.org'
+try:
+  creds = Netrc(public_nexus_host)
+  credentials(
+    name = public_nexus_host,
+    username = creds.getusername(),
+    password = creds.getpassword(),
+  )
+except:
+  pass

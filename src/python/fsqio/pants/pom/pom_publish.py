@@ -127,6 +127,31 @@ class PomWriter(object):
       version=version,
       scope='compile',
       dependencies=dependencies.values(),
+      # TODO(dan): These should really come from an OSSRHPublicationMetadata
+      #   instance, but it might have to be made a Target first so we don't
+      #   duplicate it for every PomTarget.
+      name='fsq.io',
+      description='Foursquare Opensource',
+      url='http://github.com/foursquare/fsqio',
+      licenses=[TemplateData(
+        name='Apache',
+        url='http://www.opensource.org/licenses/Apache-2.0',
+      )],
+      scm=TemplateData(
+        url='git@github.com:foursquare/spindle.git',
+        # TODO(dan): Are these the right values?
+        connection='scm:git:git@github.com:foursquare/fsqio.git',
+        developer_connection='scm:git:git@github.com:foursquare/fsqio.git',
+      ),
+      developers=[TemplateData(
+        id='paperstreet',
+        name='Daniel Harrison',
+        url='https://github.com/paperstreet',
+      ),TemplateData(
+        id='mateor',
+        name='Mateo Rodriguez',
+        url='https://github.com/mateor',
+      )],
     )
 
     template_relpath = os.path.join(_TEMPLATES_RELPATH, 'pom.mustache')
@@ -172,6 +197,8 @@ class PomPublish(PomWriter, JarBuilderTask):
   def register_options(cls, register):
     super(PomPublish, cls).register_options(register)
 
+    register('--ivy_settings', advanced=True, default=None,
+             help='Specify a custom ivysettings.xml file to be used when publishing.')
     register('--local', metavar='<PATH>',
              help='Publish jars to a maven repository on the local filesystem at this path.')
     register('--repos', advanced=True, type=dict_option,
@@ -259,7 +286,19 @@ class PomPublish(PomWriter, JarBuilderTask):
               if self.is_jarable_target(dep):
                 jar_builder.add_target(dep, recursive=False)
 
-        publications.add(self.Publication(name=tgt.name, classifier=None, ext='jar'))
+        publications.add(self.Publication(name=tgt.provides.name, classifier=None, ext='jar'))
+
+    # TODO(dan): Actually add source jar.
+    source_jar_path = self.artifact_path(jar, version, suffix='-sources', extension='jar')
+    with self.open_jar(source_jar_path, overwrite=True, compressed=True) as source_jar:
+      source_jar.writestr('EMPTY', 'EMPTY'.encode('utf-8'))
+    publications.add(self.Publication(name=jar.name, classifier='sources', ext='jar'))
+
+    # TODO(dan): Actually add doc jar.
+    doc_jar_path = self.artifact_path(jar, version, suffix='-javadoc', extension='jar')
+    with self.open_jar(doc_jar_path, overwrite=True, compressed=True) as doc_jar:
+      doc_jar.writestr('EMPTY', 'EMPTY'.encode('utf-8'))
+    publications.add(self.Publication(name=jar.name, classifier='javadoc', ext='jar'))
 
     pom_path = self.artifact_path(jar, version, extension='pom')
     self.generate_pom(tgt, version=version, path=pom_path)
@@ -293,6 +332,15 @@ class PomPublish(PomWriter, JarBuilderTask):
                                               suffix,
                                               extension))
 
+  def fetch_ivysettings(self, ivy):
+    if self.get_options().ivy_settings:
+      return self.get_options().ivy_settings
+    elif ivy.ivy_settings is None:
+      raise TaskError('An ivysettings.xml with writeable resolvers is required for publishing, '
+                      'but none was configured.')
+    else:
+      return ivy.ivy_settings
+
   def publish(self, publications, jar, version, repo, published):
     """Run ivy to publish a jar.  ivyxml_path is the path to the ivy file; published
     is a list of jars published so far (including this one). """
@@ -308,7 +356,7 @@ class PomPublish(PomWriter, JarBuilderTask):
 
     path = repo.get('path')
 
-    ivysettings = self.generate_ivysettings(ivy.ivy_settings, self.cachedir, published, publish_local=path)
+    ivysettings = self.generate_ivysettings(self.fetch_ivysettings(ivy), self.cachedir, published, publish_local=path)
     ivyxml = self.generate_ivy(jar, version, publications)
 
     resolver = repo['resolver']

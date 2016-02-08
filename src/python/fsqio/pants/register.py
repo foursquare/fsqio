@@ -20,9 +20,9 @@ from fsqio.pants.spindle.tasks.build_spindle import BuildSpindle
 from fsqio.pants.spindle.tasks.spindle_gen import SpindleGen
 
 
-internal_repo = Repository(
-  name = 'dummy_repo',
-  url = 'http://www.example.com',
+oss_sonatype_repo = Repository(
+  name = 'oss_sonatype',
+  url = 'https://oss.sonatype.org/#stagingRepositories',
   push_db_basedir = os.path.join(
     get_buildroot(),
     'pushdb',
@@ -38,7 +38,7 @@ def build_file_aliases():
       'pom_target': PomTarget,
     },
     objects={
-      'internal_repo': internal_repo,
+      'oss_sonatype_repo': oss_sonatype_repo,
     },
   )
 

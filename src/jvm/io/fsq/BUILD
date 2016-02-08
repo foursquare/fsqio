@@ -9,9 +9,9 @@ pom_target(
     'src/jvm/io/fsq/common/scala',
   ],
   provides = artifact(
-    org = 'com.foursquare.test',
-    name = 'common',
-    repo = internal_repo,
+    org = 'io.fsq',
+    name = 'common_2.10',
+    repo = oss_sonatype_repo,
   ),
 )
 
@@ -40,9 +40,9 @@ pom_target(
     'src/resources/io/fsq/exceptionator/js',
   ],
   provides = artifact(
-    org = 'com.foursquare.test',
-    name = 'exceptionator',
-    repo = internal_repo,
+    org = 'io.fsq',
+    name = 'exceptionator_2.10',
+    repo = oss_sonatype_repo,
   ),
 )
 
@@ -55,9 +55,9 @@ pom_target(
     'src/jvm/io/fsq/fhttp',
   ],
   provides = artifact(
-    org = 'com.foursquare.test',
-    name = 'fhttp',
-    repo = internal_repo,
+    org = 'io.fsq',
+    name = 'fhttp_2.10',
+    repo = oss_sonatype_repo,
   ),
 )
 
@@ -70,9 +70,9 @@ pom_target(
     'src/jvm/io/fsq/field',
   ],
   provides = artifact(
-    org = 'com.foursquare.test',
-    name = 'field',
-    repo = internal_repo,
+    org = 'io.fsq',
+    name = 'field_2.10',
+    repo = oss_sonatype_repo,
   ),
 )
 
@@ -85,9 +85,9 @@ pom_target(
     'src/jvm/io/fsq/macros',
   ],
   provides = artifact(
-    org = 'com.foursquare.test',
-    name = 'macros',
-    repo = internal_repo,
+    org = 'io.fsq',
+    name = 'macros_2.10',
+    repo = oss_sonatype_repo,
   ),
 )
 
@@ -106,9 +106,9 @@ pom_target(
     'src/jvm/io/fsq/rogue/spindle',
   ],
   provides = artifact(
-    org = 'com.foursquare.test',
-    name = 'rogue',
-    repo = internal_repo,
+    org = 'io.fsq',
+    name = 'rogue_2.10',
+    repo = oss_sonatype_repo,
   ),
 )
 
@@ -130,9 +130,9 @@ pom_target(
     'src/jvm/io/fsq/spindle/runtime',
   ],
   provides = artifact(
-    org = 'com.foursquare.test',
-    name = 'spindle',
-    repo = internal_repo,
+    org = 'io.fsq',
+    name = 'spindle_2.10',
+    repo = oss_sonatype_repo,
   ),
 )
 
@@ -166,8 +166,8 @@ pom_target(
     'src/thrift/io/fsq/twofishes',
   ],
   provides = artifact(
-    org = 'com.foursquare.test',
-    name = 'twofishes',
-    repo = internal_repo,
+    org = 'io.fsq',
+    name = 'twofishes_2.10',
+    repo = oss_sonatype_repo,
   ),
 )
