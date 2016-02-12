@@ -769,11 +769,11 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'com.twitter', name = 'util-codec_2.10', rev = twitter_util_rev),
-    jar(org = 'com.twitter', name = 'util-core_2.10', rev = twitter_util_rev),
-    jar(org = 'com.twitter', name = 'util-eval_2.10', rev = twitter_util_rev),
-    jar(org = 'com.twitter', name = 'util-hashing_2.10', rev = twitter_util_rev),
-    jar(org = 'com.twitter', name = 'util-logging_2.10', rev = twitter_util_rev),
+    sjar(org = 'com.twitter', name = 'util-codec', rev = twitter_util_rev),
+    sjar(org = 'com.twitter', name = 'util-core', rev = twitter_util_rev),
+    sjar(org = 'com.twitter', name = 'util-eval', rev = twitter_util_rev),
+    sjar(org = 'com.twitter', name = 'util-hashing', rev = twitter_util_rev),
+    sjar(org = 'com.twitter', name = 'util-logging', rev = twitter_util_rev),
   ],
 )
 
