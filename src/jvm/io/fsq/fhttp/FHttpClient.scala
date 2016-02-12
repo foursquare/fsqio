@@ -63,9 +63,7 @@ class FHttpClient ( val name: String,
     uri(path)
   }
 
-  override def toString(): String =  {
-    return "com.foursquare.fhttp.FHttpClient(" + name + "," + scheme + "://" + hostPort + "," + builder + ")"
+  override def toString(): String = {
+    "io.fsq.fhttp.FHttpClient(" + name + "," + scheme + "://" + hostPort + "," + builder + ")"
   }
 }
-
-
