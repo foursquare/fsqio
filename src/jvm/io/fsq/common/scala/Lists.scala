@@ -194,8 +194,8 @@ object Lists {
     implicit def seq2FSTraversableOnce[T, CC[X] <: TraversableOnce[X]](xs: CC[T])(implicit bf: CanBuildFrom[CC[T], T, CC[T]]): FSTraversableOnce[T, CC] = new FSTraversableOnce[T, CC](xs)
     implicit def array2FSSeq[T <: AnyRef](xs: Array[T]): FSSeq[ArraySeq, T, ArraySeq[T]] = new FSSeq[ArraySeq, T, ArraySeq[T]](new ArraySeq[T](xs.size) { override val array: Array[AnyRef] = xs.asInstanceOf[Array[AnyRef]] })
 
-    implicit def opt2FSOpt[T](o: Option[T]) = new FSOption(o)
-    implicit def fsopt2Opt[T](fso: FSOption[T]) = fso.opt
+    implicit def opt2FSOpt[T](o: Option[T]): FSOption[T] = new FSOption(o)
+    implicit def fsopt2Opt[T](fso: FSOption[T]): Option[T] = fso.opt
 
     implicit def immutable2FSMap[A, B](m: Map[A, B]): FSMap[A, B, Map[A, B], Map] = new FSMap[A, B, Map[A, B], Map](m, Map)
     implicit def mutable2FSMap[A, B](m: scala.collection.mutable.Map[A, B]): FSMap[A, B, scala.collection.mutable.Map[A, B], scala.collection.mutable.Map] = new FSMap[A, B, scala.collection.mutable.Map[A, B], scala.collection.mutable.Map](m, scala.collection.mutable.Map)
