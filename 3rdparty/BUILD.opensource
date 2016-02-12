@@ -345,7 +345,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'com.gilt', name = 'jerkson_2.10', rev = '0.6.7'),
+    sjar(org = 'com.gilt', name = 'jerkson', rev = '0.6.7'),
   ],
 )
 
