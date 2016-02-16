@@ -544,7 +544,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.novus', name = 'salat', rev = '1.9.6')
+    sjar(org = 'com.novus', name = 'salat', rev = '1.9.9')
   ]
 )
 
