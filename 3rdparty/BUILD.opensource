@@ -495,7 +495,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.parboiled', name = 'parboiled-scala_2.10', rev = '1.1.6')
+    sjar(org = 'org.parboiled', name = 'parboiled-scala', rev = '1.1.6')
   ]
 )
 
