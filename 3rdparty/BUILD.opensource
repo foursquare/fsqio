@@ -462,7 +462,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.mockito', name = 'mockito-all', rev = '1.9.0')
+    jar(org = 'org.mockito', name = 'mockito-core', rev = '1.9.5')
   ]
 )
 
@@ -488,6 +488,7 @@ jar_library(
 )
 
 
+parboiled_rev = '1.1.6'
 jar_library(
   name = 'parboiled-scala',
   tags = [
@@ -495,7 +496,8 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.parboiled', name = 'parboiled-scala', rev = '1.1.6')
+    sjar(org = 'org.parboiled', name = 'parboiled-scala', rev = parboiled_rev),
+    jar(org = 'org.parboiled', name = 'parboiled-java', rev = parboiled_rev),
   ]
 )
 
@@ -714,6 +716,7 @@ jar_library(
   ]
 )
 
+specs2_rev = '3.3.1'
 jar_library(
   name = 'specs2',
   tags = [
@@ -721,7 +724,9 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.specs2', name = 'specs2', rev = '1.12.3'),
+    sjar(org = 'org.specs2', name = 'specs2', rev = specs2_rev),
+    sjar(org = 'org.specs2', name = 'specs2-junit', rev = specs2_rev),
+    sjar(org = 'org.specs2', name = 'specs2-matcher', rev = specs2_rev),
   ],
     dependencies = [
     ':junit',

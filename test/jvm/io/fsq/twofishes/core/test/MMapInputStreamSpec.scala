@@ -5,10 +5,11 @@ import java.io.{EOFException, File, FileOutputStream}
 import java.net.URI
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{LocalFileSystem, Path}
+import org.specs2.matcher.MatchersImplicits
 import org.specs2.mutable.SpecificationWithJUnit
 
 // TODO: See if there's a way to clean up the extra noise this sends to stderr.
-class MMapInputStreamSpec extends SpecificationWithJUnit {
+class MMapInputStreamSpec extends SpecificationWithJUnit with MatchersImplicits {
   val random = new scala.util.Random(7)
 
   def createTempFile(size: Int): (File, Array[Byte]) = {
@@ -79,16 +80,16 @@ class MMapInputStreamSpec extends SpecificationWithJUnit {
       mmapStream.getPos must_== hadoopStream.getPos
       mmapStream.read(mmapReadBuf, 0, 100) must_== 100
       hadoopStream.read(hadoopReadBuf, 0, 100) must_== 100
-      mmapReadBuf.toList.take(100) must haveTheSameElementsAs(buf.view(0, 100))
-      mmapReadBuf.toList.take(100) must haveTheSameElementsAs(hadoopReadBuf.take(100))
+      mmapReadBuf.toList.take(100) must containTheSameElementsAs(buf.view(0, 100))
+      mmapReadBuf.toList.take(100) must containTheSameElementsAs(hadoopReadBuf.take(100))
 
       // Read 100-199
       mmapStream.getPos must_== 100
       mmapStream.getPos must_== hadoopStream.getPos
       mmapStream.read(mmapReadBuf, 0, 100) must_== 100
       hadoopStream.read(hadoopReadBuf, 0, 100) must_== 100
-      mmapReadBuf.toList.take(100) must haveTheSameElementsAs(buf.view(100, 200))
-      mmapReadBuf.toList.take(100) must haveTheSameElementsAs(hadoopReadBuf.take(100))
+      mmapReadBuf.toList.take(100) must containTheSameElementsAs(buf.view(100, 200))
+      mmapReadBuf.toList.take(100) must containTheSameElementsAs(hadoopReadBuf.take(100))
 
       // Seek to 150, then read 150-250
       mmapStream.seek(150)
@@ -97,8 +98,8 @@ class MMapInputStreamSpec extends SpecificationWithJUnit {
       mmapStream.getPos must_== hadoopStream.getPos
       mmapStream.read(mmapReadBuf, 0, 100) must_== 100
       hadoopStream.read(hadoopReadBuf, 0, 100) must_== 100
-      mmapReadBuf.toList.take(100) must haveTheSameElementsAs(buf.view(150, 250))
-      mmapReadBuf.toList.take(100) must haveTheSameElementsAs(hadoopReadBuf.take(100))
+      mmapReadBuf.toList.take(100) must containTheSameElementsAs(buf.view(150, 250))
+      mmapReadBuf.toList.take(100) must containTheSameElementsAs(hadoopReadBuf.take(100))
 
       mmapStream.getPos must_== 250
       mmapStream.getPos must_== hadoopStream.getPos
@@ -119,8 +120,8 @@ class MMapInputStreamSpec extends SpecificationWithJUnit {
       mmapStream.getPos must_== 0
       mmapStream.readFully(pos, mmapReadBuf)
       hadoopStream.readFully(pos, hadoopReadBuf)
-      mmapReadBuf.toList must haveTheSameElementsAs(buf.view(pos, pos + mmapReadBuf.length))
-      mmapReadBuf.toList must haveTheSameElementsAs(hadoopReadBuf)
+      mmapReadBuf.toList must containTheSameElementsAs(buf.view(pos, pos + mmapReadBuf.length))
+      mmapReadBuf.toList must containTheSameElementsAs(hadoopReadBuf)
       mmapStream.getPos must_== 0
     } finally {
       file.delete
