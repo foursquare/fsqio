@@ -68,7 +68,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.mongodb', name = 'casbah-core', rev = '2.6.4')
+    sjar(org = 'org.mongodb', name = 'casbah-core', rev = '2.7.5')
   ]
 )
 
