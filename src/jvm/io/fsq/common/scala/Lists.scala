@@ -964,11 +964,8 @@ class FSOption[T](val opt: Option[T]) extends AnyVal {
     }
   }
 
-  def flatToVectorBy[U](f: T => Option[U]): Vector[U] = {
-    opt.flatMap(f) match {
-      case Some(x) => Vector(x)
-      case None => Vector.empty
-    }
+  def flatToVectorBy[U](f: T => TraversableOnce[U]): Vector[U] = {
+    opt.map(x => f(x).toVector).getOrElse(Vector.empty)
   }
 }
 
