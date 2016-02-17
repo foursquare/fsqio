@@ -1,12 +1,12 @@
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 package io.fsq.twofishes.util
 
-import com.weiglewilczek.slf4s.Logging
+import org.slf4s.Logging
 
 object Helpers extends Logging {
   def duration[T](name: String)(f: => T): T = {
     val (rv, duration) = DurationUtils.inMilliseconds(f)
-    logger.info("%s took %s seconds".format(name, duration.inSeconds))
+    log.info("%s took %s seconds".format(name, duration.inSeconds))
     rv
   }
 

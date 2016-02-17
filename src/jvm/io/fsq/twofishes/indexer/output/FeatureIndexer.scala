@@ -105,7 +105,7 @@ class FeatureIndexer(
         f.featureId, makeGeocodeRecordWithoutGeometry(f, polyOpt))
       fidCount += 1
       if (fidCount % 100000 == 0) {
-        logger.info("processed %d of %d features".format(fidCount, fidSize))
+        log.info("processed %d of %d features".format(fidCount, fidSize))
       }
     }
     writer.close()

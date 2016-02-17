@@ -49,7 +49,7 @@ class RevGeoIndexer(
       (geoid, woeType) <- polygonMap.getOrElse(revgeoIndexRecord.polyId, Nil)
     } {
       if (index % 10000 == 0) {
-        logger.info("processed %d of %d revgeo entries for %s".format(index, total, restrict))
+        log.info("processed %d of %d revgeo entries for %s".format(index, total, restrict))
       }
       if (currentKey != revgeoIndexRecord.cellid) {
         if (currentKey != 0L) {

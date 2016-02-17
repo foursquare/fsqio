@@ -68,7 +68,7 @@ class NameIndexer(
 
       nameCount += 1
       if (nameCount % 100000 == 0) {
-        logger.info("processed %d of %d names".format(nameCount, nameSize))
+        log.info("processed %d of %d names".format(nameCount, nameSize))
       }
     })
     writeFidsForLastName()

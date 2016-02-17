@@ -46,7 +46,7 @@ class S2InteriorIndexer(
       covering <- coverMap.get(f.polyId)
     } {
       if (coverIndex == 0) {
-        logger.info("S2InteriorIndexer: outputted %d of %d used polys, %d of %d total polys seen".format(
+        log.info("S2InteriorIndexer: outputted %d of %d used polys, %d of %d total polys seen".format(
           numUsedPolygon, usedPolygonSize, polygonSize, groupIndex*groupSize))
       }
       numUsedPolygon += 1
@@ -54,7 +54,7 @@ class S2InteriorIndexer(
     }
     writer.close()
 
-    logger.info("done")
+    log.info("done")
   }
 }
 

@@ -86,9 +86,9 @@ class PrefixIndexer(
   }
 
   def writeIndexImpl() {
-    logger.info("sorting prefix set")
+    log.info("sorting prefix set")
     val sortedPrefixes = prefixSet.toList.sortWith(lexicalSort)
-    logger.info("done sorting")
+    log.info("done sorting")
 
     val bestWoeTypes = List(
       YahooWoeType.POSTAL_CODE,
@@ -112,7 +112,7 @@ class PrefixIndexer(
       (prefix, index) <- sortedPrefixes.zipWithIndex
     } {
       if (index % 1000 == 0) {
-        logger.info("done with %d of %d prefixes".format(index, numPrefixes))
+        log.info("done with %d of %d prefixes".format(index, numPrefixes))
       }
       val records = getRecordsByPrefix(prefix, PrefixIndexer.MaxNamesToConsider)
 
@@ -143,6 +143,6 @@ class PrefixIndexer(
     }
 
     prefixWriter.close()
-    logger.info("done")
+    log.info("done")
   }
 }

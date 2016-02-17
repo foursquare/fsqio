@@ -9,7 +9,6 @@ import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.{Point => JTSPoint}
 import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory
 import com.vividsolutions.jts.io.{WKBReader, WKBWriter}
-import com.weiglewilczek.slf4s.Logging
 import io.fsq.twofishes.indexer.mongo.{PolygonIndexDAO, RevGeoIndex, RevGeoIndexDAO, S2CoveringIndex,
     S2CoveringIndexDAO, S2InteriorIndex, S2InteriorIndexDAO}
 import io.fsq.twofishes.util.{DurationUtils, GeometryCleanupUtils, GeometryUtils, RevGeoConstants, S2CoveringConstants,
@@ -17,6 +16,7 @@ import io.fsq.twofishes.util.{DurationUtils, GeometryCleanupUtils, GeometryUtils
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 import org.bson.types.ObjectId
+import org.slf4s.Logging
 import scala.collection.JavaConverters._
 
 // ====================
@@ -64,7 +64,7 @@ class S2CoveringWorker extends Actor with DurationUtils with RevGeoConstants wit
       val currentCount = GlobalCounter.count.getAndIncrement()
 
       if (currentCount % 1000 == 0) {
-        logger.info("processed about %s polygons for s2 coverage".format(currentCount))
+        log.info("processed about %s polygons for s2 coverage".format(currentCount))
       }
 
       val geom = wkbReader.read(geomBytes)
@@ -184,7 +184,7 @@ class S2CoveringMaster(val latch: CountDownLatch) extends Actor with Logging {
         shutdownWithMessage("finished all s2 covers, shutting down system")
       }
       if (inFlight < 0) {
-        logger.error("inFlight < 0 ... we're bad at a counting")
+        log.error("inFlight < 0 ... we're bad at a counting")
       }
     case msg: CalculateCover =>
       Stats.incr("s2.akkaWorkers.CalculateCover")
@@ -194,7 +194,7 @@ class S2CoveringMaster(val latch: CountDownLatch) extends Actor with Logging {
       inFlight += 1
       router ! msg
     case msg: Done =>
-      logger.info("all done with s2 cover indexing, sending poison pills")
+      log.info("all done with s2 cover indexing, sending poison pills")
       // send a PoisonPill to all workers telling them to shut down themselves
       router ! Broadcast(PoisonPill)
       seenDone = true
@@ -204,7 +204,7 @@ class S2CoveringMaster(val latch: CountDownLatch) extends Actor with Logging {
   }
 
   private def shutdownWithMessage(message: String): Unit = {
-    logger.info(message)
+    log.info(message)
     latch.countDown()
     self ! PoisonPill
   }
@@ -215,7 +215,7 @@ class S2CoveringMaster(val latch: CountDownLatch) extends Actor with Logging {
 
   override def postStop() {
     // tell the world that the calculation is complete
-    logger.info(
+    log.info(
       "s2 covering calculation time: \t%s millis"
         .format((System.currentTimeMillis - start))
     )

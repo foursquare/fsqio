@@ -28,7 +28,7 @@ class FidMap(preload: Boolean) extends DurationUtils {
         })
         i += 1
         if (i % (100*1000) == 0) {
-          logger.info("preloaded %d/%d fids".format(i, total))
+          log.info("preloaded %d/%d fids".format(i, total))
         }
       })
     }

@@ -46,7 +46,7 @@ class S2CoveringIndexer(
       covering <- coverMap.get(f.polyId)
     } {
       if (coverIndex == 0) {
-        logger.info("S2CoveringIndexer: outputted %d of %d used polys, %d of %d total polys seen".format(
+        log.info("S2CoveringIndexer: outputted %d of %d used polys, %d of %d total polys seen".format(
           numUsedPolygon, usedPolygonSize, polygonSize, groupIndex*groupSize))
       }
       numUsedPolygon += 1
@@ -54,6 +54,6 @@ class S2CoveringIndexer(
     }
     writer.close()
 
-    logger.info("done")
+    log.info("done")
   }
 }

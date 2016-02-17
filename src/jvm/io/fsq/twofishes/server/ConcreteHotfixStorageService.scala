@@ -5,7 +5,6 @@ import com.google.common.geometry.S2CellId
 import com.vividsolutions.jts.geom.{Geometry, Point}
 import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory
 import com.vividsolutions.jts.io.{WKBWriter, WKTReader}
-import com.weiglewilczek.slf4s.Logging
 import io.fsq.twofishes.gen.{CellGeometry, EditType, FeatureGeometry, FeatureName, FeatureNameFlags,
     FeatureNameFlagsListEdit, FeatureNameListEdit, GeocodeFeature, GeocodeFeatureAttributes, GeocodePoint,
     GeocodeServingFeature, LongListEdit, ScoringFeatures, StringListEdit}
@@ -13,6 +12,7 @@ import io.fsq.twofishes.util.{GeometryCleanupUtils, GeometryUtils, NameNormalize
     S2CoveringConstants, ShapefileS2Util, StoredFeatureId}
 import java.nio.ByteBuffer
 import org.geotools.geojson.geom.GeometryJSON
+import org.slf4s.Logging
 
 class ConcreteHotfixStorageService(
   source: HotfixSource,

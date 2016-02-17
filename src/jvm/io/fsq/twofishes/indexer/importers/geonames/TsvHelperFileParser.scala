@@ -1,9 +1,9 @@
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 package io.fsq.twofishes.indexer.importers.geonames
 
-import com.weiglewilczek.slf4s.Logging
 import io.fsq.twofishes.util.{FeatureNamespace, StoredFeatureId}
 import java.io.File
+import org.slf4s.Logging
 
 trait TsvHelperFileParserLogger {
   def logUnused: Iterable[String]
@@ -32,7 +32,7 @@ class GeoIdTsvHelperFileParser(defaultNamespace: FeatureNamespace, filenames: St
             parts = line.split("\t")
           }
           if (parts.length != 2) {
-            logger.error("Broken line in %s: %s (%d parts, needs 2)".format(filename, line, parts.length))
+            log.error("Broken line in %s: %s (%d parts, needs 2)".format(filename, line, parts.length))
           } else {
             StoredFeatureId.fromHumanReadableString(parts(0), Some(defaultNamespace)).foreach(key => {
               var values: List[String] = parts(1).split(",").toList
@@ -95,7 +95,7 @@ class TsvHelperFileParser(filenames: String*) extends TsvHelperFileParserLogger 
             parts = line.split("\t")
           }
           if (parts.length != 2) {
-            logger.error("Broken line in %s: %s (%d parts, needs 2)".format(filename, line, parts.length))
+            log.error("Broken line in %s: %s (%d parts, needs 2)".format(filename, line, parts.length))
           } else {
             val key = parts(0)
             var values: List[String] = parts(1).split(",").toList

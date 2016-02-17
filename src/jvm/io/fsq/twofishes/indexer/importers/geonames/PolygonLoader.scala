@@ -180,7 +180,7 @@ class PolygonLoader(
       geoid <- geoids
     } {
       try {
-        logger.debug("adding poly %s to %s %s".format(polyId, geoid, geoid.longId))
+        log.debug("adding poly %s to %s %s".format(polyId, geoid, geoid.longId))
         recordsUpdated += 1
         store.addPolygonToRecord(geoid, polyId)
       } catch {
@@ -206,7 +206,7 @@ class PolygonLoader(
       }
       load(defaultNamespace, f)
     }
-    logger.info("post processing, looking for bad poly matches")
+    log.info("post processing, looking for bad poly matches")
     val polygons =
       PolygonIndexDAO.find(MongoDBObject())
         .sort(orderBy = MongoDBObject("_id" -> 1)) // sort by _id asc
@@ -221,7 +221,7 @@ class PolygonLoader(
       val polygon = wkbReader.read(polyData)
       val point = featureRecord.center
       if (!polygon.contains(point) && polygon.distance(point) > 0.03) {
-        logger.info("bad poly on %s -- %s too far from %s".format(
+        log.info("bad poly on %s -- %s too far from %s".format(
           featureRecord.featureId, polygon, point))
 
           MongoGeocodeDAO.update(MongoDBObject("_id" -> featureRecord.featureId.longId),
@@ -235,7 +235,7 @@ class PolygonLoader(
           Stats.incr("PolygonLoader.removeBadPolygon")
       }
     }
-    logger.info("done reading in polys")
+    log.info("done reading in polys")
     parser.s2CoveringMaster.foreach(_ ! Done())
   }
 
@@ -251,7 +251,7 @@ class PolygonLoader(
       .grouped(1000).foreach(group => {
         parser.s2CoveringMaster.foreach(_ ! CalculateCoverFromMongo(group.toList, coverOptions))
       })
-    logger.info("done reading in polys")
+    log.info("done reading in polys")
     parser.s2CoveringMaster.foreach(_ ! Done())
   }
 
@@ -287,10 +287,10 @@ class PolygonLoader(
     val query = buildQuery(geometry, woeTypes)
     val size = MongoGeocodeDAO.count(query)
     if (size > 10000) {
-      logger.error("result set too big: %s for %s".format(size, query))
+      log.error("result set too big: %s for %s".format(size, query))
       return Iterator.empty
     } else if (size > 2000) {
-      logger.info("oversize result set: %s for %s".format(size, query))
+      log.info("oversize result set: %s for %s".format(size, query))
     }
 
     val candidateCursor = MongoGeocodeDAO.find(query)
@@ -432,7 +432,7 @@ class PolygonLoader(
 
     if (withLogging) {
       if (!isGoodEnoughMatch(polygonMatch)) {
-        logger.debug(
+        log.debug(
           "%s vs %s -- %s vs %s".format(
             candidate.featureId.humanReadableString,
             feature.propMap.get(config.idField).getOrElse("0"),
@@ -462,7 +462,7 @@ class PolygonLoader(
     var candidatesSeen = 0
 
     if (!hasName(config, feature)) {
-      logger.info("no names on " + debugFeature(config, feature) + " - " + buildQuery(geometry, config.getAllWoeTypes))
+      log.info("no names on " + debugFeature(config, feature) + " - " + buildQuery(geometry, config.getAllWoeTypes))
       return Nil
     }
 
@@ -501,13 +501,13 @@ class PolygonLoader(
           .find(_.nonEmpty).toList.flatten
 
       if (candidatesSeen == 0) {
-        logger.debug("failed couldn't find any candidates for " + debugFeature(config, feature) + " - " + buildQuery(geometry, config.getAllWoeTypes))
+        log.debug("failed couldn't find any candidates for " + debugFeature(config, feature) + " - " + buildQuery(geometry, config.getAllWoeTypes))
       } else if (acceptableCandidates.isEmpty) {
-        logger.debug("failed to match: %s".format(debugFeature(config, feature)))
-        logger.debug("%s".format(buildQuery(geometry, config.getAllWoeTypes)))
+        log.debug("failed to match: %s".format(debugFeature(config, feature)))
+        log.debug("%s".format(buildQuery(geometry, config.getAllWoeTypes)))
         matchAtWoeType(config.getAllWoeTypes, withLogging = true)
       } else {
-        logger.debug("matched %s %s to %s".format(
+        log.debug("matched %s %s to %s".format(
           debugFeature(config, feature),
           getId(config, feature),
           acceptableCandidates.map(debugFeature).mkString(", ")
@@ -563,7 +563,7 @@ class PolygonLoader(
 
       PolygonLoader.adHocIdCounter += 1
       val gnfeature = new GeonamesFeature(attribMap ++ supplementalAttrubs)
-      logger.debug("making adhoc feature: " + id + " " + id.longId)
+      log.debug("making adhoc feature: " + id + " " + id.longId)
       parser.insertGeocodeRecords(List(parser.parseFeature(gnfeature)))
       id
     }
@@ -593,7 +593,7 @@ class PolygonLoader(
         id,
         woeType
       )
-      logger.info("creating feature for %s in %s".format(
+      log.info("creating feature for %s in %s".format(
         debugFeature(config, feature), cc
       ))
       val geocodeRecord = parser.parseFeature(basicFeature)
@@ -612,7 +612,7 @@ class PolygonLoader(
     }
 
     featureOpt.orElse(toFixFeature).orElse({
-      logger.error("no id on %s".format(debugFeature(feature)))
+      log.error("no id on %s".format(debugFeature(feature)))
       None
     })
   }
@@ -634,7 +634,7 @@ class PolygonLoader(
       geom <- feature.geometry
     } {
       if (index % 100 == 0) {
-        logger.info("processing feature %d in %s".format(index, features.file.getName))
+        log.info("processing feature %d in %s".format(index, features.file.getName))
       }
 
       val fidsFromFileName = fparts.lift(0).flatMap(p => Helpers.TryO(p.toInt.toString))
@@ -700,7 +700,7 @@ class PolygonLoader(
 
   def load(defaultNamespace: FeatureNamespace, f: File): Unit = {
     val previousRecordsUpdated = recordsUpdated
-    logger.info("processing %s".format(f))
+    log.info("processing %s".format(f))
     val fparts = f.getName().split("\\.")
     val extension = fparts.lastOption.getOrElse("")
     val shapeFileExtensions = List("shx", "dbf", "prj", "xml", "cpg")
@@ -712,7 +712,7 @@ class PolygonLoader(
         PolygonMappingConfig.getMappingForFile(f),
         getMatchingForFile(f, defaultNamespace)
       )
-      logger.info("%d records updated by %s".format(recordsUpdated - previousRecordsUpdated, f))
+      log.info("%d records updated by %s".format(recordsUpdated - previousRecordsUpdated, f))
     } else if (extension == "shp") {
       processFeatureIterator(
         defaultNamespace,
@@ -720,7 +720,7 @@ class PolygonLoader(
         PolygonMappingConfig.getMappingForFile(f),
         getMatchingForFile(f, defaultNamespace)
       )
-      logger.info("%d records updated by %s".format(recordsUpdated - previousRecordsUpdated, f))
+      log.info("%d records updated by %s".format(recordsUpdated - previousRecordsUpdated, f))
     } else if (shapeFileExtensions.has(extension)) {
       // do nothing, shapefile aux file
       Nil

@@ -7,7 +7,6 @@ import com.twitter.ostrich.admin.{AdminServiceFactory, RuntimeEnvironment}
 import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBWriter, WKTReader}
-import com.weiglewilczek.slf4s.Logging
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.gen._
@@ -25,6 +24,7 @@ import org.bson.types.ObjectId
 import org.json4s.NoTypeHints
 import org.json4s.jackson.{JsonMethods, Serialization}
 import org.opengis.feature.simple.SimpleFeature
+import org.slf4s.Logging
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{HashMap, HashSet}
 import scala.io.Source
@@ -108,8 +108,8 @@ object GeonamesParser extends DurationUtils {
 
     implicit val formats = Serialization.formats(NoTypeHints)
     val prettyJsonStats = Serialization.writePretty(JsonMethods.parse(Stats.get().toJson))
-    logger.info(prettyJsonStats)
-    logger.info("all done with parse, trying to shutdown admin server and exit")
+    log.info(prettyJsonStats)
+    log.info("all done with parse, trying to shutdown admin server and exit")
     admin.shutdown()
     System.exit(0)
   }
@@ -236,7 +236,7 @@ class GeonamesParser(
   }
 
   def logUnusedHelperEntries {
-    helperTables.flatMap(_.logUnused).foreach(line => logger.error(line))
+    helperTables.flatMap(_.logUnused).foreach(line => log.error(line))
   }
 
   val wkbWriter = new WKBWriter()
@@ -254,7 +254,7 @@ class GeonamesParser(
     if (!config.parseWorld) {
       val countries = config.parseCountry.split(",")
       countries.foreach(f => {
-        logger.info("Parsing %s".format(f))
+        log.info("Parsing %s".format(f))
         parseAdminInfoFile("src/jvm/io/fsq/twofishes/indexer/data/downloaded/adminCodes-%s.txt".format(f))
         parseAdminFile(
           "src/jvm/io/fsq/twofishes/indexer/data/downloaded/%s.txt".format(f))
@@ -516,7 +516,7 @@ class GeonamesParser(
           Some(BoundingBox(Point(n.toDouble, e.toDouble), Point(s.toDouble, w.toDouble)))
         }
         case _ => {
-          logger.error("malformed bbox: " + bboxStr)
+          log.error("malformed bbox: " + bboxStr)
           None
         }
       }
@@ -674,7 +674,7 @@ class GeonamesParser(
     } {
       val processed = groupIndex * groupSize
       if (processed % 10000 == 0) {
-        logger.info("imported %d %s so far".format(processed, typeName))
+        log.info("imported %d %s so far".format(processed, typeName))
       }
 
       val recordsToInsert = lineGroup.zipWithIndex.flatMap({case (line, index) => {
@@ -867,7 +867,7 @@ class GeonamesParser(
 
       val records = store.getById(featureId).toList
       records match {
-        case Nil => logger.error("no match for id %s".format(idString))
+        case Nil => log.error("no match for id %s".format(idString))
         case record :: Nil => {
           val flagsMaskComputed = flagsMask | (if (isLocalLang(lang, record.cc)) {
             FeatureNameFlags.LOCAL_LANG.getValue
@@ -882,7 +882,7 @@ class GeonamesParser(
           var merged = false
           val mergedNames = record.displayNames.map(dn => {
             if (dn.lang =? lang && dn.name =? name) {
-              logger.info("merged display name %s with name transform: id %s, lang %s, name %s, flags %d".format(dn, idString, lang, name, flagsMaskComputed))
+              log.info("merged display name %s with name transform: id %s, lang %s, name %s, flags %d".format(dn, idString, lang, name, flagsMaskComputed))
               merged = true
               DisplayName(dn.lang, dn.name, dn.flags | flagsMaskComputed)
             } else {
@@ -895,7 +895,7 @@ class GeonamesParser(
             val normalizedName = NameNormalizer.normalize(name).trim
             val nameRecords = store.getNameIndexByIdLangAndName(featureId, lang, normalizedName).toList
             nameRecords match {
-              case Nil => logger.error("display names and name index out of sync for id %s, lang %s, name %s".format(idString, lang, name))
+              case Nil => log.error("display names and name index out of sync for id %s, lang %s, name %s".format(idString, lang, name))
               case nameRecord :: dupes => {
                 // dupes can rarely creep into the name index when display names are not exact dupes
                 // but their normalized forms are, e.g. "LA", "L.A." both normalize to "la"
@@ -928,7 +928,7 @@ class GeonamesParser(
             })
           store.setRecordNames(featureId, newNames)
         }
-        case list => logger.error("multiple matches for id %s -- %s".format(idString, list))
+        case list => log.error("multiple matches for id %s -- %s".format(idString, list))
       }
     }
   }

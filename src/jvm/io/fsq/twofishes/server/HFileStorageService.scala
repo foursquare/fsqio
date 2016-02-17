@@ -2,7 +2,6 @@ package io.fsq.twofishes.server
 
 import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.Geometry
-import com.weiglewilczek.slf4s.Logging
 import io.fsq.twofishes.core.{Index, Indexes, MapFileUtils}
 import io.fsq.twofishes.gen.{CellGeometry, GeocodeServingFeature}
 import io.fsq.twofishes.util.{DurationUtils, StoredFeatureId}
@@ -16,6 +15,7 @@ import org.apache.hadoop.hbase.io.hfile.hacks.TwofishesFoursquareCacheConfigHack
 import org.apache.hadoop.hbase.util.Bytes._
 import org.apache.hadoop.io.BytesWritable
 import org.apache.thrift.TBaseHelper
+import org.slf4s.Logging
 import scala.collection.JavaConverters._
 
 class HFileStorageService(originalBasepath: String, shouldPreload: Boolean) extends GeocodeStorageReadService with Logging {
@@ -35,7 +35,7 @@ class HFileStorageService(originalBasepath: String, shouldPreload: Boolean) exte
     scala.io.Source.fromFile(infoFile).getLines.foreach(line => {
       val parts = line.split(": ")
       if (parts.size != 2) {
-        logger.error("badly formatted info line: " + line)
+        log.error("badly formatted info line: " + line)
       }
       for {
         key <- parts.lift(0)
@@ -149,7 +149,7 @@ class HFileInput[V](basepath: String, index: Index[String, V], shouldPreload: Bo
       while(scanner.next()) {}
     })
 
-    logger.info("took %s seconds to read %s".format(duration.inSeconds, index.filename))
+    log.info("took %s seconds to read %s".format(duration.inSeconds, index.filename))
   }
 
   def lookup(keyStr: String): Option[V] = {
@@ -193,7 +193,7 @@ class MapFileInput[K, V](basepath: String, index: Index[K, V], shouldPreload: Bo
     val (rv, duration) = DurationUtils.inMilliseconds({
       MapFileUtils.readerAndInfoFromLocalPath(new File(basepath, index.filename).toString, shouldPreload)
     })
-    logger.info("took %s seconds to read %s".format(duration.inSeconds, index.filename))
+    log.info("took %s seconds to read %s".format(duration.inSeconds, index.filename))
     rv
   }
 
@@ -213,7 +213,7 @@ class MapFileInput[K, V](basepath: String, index: Index[K, V], shouldPreload: Bo
     // This might just end up logging GC pauses, but it's possible we have
     // degenerate keys/values as well.
     if (duration.inMilliseconds > 100) {
-      logger.info("reading key '%s' from index '%s' took %s milliseconds. valueOpt is %s bytes long".format(
+      log.info("reading key '%s' from index '%s' took %s milliseconds. valueOpt is %s bytes long".format(
         key.toString, index.filename, duration.inMilliseconds, rv.map(_ => valueBytes.getLength)))
     }
 

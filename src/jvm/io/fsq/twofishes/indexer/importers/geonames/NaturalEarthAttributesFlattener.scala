@@ -1,10 +1,10 @@
 // Copyright 2014 Foursquare Labs Inc. All Rights Reserved.
 package io.fsq.twofishes.indexer.importers.geonames
 
-import com.weiglewilczek.slf4s.Logging
 import io.fsq.twofishes.indexer.util.FsqSimpleFeatureImplicits._
 import io.fsq.twofishes.indexer.util.ShapefileIterator
 import java.io.FileWriter
+import org.slf4s.Logging
 
 // Tool to flatten NaturalEarth Populated Places Shapefile to a single text file
 // to simplify scalding index build
@@ -44,11 +44,11 @@ object NaturalEarthAttributesFlattener extends Logging {
 
       features += 1
       if (features % 1000 == 0) {
-        logger.info("processed %d features".format(features))
+        log.info("processed %d features".format(features))
       }
     }
 
     fileWriter.close()
-    logger.info("Done.")
+    log.info("Done.")
   }
 }

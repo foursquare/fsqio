@@ -1,11 +1,11 @@
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 package io.fsq.twofishes.indexer.importers.geonames
 
-import com.weiglewilczek.slf4s.Logging
 import io.fsq.common.scala.Identity._
 import io.fsq.twofishes.gen.YahooWoeType
 import io.fsq.twofishes.util.{GeonamesNamespace, GeonamesZip, StoredFeatureId}
 import io.fsq.twofishes.util.Helpers._
+import org.slf4s.Logging
 
 
 object GeonamesFeatureColumns extends Enumeration {
@@ -80,7 +80,7 @@ object GeonamesFeature extends Logging {
         ))
       } catch {
         case e: Exception =>
-          logger.error("Exception when handling '%s': %s".format(in, e))
+          log.error("Exception when handling '%s': %s".format(in, e))
           None
       }
     }
@@ -99,13 +99,13 @@ object GeonamesFeature extends Logging {
       ): Option[GeonamesFeature] = {
     val parts = line.split("\t")
     if (parts.size < columns.size) {
-      logger.error("line %d has too few columns. Has %d, needs %d (%s)".format(
+      log.error("line %d has too few columns. Has %d, needs %d (%s)".format(
         index, parts.size, columns.size, parts.mkString(",")))
       None
     } else {
       modifyCallback(columns.zip(parts).toMap) match {
         case None =>
-          logger.error("CALLBACK ELIDED LINE: %s".format(line))
+          log.error("CALLBACK ELIDED LINE: %s".format(line))
           None
 
         case Some(colMapVal) =>
@@ -119,7 +119,7 @@ object GeonamesFeature extends Logging {
           if (feature.isValid) {
             Some(feature)
           } else {
-            logger.error("INVALID: %s".format(line))
+            log.error("INVALID: %s".format(line))
             None
           }
       }

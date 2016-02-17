@@ -2,12 +2,12 @@
 package io.fsq.twofishes.indexer.importers.geonames
 
 import com.vividsolutions.jts.io.WKBWriter
-import com.weiglewilczek.slf4s.Logging
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.indexer.util.{DisplayName, FsqSimpleFeature, GeoJsonIterator, ShapeIterator, ShapefileIterator}
 import io.fsq.twofishes.util.{FeatureNamespace, GeonamesNamespace, Helpers, StoredFeatureId}
 import java.io.{File, FileWriter, Writer}
 import org.apache.commons.net.util.Base64
+import org.slf4s.Logging
 
 // Tool to flatten all polygons and matching metadata to a single text file
 // to simplify scalding index build
@@ -96,7 +96,7 @@ object PolygonDataFlattener extends Logging {
       geom <- feature.geometry
     } {
       if (index % 100 == 0) {
-        logger.info("processing feature %d in %s".format(index, features.file.getName))
+        log.info("processing feature %d in %s".format(index, features.file.getName))
       }
       
       val polygonId = getId()
@@ -191,6 +191,6 @@ object PolygonDataFlattener extends Logging {
     polygonFiles.foreach(f => load(defaultNameSpace, f, fileWriter))
 
     fileWriter.close()
-    logger.info("Done.")
+    log.info("Done.")
   }
 }

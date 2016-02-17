@@ -64,6 +64,6 @@ class OutputIndexes(
     // wait forever to finish
     Await.result(Future.collect(indexFutures))
 
-    logger.info("all done with output")
+    log.info("all done with output")
   }
 }

@@ -712,7 +712,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'com.weiglewilczek.slf4s', name = 'slf4s_2.9.1', rev = '1.0.7')
+    sjar(org = 'org.slf4s', name = 'slf4s-api', rev = '1.7.13'),
   ]
 )
 

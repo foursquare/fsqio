@@ -11,7 +11,6 @@ import com.twitter.ostrich.admin.config._
 import com.twitter.ostrich.stats.Stats
 import com.twitter.util.{Await, Future, FuturePool}
 import com.vividsolutions.jts.io.WKTWriter
-import com.weiglewilczek.slf4s.Logging
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.spindle.common.thrift.json.TReadableJSONProtocol
 import io.fsq.spindle.runtime.{MetaRecord, Record}
@@ -32,6 +31,7 @@ import org.codehaus.jackson.JsonFactory
 import org.jboss.netty.buffer.ChannelBuffers
 import org.jboss.netty.handler.codec.http._
 import org.jboss.netty.util.CharsetUtil
+import org.slf4s.Logging
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import scala.io.BufferedSource
@@ -104,7 +104,7 @@ class QueryLoggingGeocodeServerImpl(service: Geocoder.ServiceIface) extends Geoc
       // greater than 500 ms
       if (end - start > 500) {
         // log slow query
-        logger.info("%s took %d ms".format(r, end - start))
+        log.info("%s took %d ms".format(r, end - start))
         slowQueries.synchronized {
           slowQueries += (r, start, end)
         }
@@ -155,10 +155,10 @@ class GeocodeServerImpl(
 
       var lines = new BufferedSource(getClass.getResourceAsStream("/io/fsq/twofishes/server/resources/warmup/geocodes.txt")).getLines.take(10000).grouped(batchSize).toVector
 
-      logger.info("Warming up by geocoding %d queries".format(lines.size * batchSize))
+      log.info("Warming up by geocoding %d queries".format(lines.size * batchSize))
       lines.zipWithIndex.foreach { case (batch, index) =>
         if (index % 20 == 0) {
-          logger.info("finished %d queries".format(index * batchSize))
+          log.info("finished %d queries".format(index * batchSize))
         }
         val work = Future.collect(batch.map { line => queryFuturePool {
           new GeocodeRequestDispatcher(store).geocode(
@@ -170,14 +170,14 @@ class GeocodeServerImpl(
         }})
         Await.result(work)
       }
-      logger.info("done")
+      log.info("done")
 
       val revgeoLines = new BufferedSource(getClass.getResourceAsStream("/io/fsq/twofishes/server/resources/warmup/revgeo.txt")).getLines.take(10000).grouped(batchSize).toVector
 
-      logger.info("Warming up by reverse geocoding %d queries".format(revgeoLines.size * batchSize))
+      log.info("Warming up by reverse geocoding %d queries".format(revgeoLines.size * batchSize))
       revgeoLines.zipWithIndex.foreach { case (batch, index) =>
         if (index % 20 == 0) {
-          logger.info("finished %d queries".format(index * batchSize))
+          log.info("finished %d queries".format(index * batchSize))
         }
         val work = Future.collect(batch.map { line => queryFuturePool {
           val parts = line.split(",")
@@ -186,22 +186,22 @@ class GeocodeServerImpl(
         }})
         Await.result(work)
       }
-      logger.info("done")
+      log.info("done")
 
       val slugLines = 1.to(10000).map(id => "geonameid:%d".format(id)).grouped(batchSize)
-      logger.info("Warming up by geocoding %d slugs".format(slugLines.size * batchSize))
+      log.info("Warming up by geocoding %d slugs".format(slugLines.size * batchSize))
       slugLines.zipWithIndex.foreach { case (batch, index) =>
         if (index % 20 == 0) {
-          logger.info("finished %d queries".format(index * batchSize))
+          log.info("finished %d queries".format(index * batchSize))
         }
         val work = Future.collect(batch.map { line => queryFuturePool {
           new GeocodeRequestDispatcher(store).geocode(GeocodeRequest.newBuilder.slug(line).result)
         }})
         Await.result(work)
       }
-      logger.info("done")
+      log.info("done")
     }
-    logger.info("done")
+    log.info("done")
     val labels = Stats.getLabels()
     Stats.clearAll()
     labels.foreach({case (k, v) => Stats.setLabel(k, v)})
@@ -260,7 +260,7 @@ class HandleExceptions extends SimpleFilter[HttpRequest, HttpResponse] with Logg
     // `handle` asynchronously handles exceptions.
     service(request) handle {
       case error: Exception =>
-        logger.error("got error: %s".format(error))
+        log.error("got error: %s".format(error))
         error.printStackTrace
         val statusCode = HttpResponseStatus.INTERNAL_SERVER_ERROR
         val errorResponse = new DefaultHttpResponse(HttpVersion.HTTP_1_1, statusCode)
@@ -528,7 +528,7 @@ object GeocodeFinagleServer extends Logging {
 
     val version = getClass.getPackage.getImplementationVersion
     if (version != null) {
-      logger.info("starting version %s".format(version))
+      log.info("starting version %s".format(version))
       Stats.setLabel("version", version)
     }
 
@@ -540,10 +540,10 @@ object GeocodeFinagleServer extends Logging {
     // Convert the Thrift Processor to a Finagle Service
     val service = new Geocoder.Service(processor, new TBinaryProtocol.Factory())
 
-    logger.info("serving finagle-thrift on port %d".format(config.thriftServerPort))
-    logger.info("serving http/json on port %d".format(config.thriftServerPort + 1))
-    logger.info("serving debug info on port %d".format(config.thriftServerPort + 2))
-    logger.info("serving slow query http/json on port %d".format(config.thriftServerPort + 3))
+    log.info("serving finagle-thrift on port %d".format(config.thriftServerPort))
+    log.info("serving http/json on port %d".format(config.thriftServerPort + 1))
+    log.info("serving debug info on port %d".format(config.thriftServerPort + 2))
+    log.info("serving slow query http/json on port %d".format(config.thriftServerPort + 3))
 
     val server: Server = ServerBuilder()
       .bindTo(new InetSocketAddress(config.host, config.thriftServerPort))

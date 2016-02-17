@@ -51,11 +51,11 @@ abstract class Indexer extends DurationUtils {
     val name = this.getClass.getName
 
     if (outputs.forall(_.exists(basepath))) {
-      logger.info("had all indexes for %s, skipping this phase".format(name))
+      log.info("had all indexes for %s, skipping this phase".format(name))
     } else {
-      logger.info("starting indexing for %s".format(name))
+      log.info("starting indexing for %s".format(name))
       logDuration(name) { writeIndexImpl() }
-      logger.info("done indexing for %s".format(name))
+      log.info("done indexing for %s".format(name))
     }
   }
 

@@ -1,11 +1,11 @@
 // Copyright 2014 Foursquare Labs Inc. All Rights Reserved.
 package io.fsq.twofishes.server
 
-import com.weiglewilczek.slf4s.Logging
 import io.fsq.spindle.common.thrift.json.TReadableJSONProtocol
 import io.fsq.twofishes.gen.{GeocodeServingFeatureEdit, RawGeocodeServingFeatureEdits}
 import java.io.File
 import org.apache.thrift.TDeserializer
+import org.slf4s.Logging
 
 class JsonHotfixSource(originalPath: String) extends HotfixSource with Logging {
   val deserializer = new TDeserializer(new TReadableJSONProtocol.Factory())
@@ -23,7 +23,7 @@ class JsonHotfixSource(originalPath: String) extends HotfixSource with Logging {
         edits.edits
       })
     } else {
-      logger.warn("invalid hotfix directory: %s".format(path))
+      log.warn("invalid hotfix directory: %s".format(path))
     }
   }
 

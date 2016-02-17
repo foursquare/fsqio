@@ -45,7 +45,7 @@ class PolygonIndexer(override val basepath: String, override val fidMap: FidMap)
       poly <- polyMap.get(f.polyId)
     } {
       if (polygonIndex == 0) {
-        logger.info("PolygonIndexer: outputted %d of %d used polys, %d of %d total polys seen".format(
+        log.info("PolygonIndexer: outputted %d of %d used polys, %d of %d total polys seen".format(
           numUsedPolygon, usedPolygonSize, polygonSize, groupIndex*groupSize))
       }
       numUsedPolygon += 1
@@ -53,6 +53,6 @@ class PolygonIndexer(override val basepath: String, override val fidMap: FidMap)
     }
     writer.close()
 
-    logger.info("done")
+    log.info("done")
   }
 }
