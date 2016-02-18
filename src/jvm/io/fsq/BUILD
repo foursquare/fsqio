@@ -6,6 +6,8 @@ pom_target(
     'src/jvm/io/fsq/common',
   ],
   dependencies = [
+    # TODO(dan): These should probably be published in different jars.
+    'src/jvm/io/fsq/common/concurrent',
     'src/jvm/io/fsq/common/scala',
   ],
   provides = artifact(
