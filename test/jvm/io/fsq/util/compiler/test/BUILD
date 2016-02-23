@@ -2,7 +2,7 @@
 
 scala_library(
   name = 'test',
-  sources = globs('*.scala'),
+  sources = globs('CompilerForNegativeTests.scala'),
   tags = [
     'opensource',
     'fscommon',
@@ -10,5 +10,14 @@ scala_library(
   dependencies = [
     '3rdparty:reflections',
     '3rdparty:specs2',
+  ],
+)
+
+junit_tests(
+  name = 'test_of_test',
+  sources = globs('TestOfCompilerForNegativeTests.scala'),
+  dependencies = [
+    '3rdparty:junit',
+    ':test',  # buildgen will remove this dep without this comment
   ],
 )
