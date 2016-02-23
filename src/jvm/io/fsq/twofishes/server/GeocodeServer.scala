@@ -267,12 +267,12 @@ class HandleExceptions extends SimpleFilter[HttpRequest, HttpResponse] with Logg
         errorResponse.headers.set("Content-Type", "application/json; charset=utf-8")
         val errorMap = Map(
           "exception" -> error.toString,
-          "stacktrace" -> error.getStackTraceString)
+          "stacktrace" -> error.getStackTrace.mkString("", "\n", "\n"))
         val jsonBytes = {
           val baos = new ByteArrayOutputStream
           val generator = jsonFactory.createJsonGenerator(baos)
           generator.writeStringField("exception", error.toString)
-          generator.writeStringField("stacktrace", error.getStackTraceString)
+          generator.writeStringField("stacktrace", error.getStackTrace.mkString("", "\n", "\n"))
           generator.flush()
           baos.toByteArray
         }
