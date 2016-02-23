@@ -26,5 +26,5 @@ trait PoolJumper {
 }
 
 final class DefaultPoolJumper(pool: FuturePool) extends PoolJumper {
-  def map[T](f: Function1[Unit, T]): Future[T] = pool(f())
+  def map[T](f: Function1[Unit, T]): Future[T] = pool(f(()))
 }
