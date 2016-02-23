@@ -16,7 +16,7 @@ object ScalaReflection {
       case Some(loader) => Class.forName(name + "$", true, loader)
     }
     val moduleGetter = clazz.getDeclaredField("MODULE$")
-    moduleGetter.get()
+    moduleGetter.get(null)  // for static fields, the argument is ignored; pass `null` as recommended by javadoc
   }
 
   /** Get all the superclasses of a given Class
