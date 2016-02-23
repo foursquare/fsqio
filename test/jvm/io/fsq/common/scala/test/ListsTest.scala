@@ -296,7 +296,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   def testGroupWhile {
     val xs = List(1,2,3,11,12,13,21,22)
     xs.groupWhile(_ / 10 == _ / 10) must_== List(List(1,2,3),List(11,12,13), List(21,22))
-    Nil.groupWhile(_ == _) must_== Nil
+    List.empty[Int].groupWhile(_ == _) must_== Nil
   }
 
   @Test
