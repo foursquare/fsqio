@@ -277,7 +277,7 @@ class FSTraversable[CC[X] <: Traversable[X], T, Repr <: TraversableLike[T, Repr]
   def has(e: T): Boolean = xs match {
     case xSet: Set[_] => xSet.asInstanceOf[Set[T]].contains(e)
     case xMap: Map[_,_] => {
-      val p = e.asInstanceOf[Pair[Any,Any]]
+      val p = e.asInstanceOf[(Any,Any)]
       xMap.asInstanceOf[Map[Any,Any]].get(p._1) == Some(p._2)
     }
     case _ => xs.exists(_ == e)
