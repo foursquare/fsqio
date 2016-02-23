@@ -47,7 +47,7 @@ class SerdeSpec extends SpecificationWithJUnit {
       test(TrivialSerde, Array[Byte]())
       test(TrivialSerde, Array[Byte](1))
 
-      test(ThriftSerde(Unit => CellGeometry.newBuilder.result), CellGeometry.newBuilder.full(true).result)
+      test(ThriftSerde(() => CellGeometry.newBuilder.result), CellGeometry.newBuilder.full(true).result)
     }
   }
 }

@@ -101,7 +101,7 @@ object Serde {
   }
 
   case class ThriftSerde[T <: TBase[_ <: TBase[_ <: AnyRef, _ <: TFieldIdEnum], _ <: TFieldIdEnum]](
-      factory: Unit => T) extends Serde[T] {
+      factory: () => T) extends Serde[T] {
     val protFactory = new TCompactProtocol.Factory
 
     def toBytes(t: T): Array[Byte] = {
@@ -135,13 +135,13 @@ object Indexes {
     "s2_interior", Serde.StoredFeatureIdSerde, Serde.LongListSerde)
 
   case object FeatureIndex extends Index[StoredFeatureId, GeocodeServingFeature](
-    "features", Serde.StoredFeatureIdSerde, Serde.ThriftSerde(Unit => new RawGeocodeServingFeature))
+    "features", Serde.StoredFeatureIdSerde, Serde.ThriftSerde(() => new RawGeocodeServingFeature))
 
   case object IdMappingIndex extends Index[String, StoredFeatureId](
     "id-mapping", Serde.StringSerde, Serde.StoredFeatureIdSerde)
 
   case object S2Index extends Index[Long, CellGeometries](
-    "s2_index", Serde.LongSerde, Serde.ThriftSerde(Unit => new RawCellGeometries))
+    "s2_index", Serde.LongSerde, Serde.ThriftSerde(() => new RawCellGeometries))
 
   case object PrefixIndex extends Index[String, Seq[StoredFeatureId]](
     "prefix_index", Serde.StringSerde, Serde.StoredFeatureIdListSerde)
