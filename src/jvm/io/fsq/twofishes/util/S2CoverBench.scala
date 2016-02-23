@@ -55,7 +55,7 @@ class S2CoverBenchmark extends SimpleBenchmark {
   }
 
 
-  def helpTime[T](f: Unit => T)(reps: Int): Int = {
+  def helpTime[T](f: () => T)(reps: Int): Int = {
     var i = 0
     var sum = 0
     while (i < reps) {
@@ -66,11 +66,11 @@ class S2CoverBenchmark extends SimpleBenchmark {
     sum
   }
 
-  def time100(reps: Int): Unit = helpTime(Unit => geocode(100))(reps)
-  def time1k(reps: Int): Unit = helpTime(Unit => geocode(1000))(reps)
-  def time2k(reps: Int): Unit = helpTime(Unit => geocode(2*1000))(reps)
-  def time5k(reps: Int): Unit = helpTime(Unit => geocode(5*1000))(reps)
-  def time10k(reps: Int): Unit = helpTime(Unit => geocode(10*1000))(reps)
+  def time100(reps: Int): Unit = helpTime(() => geocode(100))(reps)
+  def time1k(reps: Int): Unit = helpTime(() => geocode(1000))(reps)
+  def time2k(reps: Int): Unit = helpTime(() => geocode(2*1000))(reps)
+  def time5k(reps: Int): Unit = helpTime(() => geocode(5*1000))(reps)
+  def time10k(reps: Int): Unit = helpTime(() => geocode(10*1000))(reps)
 }
 
 /** To run this benchmark:
