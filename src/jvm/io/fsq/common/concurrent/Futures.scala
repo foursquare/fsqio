@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException
  * Handy helpers for dealing with Futures.
  */
 object Futures {
-  val SentinelElement = new StackTraceElement("com.foursquare", "ASYNC", "Futures.scala", -1)
+  val SentinelElement = new StackTraceElement("io.fsq", "ASYNC", "Futures.scala", -1)
 
   class FilledTimeoutException(
     msg: String,
