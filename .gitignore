@@ -43,4 +43,5 @@ dependencies/*
 dist
 environ.sh
 log/*
+scripts/upkeep/current
 target/
