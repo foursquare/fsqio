@@ -7,6 +7,7 @@ import io.fsq.common.scala.Identity._
 import org.junit.{Assert, Test}
 import org.scalacheck.{ConsoleReporter, Prop, Test => Check}
 import org.specs.SpecsMatchers
+import scala.collection.mutable.{Map => MutableMap}
 
 class ListsTest extends SpecsMatchers with Lists.Implicits {
 
@@ -414,6 +415,16 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
 
     val testValue = Seq(1, 2, 3).toMapBy(x => (x -> (x + 10)))
     val result = Map(1 -> 11, 2 -> 12, 3 -> 13)
+    Assert.assertTrue(testValue equals result)
+  }
+
+  @Test
+  def testToMutableMapBy {
+    // Empty input
+    Assert.assertTrue(Seq.empty[Int].toMutableMapBy(x => (x -> (x + 10))) equals MutableMap.empty[Int, Int])
+
+    val testValue = Seq(1, 2, 3).toMutableMapBy(x => (x -> (x + 10)))
+    val result = MutableMap(1 -> 11, 2 -> 12, 3 -> 13)
     Assert.assertTrue(testValue equals result)
   }
 

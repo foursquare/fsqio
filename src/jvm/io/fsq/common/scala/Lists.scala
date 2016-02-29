@@ -7,7 +7,7 @@ import scala.collection.{IterableLike, SeqLike, SetLike, TraversableLike}
 import scala.collection.generic.{CanBuildFrom, GenericCompanion, GenericSetTemplate, GenericTraversableTemplate,
     MapFactory}
 import scala.collection.immutable.{Map, VectorBuilder}
-import scala.collection.mutable.{ArrayBuffer, ArraySeq, Builder, HashMap, PriorityQueue}
+import scala.collection.mutable.{ArrayBuffer, ArraySeq, Builder, HashMap, Map => MutableMap, PriorityQueue}
 import scala.util.Random
 
 object Arrays {
@@ -563,6 +563,19 @@ class FSIterable[CC[X] <: Iterable[X], T, Repr <: IterableLike[T, Repr] with Gen
    */
   def toMapBy[K, V](f: T => (K, V)): Map[K, V] = {
     val builder = Map.newBuilder[K, V]
+
+    xs.foreach(x => {
+      builder += f(x)
+    })
+
+    builder.result()
+  }
+
+  /** Applies `f` to each item in the collection and returns a mutable Map,
+   *  discarding duplicates.
+   */
+  def toMutableMapBy[K, V](f: T => (K, V)): MutableMap[K, V] = {
+    val builder = MutableMap.newBuilder[K, V]
 
     xs.foreach(x => {
       builder += f(x)
