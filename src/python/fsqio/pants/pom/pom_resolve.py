@@ -29,10 +29,9 @@ from xml.etree import ElementTree
 from pants.backend.jvm.jar_dependency_utils import M2Coordinate, ResolvedJar
 from pants.backend.jvm.targets.jar_library import JarLibrary
 from pants.backend.jvm.tasks.classpath_products import ClasspathProducts
-from pants.base.build_environment import get_buildroot
-from pants.base.cmd_line_spec_parser import CmdLineSpecParser
 from pants.base.fingerprint_strategy import FingerprintStrategy
 from pants.base.payload_field import stable_json_sha1
+from pants.base.specs import DescendantAddresses
 from pants.invalidation.cache_manager import VersionedTargetSet
 from pants.option.custom_types import dict_option, list_option
 from pants.task.task import Task
@@ -298,6 +297,7 @@ class PomResolve(Task):
     register(
       '--global-exclusions',
       type=list_option,
+      member_type=tuple,
       advanced=True,
       help='A list of (org, name) tuples to exclude globally from consideration.',
     )
@@ -341,6 +341,7 @@ class PomResolve(Task):
     register(
       '--maven-repos',
       type=list_option,
+      member_type=dict_option,
       advanced=False,
       help='A list of maps {name: url} that point to maven-style repos, preference is left-to-right.',
     )
@@ -521,10 +522,9 @@ class PomResolve(Task):
     # either be unconnected nodes of the target root graph or they will have been pulled
     # in anyway)
     if self._all_jar_libs is None:
-      spec_parser = CmdLineSpecParser(get_buildroot(), self.context.address_mapper)
       build_graph = self.context.build_graph
       third_party_libs = set()
-      for address in spec_parser.parse_addresses(['3rdparty::']):
+      for address in self.context.address_mapper.scan_specs([DescendantAddresses('3rdparty')]):
         build_graph.inject_address_closure(address)
         third_party_libs.add(build_graph.get_target(address))
       self._all_jar_libs = set(t for t in third_party_libs if isinstance(t, JarLibrary))

@@ -12,6 +12,7 @@ from __future__ import (
 )
 
 from collections import defaultdict
+from itertools import chain
 import os
 import re
 
@@ -20,7 +21,7 @@ from pants.backend.jvm.tasks.nailgun_task import NailgunTask
 from pants.base.build_environment import get_buildroot
 from pants.base.exceptions import TaskError
 from pants.build_graph.address import Address
-from pants.option.custom_types import list_option, target_list_option
+from pants.option.custom_types import list_option, target_option
 from pants.util.memo import memoized_property
 
 from fsqio.pants.spindle.targets.spindle_thrift_library import SpindleThriftLibrary
@@ -62,14 +63,14 @@ class SpindleGen(NailgunTask, SpindleTask):
       '--scala-ssp-template',
       fingerprint=True,
       advanced=True,
-      type=target_list_option,
+      type=target_option,
       help='Use this target as the scala templates for spindle codegen (required to be 1 target).',
     )
     register(
       '--java-ssp-template',
       fingerprint=True,
       advanced=True,
-      type=target_list_option,
+      type=target_option,
       help='Use this target as the java templates for spindle codegen (required to be 1 target).',
     )
 
@@ -79,7 +80,7 @@ class SpindleGen(NailgunTask, SpindleTask):
 
   @memoized_property
   def scala_template(self):
-    return self.get_spindle_target('java_ssp_template', self.get_options().scala_ssp_template, SspTemplate)
+    return self.get_spindle_target('scala_ssp_template', self.get_options().scala_ssp_template, SspTemplate)
 
   @classmethod
   def prepare(cls, options, round_manager):
@@ -162,8 +163,10 @@ class SpindleGen(NailgunTask, SpindleTask):
     build_graph = self.context.build_graph
 
     with self.invalidated(targets, invalidate_dependents=True) as invalidation_check:
-      for vts in invalidation_check.invalid_vts_partitioned:
-        invalid_targets = vts.targets
+      invalid_targets = list(chain.from_iterable(
+        vts.targets for vts in invalidation_check.invalid_vts
+      ))
+      if invalid_targets:
         self._execute_codegen(invalid_targets)
 
       invalid_vts_by_target = dict([(vt.target, vt) for vt in invalidation_check.invalid_vts])
