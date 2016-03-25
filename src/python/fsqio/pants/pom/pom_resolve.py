@@ -297,21 +297,26 @@ class PomResolve(Task):
     register(
       '--global-exclusions',
       type=list_option,
-      member_type=tuple,
+      member_type=dict_option,
       advanced=True,
-      help='A list of (org, name) tuples to exclude globally from consideration.',
+      help='A list of dicts representing coordinates { org: a, name: b } '
+           'to exclude globally from consideration.',
     )
     register(
       '--global-pinned-versions',
-      type=dict_option,
+      type=list_option,
+      member_type=dict_option,
       advanced=True,
-      help='A map of {(org, name): version} to explicitly pin during resolution.',
+      help='A list of dicts representing coordinates { org: a, name: b, rev: x.y.z } to '
+           'explicitly pin during resolution.',
     )
     register(
       '--local-override-versions',
-      type=dict_option,
+      type=list_option,
+      member_type=dict_option,
       advanced=True,
-      help='A map of {(org, name, version): file_path_to_jar} to use particular local jars.',
+      help='A map of dicts coordinates { { org: a, name: b, rev: x.y.z } : "path/to/artifact.jar" } to a path string, '
+           'allowing the use of particular local jars.',
     )
     register(
       '--report-artifacts',
@@ -531,9 +536,32 @@ class PomResolve(Task):
     return self._all_jar_libs
 
   def execute(self):
-    global_exclusions = frozenset(self.get_options().global_exclusions)
-    global_pinned_versions = dict(self.get_options().global_pinned_versions)
-    local_override_versions = self.get_options().local_override_versions
+
+    # Pants does no longer allows options to be tuples or sets. So we use lists of dicts and then convert into
+    # hashable structures here.
+
+    # Pins converted to { (org, name): rev, ... }
+    global_pinned_tuples = {}
+    for pin in self.get_options().global_pinned_versions:
+      artifact_tuple = (pin['org'], pin['name'])
+      if artifact_tuple in global_pinned_tuples:
+        raise Exception('An artifact has conflicting overrides!:\n{}:{} and\n'
+          '{}'.format(artifact_tuple, pin['rev'], global_pinned_tuples[artifact_tuple]))
+      global_pinned_tuples[artifact_tuple] = pin['rev']
+
+    # Overrrides converted to { (org, name, rev): /path/to/artifact, ... }
+    override_tuples = {}
+    for override in self.get_options().local_override_versions:
+      override_tuples[(override['org'], override['name'], override['rev'])] = override['artifact_path']
+
+    # Exclusions converted to [(org, name), ...]
+    global_exclusion_tuples = []
+    for exclusion in self.get_options().global_exclusions:
+      global_exclusion_tuples.append((exclusion['org'], exclusion['name']))
+
+    global_exclusions = frozenset(global_exclusion_tuples)
+    global_pinned_versions = dict(global_pinned_tuples)
+    local_override_versions = override_tuples
     fetchers = ChainedFetcher(self.get_options().maven_repos)
 
     fingerprint_strategy = PomResolveFingerprintStrategy(global_exclusions, global_pinned_versions)
@@ -625,6 +653,7 @@ class PomResolve(Task):
           for artifact in sorted(all_artifacts):
             f.write('{}\n'.format(artifact))
       print('Dumped classpath file to {}'.format(classpath_dump_path))
+
 
     with self.context.new_workunit('fetch-artifacts'):
       coord_to_artifact_symlinks = self._fetch_artifacts(local_override_versions)
