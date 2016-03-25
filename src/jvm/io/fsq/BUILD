@@ -7,6 +7,7 @@ pom_target(
   ],
   dependencies = [
     # TODO(dan): These should probably be published in different jars.
+    'src/jvm/io/fsq/macros:macros',
     'src/jvm/io/fsq/common/concurrent',
     'src/jvm/io/fsq/common/scala',
   ],

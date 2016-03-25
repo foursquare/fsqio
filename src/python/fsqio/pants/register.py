@@ -21,7 +21,7 @@ from fsqio.pants.spindle.tasks.spindle_gen import SpindleGen
 
 
 oss_sonatype_repo = Repository(
-  name = 'oss_sonatype',
+  name = 'oss_sonatype_repo',
   url = 'https://oss.sonatype.org/#stagingRepositories',
   push_db_basedir = os.path.join(
     get_buildroot(),
