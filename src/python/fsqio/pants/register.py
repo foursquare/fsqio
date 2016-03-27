@@ -10,6 +10,7 @@ from pants.base.build_environment import get_buildroot
 from pants.build_graph.build_file_aliases import BuildFileAliases
 from pants.goal.goal import Goal
 from pants.goal.task_registrar import TaskRegistrar as task
+from pants.task.task import Task
 
 from fsqio.pants.pom.ivy_diff import PomIvyDiff
 from fsqio.pants.pom.pom_publish import PomPublish, PomTarget
@@ -18,6 +19,7 @@ from fsqio.pants.spindle.targets.spindle_thrift_library import SpindleThriftLibr
 from fsqio.pants.spindle.targets.ssp_template import SspTemplate
 from fsqio.pants.spindle.tasks.build_spindle import BuildSpindle
 from fsqio.pants.spindle.tasks.spindle_gen import SpindleGen
+from fsqio.pants.validate import Tagger, Validate
 
 
 oss_sonatype_repo = Repository(
@@ -43,7 +45,26 @@ def build_file_aliases():
   )
 
 def register_goals():
+  task(name='tag',
+       action=Tagger).install()
 
+  task(name='validate',
+       action=Validate).install()
+  # TODO: Once we have validation logic that passes cleanly, add the validate goal as a
+  # dependency of, say, the thrift goal, to ensure validate is always invoked when compiling.
+
+  class ForceValidation(Task):
+    @classmethod
+    def prepare(cls, options, round_manager):
+      round_manager.require_data('validated_build_graph')
+
+    def execute(self):
+      pass
+
+  task(
+    name='validate-graph',
+    action=ForceValidation,
+  ).install('gen', replace=True)
 
   Goal.by_name('resolve').uninstall_task('ivy')
   task(name='pom-resolve', action=PomResolve).install()
