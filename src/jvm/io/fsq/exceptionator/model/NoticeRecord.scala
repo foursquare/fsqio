@@ -15,12 +15,11 @@ import net.liftweb.record.field._
 import org.bson.types.ObjectId
 import org.joda.time.{DateTime, DateTimeZone}
 
-
 class NoticeRecord extends MongoRecord[NoticeRecord] with ObjectIdPk[NoticeRecord] {
   def meta = NoticeRecord
 
-  def createDateTime = new DateTime(id.value.getTimestamp * 1000L, DateTimeZone.UTC)
-  def createTime = createDateTime.toDate
+  def createDateTime: DateTime = new DateTime(id.value.getTimestamp * 1000L, DateTimeZone.UTC)
+  def createTime: Date = createDateTime.toDate
 
   object notice extends MongoCaseClassField[NoticeRecord, Incoming](this) {
     override def name = "n"
