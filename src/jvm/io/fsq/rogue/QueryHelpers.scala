@@ -14,6 +14,7 @@ object QueryHelpers {
   trait QueryLogger {
     def log(query: Query[_, _, _], instanceName: String, msg: => String, timeMillis: Long): Unit
     def onExecuteQuery[T](query: Query[_, _, _], instanceName: String, msg: => String, func: => T): T
+    def onExecuteWriteCommand[T](operationName: String, collectionName: String, instanceName: String, msg: => String, func: => T): T
     def logIndexMismatch(query: Query[_, _, _], msg: => String)
     def logIndexHit(query: Query[_, _, _], index: UntypedMongoIndex)
     def warn(query: Query[_, _, _], msg: => String): Unit
@@ -22,6 +23,7 @@ object QueryHelpers {
   class DefaultQueryLogger extends QueryLogger {
     override def log(query: Query[_, _, _], instanceName: String, msg: => String, timeMillis: Long) {}
     override def onExecuteQuery[T](query: Query[_, _, _], instanceName: String, msg: => String, func: => T): T = func
+    override def onExecuteWriteCommand[T](operationName: String, collectionName: String, instanceName: String, msg: => String, func: => T): T = func
     override def logIndexMismatch(query: Query[_, _, _], msg: => String) {}
     override def logIndexHit(query: Query[_, _, _], index: UntypedMongoIndex) {}
     override def warn(query: Query[_, _, _], msg: => String) {}

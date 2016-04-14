@@ -116,22 +116,32 @@ class MongoJavaDriverAdapter[MB, RB](
 
   def save(record: RB, dbo: DBObject, writeConcern: WriteConcern): Unit = {
     val collection = dbCollectionFactory.getPrimaryDBCollection(record)
-    collection.save(dbo, writeConcern)
+    val collectionName = collection.getName
+    val instanceName = collection.getDB.getName
+    // Note: save is not a real mongo command (under the cover its either an upsert by _id or an insert)
+    logger.onExecuteWriteCommand("save", collectionName, instanceName, dbo.toString, collection.save(dbo, writeConcern))
   }
 
   def insert(record: RB, dbo: DBObject, writeConcern: WriteConcern): Unit = {
     val collection = dbCollectionFactory.getPrimaryDBCollection(record)
-    collection.insert(dbo, writeConcern)
+    val collectionName = collection.getName
+    val instanceName = collection.getDB.getName
+    logger.onExecuteWriteCommand("insert", collectionName, instanceName, dbo.toString, collection.insert(dbo, writeConcern))
   }
 
   def insertAll(record: RB, dbos: Seq[DBObject], writeConcern: WriteConcern): Unit = {
     val collection = dbCollectionFactory.getPrimaryDBCollection(record)
-    collection.insert(QueryHelpers.list(dbos), writeConcern)
+    val collectionName = collection.getName
+    val instanceName = collection.getDB.getName
+    val descriptionFunc = () => dbos.map(_.toString).mkString("[", ",", "]")
+    logger.onExecuteWriteCommand("insert", collectionName, instanceName, descriptionFunc(), collection.insert(QueryHelpers.list(dbos), writeConcern))
   }
 
   def remove(record: RB, dbo: DBObject, writeConcern: WriteConcern): Unit = {
     val collection = dbCollectionFactory.getPrimaryDBCollection(record)
-    collection.remove(dbo, writeConcern)
+    val collectionName = collection.getName
+    val instanceName = collection.getDB.getName
+    logger.onExecuteWriteCommand("remove", collectionName, instanceName, dbo.toString, collection.remove(dbo, writeConcern))
   }
 
   def modify[M <: MB](mod: ModifyQuery[M, _],
