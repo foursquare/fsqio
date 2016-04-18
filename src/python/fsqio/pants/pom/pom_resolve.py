@@ -96,6 +96,11 @@ def traverse_project_graph(
   if maven_dep.unversioned_coordinate in unversioned_dep_chain:
     raise CycleException(unversioned_dep_chain + (maven_dep.unversioned_coordinate,))
 
+  fetcher, pom_str = fetchers.resolve_pom(maven_dep.groupId, maven_dep.artifactId,
+                                      maven_dep.version, jar_coordinate=maven_dep.coordinate)
+
+  # TODO(mateo): This code block was not executed in almost 3 months - it should be deleted and instead raise an
+  # exception requesting a pin.
   if '(' in maven_dep.version or '[' in maven_dep.version:
     # These range refs are fairly rare, and where they do happen we should probably just
     # be conservative and have a global pin of that dep.  Here, we just choose the latest
@@ -115,8 +120,6 @@ def traverse_project_graph(
   dep_graph = MavenDependencyGraph()
   dep_graph.ensure_node(maven_dep.coordinate)
 
-  fetcher, pom_str = fetchers.resolve_pom(maven_dep.groupId, maven_dep.artifactId,
-                                      maven_dep.version, jar_coordinate=maven_dep.coordinate)
   if fetcher is None:
     raise MissingResourceException('Failed to fetch maven pom or resource: {}'.format(maven_dep.coordinate))
   if pom_str is None:
