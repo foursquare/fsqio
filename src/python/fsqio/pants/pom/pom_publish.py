@@ -143,15 +143,18 @@ class PomWriter(object):
         connection='scm:git:git@github.com:foursquare/fsqio.git',
         developer_connection='scm:git:git@github.com:foursquare/fsqio.git',
       ),
-      developers=[TemplateData(
-        id='paperstreet',
-        name='Daniel Harrison',
-        url='https://github.com/paperstreet',
-      ),TemplateData(
-        id='mateor',
-        name='Mateo Rodriguez',
-        url='https://github.com/mateor',
-      )],
+      developers=[
+        TemplateData(
+          id='paperstreet',
+          name='Daniel Harrison',
+          url='https://github.com/paperstreet',
+        ),
+        TemplateData(
+          id='mateor',
+          name='Mateo Rodriguez',
+          url='https://github.com/mateor',
+        ),
+      ],
     )
 
     template_relpath = os.path.join(_TEMPLATES_RELPATH, 'pom.mustache')

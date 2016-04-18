@@ -23,12 +23,9 @@ from fsqio.pants.validate import Tagger, Validate
 
 
 oss_sonatype_repo = Repository(
-  name = 'oss_sonatype_repo',
-  url = 'https://oss.sonatype.org/#stagingRepositories',
-  push_db_basedir = os.path.join(
-    get_buildroot(),
-    'pushdb',
-  ),
+  name='oss_sonatype_repo',
+  url='https://oss.sonatype.org/#stagingRepositories',
+  push_db_basedir=os.path.join(get_buildroot(), 'pushdb'),
 )
 
 def build_file_aliases():

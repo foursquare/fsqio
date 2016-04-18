@@ -67,8 +67,7 @@ class BuildGraphRuleViolation(object):
     self.tag = tag
     self.direct = dep in target.dependencies
 
-class TagValidationError(TaskError):
-  """"""
+class TagValidationError(TaskError): pass
 
 class BannedTag(BuildGraphRuleViolation):
   def msg(self):
