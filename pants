@@ -22,8 +22,8 @@ fi
 
 
 if [ -z "$PANTSBINARY" ]; then
-  exec .pantsenv/bin/pants --print-exception-stacktrace "$@"
+  exec .pantsenv/bin/pants "$@"
 else
   export PYTHONPATH=src/python
-  exec $PANTSBINARY --print-exception-stacktrace "$@"
+  exec $PANTSBINARY "$@"
 fi

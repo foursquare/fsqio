@@ -27,7 +27,6 @@ from pants.build_graph.resources import Resources
 from pants.build_graph.target import Target
 from pants.ivy.bootstrapper import Bootstrapper
 from pants.ivy.ivy import Ivy
-from pants.option.custom_types import dict_option
 from pants.util.dirutil import safe_mkdir, safe_open, safe_rmtree
 from twitter.common.collections import OrderedSet
 
@@ -204,7 +203,7 @@ class PomPublish(PomWriter, JarBuilderTask):
              help='Specify a custom ivysettings.xml file to be used when publishing.')
     register('--local', metavar='<PATH>',
              help='Publish jars to a maven repository on the local filesystem at this path.')
-    register('--repos', advanced=True, type=dict_option,
+    register('--repos', advanced=True, type=dict,
              help='Settings for repositories that can be pushed to. See '
                   'https://pantsbuild.github.io/publish.html for details.')
     register('--version',

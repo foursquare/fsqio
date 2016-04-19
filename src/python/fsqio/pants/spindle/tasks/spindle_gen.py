@@ -21,7 +21,7 @@ from pants.backend.jvm.tasks.nailgun_task import NailgunTask
 from pants.base.build_environment import get_buildroot
 from pants.base.exceptions import TaskError
 from pants.build_graph.address import Address
-from pants.option.custom_types import list_option, target_option
+from pants.option.custom_types import target_option
 from pants.util.memo import memoized_property
 
 from fsqio.pants.spindle.targets.spindle_thrift_library import SpindleThriftLibrary
@@ -44,19 +44,19 @@ class SpindleGen(NailgunTask, SpindleTask):
       '--jvm-options',
       default=[],
       advanced=True,
-      type=list_option,
+      type=list,
       help='Use these jvm options when running Spindle.',
     )
     register(
       '--thrift-include',
       advanced=True,
-      type=list_option,
+      type=list,
       help='Use these thrift files as spindle bases for codegen.',
     )
     register(
       '--runtime-dependency',
       advanced=True,
-      type=list_option,
+      type=list,
       help='A list of targets that all spindle codegen depends on at runtime.',
     )
     register(

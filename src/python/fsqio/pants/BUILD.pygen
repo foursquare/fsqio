@@ -5,7 +5,6 @@ python_library(
   sources = ['register.py', '__init__.py'],
   dependencies = [
     ':validate',
-    'src/python/fsqio/pants/pom:ivy_diff',
     'src/python/fsqio/pants/pom:pom_publish',
     'src/python/fsqio/pants/pom:pom_resolve',
     'src/python/fsqio/pants/spindle/targets:spindle_thrift_library',

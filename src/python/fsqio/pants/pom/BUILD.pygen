@@ -23,11 +23,6 @@ python_library(
 )
 
 python_library(
-  name = 'ivy_diff',
-  sources = ['ivy_diff.py', '__init__.py'],
-)
-
-python_library(
   name = 'maven_dependency_graph',
   sources = ['maven_dependency_graph.py', '__init__.py'],
   dependencies = [

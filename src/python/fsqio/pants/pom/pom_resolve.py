@@ -33,7 +33,6 @@ from pants.base.fingerprint_strategy import FingerprintStrategy
 from pants.base.payload_field import stable_json_sha1
 from pants.base.specs import DescendantAddresses
 from pants.invalidation.cache_manager import VersionedTargetSet
-from pants.option.custom_types import dict_option, list_option
 from pants.task.task import Task
 from requests_futures.sessions import FuturesSession
 
@@ -299,57 +298,56 @@ class PomResolve(Task):
     )
     register(
       '--global-exclusions',
-      type=list_option,
-      member_type=dict_option,
+      type=list,
+      member_type=dict,
       advanced=True,
       help='A list of dicts representing coordinates { org: a, name: b } '
            'to exclude globally from consideration.',
     )
     register(
       '--global-pinned-versions',
-      type=list_option,
-      member_type=dict_option,
+      type=list,
+      member_type=dict,
       advanced=True,
       help='A list of dicts representing coordinates { org: a, name: b, rev: x.y.z } to '
            'explicitly pin during resolution.',
     )
     register(
       '--local-override-versions',
-      type=list_option,
-      member_type=dict_option,
+      type=list,
+      member_type=dict,
       advanced=True,
       help='A map of dicts coordinates { { org: a, name: b, rev: x.y.z } : "path/to/artifact.jar" } to a path string, '
            'allowing the use of particular local jars.',
     )
     register(
       '--report-artifacts',
-      action='append',
+      type=list,
       default=None,
       help='An "org:name" to print detailed resolution about when working with a new classpath.'
     )
     register(
       '--fetch-source-jars',
-      action='store_true',
+      type=bool,
       default=False,
       help='Fetch source jars and symlink them into the pom cache dir.  Prints the directory where'
            ' the source jar symlink farm resides.'
     )
     register(
       '--dump-classpath-file',
-      action='store_true',
+      type=bool,
       default=False,
       help='Dump a text file of the entire global classpath and print the resulting filename.'
     )
     register(
       '--write-classpath-info-to-file',
-      action='store',
       default=None,
       help='Write JSON describing the global classpath to the specified file.',
     )
     register(
       '--maven-repos',
-      type=list_option,
-      member_type=dict_option,
+      type=list,
+      member_type=dict,
       advanced=False,
       help='A list of maps {name: url} that point to maven-style repos, preference is left-to-right.',
     )

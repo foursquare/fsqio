@@ -40,10 +40,10 @@ class BuildSpindle(SpindleTask):
 
   def run_pants_no_lock(self, command, workunit_name=None, **kwargs):
     global_args = ['--quiet'] if self.get_options().quiet else []
-    global_args.extend(['--no-pantsrc',
-            '--print-exception-stacktrace',
-            '--no-lock',
-            ])
+    global_args.extend([
+      '--no-pantsrc',
+      '--no-lock',
+    ])
     pants_script = os.path.join(get_buildroot(), self.PANTS_SCRIPT_NAME)
     pants_command = [pants_script] + global_args + command
 
@@ -64,7 +64,7 @@ class BuildSpindle(SpindleTask):
       '--shelled',
       fingerprint=True,
       advanced=True,
-      action='store_true',
+      type=bool,
       default=False,
       help="Don't pass this flag, internal use only!",
     )

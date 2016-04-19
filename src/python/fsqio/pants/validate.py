@@ -8,7 +8,6 @@ import os
 
 from pants.base.exceptions import TaskError
 from pants.base.fingerprint_strategy import FingerprintStrategy
-from pants.option.custom_types import dict_option
 from pants.task.task import Task
 
 
@@ -33,13 +32,13 @@ class Tagger(Task):
     super(Tagger, cls).register_options(register)
     register(
       '--by-basename',
-      type=dict_option,
+      type=dict,
       default={},
       advanced=True,
     )
     register(
       '--by-prefix',
-      type=dict_option,
+      type=dict,
       default={},
       advanced=True,
     )
