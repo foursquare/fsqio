@@ -109,7 +109,8 @@ class Validate(Task):
 
     with self.invalidated(self.context.targets(),
                           invalidate_dependents=True,
-                          fingerprint_strategy=fingerprint_strategy) as invalidation_check:
+                          fingerprint_strategy=fingerprint_strategy,
+                          topological_order=True) as invalidation_check:
       for vts in invalidation_check.invalid_vts:
         invalid_targets = vts.targets
         for target in invalid_targets:
