@@ -21,6 +21,9 @@ class ${cls.name}Meta
     with _root_.io.fsq.spindle.runtime.HasMetaPrimaryKey[${pkField.renderType.text}, ${cls.name}]
 #end
     with _root_.io.fsq.spindle.runtime.RecordProvider[${cls.name}] \
+#if (cls.annotations.contains("meta_extends"))
+    with ${cls.annotations.getAll("meta_extends").mkString("\n    with ")} \
+#end
 {
   override def recordName: String = "${cls.name}"
 
