@@ -84,8 +84,8 @@ object AddShardAware {
 sealed trait !<:<[A, B]
 object !<:< {
   implicit def any[A, B]: A !<:< B = null
-  implicit def sub1[A, B >: A]: A !<:< B = null
-  implicit def sub2[A, B >: A]: A !<:< B = null
+  implicit def intentionallyAmbiguousImplicitForNotSubclassTypeConstraint[A, B >: A]: A !<:< B = null
+  implicit def intentionallyAmbiguousImplicitForNotSubclassTypeConstraint2[A, B >: A]: A !<:< B = null
 }
 
 @implicitNotFound(msg = "Cannot prove that ${A} <: ${B}")
