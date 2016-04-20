@@ -13,6 +13,7 @@ junit_tests(
     'src/jvm/io/fsq/rogue/indexchecker',
     'src/jvm/io/fsq/rogue/spindle',
     'src/jvm/io/fsq/spindle/runtime',
+    'test/jvm/io/fsq/rogue/test',
     'test/jvm/io/fsq/util/compiler/test',
     'test/thrift/io/fsq/rogue/spindle/test',
   ],

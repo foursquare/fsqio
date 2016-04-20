@@ -68,8 +68,6 @@ class EndToEndTest extends JUnitMustMatchers {
 
     db.bulkDelete_!!(Q(ThriftLike)) //TODO(rogue-shards): should have shards and be an allShards.bulkDelete_!!!
     db.count(Q(ThriftLike)) must_== 0
-
-    db.disconnectFromMongo
   }
 
   @Test

@@ -2,10 +2,10 @@
 
 package io.fsq.rogue.spindle.test
 
-import com.mongodb.{MongoClient, ServerAddress}
 import io.fsq.rogue.Rogue._
 import io.fsq.rogue.spindle.{SpindleDBCollectionFactory, SpindleDatabaseService, SpindleQuery}
 import io.fsq.rogue.spindle.test.gen.TestStruct
+import io.fsq.rogue.test.TrivialORM
 import io.fsq.spindle.runtime.UntypedMetaRecord
 import org.junit.Assert._
 import org.junit.Test
@@ -13,12 +13,9 @@ import org.junit.Test
 class TestSpindleDBService {
   @Test
   def testSimpleStruct {
-    val MongoPort = Option(System.getenv("MONGO_PORT")).map(_.toInt).getOrElse(27017)
-    val mongo = new MongoClient(new ServerAddress("localhost", MongoPort))
-
     val dbService = new SpindleDatabaseService(
       new SpindleDBCollectionFactory {
-        override def getPrimaryDB(meta: UntypedMetaRecord) = mongo.getDB("test")
+        override def getPrimaryDB(meta: UntypedMetaRecord) = TrivialORM.mongo.getDB("test")
         override def indexCache = None
       }
     )

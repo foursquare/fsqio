@@ -2,18 +2,16 @@
 
 package io.fsq.rogue.spindle.test
 
-import com.mongodb.{DB, MongoClient, ServerAddress}
+import com.mongodb.DB
 import io.fsq.rogue.spindle.{SpindleDBCollectionFactory, SpindleDatabaseService}
+import io.fsq.rogue.test.TrivialORM
 import io.fsq.spindle.runtime.UntypedMetaRecord
 
 class TestDatabaseService extends SpindleDatabaseService(new TestDBCollectionFactory()) {
-  def disconnectFromMongo() {
-    dbCollectionFactory.asInstanceOf[TestDBCollectionFactory].disconnectFromMongo()
-  }
 }
 
 class TestDBCollectionFactory extends SpindleDBCollectionFactory {
-  val mongoClient = new MongoClient(new ServerAddress("localhost", 27017))
+  val mongoClient = TrivialORM.mongo
 
   override def getPrimaryDB(meta: UntypedMetaRecord): DB = {
     val identifierStr = getIdentifier(meta)
@@ -23,10 +21,6 @@ class TestDBCollectionFactory extends SpindleDBCollectionFactory {
     mongoClient.getDB(identifierStr)
   }
   override val indexCache = None
-
-  def disconnectFromMongo() {
-    mongoClient.close()
-  }
 }
 
 // Used for selectCase tests.

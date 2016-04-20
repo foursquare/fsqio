@@ -27,13 +27,12 @@ object TrivialORM {
     def toDBObject(record: R): DBObject
   }
 
-  val mongo = {
-    val MongoPort = Option(System.getenv("MONGO_PORT")).map(_.toInt).getOrElse(27017)
-    new MongoClient(new ServerAddress("localhost", MongoPort))
-  }
-
-  def disconnectFromMongo = {
-    mongo.close
+  lazy val mongo = {
+    val (host, port) = Option(System.getProperty("default.mongodb.server")).map({ str =>
+      val arr = str.split(':')
+      (arr(0), arr(1).toInt)
+    }).getOrElse(("localhost", 27017))
+    new MongoClient(new ServerAddress(host, port))
   }
 
   type MB = Meta[_]

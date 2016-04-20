@@ -15,6 +15,7 @@ junit_tests(
     'src/jvm/io/fsq/rogue/index',
     'src/jvm/io/fsq/rogue/indexchecker',
     'src/jvm/io/fsq/rogue/lift',
+    'test/jvm/io/fsq/rogue/test',
     'test/jvm/io/fsq/util/compiler/test',
   ],
 )
