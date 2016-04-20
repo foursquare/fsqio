@@ -33,6 +33,9 @@ object LiftDBCollectionFactory extends DBCollectionFactory[MongoRecord[_] with M
   override def getInstanceName[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): String = {
     query.meta.connectionIdentifier.toString
   }
+  override def getInstanceName(record: MongoRecord[_]): String = {
+    record.meta.connectionIdentifier.toString
+  }
 
   /**
    * Retrieves the list of indexes declared for the record type associated with a

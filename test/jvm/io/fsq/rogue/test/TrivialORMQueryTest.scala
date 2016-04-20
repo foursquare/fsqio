@@ -41,15 +41,23 @@ object TrivialORM {
     override def getDBCollection[M <: MB](query: Query[M, _, _]): DBCollection = {
       db.getCollection(query.meta.collectionName)
     }
+
     override def getPrimaryDBCollection[M <: MB](query: Query[M, _, _]): DBCollection = {
       db.getCollection(query.meta.collectionName)
     }
+
     override def getPrimaryDBCollection(record: Record): DBCollection = {
       db.getCollection(record.meta.collectionName)
     }
+
     override def getInstanceName[M <: MB](query: Query[M, _, _]): String = {
       db.getName
     }
+
+    override def getInstanceName(record: Record): String = {
+      db.getName
+    }
+
     override def getIndexes[M <: MB](query: Query[M, _, _]): Option[Seq[UntypedMongoIndex]] = {
       None
     }

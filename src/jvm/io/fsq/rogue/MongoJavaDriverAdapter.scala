@@ -15,6 +15,7 @@ trait DBCollectionFactory[MB, RB] {
   def getPrimaryDBCollection[M <: MB](query: Query[M, _, _]): DBCollection
   def getPrimaryDBCollection(record: RB): DBCollection
   def getInstanceName[M <: MB](query: Query[M, _, _]): String
+  def getInstanceName(record: RB): String
   // A set of of indexes, which are ordered lists of field names
   def getIndexes[M <: MB](query: Query[M, _, _]): Option[Seq[UntypedMongoIndex]]
 }
@@ -117,7 +118,7 @@ class MongoJavaDriverAdapter[MB, RB](
   def save(record: RB, dbo: DBObject, writeConcern: WriteConcern): Unit = {
     val collection = dbCollectionFactory.getPrimaryDBCollection(record)
     val collectionName = collection.getName
-    val instanceName = collection.getDB.getName
+    val instanceName = dbCollectionFactory.getInstanceName(record)
     // Note: save is not a real mongo command (under the cover its either an upsert by _id or an insert)
     logger.onExecuteWriteCommand("save", collectionName, instanceName, dbo.toString, collection.save(dbo, writeConcern))
   }
@@ -125,14 +126,14 @@ class MongoJavaDriverAdapter[MB, RB](
   def insert(record: RB, dbo: DBObject, writeConcern: WriteConcern): Unit = {
     val collection = dbCollectionFactory.getPrimaryDBCollection(record)
     val collectionName = collection.getName
-    val instanceName = collection.getDB.getName
+    val instanceName = dbCollectionFactory.getInstanceName(record)
     logger.onExecuteWriteCommand("insert", collectionName, instanceName, dbo.toString, collection.insert(dbo, writeConcern))
   }
 
   def insertAll(record: RB, dbos: Seq[DBObject], writeConcern: WriteConcern): Unit = {
     val collection = dbCollectionFactory.getPrimaryDBCollection(record)
     val collectionName = collection.getName
-    val instanceName = collection.getDB.getName
+    val instanceName = dbCollectionFactory.getInstanceName(record)
     val descriptionFunc = () => dbos.map(_.toString).mkString("[", ",", "]")
     logger.onExecuteWriteCommand("insert", collectionName, instanceName, descriptionFunc(), collection.insert(QueryHelpers.list(dbos), writeConcern))
   }
@@ -140,7 +141,7 @@ class MongoJavaDriverAdapter[MB, RB](
   def remove(record: RB, dbo: DBObject, writeConcern: WriteConcern): Unit = {
     val collection = dbCollectionFactory.getPrimaryDBCollection(record)
     val collectionName = collection.getName
-    val instanceName = collection.getDB.getName
+    val instanceName = dbCollectionFactory.getInstanceName(record)
     logger.onExecuteWriteCommand("remove", collectionName, instanceName, dbo.toString, collection.remove(dbo, writeConcern))
   }
 

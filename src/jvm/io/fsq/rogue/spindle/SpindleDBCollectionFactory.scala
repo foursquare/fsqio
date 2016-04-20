@@ -35,6 +35,10 @@ trait SpindleDBCollectionFactory extends DBCollectionFactory[UntypedMetaRecord, 
     getIdentifier(query.meta)
   }
 
+  override def getInstanceName(record: UntypedRecord): String = {
+    getIdentifier(record.meta)
+  }
+
   def getIdentifier(meta: UntypedMetaRecord): String = {
     meta.annotations.get("mongo_identifier").getOrElse {
       throw new Exception("Add a mongo_identifier annotation to the Thrift definition for this class.")
