@@ -29,7 +29,7 @@ from xml.etree import ElementTree
 from pants.backend.jvm.jar_dependency_utils import M2Coordinate, ResolvedJar
 from pants.backend.jvm.targets.jar_library import JarLibrary
 from pants.backend.jvm.tasks.classpath_products import ClasspathProducts
-from pants.base.fingerprint_strategy import FingerprintStrategy
+from pants.base.fingerprint_strategy import TaskIdentityFingerprintStrategy
 from pants.base.payload_field import stable_json_sha1
 from pants.base.specs import DescendantAddresses
 from pants.invalidation.cache_manager import VersionedTargetSet
@@ -259,7 +259,7 @@ class MissingResourceException(Exception):
   """Indicates that no resource matching that maven coordinate was found."""
 
 
-class PomResolveFingerprintStrategy(FingerprintStrategy):
+class PomResolveFingerprintStrategy(TaskIdentityFingerprintStrategy):
   """A FingerprintStrategy with the addition of global exclusions and pins."""
 
   def __init__(self, global_exclusions=None, global_pinned_versions=None):
@@ -563,12 +563,10 @@ class PomResolve(Task):
     local_override_versions = override_tuples
     fetchers = ChainedFetcher(self.get_options().maven_repos)
 
-    fingerprint_strategy = PomResolveFingerprintStrategy(global_exclusions, global_pinned_versions)
-
     invalidation_context_manager = self.invalidated(
       self.all_jar_libs,
       invalidate_dependents=False,
-      fingerprint_strategy=fingerprint_strategy,
+      fingerprint_strategy=PomResolveFingerprintStrategy(global_exclusions, global_pinned_versions),
     )
 
     with invalidation_context_manager as invalidation_check:

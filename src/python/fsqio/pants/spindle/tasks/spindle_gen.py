@@ -41,13 +41,6 @@ class SpindleGen(NailgunTask, SpindleTask):
   def register_options(cls, register):
     super(SpindleGen, cls).register_options(register)
     register(
-      '--jvm-options',
-      default=[],
-      advanced=True,
-      type=list,
-      help='Use these jvm options when running Spindle.',
-    )
-    register(
       '--thrift-include',
       advanced=True,
       type=list,

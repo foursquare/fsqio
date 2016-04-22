@@ -7,11 +7,11 @@ from hashlib import sha1
 import os
 
 from pants.base.exceptions import TaskError
-from pants.base.fingerprint_strategy import FingerprintStrategy
+from pants.base.fingerprint_strategy import TaskIdentityFingerprintStrategy
 from pants.task.task import Task
 
 
-class NameTagsAndDepFingerprintStrategy(FingerprintStrategy):
+class NameTagsAndDepFingerprintStrategy(TaskIdentityFingerprintStrategy):
   def compute_fingerprint(self, target):
     hasher = sha1()
     hasher.update(target.address.spec)
@@ -25,7 +25,6 @@ class NameTagsAndDepFingerprintStrategy(FingerprintStrategy):
   def __eq__(self, other):
     return type(other) == type(self)
 
-
 class Tagger(Task):
   @classmethod
   def register_options(cls, register):
@@ -33,12 +32,14 @@ class Tagger(Task):
     register(
       '--by-basename',
       type=dict,
+      fingerprint=True,
       default={},
       advanced=True,
     )
     register(
       '--by-prefix',
       type=dict,
+      fingerprint=True,
       default={},
       advanced=True,
     )
@@ -104,11 +105,9 @@ class Validate(Task):
       return
     violations = []
 
-    fingerprint_strategy = NameTagsAndDepFingerprintStrategy()
-
     with self.invalidated(self.context.targets(),
                           invalidate_dependents=True,
-                          fingerprint_strategy=fingerprint_strategy,
+                          fingerprint_strategy=NameTagsAndDepFingerprintStrategy(self),
                           topological_order=True) as invalidation_check:
       for vts in invalidation_check.invalid_vts:
         invalid_targets = vts.targets
