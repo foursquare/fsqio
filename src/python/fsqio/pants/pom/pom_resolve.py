@@ -193,7 +193,6 @@ def traverse_project_graph(
       )
       dep = dep._replace(classifier='tests', type='jar')
 
-
     if dep.unversioned_coordinate in global_pinned_versions:
       dep = dep._replace(version=global_pinned_versions[dep.unversioned_coordinate])
       dep_graph.used_global_pin(dep.unversioned_coordinate)
@@ -425,7 +424,6 @@ class PomResolve(Task):
         ))
       resolve_maven_deps_args.append((maven_deps, fetchers, global_pinned_versions, global_exclusions))
 
-
     def resolve_deps_in_process():
       for args in resolve_maven_deps_args:
         yield resolve_maven_deps(args)
@@ -655,7 +653,6 @@ class PomResolve(Task):
             f.write('{}\n'.format(artifact))
       print('Dumped classpath file to {}'.format(classpath_dump_path))
 
-
     with self.context.new_workunit('fetch-artifacts'):
       coord_to_artifact_symlinks = self._fetch_artifacts(local_override_versions)
 
@@ -827,7 +824,7 @@ class PomResolve(Task):
       for artifact in self.maven_coordinate_to_provided_artifacts[coord]:
         # Sanity check. At this point, all artifacts mapped to a coord should be fully resolved, location included.
         if artifact.repo_url is None:
-          raise Exception("Something went wrong! {} was mapped to an artifact with no "
+          raise Exception("Something went wrong! {} was mapped to an artifact {} with no "
                           "associated repo: ".format(coord, artifact))
         cached_artifact_path = os.path.join(self.pom_cache_dir, artifact.artifact_path)
         if not os.path.exists(cached_artifact_path):

@@ -163,7 +163,6 @@ class PomWriter(object):
       generator.write(output)
 
 
-
 class PomPublish(PomWriter, JarBuilderTask):
   """Publish jars to a maven repository.
 

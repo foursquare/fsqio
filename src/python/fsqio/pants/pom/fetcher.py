@@ -100,7 +100,8 @@ class ArtifactFetcher(object):
       response = requests.head(resource_url)
       self._cache[coordinate] = response
     # Allow 200 or 302 (see https://github.com/kennethreitz/requests/blob/master/requests/status_codes.py)
-    return self._cache[coordinate].status_code in (requests.codes.ok, requests.codes.found)
+    valid_codes = (requests.codes.ok, requests.codes.found) # pylint: disable=no-member
+    return self._cache[coordinate].status_code in valid_codes
 
 
 class ChainedFetcher(ArtifactFetcher):
