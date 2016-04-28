@@ -8,5 +8,6 @@ scala_library(
     '3rdparty:mongodb',
     'src/jvm/io/fsq/field',
     'src/jvm/io/fsq/rogue/index',
+    'src/jvm/io/fsq/spindle/types',
   ],
 )

@@ -5,6 +5,7 @@ package io.fsq.rogue
 import com.mongodb.{DBObject, MongoException, ReadPreference, WriteConcern}
 import io.fsq.field.Field
 import io.fsq.rogue.MongoHelpers.{MongoModify, MongoSelect}
+import io.fsq.spindle.types.MongoDisallowed
 import scala.collection.mutable.{Builder, ListBuffer}
 
 trait RogueReadSerializer[R] {
@@ -79,7 +80,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
 
   def fetch[M <: MB, R, State](query: Query[M, R, State],
                                readPreference: Option[ReadPreference] = None)
-                              (implicit ev: ShardingOk[M, State]): Seq[R] = {
+                              (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Seq[R] = {
     if (optimizer.isEmptyQuery(query)) {
       Nil
     } else {
