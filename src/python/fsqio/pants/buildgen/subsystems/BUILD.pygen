@@ -1,0 +1,6 @@
+# Copyright 2016 Foursquare Labs Inc. All Rights Reserved.
+
+python_library(
+  name = 'buildgen_subsystem',
+  sources = ['buildgen_subsystem.py', '__init__.py'],
+)

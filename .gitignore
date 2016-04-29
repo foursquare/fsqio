@@ -18,6 +18,7 @@
 .#*
 .DS_Store
 .artifact_cache
+.buildgen_timestamp
 .cache
 .classpath
 .coverage
@@ -28,6 +29,7 @@
 .pants.d*
 .pants.run
 .pants.virtualenvs*
+.pants.workdir.file_lock
 .pantsenv
 .pex*
 .pids

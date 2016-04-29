@@ -1,0 +1,69 @@
+
+python_library(
+  name = 'buildgen',
+  sources = ['buildgen.py', '__init__.py'],
+  dependencies = [
+    ':buildgen_task',
+  ],
+)
+
+python_library(
+  name = 'buildgen_aggregate_targets',
+  sources = ['buildgen_aggregate_targets.py', '__init__.py'],
+  dependencies = [
+    ':buildgen_target_bag',
+    ':buildgen_task',
+  ],
+)
+
+python_library(
+  name = 'buildgen_base',
+  sources = ['buildgen_base.py', '__init__.py'],
+  dependencies = [
+    'src/python/fsqio/pants/buildgen/subsystems:buildgen_subsystem',
+  ],
+)
+
+python_library(
+  name = 'buildgen_target_bag',
+  sources = ['buildgen_target_bag.py', '__init__.py'],
+)
+
+python_library(
+  name = 'buildgen_task',
+  sources = ['buildgen_task.py', '__init__.py'],
+  dependencies = [
+    ':buildgen_base',
+    'src/python/fsqio/pants/buildgen/subsystems:buildgen_subsystem',
+  ],
+)
+
+python_library(
+  name = 'buildgen_timestamp',
+  sources = ['buildgen_timestamp.py', '__init__.py'],
+)
+
+python_library(
+  name = 'map_derived_targets',
+  sources = ['map_derived_targets.py', '__init__.py'],
+)
+
+python_library(
+  name = 'map_sources_to_addresses_mapper',
+  sources = ['map_sources_to_addresses_mapper.py', '__init__.py'],
+)
+
+python_library(
+  name = 'source_analysis_task',
+  sources = ['source_analysis_task.py', '__init__.py'],
+)
+
+python_library(
+  name = 'symbol_tree',
+  sources = ['symbol_tree.py', '__init__.py'],
+)
+
+python_library(
+  name = 'third_party_map_util',
+  sources = ['third_party_map_util.py', '__init__.py'],
+)

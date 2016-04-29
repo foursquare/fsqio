@@ -12,6 +12,12 @@ from pants.goal.goal import Goal
 from pants.goal.task_registrar import TaskRegistrar as task
 from pants.task.task import Task
 
+from fsqio.pants.buildgen.core.buildgen import Buildgen
+from fsqio.pants.buildgen.core.buildgen_aggregate_targets import BuildgenAggregateTargets
+from fsqio.pants.buildgen.core.buildgen_target_bag import BuildgenTargetBag
+from fsqio.pants.buildgen.core.buildgen_timestamp import BuildgenTimestamp
+from fsqio.pants.buildgen.core.map_derived_targets import MapDerivedTargets
+from fsqio.pants.buildgen.core.map_sources_to_addresses_mapper import MapSourcesToAddressesMapper
 from fsqio.pants.pom.pom_publish import PomPublish, PomTarget
 from fsqio.pants.pom.pom_resolve import PomResolve
 from fsqio.pants.spindle.targets.spindle_thrift_library import SpindleThriftLibrary
@@ -30,6 +36,7 @@ oss_sonatype_repo = Repository(
 def build_file_aliases():
   return BuildFileAliases(
     targets={
+      'buildgen_target_bag': BuildgenTargetBag,
       'spindle_thrift_library': SpindleThriftLibrary,
       'scala_record_library': SpindleThriftLibrary,
       'ssp_template': SspTemplate,
@@ -61,6 +68,31 @@ def register_goals():
     name='validate-graph',
     action=ForceValidation,
   ).install('gen', replace=True)
+
+  task(
+    name='map-derived-targets',
+    action=MapDerivedTargets,
+  ).install()
+
+  task(
+    name='map-sources-to-addresses-mapper',
+    action=MapSourcesToAddressesMapper,
+  ).install()
+
+  task(
+    name='buildgen',
+    action=Buildgen,
+  ).install()
+
+  task(
+    name='aggregate-targets',
+    action=BuildgenAggregateTargets,
+  ).install('buildgen')
+
+  task(
+    name='timestamp',
+    action=BuildgenTimestamp,
+  ).install('buildgen')
 
   Goal.by_name('resolve').uninstall_task('ivy')
   task(name='pom-resolve', action=PomResolve).install()

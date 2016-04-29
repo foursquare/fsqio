@@ -5,6 +5,12 @@ python_library(
   sources = ['register.py', '__init__.py'],
   dependencies = [
     ':validate',
+    'src/python/fsqio/pants/buildgen/core:buildgen',
+    'src/python/fsqio/pants/buildgen/core:buildgen_aggregate_targets',
+    'src/python/fsqio/pants/buildgen/core:buildgen_target_bag',
+    'src/python/fsqio/pants/buildgen/core:buildgen_timestamp',
+    'src/python/fsqio/pants/buildgen/core:map_derived_targets',
+    'src/python/fsqio/pants/buildgen/core:map_sources_to_addresses_mapper',
     'src/python/fsqio/pants/pom:pom_publish',
     'src/python/fsqio/pants/pom:pom_resolve',
     'src/python/fsqio/pants/spindle/targets:spindle_thrift_library',
