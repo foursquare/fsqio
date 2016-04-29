@@ -1,5 +1,36 @@
 # Copyright 2016 Foursquare Labs, Inc. All Rights Reserved.
 
+
+pom_target(
+  name = 'buildgen-emit-exported-symbols',
+  prefixes = [
+    'src/jvm/io/fsq/buildgen',
+  ],
+  dependencies = [
+       'src/jvm/io/fsq/buildgen/plugin/emit_exported_symbols',
+  ],
+  provides = artifact(
+    org = 'io.fsq',
+    name = 'buildgen-emit-exported-symbols_2.10',
+    repo = oss_sonatype_repo,
+  ),
+)
+
+pom_target(
+  name = 'emit-used-symbols',
+  prefixes = [
+    'src/jvm/io/fsq/buildgen',
+  ],
+  dependencies = [
+    'src/jvm/io/fsq/buildgen/plugin/emit_used_symbols',
+  ],
+  provides = artifact(
+    org = 'io.fsq',
+    name = 'buildgen-emit-used-symbols_2.10',
+    repo = oss_sonatype_repo,
+  ),
+)
+
 pom_target(
   name = 'common',
   prefixes = [
