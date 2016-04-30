@@ -18,6 +18,8 @@ python_library(
     'src/python/fsqio/pants/buildgen/jvm:map_java_exported_symbols',
     'src/python/fsqio/pants/buildgen/jvm:map_jvm_symbol_to_source_tree',
     'src/python/fsqio/pants/buildgen/jvm:map_third_party_jar_symbols',
+    'src/python/fsqio/pants/buildgen/python:buildgen_python',
+    'src/python/fsqio/pants/buildgen/python:map_python_exported_symbols',
     'src/python/fsqio/pants/buildgen:buildgen_spindle',
     'src/python/fsqio/pants/pom:pom_publish',
     'src/python/fsqio/pants/pom:pom_resolve',

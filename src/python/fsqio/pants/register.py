@@ -28,6 +28,8 @@ from fsqio.pants.buildgen.jvm.scala.map_scala_library_used_addresses import (
 )
 from fsqio.pants.buildgen.jvm.scala.scala_exported_symbols import MapScalaExportedSymbols
 from fsqio.pants.buildgen.jvm.scala.scala_used_symbols import MapScalaUsedSymbols
+from fsqio.pants.buildgen.python.buildgen_python import BuildgenPython
+from fsqio.pants.buildgen.python.map_python_exported_symbols import MapPythonExportedSymbols
 from fsqio.pants.pom.pom_publish import PomPublish, PomTarget
 from fsqio.pants.pom.pom_resolve import PomResolve
 from fsqio.pants.spindle.targets.spindle_thrift_library import SpindleThriftLibrary
@@ -77,7 +79,12 @@ def register_goals():
   task(
     name='validate-graph',
     action=ForceValidation,
-  ).install('gen', replace=True)
+  ).install('gen')
+
+  task(
+    name='map-python-exported-symbols',
+    action=MapPythonExportedSymbols,
+  ).install()
 
   task(
     name='map-third-party-jar-symbols',
@@ -132,6 +139,11 @@ def register_goals():
   task(
     name='spindle',
     action=BuildgenSpindle,
+  ).install('buildgen')
+
+  task(
+    name='python',
+    action=BuildgenPython,
   ).install('buildgen')
 
   task(

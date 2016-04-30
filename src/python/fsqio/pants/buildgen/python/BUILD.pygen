@@ -1,0 +1,30 @@
+
+python_library(
+  name = 'buildgen_python',
+  sources = ['buildgen_python.py', '__init__.py'],
+  dependencies = [
+    ':python_import_parser',
+    ':third_party_map_python',
+    'src/python/fsqio/pants/buildgen/core:buildgen_task',
+    'src/python/fsqio/pants/buildgen/core:symbol_tree',
+    'src/python/fsqio/pants/buildgen/core:third_party_map_util',
+  ],
+)
+
+python_library(
+  name = 'map_python_exported_symbols',
+  sources = ['map_python_exported_symbols.py', '__init__.py'],
+)
+
+python_library(
+  name = 'python_import_parser',
+  sources = ['python_import_parser.py', '__init__.py'],
+  dependencies = [
+    'src/python/fsqio/util/memo',
+  ],
+)
+
+python_library(
+  name = 'third_party_map_python',
+  sources = ['third_party_map_python.py', '__init__.py'],
+)
