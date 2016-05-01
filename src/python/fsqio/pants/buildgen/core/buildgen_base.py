@@ -14,7 +14,7 @@ from __future__ import (
 from pants.task.task import Task
 from pants.util.memo import memoized_property
 
-from fsqio.pants.buildgen.subsystems.buildgen_subsystem import BuildgenSubsystem
+from fsqio.pants.buildgen.core.subsystems.buildgen_subsystem import BuildgenSubsystem
 
 
 class BuildgenBase(Task):

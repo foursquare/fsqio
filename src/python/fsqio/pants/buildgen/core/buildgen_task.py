@@ -11,14 +11,11 @@ from __future__ import (
   with_statement,
 )
 
-import colors
-import sys
-
-from pants.contrib.buildgen.build_file_manipulator import BuildFileManipulator
 from pants.util.memo import memoized_property
 
+from fsqio.pants.buildgen.core.build_file_manipulator import BuildFileManipulator
 from fsqio.pants.buildgen.core.buildgen_base import BuildgenBase
-from fsqio.pants.buildgen.subsystems.buildgen_subsystem import BuildgenSubsystem
+from fsqio.pants.buildgen.core.subsystems.buildgen_subsystem import BuildgenSubsystem
 
 
 class BuildgenTask(BuildgenBase):
@@ -34,10 +31,6 @@ class BuildgenTask(BuildgenBase):
   @memoized_property
   def dryrun(self):
     return self.buildgen_subsystem.dry_run
-
-  @memoized_property
-  def style_run(self):
-    return self.buildgen_subsystem.style_run
 
   @memoized_property
   def target_alias_whitelist(self):
@@ -59,8 +52,7 @@ class BuildgenTask(BuildgenBase):
                                             target.address.target_name,
                                             alias_whitelist)
 
-    existing_dep_addresses = manipulator._dependencies_by_address.keys()
-
+    existing_dep_addresses = manipulator.get_dependency_addresses()
     for address in existing_dep_addresses:
       if not self.context.build_graph.get_target(address):
         self.context.build_graph.inject_address(address)
@@ -77,33 +69,8 @@ class BuildgenTask(BuildgenBase):
     for address in computed_dep_addresses:
       manipulator.add_dependency(address)
 
-    final_dep_addresses = manipulator._dependencies_by_address.keys()
-
-    style_only = set(final_dep_addresses) == set(existing_dep_addresses)
-
-    diff_lines = manipulator.diff_lines()
-    if diff_lines:
-      if self.dryrun:
-        msg = colors.yellow('DRY RUN, would have written this diff:')
-      elif self.style_run and style_only:
-        msg = colors.green('STYLE RUN, about to write this (style only) diff:')
-      else:
-        msg = colors.blue('REAL RUN, about to write the following diff:')
-      sys.stderr.write('\n\n' + msg + '\n')
-      sys.stderr.write(colors.yellow('*' * 40 + '\n'))
-      sys.stderr.write('target at: ')
-      sys.stderr.write(str(target.address) + '\n')
-      for line in diff_lines:
-        color_fn = lambda x: x
-        if line.startswith('+') and not line.startswith('+++'):
-          color_fn = colors.green
-        elif line.startswith('-') and not line.startswith('---'):
-          color_fn = colors.red
-        sys.stderr.write(color_fn(line) + '\n')
-      sys.stderr.write(colors.yellow('*' * 40 + '\n'))
-      if not self.dryrun or (self.style_run and style_only):
-        with open(manipulator.build_file.full_path, 'w') as f:
-          f.write('\n'.join(manipulator.build_file_lines()))
+    final_dep_addresses = manipulator.get_dependency_addresses()
+    manipulator.write(dry_run=self.dryrun, use_colors=self.get_options().colors)
 
   def execute(self):
     def task_targets():

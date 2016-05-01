@@ -67,12 +67,6 @@ class BuildgenSubsystem(object):
         help="Each listed BuildgenTargetBag will have all configured targets aggregated and injected as dependencies",
       )
       register(
-        "--style-run",
-        default=False,
-        type=bool,
-        help="Only writes out changes that are style-only (deps remain the same).",
-      )
-      register(
         '--dry-run',
         default=False,
         type=bool,
@@ -88,7 +82,6 @@ class BuildgenSubsystem(object):
         options.managed_dependency_aliases,
         options.required_products,
         options.buildgen_target_bags,
-        options.style_run,
         options.dry_run
       )
 
@@ -99,7 +92,6 @@ class BuildgenSubsystem(object):
                managed_dependency_aliases,
                required_products,
                buildgen_target_bags,
-               style_run,
                dry_run):
     self.source_dirs = source_dirs
     self.test_dirs = test_dirs
@@ -107,5 +99,4 @@ class BuildgenSubsystem(object):
     self.managed_dependency_aliases = managed_dependency_aliases
     self.required_products = required_products
     self.buildgen_target_bags = buildgen_target_bags
-    self.style_run = style_run
     self.dry_run = dry_run

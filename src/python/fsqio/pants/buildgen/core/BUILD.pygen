@@ -1,4 +1,10 @@
 
+
+python_library(
+  name = 'build_file_manipulator',
+  sources = ['build_file_manipulator.py', '__init__.py'],
+)
+
 python_library(
   name = 'buildgen',
   sources = ['buildgen.py', '__init__.py'],
@@ -20,7 +26,7 @@ python_library(
   name = 'buildgen_base',
   sources = ['buildgen_base.py', '__init__.py'],
   dependencies = [
-    'src/python/fsqio/pants/buildgen/subsystems:buildgen_subsystem',
+    'src/python/fsqio/pants/buildgen/core/subsystems:buildgen_subsystem',
   ],
 )
 
@@ -33,8 +39,9 @@ python_library(
   name = 'buildgen_task',
   sources = ['buildgen_task.py', '__init__.py'],
   dependencies = [
+    ':build_file_manipulator',
     ':buildgen_base',
-    'src/python/fsqio/pants/buildgen/subsystems:buildgen_subsystem',
+    'src/python/fsqio/pants/buildgen/core/subsystems:buildgen_subsystem',
   ],
 )
 
