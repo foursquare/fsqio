@@ -14,8 +14,23 @@ from __future__ import (
 import ast
 from collections import defaultdict
 import tokenize
+from types import GeneratorType
 
-from fsqio.util.memo.memo import memoized_property
+
+class cached_property(object):
+  """From https://github.com/pydanny/cached-property/blob/master/cached_property.py"""
+  def __init__(self, func):
+    self.__doc__ = getattr(func, '__doc__')
+    self.func = func
+
+  def __get__(self, obj, cls):
+    if obj is None:
+        return self
+    value = self.func(obj)
+    if isinstance(value, GeneratorType):
+      value = list(value)
+    obj.__dict__[self.func.__name__] = value
+    return value
 
 
 class ParsedImport(object):
@@ -45,7 +60,7 @@ class PythonImportParser(object):
     self._first_party_packages = first_party_packages
     self._source_path = source_path
 
-  @memoized_property
+  @cached_property
   def source_code(self):
     try:
       with open(self._source_path, 'rb') as f:
@@ -53,23 +68,23 @@ class PythonImportParser(object):
     except Exception as e:
       raise('Error opening source: {}\n{}'.format(self._source_path, e))
 
-  @memoized_property
+  @cached_property
   def source_lines(self):
     return self.source_code.split('\n')
 
-  @memoized_property
+  @cached_property
   def tokens(self):
      with open(self._source_path, 'rb') as f:
        return list(tokenize.generate_tokens(f.readline))
 
-  @memoized_property
+  @cached_property
   def tree(self):
     try:
       return ast.parse(self.source_code.encode('utf-8'), mode='exec')
     except Exception as e:
       raise Exception('Failed to parse python source: {}\n{}'.format(self._source_path, e))
 
-  @memoized_property
+  @cached_property
   def first_non_import_index(self):
     for node in self.tree.body:
       is_import = isinstance(node, (ast.Import, ast.ImportFrom))
@@ -91,7 +106,7 @@ class PythonImportParser(object):
         return real_code_index
     return 0
 
-  @memoized_property
+  @cached_property
   def index_to_tokens(self):
     index_to_tokens_map = defaultdict(list)
     for token in self.tokens:
@@ -126,7 +141,7 @@ class PythonImportParser(object):
       for token in self.index_to_tokens.get(i, []):
         yield token
 
-  @memoized_property
+  @cached_property
   def lint_and_collect_imports(self):
     module_to_aliases = defaultdict(set)
     module_to_comments = defaultdict(list)
