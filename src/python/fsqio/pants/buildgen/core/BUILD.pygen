@@ -3,6 +3,9 @@
 python_library(
   name = 'build_file_manipulator',
   sources = ['build_file_manipulator.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:ansicolors',
+  ],
 )
 
 python_library(

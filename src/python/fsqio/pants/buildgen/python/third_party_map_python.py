@@ -8,6 +8,7 @@ import sys
 
 
 python_third_party_map = {
+  'ansicolors': '3rdparty/python:ansicolors',
   'apache': {
     'aurora': '3rdparty/python:apache.aurora.client',
   },
@@ -16,6 +17,7 @@ python_third_party_map = {
   'astroid': '3rdparty/python:astroid',
   'boto': '3rdparty/python:boto',
   'bson': '3rdparty/python:pymongo',
+  'colors': '3rdparty/python:ansicolors',
   'concurrent': '3rdparty/python:futures',
   'configobj': '3rdparty/python:configobj',
   'cookies': '3rdparty/python:cookies',
