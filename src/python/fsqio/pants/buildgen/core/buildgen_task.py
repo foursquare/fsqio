@@ -46,7 +46,6 @@ class BuildgenTask(BuildgenBase):
 
   def adjust_target_build_file(self, target, computed_dep_addresses, whitelist=None):
     """Makes a BuildFileManipulator and adjusts the BUILD file to reflect the computed addresses"""
-    # TODO(mateo): Upstream module in contrib no longer matches this signature, adjust it to match after this is OSS.
     alias_whitelist = whitelist or self.buildgen_subsystem.target_alias_whitelist
     manipulator = BuildFileManipulator.load(target.address.build_file,
                                             target.address.target_name,

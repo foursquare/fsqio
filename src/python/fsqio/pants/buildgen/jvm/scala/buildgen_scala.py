@@ -26,7 +26,6 @@ class BuildgenScala(BuildgenTask):
     round_manager.require_data('scala_library_to_used_addresses')
     round_manager.require_data('scala_source_to_exported_symbols')
     round_manager.require_data('scala_source_to_used_symbols')
-    round_manager.require_data('soy_source_to_external_call_symbols')
 
   @classmethod
   def product_types(cls):
