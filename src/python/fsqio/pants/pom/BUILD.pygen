@@ -63,4 +63,7 @@ python_library(
 python_library(
   name = 'sort_projects',
   sources = ['sort_projects.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:twitter.common.collections',
+  ],
 )

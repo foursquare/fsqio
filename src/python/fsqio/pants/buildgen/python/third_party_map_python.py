@@ -72,6 +72,13 @@ python_third_party_map = {
   'tornadoredis': '3rdparty/python:tornado-redis',
   'toro': '3rdparty/python:toro',
   'twisted': '3rdparty/python:Twisted',
+  'twitter': {
+    'common': {
+      'collections': '3rdparty/python:twitter.common.collections',
+      'confluence': '3rdparty/python:twitter.common.confluence',
+      'dirutil': '3rdparty/python:twitter.common.dirutil',
+    },
+  },
   'whoops': '3rdparty/python:whoops',
   'yaml': '3rdparty/python:PyYAML',
 }
