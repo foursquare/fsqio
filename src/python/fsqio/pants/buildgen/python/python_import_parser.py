@@ -14,11 +14,15 @@ from __future__ import (
 import ast
 from collections import defaultdict
 import tokenize
-from types import GeneratorType
 
 
 class cached_property(object):
-  """From https://github.com/pydanny/cached-property/blob/master/cached_property.py"""
+  """From https://github.com/pydanny/cached-property/blob/master/cached_property.py
+
+  A property that is only computed once per instance and then replaces itself
+  with an ordinary attribute. Deleting the attribute resets the property.
+  Source: https://github.com/bottlepy/bottle/commit/fa7733e075da0d790d809aa3d2f53071897e6f76
+  """   # noqa
   def __init__(self, func):
     self.__doc__ = getattr(func, '__doc__')
     self.func = func
@@ -26,10 +30,7 @@ class cached_property(object):
   def __get__(self, obj, cls):
     if obj is None:
         return self
-    value = self.func(obj)
-    if isinstance(value, GeneratorType):
-      value = list(value)
-    obj.__dict__[self.func.__name__] = value
+    value = obj.__dict__[self.func.__name__] = self.func(obj)
     return value
 
 
@@ -66,7 +67,7 @@ class PythonImportParser(object):
       with open(self._source_path, 'rb') as f:
         return f.read().decode('utf-8')
     except Exception as e:
-      raise('Error opening source: {}\n{}'.format(self._source_path, e))
+      raise Exception('Error opening source: {}\n{}'.format(self._source_path, e))
 
   @cached_property
   def source_lines(self):

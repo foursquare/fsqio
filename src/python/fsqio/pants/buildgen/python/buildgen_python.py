@@ -53,6 +53,13 @@ class BuildgenPython(BuildgenTask):
       type=list,
       help="List of python package names produced by the repo (e.g. ['fsqio', 'pants', ...])."
     )
+    register(
+      '--target-alias-blacklist',
+      default=[],
+      advanced=True,
+      type=list,
+      help="list target aliases that should not be managed by that task (e.g. ['python_egg', ... ]"
+    )
 
   @classmethod
   def product_types(cls):
@@ -63,6 +70,10 @@ class BuildgenPython(BuildgenTask):
   @property
   def types_operated_on(self):
     return (PythonLibrary, PythonTests)
+
+  @memoized_property
+  def target_alias_blacklist(self):
+    return self.get_options().target_alias_blacklist
 
   @memoized_property
   def first_party_packages(self):

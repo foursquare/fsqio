@@ -37,11 +37,23 @@ class BuildgenTask(BuildgenBase):
     return self.buildgen_subsystem.target_alias_whitelist
 
   @memoized_property
+  def target_alias_blacklist(self):
+    """Subclasses may implement to list target aliases that should not be managed by that task.
+
+    For instance, the task understands JvmLibrary but not its subclass ScalaLibrary.
+    """
+    return []
+
+  @memoized_property
   def managed_dependency_aliases(self):
     return self.buildgen_subsystem.managed_dependency_aliases
 
   @memoized_property
   def required_products(self):
+    """Subclasses may implement to list target aliases that should not be managed by that task.
+
+    For instance, the task understands JvmLibrary but not its subclass ScalaLibrary.
+    """
     return self.buildgen_subsystem.required_products
 
   def adjust_target_build_file(self, target, computed_dep_addresses, whitelist=None):
@@ -74,7 +86,7 @@ class BuildgenTask(BuildgenBase):
   def execute(self):
     def task_targets():
       for target in self.context.target_roots:
-        if isinstance(target, self.types_operated_on):
+        if isinstance(target, self.types_operated_on) and target.type_alias not in self.target_alias_blacklist:
           yield target
     targets = sorted(list(task_targets()))
     if self.get_options().level == 'debug':
