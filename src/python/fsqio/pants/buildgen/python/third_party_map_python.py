@@ -46,7 +46,7 @@ python_third_party_map = {
   'lvm': '3rdparty/python/linuxonly:lvm',
   'lxml': '3rdparty/python:lxml',
   'mako': '3rdparty/python:Mako',
-  'mock': '3rdparty/python:mox',
+  'mock': '3rdparty/python:mock',
   'motor': '3rdparty/python:motor',
   'mox': '3rdparty/python:mox',
   'path': '3rdparty/python:path',
