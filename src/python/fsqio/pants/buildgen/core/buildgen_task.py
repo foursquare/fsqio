@@ -15,18 +15,14 @@ from pants.util.memo import memoized_property
 
 from fsqio.pants.buildgen.core.build_file_manipulator import BuildFileManipulator
 from fsqio.pants.buildgen.core.buildgen_base import BuildgenBase
-from fsqio.pants.buildgen.core.subsystems.buildgen_subsystem import BuildgenSubsystem
 
 
 class BuildgenTask(BuildgenBase):
 
   @classmethod
   def prepare(cls, options, round_manager):
-    # Hack the planet.
-    subsystem = BuildgenSubsystem.Factory.global_instance().create()
-    products = subsystem.required_products
-    for product in products:
-      round_manager.require_data(product)
+    round_manager.require('concrete_target_to_derivatives')
+    round_manager.require('source_to_addresses_mapper')
 
   @memoized_property
   def dryrun(self):
@@ -47,14 +43,6 @@ class BuildgenTask(BuildgenBase):
   @memoized_property
   def managed_dependency_aliases(self):
     return self.buildgen_subsystem.managed_dependency_aliases
-
-  @memoized_property
-  def required_products(self):
-    """Subclasses may implement to list target aliases that should not be managed by that task.
-
-    For instance, the task understands JvmLibrary but not its subclass ScalaLibrary.
-    """
-    return self.buildgen_subsystem.required_products
 
   def adjust_target_build_file(self, target, computed_dep_addresses, whitelist=None):
     """Makes a BuildFileManipulator and adjusts the BUILD file to reflect the computed addresses"""

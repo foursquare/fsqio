@@ -44,7 +44,6 @@ python_library(
   dependencies = [
     ':build_file_manipulator',
     ':buildgen_base',
-    'src/python/fsqio/pants/buildgen/core/subsystems:buildgen_subsystem',
   ],
 )
 

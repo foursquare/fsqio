@@ -3,7 +3,7 @@ python_library(
   name = 'buildgen_spindle',
   sources = ['buildgen_spindle.py', '__init__.py'],
   dependencies = [
-    'src/python/fsqio/pants/buildgen/core:buildgen_task',
+    'src/python/fsqio/pants/buildgen/jvm/scala:buildgen_scala',
     'src/python/fsqio/pants/spindle/targets:spindle_thrift_library',
   ],
 )

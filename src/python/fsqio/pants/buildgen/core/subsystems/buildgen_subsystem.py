@@ -53,13 +53,6 @@ class BuildgenSubsystem(object):
              '(e.g. [scala_library, python_library, ...].',
       )
       register(
-        '--required-products',
-        advanced=True,
-        type=list,
-        help='Full list of target callables as strings. These are the target types that have any of their '
-             'dependencies managed by buildgen. (e.g. [scala_library, python_library, ...]',
-      )
-      register(
         '--buildgen-target-bags',
         default=[],
         advanced=True,
@@ -80,7 +73,6 @@ class BuildgenSubsystem(object):
         options.test_dirs,
         options.target_whitelist,
         options.managed_dependency_aliases,
-        options.required_products,
         options.buildgen_target_bags,
         options.dry_run
       )
@@ -90,13 +82,11 @@ class BuildgenSubsystem(object):
                test_dirs,
                target_whitelist,
                managed_dependency_aliases,
-               required_products,
                buildgen_target_bags,
                dry_run):
     self.source_dirs = source_dirs
     self.test_dirs = test_dirs
     self.target_alias_whitelist = target_whitelist
     self.managed_dependency_aliases = managed_dependency_aliases
-    self.required_products = required_products
     self.buildgen_target_bags = buildgen_target_bags
     self.dry_run = dry_run

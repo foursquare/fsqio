@@ -17,7 +17,7 @@ import re
 
 from pants.backend.jvm.targets.scala_library import ScalaLibrary
 
-from fsqio.pants.buildgen.core.buildgen_task import BuildgenTask
+from fsqio.pants.buildgen.jvm.scala.buildgen_scala import BuildgenScala
 from fsqio.pants.spindle.targets.spindle_thrift_library import SpindleThriftLibrary
 
 
@@ -57,17 +57,12 @@ class ThriftDependencyMapper(object):
         yield self.buildroot_relative_source(include)
 
 
-class BuildgenSpindle(BuildgenTask):
+class BuildgenSpindle(BuildgenScala):
   @classmethod
   def prepare(cls, options, round_manager):
     super(BuildgenSpindle, cls).prepare(options, round_manager)
     round_manager.require_data('concrete_target_to_derivatives')
-    round_manager.require_data('java_source_to_exported_symbols')
-    round_manager.require_data('jvm_symbol_to_source_tree')
-    round_manager.require_data('scala')
     round_manager.require_data('scala_library_to_used_addresses')
-    round_manager.require_data('scala_source_to_exported_symbols')
-    round_manager.require_data('scala_source_to_used_symbols')
     round_manager.require_data('source_to_addresses_mapper')
 
   @classmethod
