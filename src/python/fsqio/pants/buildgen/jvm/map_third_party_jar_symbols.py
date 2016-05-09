@@ -41,7 +41,7 @@ class MapThirdPartyJarSymbols(Task):
 
     # NOTE(mateo): This is a deprecated concept upstream - everything is in the classpath now. So it will take some
     # fiddling to get the jar symbols for anyone not using pom-resolve.
-    round_manager.require_data('ivy_resolve_symlink_map')
+    round_manager.require_data('compile_classpath')
     round_manager.require_data('java')
     round_manager.require_data('scala')
 
@@ -77,7 +77,9 @@ class MapThirdPartyJarSymbols(Task):
       vts_workdir = os.path.join(self._workdir, global_vts.cache_key.hash)
       vts_analysis_file = os.path.join(vts_workdir, 'buildgen_analysis.json')
       if invalidation_check.invalid_vts or not os.path.exists(vts_analysis_file):
-        all_jars = products.get_data('ivy_resolve_symlink_map').values()
+        classpath = self.context.products.get_data('compile_classpath')
+        jar_entries = classpath.get_for_targets(targets)
+        all_jars = [jar for _, jar in jar_entries]
         calculated_analysis = {}
         calculated_analysis['hash'] = global_vts.cache_key.hash
         calculated_analysis['jar_to_symbols_exported'] = {}
