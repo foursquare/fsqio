@@ -11,6 +11,7 @@ from __future__ import (
   with_statement,
 )
 
+from copy import deepcopy
 from os import path as P
 
 from pants.backend.python.targets.python_binary import PythonBinary
@@ -21,7 +22,7 @@ from pants.util.memo import memoized_property
 
 from fsqio.pants.buildgen.core.buildgen_task import BuildgenTask
 from fsqio.pants.buildgen.core.symbol_tree import SymbolTreeNode
-from fsqio.pants.buildgen.core.third_party_map_util import check_manually_defined
+from fsqio.pants.buildgen.core.third_party_map_util import check_manually_defined, merge_map
 from fsqio.pants.buildgen.python.python_import_parser import PythonImportParser
 from fsqio.pants.buildgen.python.third_party_map_python import (
   get_system_modules,
@@ -60,6 +61,15 @@ class BuildgenPython(BuildgenTask):
       type=list,
       help="list target aliases that should not be managed by that task (e.g. ['python_egg', ... ]"
     )
+    register(
+      '--additional-third-party-map',
+      default={},
+      advanced=True,
+      type=dict,
+      # See the test_third_party_map_util.py for examples.
+      help="A dict that defines additional third party mappings (may be nested). See third_party_map_python.py "
+        "for defaults. Mappings passed to this option will take precedence over the defaults."
+    )
 
   @classmethod
   def product_types(cls):
@@ -82,6 +92,16 @@ class BuildgenPython(BuildgenTask):
   @memoized_property
   def system_modules(self):
     return get_system_modules(self.first_party_packages)
+
+  @memoized_property
+  def merged_map(self):
+    """Returns the recursively updated mapping of imports to third party BUILD file entries.
+
+    Entries passed to the option system take priority.
+    """
+    merged_map = deepcopy(python_third_party_map)
+    merge_map(merged_map, self.get_options().additional_third_party_map)
+    return merged_map
 
   _symbol_to_source_tree = None
   @property
@@ -189,7 +209,7 @@ class BuildgenPython(BuildgenTask):
     ignored_prefixes.update(set(self.first_party_packages))
 
     for symbol in target_used_symbols:
-      third_party_dep = check_manually_defined(symbol, subtree=python_third_party_map)
+      third_party_dep = check_manually_defined(symbol, subtree=self.merged_map)
       if third_party_dep:
         addresses_used_by_target.add(Address.parse(third_party_dep))
       elif symbol.split('.')[0] not in ignored_prefixes:
@@ -204,5 +224,4 @@ class BuildgenPython(BuildgenTask):
       addr for addr in addresses_used_by_target
       if addr != target.address
     )
-
     self.adjust_target_build_file(target, filtered_addresses_used_by_target)

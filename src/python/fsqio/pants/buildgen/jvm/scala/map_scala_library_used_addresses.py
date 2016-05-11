@@ -12,6 +12,7 @@ from __future__ import (
 )
 
 from collections import defaultdict
+from copy import deepcopy
 from itertools import chain
 import sys
 
@@ -22,7 +23,7 @@ from pants.build_graph.address import Address
 from pants.util.memo import memoized_property
 
 from fsqio.pants.buildgen.core.buildgen_base import BuildgenBase
-from fsqio.pants.buildgen.core.third_party_map_util import Skip, check_manually_defined
+from fsqio.pants.buildgen.core.third_party_map_util import check_manually_defined, merge_map
 from fsqio.pants.buildgen.jvm.third_party_map_jvm import jvm_third_party_map
 
 
@@ -51,6 +52,18 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
     round_manager.require_data('scala')
     round_manager.require_data('java')
 
+  @classmethod
+  def register_options(cls, register):
+    register(
+      '--additional-third-party-map',
+      default={},
+      advanced=True,
+      type=dict,
+      # See the test_third_party_map_util.py for examples.
+      help="A dict that defines additional third party mappings (may be nested). See third_party_map_jvm.py "
+        "for defaults. Mappings passed to this option will take precedence over the defaults."
+    )
+
   def _symbols_used_by_scala_target(self, target):
     """Consults the analysis products and returns a set of all symbols used by a scala target."""
     products = self.context.products
@@ -70,6 +83,16 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
   @property
   def _source_mapper(self):
     return self.context.products.get_data('source_to_addresses_mapper')
+
+  @memoized_property
+  def merged_map(self):
+    """Returns the recursively updated mapping of imports to third party BUILD file entries.
+
+    Entries passed to the option system take priority.
+    """
+    merged_map = deepcopy(jvm_third_party_map)
+    merge_map(merged_map, self.get_options().additional_third_party_map)
+    return merged_map
 
   def _is_test(self, target):
     """A little hack to determine if an address lives in one of the testing directories."""
@@ -93,7 +116,7 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
     errors = []
     for symbol in syms:
       exact_matching_sources = self._internal_symbol_tree.get(symbol, exact=False)
-      manually_defined_target = check_manually_defined(symbol, subtree=jvm_third_party_map)
+      manually_defined_target = check_manually_defined(symbol, subtree=self.merged_map)
       if manually_defined_target and exact_matching_sources:
         print(
           'ERROR: buildgen found both sources and manually defined in third_party_map_jvm'
@@ -116,7 +139,7 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
           self._source_mapper.target_addresses_for_source(source)
           for source in exact_matching_sources
         ))
-      elif manually_defined_target == Skip:
+      elif manually_defined_target == 'SKIP':
         continue
       elif manually_defined_target:
         addresses = [self._manually_defined_spec_to_address(manually_defined_target)]

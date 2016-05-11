@@ -25,7 +25,4 @@ python_library(
 python_library(
   name = 'third_party_map_jvm',
   sources = ['third_party_map_jvm.py', '__init__.py'],
-  dependencies = [
-    'src/python/fsqio/pants/buildgen/core:third_party_map_util',
-  ],
 )

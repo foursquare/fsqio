@@ -3,12 +3,7 @@
 
 from __future__ import absolute_import
 
-from fsqio.pants.buildgen.core.third_party_map_util import Default, Skip
 
-
-# This non-exhaustive map covers many common package names imported via 3rdparty jars.
-# TODO(ryan): do some kind of real lookup here, e.g. iterate over JarDependencies, list files, look for appropriate
-# packages.
 jvm_third_party_map = {
   'akka': 'akka',
   'backtype': {
@@ -59,7 +54,7 @@ jvm_third_party_map = {
         'async': 'twitter-util-async',
       },
       'datafiles': {
-        Default: 'geotouches'
+        'DEFAULT': 'geotouches'
       },
       'esh230': 'elasticsearch-hadoop-mr-230',
       'geo': {
@@ -129,7 +124,7 @@ jvm_third_party_map = {
       'i18n': {
         'phonenumbers': {
           'geocoding': 'phonenumbers-geocoder',
-          Default: 'phonenumbers'
+          'DEFAULT': 'phonenumbers'
         }
       },
       'inject': 'guice',
@@ -149,7 +144,7 @@ jvm_third_party_map = {
     'jcraft': 'jsch',
     'maxmind': 'geoip',
     'mongodb': {
-      Default: 'mongodb',
+      'DEFAULT': 'mongodb',
       'casbah': 'casbah',
     },
     'mchange': {
@@ -161,11 +156,11 @@ jvm_third_party_map = {
     'novus': 'salat',
     'opencsv': 'opencsv',
     'rockymadden': 'rockymadden',
-    'thoughtworks': Skip,
+    'thoughtworks': 'SKIP',
     'sun': {
       'jna': 'jna',
       'net': {
-        'httpserver': Skip,
+        'httpserver': 'SKIP',
       },
     },
     'thimbleware': {
@@ -180,9 +175,9 @@ jvm_third_party_map = {
       'finagle': {
         'memcached': {
           'NoReplicationClient': None,
-          Default: 'finagle',
+          'DEFAULT': 'finagle',
         },
-        Default: 'finagle',
+        'DEFAULT': 'finagle',
       },
       'hashing': 'twitter-util',
       'json': 'twitter-json',
@@ -223,10 +218,10 @@ jvm_third_party_map = {
   'io': {
     'netty': 'netty4',
   },
-  'java': Skip,
+  'java': 'SKIP',
   'javax': {
     'mail': 'mail',
-    Default: Skip,  # NOTE(ryan): I can't find where this lives
+    'DEFAULT': 'SKIP',  # NOTE(ryan): I can't find where this lives
   },
   'jskills': 'jskills',
   'kafka': {
@@ -294,7 +289,7 @@ jvm_third_party_map = {
         'validator': 'commons-validator',
       },
       'curator': {
-        Default: 'curator',
+        'DEFAULT': 'curator',
         'test': 'curator-test',
       },
       'hadoop': {
@@ -305,7 +300,7 @@ jvm_third_party_map = {
         'hbase': {
           'io': {
             'hfile': {
-              Default: 'hbase',
+              'DEFAULT': 'hbase',
               'hacks': None,
             },
           },
@@ -313,23 +308,23 @@ jvm_third_party_map = {
         },
         'hdfs': 'hadoop-hdfs',
         'hive': {
-          Default: 'hive-exec',  # TODO(joe): this isn't the whole story
+          'DEFAULT': 'hive-exec',  # TODO(joe): this isn't the whole story
           'common': 'hive-common'
         },
         'http': 'hadoop-common',
         'io': 'hadoop-common',
         'mapred': 'hadoop-mapreduce-client',
         'mapreduce': {
-          Default: 'hadoop-mapreduce-client',
+          'DEFAULT': 'hadoop-mapreduce-client',
           'lib': {
-            Default: 'hadoop-mapreduce-client',
+            'DEFAULT': 'hadoop-mapreduce-client',
             'output': {
-              Default: 'hadoop-mapreduce-client',
+              'DEFAULT': 'hadoop-mapreduce-client',
               'NiceMultipleOutputs': None,
             },
           },
           'util': {
-            Default: 'hadoop-mapreduce-client',
+            'DEFAULT': 'hadoop-mapreduce-client',
             'HostUtil': None,
           },
         },
@@ -343,18 +338,18 @@ jvm_third_party_map = {
       },
       'hcatalog': 'hcatalog',
       'http': {
-        Default: 'apache-httpclient',
+        'DEFAULT': 'apache-httpclient',
         'message': 'commons-httpclient',
         'client': 'commons-httpclient',
         'entity': 'commons-httpclient',
         'impl': {
-          Default: 'apache-httpclient',
+          'DEFAULT': 'apache-httpclient',
         },
       },
       'lucene': {
-        Default: 'lucene-analyzers-common',
+        'DEFAULT': 'lucene-analyzers-common',
         'analysis': {
-          Default: 'lucene-analyzers-common',
+          'DEFAULT': 'lucene-analyzers-common',
           'cn': 'lucene-analyzers-smartcn',
           'ja': 'lucene-analyzers-kuromoji',
           'icu': 'lucene-analyzers-icu',
@@ -379,7 +374,7 @@ jvm_third_party_map = {
       'jackson': 'jackson',
     },
     'elasticsearch': {
-      Default: 'elasticsearch',
+      'DEFAULT': 'elasticsearch',
       'hadoop': 'elasticsearch-hadoop-mr',
     },
     'fusesource': {
@@ -394,7 +389,7 @@ jvm_third_party_map = {
     'geotools': {
       'geometry': 'gt-main',
       'geojson': 'gt-geojson',
-      Default: 'gt-shapefile'
+      'DEFAULT': 'gt-shapefile'
     },
     'hamcrest': 'junit',
     'I0Itec': {
@@ -428,7 +423,7 @@ jvm_third_party_map = {
 
     'opencv': {
       'HaarCascadeFrontalFaceAlt': 'haarcascade_frontalface_alt',
-      Default: 'opencv'
+      'DEFAULT': 'opencv'
     },
     'opengis': 'gt-shapefile',
     'openimaj': 'openimaj',
@@ -451,14 +446,14 @@ jvm_third_party_map = {
     'xerial': {
       'snappy': 'snappy-java',
     },
-    'xml': Skip,
+    'xml': 'SKIP',
   },
   'redis': {
     'clients': {
       'jedis': 'jedis',
     },
   },
-  'scala': Skip,
+  'scala': 'SKIP',
   'scalaj': {
     'http': 'scalaj-http',
   },
@@ -468,10 +463,10 @@ jvm_third_party_map = {
     'kafka': 'storm-kafka',
   },
   'sun': {
-    'reflect': Skip,
+    'reflect': 'SKIP',
     'misc': {
-      'BASE64Decoder': Skip,  # NOTE(ryan): I can't find where this lives
-      'BASE64Encoder': Skip,  # NOTE(ryan): I can't find where this lives
+      'BASE64Decoder': 'SKIP',  # NOTE(ryan): I can't find where this lives
+      'BASE64Encoder': 'SKIP',  # NOTE(ryan): I can't find where this lives
     },
   },
   'tools': {
