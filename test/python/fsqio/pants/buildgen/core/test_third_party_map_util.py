@@ -18,8 +18,6 @@ from fsqio.pants.buildgen.core.third_party_map_util import merge_map
 
 
 class TestThirdPartyMapUtil(unittest.TestCase):
-
-
   # NOTE(mateo): This should be expanded to test the actual interop with Pants. But we are taking baby-steps
   # towards being able to extend upstream Pants test infa. It is just not worth reinventing the wheel for all the
   # before that happens. So for now, this just tests operations that are done outside of Pants.
@@ -50,7 +48,7 @@ class TestThirdPartyMapUtil(unittest.TestCase):
       'yaml': '3rdparty/python:PyYAML',
     }
 
-    self.additional_map =  {
+    self.additional_map = {
        'ansicolors': '/elsewhere:ansicolors',
        'apache': '/elsewhere:apache.aurora.client',
        'fsqio': {
@@ -81,20 +79,20 @@ class TestThirdPartyMapUtil(unittest.TestCase):
       'boto': None,
       'fsqio': {
         'buildgen': {
-          'core':  '/elsewhere:buildgen-core',
-          'python':  '/elsewhere:buildgen-jvm'}},
+          'core': '/elsewhere:buildgen-core',
+          'python': '/elsewhere:buildgen-jvm'}},
       'twitter': {
         'common': {
-          'collections':  '/elsewhere:twitter.common.collections',
-          'confluence':  '/elsewhere:twitter.common.confluence',
-          'dirutil':  '3rdparty/python:twitter.common.dirutil',
-          'log':  '/elsewhere:twitter.common.log'
+          'collections': '/elsewhere:twitter.common.collections',
+          'confluence': '/elsewhere:twitter.common.confluence',
+          'dirutil': '3rdparty/python:twitter.common.dirutil',
+          'log': '/elsewhere:twitter.common.log'
         },
          'finagle': {
-           'DEFAULT':  'a_bird_name'
+           'DEFAULT': 'a_bird_name'
           }
         },
-        'yaml':  '/elsewhere/python:PyYAML'
+        'yaml': '/elsewhere/python:PyYAML'
     }
     self.assertEqual(self.default_map, expected_merged_map)
 
