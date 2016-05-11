@@ -56,6 +56,7 @@ jvm_third_party_map = {
       'datafiles': {
         'DEFAULT': 'geotouches'
       },
+      'es231': 'elasticsearch-231',
       'esh230': 'elasticsearch-hadoop-mr-230',
       'geo': {
         'quadtree': 'country-revgeo',
@@ -77,7 +78,8 @@ jvm_third_party_map = {
               'clients': 'jedis281',
           },
       },
-      'kafka9': 'kafka9-clients'
+      'kafka9': 'kafka9-clients',
+      'lucene550': 'lucene-550'
     },
     'github': {
       'fakemongo': 'fongo',
