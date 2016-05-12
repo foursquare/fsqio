@@ -16,6 +16,7 @@ python_third_party_map = {
   'argcomplete': '3rdparty/python:argcomplete',
   'astroid': '3rdparty/python:astroid',
   'boto': '3rdparty/python:boto',
+  'boto3': '3rdparty/python:boto3',
   'bson': '3rdparty/python:pymongo',
   'colors': '3rdparty/python:ansicolors',
   'concurrent': '3rdparty/python:futures',
