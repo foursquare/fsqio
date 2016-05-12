@@ -220,6 +220,7 @@ jar_library(
     sjar(org = 'com.twitter', name = 'finagle-core', rev = finagle_rev),
     sjar(org = 'com.twitter', name = 'finagle-http', rev = finagle_rev),
     sjar(org = 'com.twitter', name = 'finagle-httpx', rev = finagle_rev),
+    sjar(org = 'com.twitter', name = 'finagle-httpx-compat', rev = finagle_rev),
     sjar(org = 'com.twitter', name = 'finagle-stream', rev = finagle_rev),
     sjar(org = 'com.twitter', name = 'finagle-kestrel', rev = finagle_rev),
     sjar(org = 'com.twitter', name = 'finagle-ostrich4', rev = finagle_rev),
