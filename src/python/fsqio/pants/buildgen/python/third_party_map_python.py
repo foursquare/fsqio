@@ -27,6 +27,7 @@ python_third_party_map = {
   'fake_filesystem': '3rdparty/python:pyfakefs',
   'fake_filesystem_glob': '3rdparty/python:pyfakefs',
   'fake_filesystem_shutil': '3rdparty/python:pyfakefs',
+  'flaky': '3rdparty/python:flaky',
   'flask': '3rdparty/python:flask',
   'fs_cython_multilogistic_regression': '3rdparty/python:fs-cython-multilogistic-regression',
   'gen': {
