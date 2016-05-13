@@ -5,7 +5,7 @@ from __future__ import absolute_import
 
 
 def merge_map(a, b):
-  """Recursively merge two dictionaries, with any given subtree in b recursively taking priority over a."""
+  """Recursively merge two nested dictionaries, with any given subtree in b recursively taking priority over a."""
   # Callers are encouraged to pass a deepcopy of dict a.
   # TODO(mateo): Remove mutation and return a new dict instead.
 

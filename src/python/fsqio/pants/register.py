@@ -18,7 +18,7 @@ from fsqio.pants.buildgen.core.buildgen_aggregate_targets import BuildgenAggrega
 from fsqio.pants.buildgen.core.buildgen_target_bag import BuildgenTargetBag
 from fsqio.pants.buildgen.core.buildgen_timestamp import BuildgenTimestamp
 from fsqio.pants.buildgen.core.map_derived_targets import MapDerivedTargets
-from fsqio.pants.buildgen.core.map_sources_to_addresses_mapper import MapSourcesToAddressesMapper
+from fsqio.pants.buildgen.core.map_sources_to_addresses import MapSourcesToAddresses
 from fsqio.pants.buildgen.jvm.map_java_exported_symbols import MapJavaExportedSymbols
 from fsqio.pants.buildgen.jvm.map_jvm_symbol_to_source_tree import MapJvmSymbolToSourceTree
 from fsqio.pants.buildgen.jvm.map_third_party_jar_symbols import MapThirdPartyJarSymbols
@@ -113,7 +113,7 @@ def register_goals():
 
   task(
     name='map-sources-to-addresses-mapper',
-    action=MapSourcesToAddressesMapper,
+    action=MapSourcesToAddresses,
   ).install()
 
   task(

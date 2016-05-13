@@ -11,10 +11,13 @@ from __future__ import (
   with_statement,
 )
 
+from copy import deepcopy
+
 from pants.util.memo import memoized_property
 
 from fsqio.pants.buildgen.core.build_file_manipulator import BuildFileManipulator
 from fsqio.pants.buildgen.core.buildgen_base import BuildgenBase
+from fsqio.pants.buildgen.core.third_party_map_util import merge_map
 
 
 class BuildgenTask(BuildgenBase):
@@ -36,13 +39,29 @@ class BuildgenTask(BuildgenBase):
   def target_alias_blacklist(self):
     """Subclasses may implement to list target aliases that should not be managed by that task.
 
-    For instance, the task understands JvmLibrary but not its subclass ScalaLibrary.
+    For example, a buildgem task may understand JvmLibrary but not its subclass ScalaLibrary.
     """
     return []
 
   @memoized_property
   def managed_dependency_aliases(self):
     return self.buildgen_subsystem.managed_dependency_aliases
+
+  @memoized_property
+  def third_party_target_aliases(self):
+    """List of target_aliases that are acceptable 3rdparty libraries for a language."""
+    return []
+
+  @memoized_property
+  def merged_map(self):
+    """Returns the recursively updated mapping of imports to third party BUILD file entries.
+
+    Entries passed to the option system take priority.
+    """
+    # TODO(mateo): Make the third_party map a Task property and move this to super class?
+    merged_map = deepcopy(self.third_party_map)
+    merge_map(merged_map, self.get_options().additional_third_party_map)
+    return merged_map
 
   def adjust_target_build_file(self, target, computed_dep_addresses, whitelist=None):
     """Makes a BuildFileManipulator and adjusts the BUILD file to reflect the computed addresses"""
@@ -58,7 +77,6 @@ class BuildgenTask(BuildgenBase):
 
     existing_deps = [self.context.build_graph.get_target(address)
                      for address in existing_dep_addresses]
-    # Note that I changed the type check here, from a Target (e.g. ScalaLibrary) to a type_alias (e.g. 'scala_library')
     ignored_deps = [dep for dep in existing_deps
                     if dep.type_alias not in self.managed_dependency_aliases]
 

@@ -3,33 +3,25 @@
 
 from __future__ import absolute_import
 
+import distutils
+import glob
+import os
 import pkgutil
 import sys
 
 
 python_third_party_map = {
-  'ansicolors': '3rdparty/python:ansicolors',
   'apache': {
     'aurora': '3rdparty/python:apache.aurora.client',
   },
-  'apscheduler': '3rdparty/python:APScheduler',
-  'argcomplete': '3rdparty/python:argcomplete',
-  'astroid': '3rdparty/python:astroid',
-  'boto': '3rdparty/python:boto',
-  'boto3': '3rdparty/python:boto3',
   'bson': '3rdparty/python:pymongo',
   'colors': '3rdparty/python:ansicolors',
   'concurrent': '3rdparty/python:futures',
-  'configobj': '3rdparty/python:configobj',
-  'cookies': '3rdparty/python:cookies',
   'dateutil': '3rdparty/python:python-dateutil',
   'dns': '3rdparty/python:dnspython',
   'fake_filesystem': '3rdparty/python:pyfakefs',
   'fake_filesystem_glob': '3rdparty/python:pyfakefs',
   'fake_filesystem_shutil': '3rdparty/python:pyfakefs',
-  'flaky': '3rdparty/python:flaky',
-  'flask': '3rdparty/python:flask',
-  'fs_cython_multilogistic_regression': '3rdparty/python:fs-cython-multilogistic-regression',
   'gen': {
     'apache': {
       'aurora': '3rdparty/python:apache.aurora.client',
@@ -38,44 +30,15 @@ python_third_party_map = {
   'google': {
     'protobuf': '3rdparty/python:protobuf',
   },
-  'gunicorn': '3rdparty/python:gunicorn',
-  'jsoncomment': '3rdparty/python:jsoncomment',
-  'jsonschema': '3rdparty/python:jsonschema',
+  'fake_filesystem': '3rdparty/python:pyfakefs',
+  'fake_filesystem_glob': '3rdparty/python:pyfakefs',
+  'fake_filesystem_shutil': '3rdparty/python:pyfakefs',
   'kafka': '3rdparty/python:kafka-python',
-  'kazoo': '3rdparty/python:kazoo',
   'keyczar': '3rdparty/python:python-keyczar',
-  'luigi': '3rdparty/python:luigi',
-  'lvm': '3rdparty/python/linuxonly:lvm',
-  'lxml': '3rdparty/python:lxml',
-  'mako': '3rdparty/python:Mako',
-  'mock': '3rdparty/python:mock',
-  'motor': '3rdparty/python:motor',
-  'mox': '3rdparty/python:mox',
-  'path': '3rdparty/python:path',
-  'pep8': '3rdparty/python:pep8',
-  'phabricator': '3rdparty/python:phabricator',
-  'psycopg2': '3rdparty/python:psycopg2',
-  'pybindxml': '3rdparty/python:pybindxml',
-  'pycurl': '3rdparty/python:pycurl',
-  'pymongo': '3rdparty/python:pymongo',
-  'pymysql': '3rdparty/python:PyMySQL',
-  'pysnmp': '3rdparty/python:pysnmp',
-  'pystache': '3rdparty/python:pystache',
-  'pytest': '3rdparty/python:pytest',
-  'redis': '3rdparty/python:Redis',
-  'repoze': '3rdparty/python:repoze.lru',
-  'requests': '3rdparty/python:requests',
-  'requests_futures': '3rdparty/python:requests-futures',
-  'scrapy': '3rdparty/python:scrapy',
-  'simplejson': '3rdparty/python:simplejson',
-  'six': '3rdparty/python:six',
-  'sqlalchemy': '3rdparty/python:SQLAlchemy',
-  'supervisor': '3rdparty/python:supervisor',
-  'thrift': '3rdparty/python:thrift',
-  'tornado': '3rdparty/python:tornado',
+  'repoze': {
+    'lru': '3rdparty/python:repoze.lru',
+  },
   'tornadoredis': '3rdparty/python:tornado-redis',
-  'toro': '3rdparty/python:toro',
-  'twisted': '3rdparty/python:Twisted',
   'twitter': {
     'common': {
       'collections': '3rdparty/python:twitter.common.collections',
@@ -84,21 +47,34 @@ python_third_party_map = {
       'log': '3rdparty/python:twitter.common.log',
     },
   },
-  'whoops': '3rdparty/python:whoops',
   'yaml': '3rdparty/python:PyYAML',
 }
 
 
-def get_system_modules(first_party_packages):
-  """Return the list of all loaded modules that are not declared as first or third party libraries.
+def get_system_modules():
+  """Return the Python builtins and stdlib top_level import names for a distribution."""
 
-  Callers should cache this return value instead of recalculating repeatedly.
-  :param list first_party_packages: A list of all package names produced by this repo, e.g. ['foursquare', 'fsqio']).
-  """
-  # Get list of all loaded modules.
-  loaded_modules = [m for _, m, _ in list(pkgutil.iter_modules())]
-  interpreter_modules = list(sys.builtin_module_names)
-  modules = sorted(loaded_modules + interpreter_modules)
+  # Get list of all loaded source modules.
+  modules = {module for _, module, package in list(pkgutil.iter_modules()) if package is False}
 
-  # Filter out all modules that are declared as first or third party packages.
-  return sorted([m for m in modules if m not in python_third_party_map and m not in first_party_packages])
+  # Gather the import names from the site-packages installed in the pants-virtualenv.
+  top_level_txt = glob.iglob(os.path.join(os.path.dirname(os.__file__) + '/site-packages', '*-info', 'top_level.txt'))
+  site_packages = [map(str.strip, open(txt).readlines()) for txt in list(top_level_txt)]
+
+  user_modules = set()
+  for packages in site_packages:
+    # 'pip' and 'setuptools' packages are dependencies of the Pants virtualenv so we treat them as guaranteed.
+    if 'pip' not in packages and 'setuptools' not in packages:
+      user_modules.update(set(packages))
+    else:
+      modules.update(packages)
+
+  # Delete the site-packages from the module lists.
+  modules -= user_modules
+
+  # Get the system packages.
+  system_modules = set(sys.builtin_module_names)
+
+  # Get the top-level packages from the python install (email, logging, xml, some others).
+  _, top_level_libs, _ = list(os.walk(distutils.sysconfig.get_python_lib(standard_lib=True)))[0]
+  return sorted(top_level_libs + list(modules | system_modules))

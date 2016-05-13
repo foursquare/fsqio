@@ -33,12 +33,58 @@ class cached_property(object):
     value = obj.__dict__[self.func.__name__] = self.func(obj)
     return value
 
+class Import(object):
 
-class ParsedImport(object):
+  @staticmethod
+  def format_alias(alias):
+    return '{0} as {1}'.format(*alias) if alias[1] else alias[0]
+
+  @classmethod
+  def render_import(cls, alias):
+    return 'import {0}'.format(cls.format_alias(alias))
+
+  @classmethod
+  def render_importfrom(cls, module, aliases, colwidth=100):
+    formatted_name_pairs = [cls.format_alias(alias) for alias in aliases]
+    inline_name_pairs = ', '.join(formatted_name_pairs)
+    inline_import = 'from {0} import {1}'.format(module, inline_name_pairs)
+    if len(inline_import) < colwidth:
+      return inline_import
+    else:
+      expanded_name_pairs = ',\n  '.join(formatted_name_pairs)
+      expanded_imports = 'from {0} import (\n  {1},\n)'.format(module, expanded_name_pairs)
+      return expanded_imports
+
+  @classmethod
+  def filtered_by_whitelist(cls, imp, whitelist):
+    aliases = tuple(
+      (name, asname) for name, asname in imp.aliases
+      if tuple((asname or name).split('.')) in whitelist
+    )
+    return Import(module=imp.module, aliases=aliases, comments=imp.comments)
+
+  @classmethod
+  def add_aliases(cls, imp, aliases):
+    return Import(
+      module=imp.module,
+      aliases=tuple(set(imp.aliases + aliases)),
+      comments=imp.comments,
+    )
+
   def __init__(self, module=None, aliases=(), comments=()):
     self.module = module
     self.aliases = tuple(sorted(aliases, key=lambda p: p[0]))
     self.comments = comments
+
+  def __lt__(self, rhs):
+    return self.package < rhs.package
+
+  def render(self, colwidth=100):
+    if self.module is None:
+      rendered = self.render_import(self.aliases[0])
+    else:
+      rendered = self.render_importfrom(self.module, self.aliases, colwidth=colwidth)
+    return '\n'.join(self.comments + (rendered,))
 
   @property
   def package(self):
@@ -50,20 +96,22 @@ class ParsedImport(object):
   def __nonzero__(self):
     return self.__bool__()
 
+  def __repr__(self):
+    return self.render()
 
 class PythonImportParser(object):
 
   def __init__(self, source_path, first_party_packages):
-    self._first_party_packages = first_party_packages
-    self._source_path = source_path
+    self.source_path = source_path
+    self.first_party_packages = first_party_packages
 
   @cached_property
   def source_code(self):
     try:
-      with open(self._source_path, 'rb') as f:
+      with open(self.source_path, 'rb') as f:
         return f.read().decode('utf-8')
     except Exception as e:
-      raise Exception('Error opening source: {}\n{}'.format(self._source_path, e))
+      raise Exception('Error opening source: {}\n{}'.format(self.source_path, e))
 
   @cached_property
   def source_lines(self):
@@ -71,7 +119,7 @@ class PythonImportParser(object):
 
   @cached_property
   def tokens(self):
-     with open(self._source_path, 'rb') as f:
+     with open(self.source_path, 'rb') as f:
        return list(tokenize.generate_tokens(f.readline))
 
   @cached_property
@@ -79,7 +127,7 @@ class PythonImportParser(object):
     try:
       return ast.parse(self.source_code.encode('utf-8'), mode='exec')
     except Exception as e:
-      raise Exception('Failed to parse python source: {}\n{}'.format(self._source_path, e))
+      raise Exception('Failed to parse python source: {}\n{}'.format(self.source_path, e))
 
   @cached_property
   def first_non_import_index(self):
@@ -185,7 +233,7 @@ class PythonImportParser(object):
         else:
           alias = node.names[0]
           bare_imports.add(
-            ParsedImport(
+            Import(
               module=None,
               aliases=((alias.name, alias.asname),),
               comments=tuple(node_comments),
@@ -210,5 +258,5 @@ class PythonImportParser(object):
     imports = list(bare_imports)
     for module, aliases in module_to_aliases.items():
       comments = module_to_comments.get(module)
-      imports.append(ParsedImport(module=module, aliases=tuple(aliases), comments=tuple(comments)))
+      imports.append(Import(module=module, aliases=tuple(aliases), comments=tuple(comments)))
     return errors, imports

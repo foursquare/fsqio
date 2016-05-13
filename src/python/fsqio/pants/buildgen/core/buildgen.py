@@ -37,7 +37,7 @@ class Buildgen(BuildgenTask):
   def execute(self):
     # NOTE(pl): We now rely on the fact that we've scheduled Buildgen (the dummy task in the
     # buildgen goal) to run before the real buildgen tasks, e.g. buildgen-scala, buildgen-thrift,
-    # etc.  Since we are being run before the real tasks but after everything else upstream,
+    # etc. Since we are being run before the real tasks but after everything else upstream,
     # we can fix the target roots back up to be whatever the buildgen tasks are supposed to
     # operate on (instead of the entire build graph, which the upstream operated on).
 

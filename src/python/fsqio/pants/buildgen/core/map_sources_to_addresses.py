@@ -15,7 +15,7 @@ from pants.build_graph.source_mapper import LazySourceMapper
 from pants.task.task import Task
 
 
-class MapSourcesToAddressesMapper(Task):
+class MapSourcesToAddresses(Task):
   """Map sources to addresses.
 
   Tasks that buildgen for a target type can extend this task's product with their own source -> address mapping.

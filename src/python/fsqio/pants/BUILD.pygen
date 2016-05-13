@@ -10,7 +10,7 @@ python_library(
     'src/python/fsqio/pants/buildgen/core:buildgen_target_bag',
     'src/python/fsqio/pants/buildgen/core:buildgen_timestamp',
     'src/python/fsqio/pants/buildgen/core:map_derived_targets',
-    'src/python/fsqio/pants/buildgen/core:map_sources_to_addresses_mapper',
+    'src/python/fsqio/pants/buildgen/core:map_sources_to_addresses',
     'src/python/fsqio/pants/buildgen/jvm/scala:buildgen_scala',
     'src/python/fsqio/pants/buildgen/jvm/scala:map_scala_library_used_addresses',
     'src/python/fsqio/pants/buildgen/jvm/scala:scala_exported_symbols',

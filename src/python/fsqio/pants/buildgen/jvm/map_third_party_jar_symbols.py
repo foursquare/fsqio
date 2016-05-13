@@ -32,9 +32,6 @@ class MapThirdPartyJarSymbols(Task):
       'third_party_jar_symbols',
     ]
 
-  def __init__(self, *args, **kwargs):
-    super(MapThirdPartyJarSymbols, self).__init__(*args, **kwargs)
-
   @classmethod
   def prepare(cls, options, round_manager):
     super(MapThirdPartyJarSymbols, cls).prepare(options, round_manager)
