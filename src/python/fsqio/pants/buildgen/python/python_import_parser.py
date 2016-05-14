@@ -35,7 +35,6 @@ class cached_property(object):
 
 
 class ParsedImport(object):
-
   def __init__(self, module=None, aliases=(), comments=()):
     self.module = module
     self.aliases = tuple(sorted(aliases, key=lambda p: p[0]))
@@ -50,9 +49,6 @@ class ParsedImport(object):
 
   def __nonzero__(self):
     return self.__bool__()
-
-  def __repr__(self):
-    return self.render()
 
 
 class PythonImportParser(object):

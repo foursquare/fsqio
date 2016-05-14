@@ -26,4 +26,6 @@ class BuildgenBase(Task):
 
   @memoized_property
   def buildgen_subsystem(self):
+    # TODO(pl): When pants is a proper library dep, remove this ignore.
+    # pylint: disable=no-member
     return BuildgenSubsystem.Factory.global_instance().create()
