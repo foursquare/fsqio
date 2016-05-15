@@ -6,4 +6,7 @@ python_library(
   dependencies = [
     '3rdparty/python:twitter.common.collections',
   ],
+  tags = [
+    'disable_pylint',
+  ],
 )
