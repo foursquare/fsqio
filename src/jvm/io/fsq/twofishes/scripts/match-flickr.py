@@ -14,7 +14,6 @@ for f in files:
   try:
     data = geojson.loads(fdata)
   except:
-    print url
     print 'failed to parse: ' + fdata
     continue
   for feature in data['features']:
@@ -47,9 +46,9 @@ for f in files:
       center = interp['feature']['geometry']['center']
 
       if (
-        center['lat'] >= bbox[1] and 
-        center['lat'] <= bbox[3] and 
-        center['lng'] >= bbox[0] and 
+        center['lat'] >= bbox[1] and
+        center['lat'] <= bbox[3] and
+        center['lng'] >= bbox[0] and
         center['lng'] <= bbox[2]
       ):
         match = True
