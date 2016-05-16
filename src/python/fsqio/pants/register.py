@@ -30,8 +30,8 @@ from fsqio.pants.buildgen.jvm.scala.scala_exported_symbols import MapScalaExport
 from fsqio.pants.buildgen.jvm.scala.scala_used_symbols import MapScalaUsedSymbols
 from fsqio.pants.buildgen.python.buildgen_python import BuildgenPython
 from fsqio.pants.buildgen.python.map_python_exported_symbols import MapPythonExportedSymbols
-from fsqio.pants.pom.pom_publish import PomPublish, PomTarget
 from fsqio.pants.pom.pom_resolve import PomResolve
+from fsqio.pants.publish.pom_publish import PomPublish, PomTarget
 from fsqio.pants.spindle.targets.spindle_thrift_library import SpindleThriftLibrary
 from fsqio.pants.spindle.targets.ssp_template import SspTemplate
 from fsqio.pants.spindle.tasks.build_spindle import BuildSpindle
