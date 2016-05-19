@@ -12,26 +12,36 @@ from __future__ import (
 )
 
 from collections import defaultdict
+from hashlib import sha1
+import json
+import logging
 import os
+from textwrap import dedent
 
 from pants.backend.python.targets.python_library import PythonLibrary
 from pants.backend.python.targets.python_tests import PythonTests
 from pants.base.build_environment import get_buildroot
+from pants.base.exceptions import TaskError
+from pants.base.payload_field import stable_json_sha1
 from pants.build_graph.address import Address
+from pants.util.dirutil import safe_mkdir
 from pants.util.memo import memoized_property
 
 from fsqio.pants.buildgen.core.buildgen_task import BuildgenTask
 from fsqio.pants.buildgen.core.symbol_tree import SymbolTreeNode
 from fsqio.pants.buildgen.core.third_party_map_util import check_manually_defined
 from fsqio.pants.buildgen.python.python_import_parser import PythonImportParser
-from fsqio.pants.buildgen.python.third_party_map_python import (
-  get_system_modules,
-  python_third_party_map,
-)
+from fsqio.pants.buildgen.python.third_party_map_python import get_venv_map
 
 
 _SOURCE_FILE_TO_ADDRESS_MAP = defaultdict(set)
 _SYMBOLS_TO_SOURCES_MAP = defaultdict(set)
+logger = logging.getLogger(__name__)
+
+
+class PythonBuildgenError(TaskError):
+  """Indicate an unrecognized Python symbol was imported by a source file."""
+
 
 class BuildgenPython(BuildgenTask):
   @classmethod
@@ -43,6 +53,12 @@ class BuildgenPython(BuildgenTask):
 
   @classmethod
   def register_options(cls, register):
+    register(
+      '--fatal',
+      default=True,
+      type=bool,
+      help="When True, any imports that cannot be mapped raise and exception. When False, just print a warning."
+    )
     register(
       '--third-party-dirs',
       default=['3rdparty/python'],
@@ -72,13 +88,19 @@ class BuildgenPython(BuildgenTask):
       help="list target aliases that should not be managed by that task (e.g. ['python_egg', ... ]"
     )
     register(
-      '--additional-third-party-map',
+      '--third-party-venv-root',
+      default=None,
+      advanced=True,
+      type=str,
+      help="Indicates a non-Pants virtualenv that holds any installed third-party deps for buildgen to manage. "
+        "Make sure this points to the lib directory! (e.g. '${HOME}/.cache/pants/1.0.0/lib/python2.7')"
+    )
+    register(
+      '--third-party-map',
       default={},
       advanced=True,
       type=dict,
-      # See the test_third_party_map_util.py for examples.
-      help="A dict that defines additional third party mappings (may be nested). See third_party_map_python.py "
-        "for defaults. Mappings passed to this option will take precedence over the defaults."
+      help="A mapping of unconventional python imports to their providing python_requirement_library target."
     )
 
   @classmethod
@@ -86,6 +108,14 @@ class BuildgenPython(BuildgenTask):
     return [
       'buildgen_python',
     ]
+
+  @classmethod
+  def implementation_version(cls):
+    return super(BuildgenPython, cls).implementation_version() + [('BuildgenPython', 0)]
+
+  @property
+  def cache_target_dirs(self):
+    return True
 
   @memoized_property
   def types_operated_on(self):
@@ -104,16 +134,8 @@ class BuildgenPython(BuildgenTask):
     return tuple(self.get_options().first_party_packages)
 
   @memoized_property
-  def system_modules(self):
-    return frozenset(get_system_modules())
-
-  @memoized_property
   def ignored_prefixes(self):
     return tuple(self.get_options().ignored_prefixes + ['__future__'])
-
-  @memoized_property
-  def third_party_map(self):
-    return python_third_party_map
 
   @memoized_property
   def third_party_deps_addresses(self):
@@ -127,10 +149,77 @@ class BuildgenPython(BuildgenTask):
         # TODO(mateo): Break this into a property of BuildgenTask that returns a tuple of accepted dependency types.
         if addressable.addressed_alias in self.third_party_target_aliases:
           # Use light heuristics here: transform it to a valid identifier and convert to lowercase.
-          dep_name = addressable.addressed_name.lower().replace('-', '_')
+          dep_name = addressable.addressed_name.replace('-', '_')
           name_to_address_map[dep_name] = address.spec
 
     return name_to_address_map
+
+  @memoized_property
+  def map_python_deps(self):
+    name_to_address_map = defaultdict(lambda: None)
+    address_mapper = self.context.address_mapper
+    build_graph = self.context.build_graph
+    source_dirs = self.get_options().third_party_dirs
+    module_list = {}
+    reqs = set()
+    for source_dir in source_dirs:
+      for address in address_mapper.scan_addresses(os.path.join(get_buildroot(), source_dir)):
+        _, addressable = address_mapper.resolve(address)
+        if addressable.addressed_alias in self.third_party_target_aliases:
+          module_list[addressable.addressed_name.replace('-', '_')] = address.spec
+        # This gathers a list of the python requirements as strings. Forget you saw this.
+        reqs.update([str(r.requirement) for r in addressable._kwargs['requirements']])
+    return reqs, module_list
+
+  def module_hash(self, reqs):
+    hasher = sha1()
+    reqs_hash = stable_json_sha1([sorted(list(reqs))])
+    hasher.update(reqs_hash)
+
+    # This adds the python version to the hash.
+    venv_version_file = os.path.join(os.path.dirname(os.__file__), 'orig-prefix.txt')
+    with open(venv_version_file, 'rb') as f:
+      version_string = f.read()
+      hasher.update(version_string)
+
+    # Add virtualenv root to the hash. Analysis should be redone if pointed at a new venv, even if all else the same.
+    hasher.update(self.get_options().third_party_venv_root)
+
+    # Invalidate if pants changes.
+    hasher.update(self.get_options().pants_version)
+    hasher.update(self.get_options().cache_key_gen_version)
+
+    # Invalidate the cache if the task version is bumped.
+    hasher.update(str(self.implementation_version()))
+    return hasher.hexdigest()
+
+  @memoized_property
+  def venv_modules(self):
+    # The deps are python_requirement_library specs, the reqs are the requirements.txt entries.
+    reqs, deps = self.map_python_deps
+    module_hash = self.module_hash(reqs)
+    analysis_file = os.path.join(self.workdir, 'python-analysis-{}.json'.format(module_hash))
+    if not os.path.isfile(analysis_file):
+      mapping = get_venv_map(self.get_options().third_party_venv_root, deps)
+      with open(analysis_file, 'wb') as f:
+        json.dump(mapping, f)
+    else:
+      with open(analysis_file, 'rb') as f:
+        # This is an escape hatch in case the json cannot be read. Maybe it should just raise an exception.
+        try:
+          mapping = json.load(f)
+        except Exception:
+          logger.debug("Could not read the buildgen analysis file, regenerating: {}.".format(f))
+          mapping = get_venv_map(self.get_options().third_party_virtual_env, deps)
+    return mapping
+
+  @memoized_property
+  def system_modules(self):
+    return set(self.venv_modules['python_modules'])
+
+  @memoized_property
+  def symbol_to_target_map(self):
+    return self.venv_modules['third_party']
 
   @memoized_property
   def symbol_to_source_tree(self):
@@ -161,6 +250,7 @@ class BuildgenPython(BuildgenTask):
     return self._source_to_symbols_map[source]
 
   def buildgen_target(self, target):
+    safe_mkdir(self.workdir)
     source_files = [f for f in target.sources_relative_to_buildroot() if f.endswith('.py')]
     build_graph = self.context.build_graph
     address_mapper = self.context.address_mapper
@@ -173,6 +263,7 @@ class BuildgenPython(BuildgenTask):
       target_used_symbols.update(self.get_used_symbols(source_candidate))
 
     for symbol in target_used_symbols:
+
       prefix = symbol.split('.')[0]
 
       # If the symbol is a first party package, map it to providing source files and memoize the relation.
@@ -201,20 +292,45 @@ class BuildgenPython(BuildgenTask):
             _SOURCE_FILE_TO_ADDRESS_MAP[source].update(target_addresses)
           addresses_used_by_target.update(_SOURCE_FILE_TO_ADDRESS_MAP[source])
 
-      # Since the symbol is not first party, it needs to be mapped to a target or ignored.
+      # Since the symbol is not first party, it needs to be mapped to a target.
       else:
-        # Both of these return None if there is no match.
-        third_party_dep = self.third_party_deps_addresses[prefix] or check_manually_defined(symbol, self.merged_map)
-        if third_party_dep:
-          addresses_used_by_target.add(Address.parse(third_party_dep))
+        # The twitter/apache.aurora packages are hopeless to comprehensively map. They have a number of issues:
+        #   * They share `top_level.txt` and 'namespace_packages.txt' values
+        #   * Heuristics based off the package name are invalid
+        #         * apache.aurora.thrift == gen.apache.aurora.[modules].{1.py, 2.py, 3.py}
+        #         * apache.aurora.thermos == gen.apache.thermos.{a.py, b.py, c.py}
+        #           * how to tell that gen.apache.thermos is not a module of gen.apache.aurora?
+        #   * Consequently:
+        #       * they clobber each other's namespace
+        #       * There is no programmatic way to tell between modules
+        #
+        # The valid imports are trivial to determine but there is no deterministic way to map that to the package name.
+        # Without these, we could rely entirely on the namespace map but instead third_party_map lives.
+
+        import_map = self.symbol_to_target_map
+        if prefix not in import_map:
+          # Slice the import ever shorter until we either match to a known import or run out of parts.
+          prefix = symbol
+          parts = len(prefix.split('.'))
+          while prefix not in import_map and parts > 1:
+            prefix, _ = prefix.rsplit('.', 1)
+            parts -= 1
+
+        # Both of these return a target spec string if there is a match and None otherwise.
+        dep = import_map.get(prefix) or check_manually_defined(symbol, self.get_options().third_party_map)
+        if not dep:
+          msg = (dedent("""While running python buildgen, a symbol was found without a known providing target.
+            Target: {}
+            Symbol: {}
+            """.format(target.address.spec, symbol)
+          ))
+          # TODO(mateo): Make this exception fail-slow. Better to gather all bg failures and print at end.
+          if self.get_options().fatal:
+            raise PythonBuildgenError(msg)
+          else:
+            print('{}Ignoring for now.'.format(msg))
         else:
-          # TODO(mateo): make fatal an option.
-          print(
-            'While running python buildgen on {}, encountered a symbol'
-            ' without a known providing target.  Symbol: {}'
-            ' Ignoring for now...'
-            .format(target.address.spec, symbol)
-          )
+          addresses_used_by_target.add(Address.parse(dep))
 
     # Remove any imports from within the same module.
     filtered_addresses_used_by_target = set([

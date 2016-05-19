@@ -10,45 +10,70 @@ import pkgutil
 import sys
 
 
-python_third_party_map = {
-  'apache': {
-    'aurora': '3rdparty/python:apache.aurora.client',
-  },
-  'bson': '3rdparty/python:pymongo',
-  'colors': '3rdparty/python:ansicolors',
-  'concurrent': '3rdparty/python:futures',
-  'dateutil': '3rdparty/python:python-dateutil',
-  'dns': '3rdparty/python:dnspython',
-  'fake_filesystem': '3rdparty/python:pyfakefs',
-  'fake_filesystem_glob': '3rdparty/python:pyfakefs',
-  'fake_filesystem_shutil': '3rdparty/python:pyfakefs',
-  'gen': {
-    'apache': {
-      'aurora': '3rdparty/python:apache.aurora.client',
-    },
-  },
-  'google': {
-    'protobuf': '3rdparty/python:protobuf',
-  },
-  'fake_filesystem': '3rdparty/python:pyfakefs',
-  'fake_filesystem_glob': '3rdparty/python:pyfakefs',
-  'fake_filesystem_shutil': '3rdparty/python:pyfakefs',
-  'kafka': '3rdparty/python:kafka-python',
-  'keyczar': '3rdparty/python:python-keyczar',
-  'repoze': {
-    'lru': '3rdparty/python:repoze.lru',
-  },
-  'tornadoredis': '3rdparty/python:tornado-redis',
-  'twitter': {
-    'common': {
-      'collections': '3rdparty/python:twitter.common.collections',
-      'confluence': '3rdparty/python:twitter.common.confluence',
-      'dirutil': '3rdparty/python:twitter.common.dirutil',
-      'log': '3rdparty/python:twitter.common.log',
-    },
-  },
-  'yaml': '3rdparty/python:PyYAML',
-}
+def is_importable(root, name, exts=()):
+  extensions = exts or ('py', 'so', 'pyd')
+  attempt = os.path.join(root, name)
+  if os.path.isdir(attempt) or os.path.isfile(attempt):
+    return True
+  for ext in extensions:
+    if os.path.isfile('{}.{}'.format(attempt, ext)):
+      return True
+  return False
+
+
+def get_third_party_modules(venv_root, dep_map):
+
+  def walk_module_tree(dep, root, import_path, routes=None):
+    # Recursively walk a file tree, mapping the relpath(root, directory) of every matched directory to the passed dep.
+    if routes is None:
+      routes = {}
+    path = os.path.join(root, import_path)
+    if os.path.isdir(path):
+      for child in os.listdir(path):
+        if not child.startswith('_'):
+          child_path = os.path.join(import_path, child)
+          walk_module_tree(dep, root, child_path, routes)
+      routes[import_path] = dep
+    return routes
+
+  allowed_import_prefixes = {}
+  import_map = {}
+
+  if venv_root:
+    site_packages_root = os.path.join(venv_root, 'site-packages')
+    if not os.path.isdir(site_packages_root):
+      raise Exception("There is no site-packages dir at: {}".format(venv_root))
+    for dep in dep_map:
+
+      if '.' in dep:
+        # Treated as top_level or else we risk bringing in their transitive deps or clobbering other valid imports.
+        top_level = [dep.replace('.', '/')]
+      else:
+        # Parse file distributed with each package that defines the top level dirs or files for each module.
+        globbed_files = list(glob.iglob(os.path.join(site_packages_root, dep + '*-info', 'top_level.txt')))
+        top_level = map(str.strip, open(list(globbed_files)[0]).readlines()) if globbed_files else []
+      if not top_level:
+        # Rarely there's no dist-info or top_level, then we have to accept the PyPi name transformed to valid import.
+        _, package_name = dep_map[dep].lower().replace('-', '_').split(':')
+        top_level = [package_name]
+
+      for top in top_level:
+
+        if top.startswith('_') or not is_importable(site_packages_root, top):
+          continue
+        route = walk_module_tree(dep_map[dep], site_packages_root, top)
+        if not route:
+          # Since we know it is importable, that means there is a top-level file with that importable name.
+          route = {top: dep_map[dep]}
+        import_map.update(route)
+        # We do not raise Exception if a target has no valid imports because it may be a platform-specific module.
+
+    # Convert verified file paths into valid import strings.
+    for route, target in import_map.items():
+      import_path, _ = os.path.splitext(route)
+      proper_import = import_path.replace('/', '.')
+      allowed_import_prefixes[proper_import] = target
+  return allowed_import_prefixes
 
 
 def get_system_modules():
@@ -58,19 +83,11 @@ def get_system_modules():
   modules = {module for _, module, package in list(pkgutil.iter_modules()) if package is False}
 
   # Gather the import names from the site-packages installed in the pants-virtualenv.
-  top_level_txt = glob.iglob(os.path.join(os.path.dirname(os.__file__) + '/site-packages', '*-info', 'top_level.txt'))
-  site_packages = [map(str.strip, open(txt).readlines()) for txt in list(top_level_txt)]
+  module_names = glob.iglob(os.path.join(os.path.dirname(os.__file__), 'site-packages', '*-*', 'top_level.txt'))
+  site_packages = [map(str.strip, open(txt).readlines()) for txt in list(module_names)]
 
-  user_modules = set()
   for packages in site_packages:
-    # 'pip' and 'setuptools' packages are dependencies of the Pants virtualenv so we treat them as guaranteed.
-    if 'pip' not in packages and 'setuptools' not in packages:
-      user_modules.update(set(packages))
-    else:
-      modules.update(packages)
-
-  # Delete the site-packages from the module lists.
-  modules -= user_modules
+    modules -= set(packages)
 
   # Get the system packages.
   system_modules = set(sys.builtin_module_names)
@@ -78,3 +95,11 @@ def get_system_modules():
   # Get the top-level packages from the python install (email, logging, xml, some others).
   _, top_level_libs, _ = list(os.walk(distutils.sysconfig.get_python_lib(standard_lib=True)))[0]
   return sorted(top_level_libs + list(modules | system_modules))
+
+
+def get_venv_map(venv_root, dep_map):
+  venv_map = {}
+  venv_map['python_modules'] = get_system_modules()
+  # If no venv_root is passed, this returns an empty dict and is safe to query.
+  venv_map['third_party'] = get_third_party_modules(venv_root, dep_map)
+  return venv_map

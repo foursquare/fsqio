@@ -1,5 +1,6 @@
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
+# TODO(dan): The hbase dep is is only there while we transition twofishes to our hfile reader.
 scala_library(
   name = 'server',
   sources = globs('*.scala'),
@@ -8,7 +9,7 @@ scala_library(
     '3rdparty:finagle',
     '3rdparty:gt-geojson',
     '3rdparty:hadoop-common',
-    '3rdparty:hbase',  # TODO: This is only here while we transition twofishes to our hfile reader.
+    '3rdparty:hbase',
     '3rdparty:jackson',
     '3rdparty:jts',
     '3rdparty:mongodb',
