@@ -5,11 +5,12 @@ package io.fsq.exceptionator.actions.concrete
 import com.twitter.finagle.Service
 import com.twitter.ostrich.stats.Stats
 import com.twitter.util.{Future, FuturePool}
+import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{HasBucketActions, HasHistoryActions, HasNoticeActions, IncomingActions}
 import io.fsq.exceptionator.filter.{BucketSpec, FilteredIncoming, FilteredSaveService, PreSaveFilter, ProcessedIncoming}
 import io.fsq.exceptionator.filter.concrete.FreshBucketFilter
 import io.fsq.exceptionator.model.io.BucketId
-import io.fsq.exceptionator.util.{Config, Logger, PluginLoader}
+import io.fsq.exceptionator.util.{Config, PluginLoader}
 import java.util.concurrent.Executors
 import scala.collection.JavaConverters._
 

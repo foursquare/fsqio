@@ -5,10 +5,11 @@ package io.fsq.exceptionator.actions.concrete
 import com.twitter.conversions.time._
 import com.twitter.ostrich.stats.Stats
 import com.twitter.util.ScheduledThreadPoolTimer
+import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{HasBucketActions, HistoryActions, IndexActions}
 import io.fsq.exceptionator.model.{BucketRecord, HistoryRecord, MongoOutgoing, NoticeRecord}
 import io.fsq.exceptionator.model.io.{BucketId, Outgoing}
-import io.fsq.exceptionator.util.{Config, Logger, ReservoirSampler}
+import io.fsq.exceptionator.util.{Config, ReservoirSampler}
 import io.fsq.rogue.lift.LiftRogue._
 import java.util.concurrent.ConcurrentHashMap
 import net.liftweb.json.{JField, JInt, JObject}

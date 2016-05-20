@@ -16,6 +16,7 @@ scala_library(
     '3rdparty:netty',
     '3rdparty:ostrich',
     '3rdparty:twitter-util',
+    'src/jvm/io/fsq/common/logging',
     'src/jvm/io/fsq/exceptionator/actions',
     'src/jvm/io/fsq/exceptionator/actions/concrete',
     'src/jvm/io/fsq/exceptionator/filter',

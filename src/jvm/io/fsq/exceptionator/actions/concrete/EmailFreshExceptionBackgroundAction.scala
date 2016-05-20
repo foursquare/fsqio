@@ -3,11 +3,12 @@
 package io.fsq.exceptionator.actions.concrete
 
 import com.twitter.util.Future
+import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{BackgroundAction, HasBucketActions, HasNoticeActions, HasUserFilterActions}
 import io.fsq.exceptionator.filter.{IncomingFilter, ProcessedIncoming}
 import io.fsq.exceptionator.filter.concrete.FreshBucketFilter
 import io.fsq.exceptionator.model.io.BacktraceLine
-import io.fsq.exceptionator.util.{ConcreteBlamer, ConcreteMailSender, Config, Logger}
+import io.fsq.exceptionator.util.{ConcreteBlamer, ConcreteMailSender, Config}
 import scala.collection.JavaConverters._
 
 

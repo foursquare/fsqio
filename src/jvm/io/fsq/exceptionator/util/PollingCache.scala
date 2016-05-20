@@ -4,6 +4,7 @@ package io.fsq.exceptionator.util
 
 import com.twitter.conversions.time._
 import com.twitter.util.ScheduledThreadPoolTimer
+import io.fsq.common.logging.Logger
 
 object PollingCache {
   val timer = new ScheduledThreadPoolTimer(2, "PollingCache", true)

@@ -4,6 +4,7 @@ package io.fsq.exceptionator.util
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap
 import com.twitter.util.Future
+import io.fsq.common.logging.Logger
 import java.io.File
 import org.joda.time.DateTime
 import scala.util.matching.Regex

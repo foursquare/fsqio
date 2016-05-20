@@ -2,6 +2,8 @@
 
 package io.fsq.exceptionator.util
 
+import io.fsq.common.logging.Logger
+
 // TODO: make this useful someday
 object PluginLoader extends Logger {
   def defaultConstruct[T](classNames: Seq[String])(implicit man: Manifest[T]): Seq[T] = {

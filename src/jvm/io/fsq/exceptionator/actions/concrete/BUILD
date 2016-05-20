@@ -14,6 +14,7 @@ scala_library(
     '3rdparty:mongodb',
     '3rdparty:ostrich',
     '3rdparty:twitter-util',
+    'src/jvm/io/fsq/common/logging',
     'src/jvm/io/fsq/exceptionator/actions',
     'src/jvm/io/fsq/exceptionator/filter',
     'src/jvm/io/fsq/exceptionator/filter/concrete',

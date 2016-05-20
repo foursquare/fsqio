@@ -1,6 +1,6 @@
 // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
 
-package io.fsq.exceptionator.util
+package io.fsq.common.logging
 
 import com.twitter.logging.{ConsoleHandler, Level, LoggerFactory}
 

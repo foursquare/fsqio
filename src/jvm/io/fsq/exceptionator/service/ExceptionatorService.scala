@@ -10,13 +10,14 @@ import com.twitter.finagle.http.filter.ExceptionFilter
 import com.twitter.finagle.stats.OstrichStatsReceiver
 import com.twitter.ostrich.admin.{AdminServiceFactory, RuntimeEnvironment, StatsFactory, TimeSeriesCollectorFactory}
 import com.twitter.util.{Future, FuturePool}
+import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{HasBucketActions, HasHistoryActions, HasNoticeActions, HasUserFilterActions,
     IndexActions}
 import io.fsq.exceptionator.actions.concrete.{ConcreteBackgroundActions, ConcreteBucketActions, ConcreteHistoryActions,
     ConcreteIncomingActions, ConcreteNoticeActions, ConcreteUserFilterActions, FilteredConcreteIncomingActions}
 import io.fsq.exceptionator.loader.concrete.ConcretePluginLoaderService
 import io.fsq.exceptionator.loader.service.HasPluginLoaderService
-import io.fsq.exceptionator.util.{Config, Logger}
+import io.fsq.exceptionator.util.Config
 import io.fsq.rogue.QueryHelpers
 import java.io.{IOException, InputStream}
 import java.net.InetSocketAddress

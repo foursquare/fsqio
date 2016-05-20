@@ -7,10 +7,11 @@ import com.twitter.finagle.Service
 import com.twitter.finagle.http.Response
 import com.twitter.ostrich.stats.Stats
 import com.twitter.util.Future
+import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{BackgroundActions, IncomingActions}
 import io.fsq.exceptionator.filter.FilteredIncoming
 import io.fsq.exceptionator.model.io.Incoming
-import io.fsq.exceptionator.util.{Config, Logger}
+import io.fsq.exceptionator.util.Config
 import java.io.{BufferedWriter, FileWriter}
 import org.jboss.netty.buffer.ChannelBufferInputStream
 import org.jboss.netty.handler.codec.http._

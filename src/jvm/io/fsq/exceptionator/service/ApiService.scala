@@ -6,9 +6,10 @@ import com.codahale.jerkson.Json
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.util.{Future, FuturePool}
+import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{HasBucketActions, HasHistoryActions, HasNoticeActions, HasUserFilterActions}
 import io.fsq.exceptionator.model.io.{Outgoing, UserFilterView}
-import io.fsq.exceptionator.util.{Config, Logger}
+import io.fsq.exceptionator.util.Config
 import java.net.URLDecoder
 import java.util.concurrent.Executors
 import org.jboss.netty.handler.codec.http._

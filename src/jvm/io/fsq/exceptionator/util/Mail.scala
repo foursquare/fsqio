@@ -3,6 +3,7 @@
 package io.fsq.exceptionator.util
 
 import com.twitter.util.{Future, FuturePool}
+import io.fsq.common.logging.Logger
 import java.util.Properties
 import java.util.concurrent.Executors
 import javax.mail._

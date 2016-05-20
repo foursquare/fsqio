@@ -2,9 +2,9 @@
 
 package io.fsq.exceptionator.loader.concrete
 
+import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{HasBucketActions, HasNoticeActions, HasUserFilterActions}
 import io.fsq.exceptionator.loader.service.PluginLoaderService
-import io.fsq.exceptionator.util.Logger
 
 class ConcretePluginLoaderService (
   services: HasBucketActions

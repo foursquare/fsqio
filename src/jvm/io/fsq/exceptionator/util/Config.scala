@@ -3,6 +3,7 @@
 package io.fsq.exceptionator.util
 
 import com.typesafe.config.{ConfigException, ConfigFactory, ConfigRenderOptions}
+import io.fsq.common.logging.Logger
 import java.io.File
 
 object Config extends Logger {

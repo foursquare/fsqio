@@ -13,6 +13,7 @@ scala_library(
     '3rdparty:ostrich',
     '3rdparty:twitter-util',
     '3rdparty:typesafe-config',
+    'src/jvm/io/fsq/common/logging',
     'src/resources/io/fsq/exceptionator/config',
   ],
 )

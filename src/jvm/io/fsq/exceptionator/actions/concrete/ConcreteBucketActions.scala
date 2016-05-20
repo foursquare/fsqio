@@ -3,10 +3,11 @@
 package io.fsq.exceptionator.actions.concrete
 
 import com.twitter.ostrich.stats.Stats
+import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{BucketActions, IndexActions, SaveResult}
 import io.fsq.exceptionator.model.{BucketRecord, BucketRecordHistogram, MongoOutgoing, NoticeRecord}
 import io.fsq.exceptionator.model.io.{BucketId, Incoming, Outgoing}
-import io.fsq.exceptionator.util.{Hash, Logger}
+import io.fsq.exceptionator.util.Hash
 import io.fsq.rogue.lift.LiftRogue._
 import java.util.regex.Pattern
 import net.liftweb.json._
