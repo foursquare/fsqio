@@ -9,12 +9,31 @@ import io.fsq.spindle.runtime.{IndexParser, StructFieldDescriptor, UntypedMetaRe
 import scala.collection.immutable.ListMap
 import scala.collection.mutable.{Map => MutableMap}
 
+object SpindleHelpers {
+  def getIdentifier(meta: UntypedMetaRecord): String = {
+    meta.annotations.get("mongo_identifier").getOrElse {
+      throw new Exception("Add a mongo_identifier annotation to the Thrift definition for this class.")
+    }
+  }
+
+  def getCollection(meta: UntypedMetaRecord): String = {
+    meta.annotations.get("mongo_collection").getOrElse {
+      throw new Exception("Add a mongo_collection annotation to the Thrift definition for this class.")
+    }
+  }
+}
+
 trait SpindleDBCollectionFactory extends DBCollectionFactory[UntypedMetaRecord, UntypedRecord] {
   def getDB(meta: UntypedMetaRecord): DB = {
     getPrimaryDB(meta)
   }
 
   def getPrimaryDB(meta: UntypedMetaRecord): DB
+
+  def getDBCollectionFromMeta[M <: UntypedMetaRecord](metaRecord: M): DBCollection = {
+    getDB(metaRecord).getCollection(SpindleHelpers.getCollection(metaRecord))
+  }
+
 
   override def getDBCollection[M <: UntypedMetaRecord](query: RogueQuery[M, _, _]): DBCollection =
     getDB(query.meta).getCollection(query.collectionName)
@@ -28,27 +47,15 @@ trait SpindleDBCollectionFactory extends DBCollectionFactory[UntypedMetaRecord, 
   }
 
   def getPrimaryDBCollection(meta: UntypedMetaRecord): DBCollection = {
-    getPrimaryDB(meta).getCollection(getCollection(meta))
+    getPrimaryDB(meta).getCollection(SpindleHelpers.getCollection(meta))
   }
 
   override def getInstanceName[M <: UntypedMetaRecord](query: RogueQuery[M, _, _]): String = {
-    getIdentifier(query.meta)
+    SpindleHelpers.getIdentifier(query.meta)
   }
 
   override def getInstanceName(record: UntypedRecord): String = {
-    getIdentifier(record.meta)
-  }
-
-  def getIdentifier(meta: UntypedMetaRecord): String = {
-    meta.annotations.get("mongo_identifier").getOrElse {
-      throw new Exception("Add a mongo_identifier annotation to the Thrift definition for this class.")
-    }
-  }
-
-  def getCollection(meta: UntypedMetaRecord): String = {
-    meta.annotations.get("mongo_collection").getOrElse {
-      throw new Exception("Add a mongo_collection annotation to the Thrift definition for this class.")
-    }
+    SpindleHelpers.getIdentifier(record.meta)
   }
 
   /**
