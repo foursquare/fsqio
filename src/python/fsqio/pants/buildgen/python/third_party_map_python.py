@@ -50,7 +50,7 @@ def get_third_party_modules(venv_root, dep_map):
         top_level = [dep.replace('.', '/')]
       else:
         # Parse file distributed with each package that defines the top level dirs or files for each module.
-        globbed_files = list(glob.iglob(os.path.join(site_packages_root, dep + '*-info', 'top_level.txt')))
+        globbed_files = list(glob.iglob(os.path.join(site_packages_root, dep + '-*-info', 'top_level.txt')))
         top_level = map(str.strip, open(list(globbed_files)[0]).readlines()) if globbed_files else []
       if not top_level:
         # Rarely there's no dist-info or top_level, then we have to accept the PyPi name transformed to valid import.

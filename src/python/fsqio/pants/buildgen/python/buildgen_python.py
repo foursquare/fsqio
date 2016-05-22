@@ -111,7 +111,7 @@ class BuildgenPython(BuildgenTask):
 
   @classmethod
   def implementation_version(cls):
-    return super(BuildgenPython, cls).implementation_version() + [('BuildgenPython', 0)]
+    return super(BuildgenPython, cls).implementation_version() + [('BuildgenPython', 1)]
 
   @property
   def cache_target_dirs(self):
