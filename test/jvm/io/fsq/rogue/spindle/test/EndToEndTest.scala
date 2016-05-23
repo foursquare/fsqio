@@ -510,22 +510,42 @@ class EndToEndTest extends JUnitMustMatchers {
 
   @Test
   def testBulkUpdateOne: Unit = {
-    val original = baseTestVenue().toBuilder().userid(1).result()
-    db.insert(original)
+    val original1 = baseTestVenue().toBuilder().userid(1).result()
+    val original2 = baseTestVenue().toBuilder().userid(1).result()
+    val nonExistantId = VenueId(new ObjectId())
+    db.insertAll(Vector(original1, original2))
 
-    val clause = BulkUpdateOne(Q(ThriftVenue).where(_.id eqs original.id).modify(_.userid setTo 999), upsert = false)
-    db.bulk(Vector(clause))
-    db.count(Q(ThriftVenue).where(_.id eqs original.id).and(_.userid eqs 1)) must_== 0
-    db.count(Q(ThriftVenue).where(_.id eqs original.id).and(_.userid eqs 999)) must_== 1
-
-
-    val upsertVenue = baseTestVenue().toBuilder().result()
-    val upsertClause = {
-      BulkUpdateOne(Q(ThriftVenue).where(_.id eqs upsertVenue.id).modify(_.userid setTo 999), upsert = true)
+    val clauses = {
+      Vector(
+        BulkUpdateOne(Q(ThriftVenue).where(_.id eqs original1.id).modify(_.userid setTo 999), upsert = false),
+        BulkUpdateOne(Q(ThriftVenue).where(_.id eqs nonExistantId).modify(_.userid setTo 999), upsert = false)
+      )
     }
-    db.bulk(Vector(upsertClause))
-    Assert.assertEquals("Upsert did not insert",
-      1, db.count(Q(ThriftVenue).where(_.id eqs upsertVenue.id)))
+    db.bulk(clauses)
+    Assert.assertEquals("Original venue still has original value",
+      0, db.count(Q(ThriftVenue).where(_.id eqs original1.id).and(_.userid eqs 1)))
+    Assert.assertEquals("Original venue does not have updated value",
+      1, db.count(Q(ThriftVenue).where(_.id eqs original1.id).and(_.userid eqs 999)))
+    Assert.assertEquals("Non-upsert update inserted a new venue",
+      0, db.count(Q(ThriftVenue).where(_.id eqs nonExistantId)))
+
+
+    val upsertVenue1 = baseTestVenue().toBuilder().result()
+    val upsertVenue2 = baseTestVenue().toBuilder().result()
+
+    val upsertClauses = {
+      Vector(
+        BulkUpdateOne(Q(ThriftVenue).where(_.id eqs upsertVenue1.id).modify(_.userid setTo 999), upsert = true),
+        BulkUpdateOne(Q(ThriftVenue).where(_.id eqs upsertVenue2.id).modify(_.userid setTo 999), upsert = true),
+        BulkUpdateOne(Q(ThriftVenue).where(_.id eqs original2.id).modify(_.userid setTo 3141591), upsert = true)
+      )
+    }
+    db.bulk(upsertClauses)
+    Assert.assertEquals("Upsert did not insert both venues",
+      2, db.count(Q(ThriftVenue).where(_.id in Vector(upsertVenue1.id, upsertVenue2.id))))
+
+    Assert.assertEquals("Upsert did not update the existing venue",
+      1, db.count(Q(ThriftVenue).where(_.id eqs original2.id).and(_.userid eqs 3141591)))
   }
 
   @Test
