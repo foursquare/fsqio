@@ -211,7 +211,10 @@ jvm_third_party_map = {
     },
     'micromata': {
       'opengis': 'JavaAPIforKml'
-    }
+    },
+    'undercouch': {
+      'bson4jackson': 'bson4jackson'
+    },
   },
   'difflib': 'java-diff-utils',
   'edu': {
@@ -374,6 +377,12 @@ jvm_third_party_map = {
     },
     'codehaus': {
       'jackson': 'jackson',
+    },
+    'eclipse': {
+      'jetty': {
+        'server': 'jetty-server',
+        'servlet': 'jetty-servlet',
+      }
     },
     'elasticsearch': {
       'DEFAULT': 'elasticsearch',
