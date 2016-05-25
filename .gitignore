@@ -29,7 +29,7 @@
 .pants.d*
 .pants.run
 .pants.virtualenvs*
-.pants.workdir.file_lock
+.pants.workdir*
 .pantsenv
 .pex*
 .pids
