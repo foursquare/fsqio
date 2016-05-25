@@ -438,6 +438,7 @@ jvm_third_party_map = {
     },
     'opengis': 'gt-shapefile',
     'openimaj': 'openimaj',
+    'pantsbuild': 'junit-runner',
     'parboiled': 'parboiled-scala',
     'postgresql': {
       'core': 'postgresql',
