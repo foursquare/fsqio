@@ -6,6 +6,7 @@ junit_tests(
   dependencies = [
     '3rdparty:joda-time',
     '3rdparty:junit',
+    '3rdparty:junit-runner',
     '3rdparty:mongodb',
     '3rdparty:specs2',
     'src/jvm/io/fsq/field',

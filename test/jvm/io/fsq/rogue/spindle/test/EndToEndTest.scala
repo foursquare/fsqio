@@ -13,6 +13,7 @@ import io.fsq.rogue.spindle.test.gen.IdsTypedefs.{LikeId, TipId, VenueClaimId, V
 import java.util.regex.Pattern
 import org.bson.types.ObjectId
 import org.junit.{After, Assert, Ignore, Test}
+import org.pantsbuild.junit.annotations.TestSerial
 import org.specs2.matcher.JUnitMustMatchers
 
 /**
@@ -431,7 +432,7 @@ class EndToEndTest extends JUnitMustMatchers {
     ids.size must_== 15
   }
 
-  @Test
+  @TestSerial
   def testBulkInsertOne: Unit = {
     val venues = (1 to 5).map(_ => baseTestVenue())
     val venueIds = venues.map(_.id)
