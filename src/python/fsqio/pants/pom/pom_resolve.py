@@ -334,9 +334,9 @@ class PomResolve(Task):
     )
     register(
       '--dump-classpath-file',
-      type=bool,
-      default=False,
-      help='Dump a text file of the entire global classpath and print the resulting filename.'
+      type=str,
+      default=None,
+      help='Dump a text file of the entire global classpath to the specified file.'
     )
     register(
       '--write-classpath-info-to-file',
@@ -642,14 +642,13 @@ class PomResolve(Task):
         for artifact in self.maven_coordinate_to_provided_artifacts[coord]:
           all_artifacts.add(artifact)
 
-    if self.get_options().dump_classpath_file:
-      classpath_dump_path = os.path.join(vts_workdir, 'classpath.txt')
-      if not os.path.exists(classpath_dump_path):
-        with open(classpath_dump_path, 'w') as f:
+    classpath_dump_file = self.get_options().dump_classpath_file
+    if classpath_dump_file:
+      with open(classpath_dump_file, 'wb') as f:
           f.write('FINGERPRINT: {}\n'.format(global_vts.cache_key.hash))
           for artifact in sorted(all_artifacts):
             f.write('{}\n'.format(artifact))
-      print('Dumped classpath file to {}'.format(classpath_dump_path))
+      logger.info('Dumped classpath file to {}'.format(classpath_dump_file))
 
     with self.context.new_workunit('fetch-artifacts'):
       coord_to_artifact_symlinks = self._fetch_artifacts(local_override_versions)
@@ -683,7 +682,7 @@ class PomResolve(Task):
       }
       with open(classpath_info_filename, 'w') as classpath_info_file:
         classpath_info_file.write(json.dumps(classpath_info))
-      print('Wrote classpath info JSON to {}.'.format(classpath_info_filename))
+      logger.info('Wrote classpath info JSON to {}.'.format(classpath_info_filename))
 
     with self.context.new_workunit('populate-compile-classpath'):
       self._populate_compile_classpath()
