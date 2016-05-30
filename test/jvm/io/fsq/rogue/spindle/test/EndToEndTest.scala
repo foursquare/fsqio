@@ -509,7 +509,7 @@ class EndToEndTest extends JUnitMustMatchers {
       1, db.count(Q(ThriftVenue).where(_.id eqs upsertVenue.id)))
   }
 
-  @Test
+  @TestSerial
   def testBulkUpdateOne: Unit = {
     val original1 = baseTestVenue().toBuilder().userid(1).result()
     val original2 = baseTestVenue().toBuilder().userid(1).result()
