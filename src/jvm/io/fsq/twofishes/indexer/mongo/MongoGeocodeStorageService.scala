@@ -1,7 +1,7 @@
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 package io.fsq.twofishes.indexer.mongo
 
-import com.mongodb.Bytes
+import com.mongodb.{Bytes, DuplicateKeyException}
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.annotations._
@@ -28,7 +28,15 @@ class MongoGeocodeStorageService extends GeocodeStorageWriteService {
   }
 
   def insert(records: List[GeocodeRecord]) {
-    records.foreach(record => insert(record))
+    records.foreach(record => {
+      // Geonames data may contain duplicate features (especially postal codes)
+      // Silently swallow duplicate key exceptions and move on
+      try {
+        insert(record)
+      } catch {
+        case e: DuplicateKeyException => Unit
+      }
+    })
   }
 
   def addBoundingBoxToRecord(bbox: BoundingBox, id: StoredFeatureId) {
