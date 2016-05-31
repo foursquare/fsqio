@@ -59,12 +59,15 @@ object CodeRef {
   }
 
   def lineImpl(c: Context): c.Expr[Int] = {
-    val line = c.universe.Literal(c.universe.Constant(c.enclosingPosition.line))
+    import c.universe._
 
-    c.Expr[Int](line)
+    val line = c.enclosingPosition.line
+    c.Expr(q"$line")
   }
 
   def fileImpl(c: Context): c.Expr[String] = {
+    import c.universe._
+
     val path = if (c.enclosingPosition.source.file.file != null) {
       val base = new File(".").toURI
       val absolute = c.enclosingPosition.source.file.file.toURI
@@ -73,6 +76,6 @@ object CodeRef {
       ""
     }
 
-    c.Expr[String](c.universe.Literal(c.universe.Constant(path)))
+    c.Expr(q"$path")
   }
 }
