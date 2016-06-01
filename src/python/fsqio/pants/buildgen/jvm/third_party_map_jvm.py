@@ -444,6 +444,7 @@ jvm_third_party_map = {
       'core': 'postgresql',
     },
     'reflections': 'reflections',
+    'rocksdb': 'rocksdb',
     'scala_tools': {
       'time': 'scalaj-time',
     },
