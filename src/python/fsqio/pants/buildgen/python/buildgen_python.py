@@ -34,9 +34,11 @@ from fsqio.pants.buildgen.python.python_import_parser import PythonImportParser
 from fsqio.pants.buildgen.python.third_party_map_python import get_venv_map
 
 
+logger = logging.getLogger(__name__)
+
+# TODO(mateo): Make these properties of pluggable, per-lang subsystems.
 _SOURCE_FILE_TO_ADDRESS_MAP = defaultdict(set)
 _SYMBOLS_TO_SOURCES_MAP = defaultdict(set)
-logger = logging.getLogger(__name__)
 
 
 class PythonBuildgenError(TaskError):
@@ -55,7 +57,7 @@ class BuildgenPython(BuildgenTask):
   def register_options(cls, register):
     register(
       '--fatal',
-      default=True,
+      default=False,
       type=bool,
       help="When True, any imports that cannot be mapped raise and exception. When False, just print a warning."
     )
@@ -88,19 +90,27 @@ class BuildgenPython(BuildgenTask):
       help="list target aliases that should not be managed by that task (e.g. ['python_egg', ... ]"
     )
     register(
-      '--third-party-venv-root',
-      default=None,
-      advanced=True,
-      type=str,
-      help="Indicates a non-Pants virtualenv that holds any installed third-party deps for buildgen to manage. "
-        "Make sure this points to the lib directory! (e.g. '${HOME}/.cache/pants/1.0.0/lib/python2.7')"
-    )
-    register(
       '--third-party-map',
       default={},
       advanced=True,
       type=dict,
       help="A mapping of unconventional python imports to their providing python_requirement_library target."
+    )
+    register(
+      '--opt-out-virtualenv-walk',
+      default=False,
+      advanced=True,
+      type=bool,
+      help="If this is True, buildgen will not try to map dependencies based on the contents of the virtualenv and"
+        "will instead only rely on a third_party_map."
+    )
+    register(
+      '--additional-virtualenv-roots',
+      default=[],
+      advanced=True,
+      type=list,
+      help="Pass a list of virtualenv roots for buildgen. As long as not opted-out, buildgen will walk these dirs to"
+        "map imports. If none are passed then buildgen will default to walking just the pants virtualenv."
     )
 
   @classmethod
@@ -171,36 +181,25 @@ class BuildgenPython(BuildgenTask):
         reqs.update([str(r.requirement) for r in addressable._kwargs['requirements']])
     return reqs, module_list
 
-  def module_hash(self, reqs):
-    hasher = sha1()
-    reqs_hash = stable_json_sha1([sorted(list(reqs))])
-    hasher.update(reqs_hash)
-
-    # This adds the python version to the hash.
-    venv_version_file = os.path.join(os.path.dirname(os.__file__), 'orig-prefix.txt')
-    with open(venv_version_file, 'rb') as f:
-      version_string = f.read()
-      hasher.update(version_string)
-
-    # Add virtualenv root to the hash. Analysis should be redone if pointed at a new venv, even if all else the same.
-    hasher.update(self.get_options().third_party_venv_root)
-
-    # Invalidate if pants changes.
-    hasher.update(self.get_options().pants_version)
-    hasher.update(self.get_options().cache_key_gen_version)
-
-    # Invalidate the cache if the task version is bumped.
-    hasher.update(str(self.implementation_version()))
-    return hasher.hexdigest()
+  @memoized_property
+  def python_virtual_envs(self):
+    """Return the standard_lib directory of any configured virtualenv."""
+    # Additional venvs can be passed as options but this falls back to using the pants virtualenv.
+    pantsenv = os.path.join(os.path.dirname(os.__file__))
+    virtualenvs = [pantsenv]
+    user_envs = self.get_options().additional_virtualenv_roots
+    if user_envs:
+      virtualenvs.extend(user_envs)
+    return virtualenvs
 
   @memoized_property
   def venv_modules(self):
     # The deps are python_requirement_library specs, the reqs are the requirements.txt entries.
     reqs, deps = self.map_python_deps
-    module_hash = self.module_hash(reqs)
-    analysis_file = os.path.join(self.workdir, 'python-analysis-{}.json'.format(module_hash))
+    analysis_hash = self.analysis_hash(reqs)
+    analysis_file = os.path.join(self.workdir, 'python-analysis-{}.json'.format(analysis_hash))
     if not os.path.isfile(analysis_file):
-      mapping = get_venv_map(self.get_options().third_party_venv_root, deps)
+      mapping = get_venv_map(self.python_virtual_envs, deps)
       with open(analysis_file, 'wb') as f:
         json.dump(mapping, f)
     else:
@@ -210,7 +209,8 @@ class BuildgenPython(BuildgenTask):
           mapping = json.load(f)
         except Exception:
           logger.debug("Could not read the buildgen analysis file, regenerating: {}.".format(f))
-          mapping = get_venv_map(self.get_options().third_party_virtual_env, deps)
+          mapping = get_venv_map(self.python_virtual_envs, deps)
+          os.remove(analysis_file)
     return mapping
 
   @memoized_property
@@ -230,6 +230,33 @@ class BuildgenPython(BuildgenTask):
         tree.insert(symbol, source)
     self._symbol_to_source_tree = tree
     return self._symbol_to_source_tree
+
+  @memoized_property
+  def opt_out_virtualenv_walk(self):
+    return self.get_options().opt_out_virtualenv_walk
+
+  def analysis_hash(self, reqs):
+    hasher = sha1()
+    reqs_hash = stable_json_sha1([sorted(list(reqs))])
+    hasher.update(reqs_hash)
+
+    # This adds the python version to the hash.
+    venv_version_file = os.path.join(os.path.dirname(os.__file__), 'orig-prefix.txt')
+    with open(venv_version_file, 'rb') as f:
+      version_string = f.read()
+      hasher.update(version_string)
+
+    # Add virtualenv roots to the hash. Analysis should be redone if pointed at a new venv, even if all else the same.
+    for venv in self.python_virtual_envs:
+      hasher.update(venv)
+
+    # Invalidate if pants changes.
+    hasher.update(self.get_options().pants_version)
+    hasher.update(self.get_options().cache_key_gen_version)
+
+    # Invalidate the cache if the task version is bumped.
+    hasher.update(str(self.implementation_version()))
+    return hasher.hexdigest()
 
   _source_to_symbols_map = defaultdict(set)
   def get_used_symbols(self, source):
@@ -294,8 +321,8 @@ class BuildgenPython(BuildgenTask):
 
       # Since the symbol is not first party, it needs to be mapped to a target.
       else:
-        # The twitter/apache.aurora packages are hopeless to comprehensively map. They have a number of issues:
-        #   * They share `top_level.txt` and 'namespace_packages.txt' values
+        # The twitter.commons/apache.aurora packages are hopeless to comprehensively map. They have a number of issues:
+        #   * They share common `top_level.txt` and 'namespace_packages.txt' values
         #   * Heuristics based off the package name are invalid
         #         * apache.aurora.thrift == gen.apache.aurora.[modules].{1.py, 2.py, 3.py}
         #         * apache.aurora.thermos == gen.apache.thermos.{a.py, b.py, c.py}
@@ -305,20 +332,24 @@ class BuildgenPython(BuildgenTask):
         #       * There is no programmatic way to tell between modules
         #
         # The valid imports are trivial to determine but there is no deterministic way to map that to the package name.
-        # Without these, we could rely entirely on the namespace map but instead third_party_map lives.
+        # Without these, we could entirely rely on the virtualenv introspection but instead third_party_map lives.
 
-        import_map = self.symbol_to_target_map
-        if prefix not in import_map:
-          # Slice the import ever shorter until we either match to a known import or run out of parts.
-          prefix = symbol
-          parts = len(prefix.split('.'))
-          while prefix not in import_map and parts > 1:
-            prefix, _ = prefix.rsplit('.', 1)
-            parts -= 1
+        if not self.opt_out_virtualenv_walk:
+          import_map = self.symbol_to_target_map
+          if prefix not in import_map:
+            # Slice the import ever shorter until we either match to a known import or run out of parts.
+            prefix = symbol
+            parts = len(prefix.split('.'))
+            while prefix not in import_map and parts > 1:
+              prefix, _ = prefix.rsplit('.', 1)
+              parts -= 1
+        else:
+          import_map = {}
 
         # Both of these return a target spec string if there is a match and None otherwise.
-        dep = import_map.get(prefix) or check_manually_defined(symbol, self.get_options().third_party_map)
+        dep = check_manually_defined(symbol, self.get_options().third_party_map) or import_map.get(prefix)
         if not dep:
+
           msg = (dedent("""While running python buildgen, a symbol was found without a known providing target.
             Target: {}
             Symbol: {}
@@ -328,7 +359,7 @@ class BuildgenPython(BuildgenTask):
           if self.get_options().fatal:
             raise PythonBuildgenError(msg)
           else:
-            print('{}Ignoring for now.'.format(msg))
+            print('{}Ignoring for now since fatal errors are off'.format(msg))
         else:
           addresses_used_by_target.add(Address.parse(dep))
 

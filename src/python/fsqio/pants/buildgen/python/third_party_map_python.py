@@ -97,9 +97,12 @@ def get_system_modules():
   return sorted(top_level_libs + list(modules | system_modules))
 
 
-def get_venv_map(venv_root, dep_map):
+# TODO(mateo): This has outgrown its roots as a simple python script. Productionize into a task or class.
+def get_venv_map(venv_roots, dep_map):
   venv_map = {}
   venv_map['python_modules'] = get_system_modules()
-  # If no venv_root is passed, this returns an empty dict and is safe to query.
-  venv_map['third_party'] = get_third_party_modules(venv_root, dep_map)
+  site_map = {}
+  for venv in venv_roots:
+    site_map.update(get_third_party_modules(venv, dep_map))
+  venv_map['third_party'] = site_map
   return venv_map
