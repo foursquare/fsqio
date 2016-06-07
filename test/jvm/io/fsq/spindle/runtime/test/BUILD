@@ -6,6 +6,7 @@ junit_tests(
   dependencies = [
     '3rdparty:jackson',
     '3rdparty:junit',
+    '3rdparty:junit-runner',
     '3rdparty:lift-json',
     '3rdparty:mongodb',
     '3rdparty:phonenumbers',
