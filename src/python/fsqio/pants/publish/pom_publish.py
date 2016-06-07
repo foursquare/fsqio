@@ -112,7 +112,13 @@ class PomPublish(JarPublish, JarBuilderTask):
       )
       return defaultdict(lambda: local_repo)
     else:
-      self.repos
+      return self.repos
+
+  def coordinate(self, org, name, rev=None):
+    return '{}#{};{}'.format(org, name, rev) if rev else '{}#{}'.format(org, name)
+
+  def jar_coordinate(self, jar, rev=None):
+    return self.coordinate(jar.org, jar.name, rev or jar.rev)
 
   def generate_pom(self, tgt, version, path):
     closure = tgt.closure()
@@ -145,6 +151,8 @@ class PomPublish(JarPublish, JarBuilderTask):
       else:
         pass
 
+    # TODO(mateo): This needs to be configurable - preferably as a dependency or at least an option.
+    # We are now using it for internal libs - so this confusing and should be fixed soon-ish.
     target_jar = TemplateData(
       artifact_id=tgt.payload.provides.name,
       group_id=tgt.payload.provides.org,
@@ -283,7 +291,6 @@ class PomPublish(JarPublish, JarBuilderTask):
 
   def execute(self):
     safe_rmtree(self.workdir)
-
     published = []
     pom_targets = [t for t in self.context.targets() if isinstance(t, PomTarget)]
     for tgt in pom_targets:
@@ -320,7 +327,6 @@ class PomPublish(JarPublish, JarBuilderTask):
 
     ivysettings = self.generate_ivysettings(self.fetch_ivysettings(ivy), published, publish_local=path)
     ivyxml = self.generate_ivy(jar, version, publications)
-
     resolver = repo['resolver']
     args = [
       '-settings', ivysettings,
@@ -343,8 +349,12 @@ class PomPublish(JarPublish, JarBuilderTask):
     if self.get_options().local:
       args.append('-overwrite')
 
-    try:
-      ivy.execute(jvm_options=self._ivy_jvm_options(repo), args=args,
-                  workunit_factory=self.context.new_workunit, workunit_name='ivy-publish')
-    except Ivy.Error as e:
-      raise TaskError('Failed to push {0}! {1}'.format(jar, e))
+    if not self.get_options().dryrun:
+      try:
+        ivy.execute(jvm_options=self._ivy_jvm_options(repo), args=args,
+                    workunit_factory=self.context.new_workunit, workunit_name='ivy-publish')
+      except Ivy.Error as e:
+        raise TaskError('Failed to push {0}! {1}'.format(jar, e))
+    else:
+      print("\nDRYRUN- would have pushed:{} using {} resolver.".format(self.jar_coordinate(jar, version), resolver))
+
