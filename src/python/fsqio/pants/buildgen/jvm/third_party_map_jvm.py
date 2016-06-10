@@ -220,6 +220,9 @@ jvm_third_party_map = {
   'edu': {
     'upc': 'freeling',
   },
+  'gnu': {
+    'trove': 'trove4j',
+  },
   'io': {
     'netty': 'netty4',
   },
