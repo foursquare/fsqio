@@ -1,0 +1,39 @@
+sudo: false
+
+services:
+  - mongodb
+
+before_cache:
+  - find . -name "*.py[co]" -print -delete
+  - rm -fv $HOME/.ivy2/pants/*.{css,properties,xml,xsl}
+  - rm -rf $HOME/.cache/pants/stats
+
+cache:
+  directories:
+    - .local_artifact_cache/fsqio_pants_pom_pom_resolve_PomResolve
+    - $HOME/.cache/pants
+    - $HOME/.ivy2/pants
+    - $HOME/.ivy2/pants
+
+language: python
+
+python:
+  - "2.7"
+
+env:
+  global:
+    - PANTS_CONFIG_OVERRIDE="['pants.ini', 'pants-travis-ci.ini']"
+
+before_script: |
+  mkdir ~/opt
+  cd ~/opt
+  wget --no-cookies --no-check-certificate --header \
+  "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" \
+  "http://download.oracle.com/otn-pub/java/jdk/8u40-b25/jdk-8u40-linux-x64.tar.gz"
+  tar xzf jdk-8u40-linux-x64.tar.gz
+  cd -
+script: |
+  uname -a
+  ./pants buildgen
+  ./pants -ldebug compile src::
+  ./pants test test::
