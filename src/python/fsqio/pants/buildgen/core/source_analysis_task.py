@@ -86,10 +86,10 @@ class SourceAnalysisTask(Task):
       uncalculated_analysis = invalid_analyzable_sources - set(calculated_analysis.keys())
       if uncalculated_analysis:
         raise Exception(
-          '{0} failed to calculate analysis for the following sources:\n *{1}\n'
+          '{0} failed to calculate analysis for the following sources:\n * {1}\n'
           .format(
             type(self).__name__,
-            '\n *'.join(sorted(uncalculated_analysis))
+            '\n * '.join(sorted(uncalculated_analysis))
           )
         )
 
