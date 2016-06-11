@@ -120,7 +120,7 @@ class SpindleGen(NailgunTask, SpindleTask):
 
     # TODO Declare a task_subsystems dependency on JVM and use that to get options.
     java_main = 'io.fsq.spindle.codegen.binary.ThriftCodegen'
-    return self.runjava(classpath=spindle_binary, jvm_options=self.get_options().jvm_options, main=java_main,
+    return self.runjava(classpath=[spindle_binary], jvm_options=self.get_options().jvm_options, main=java_main,
                         args=args, workunit_name='spindle-codegen')
 
   def _execute_codegen(self, targets):
