@@ -3,7 +3,7 @@
 
 # Thanks to John Sirois for the pants bootstrapping functions.
 
-set -ex
+set -e
 
 PYTHON=${PYTHON:-$(which python2.7)}
 
