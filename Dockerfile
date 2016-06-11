@@ -18,4 +18,6 @@ RUN ./pants pom-resolve
 ENV TEST_DATA_DIR /testdata
 RUN mkdir -p $TEST_DATA_DIR && rm -rf $TEST_DATA_DIR/*
 ENV PANTS_COMPILE_ZINC_WORKER_COUNT 1
-RUN $BUILD_DIR/docker/docker-mongo-hack.sh $TEST_DATA_DIR ./pants --no-compile-zinc-use-nailgun compile test :: && rm -rf $TEST_DATA_DIR
+RUN $BUILD_DIR/scripts/fsqio/docker/run-mongo.sh $TEST_DATA_DIR \
+    ./pants --no-compile-zinc-use-nailgun compile test:: \
+    && rm -rf $TEST_DATA_DIR
