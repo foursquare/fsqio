@@ -10,10 +10,16 @@ before_cache:
 
 cache:
   directories:
+    # These three are Fsq.io specific and hold artifacts that were intended to be managed by a shared artifact cache.
     - .local_artifact_cache/fsqio_pants_pom_pom_resolve_PomResolve
+    - .local_artifact_cache/fsqio_pants_spindle_tasks_build_spindle_BuildSpindle
+    - $HOME/.pom2
+    # The fsqio and pants virtualenvs and shaded tooling.
+    - $HOME/.cache/fsqio
     - $HOME/.cache/pants
     - $HOME/.ivy2/pants
-    - $HOME/.ivy2/pants
+    # The install location for our managed JDK install.
+    - $HOME/opt
 
 language: python
 
@@ -22,18 +28,21 @@ python:
 
 env:
   global:
+    - JAVA_HOME="$HOME/opt/jdk1.8.0_40"
     - PANTS_CONFIG_OVERRIDE="['pants.ini', 'pants-travis-ci.ini']"
 
+# Travis does not enable much JDK configuration within Python projects, so we download a JDK and cache it.
 before_script: |
-  mkdir ~/opt
-  cd ~/opt
-  wget --no-cookies --no-check-certificate --header \
-  "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" \
-  "http://download.oracle.com/otn-pub/java/jdk/8u40-b25/jdk-8u40-linux-x64.tar.gz"
-  tar xzf jdk-8u40-linux-x64.tar.gz
-  cd -
+  if ! "$HOME"/opt/jdk1.8.0_40/bin/java -version; then
+    mkdir -p ~/opt
+    wget --no-cookies --no-check-certificate --header \
+      "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" \
+      "http://download.oracle.com/otn-pub/java/jdk/8u40-b25/jdk-8u40-linux-x64.tar.gz"
+    tar xzf jdk-8u40-linux-x64.tar.gz -C ~/opt
+  fi
+
 script: |
   uname -a
   ./pants buildgen
-  ./pants -ldebug compile src::
+  ./pants compile src::
   ./pants test test::
