@@ -6,11 +6,10 @@ junit_tests(
   dependencies = [
     '3rdparty:junit',
     '3rdparty:mongodb',
+    '3rdparty:specs',
     '3rdparty:thrift',
-    'src/jvm/io/fsq/spindle/common/thrift/bson',
     'src/jvm/io/fsq/spindle/runtime',
-    'test/thrift/io/fsq/spindle/runtime/common/gen',
-    'test/thrift/io/fsq/spindle/runtime/structs/gen',
-    'test/thrift/io/fsq/spindle/runtime/test/gen',
+    'test/thrift/io/fsq/spindle/codegen/runtime/constants/test/gen',
+    'test/thrift/io/fsq/spindle/codegen/runtime/enhanced_types/test/gen',
   ],
 )

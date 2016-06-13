@@ -1,0 +1,19 @@
+// Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
+
+namespace         java io.fsq.spindle.codegen.parser.test
+include       "io/fsq/spindle/parser/test/parse_program.thrift"
+namespace cpp io.fsq.spindle.codegen.parser.test
+cpp_include "io/fsq/spindle/parser/test/parse_program.thrift"
+namespace * io.fsq.spindle.codegen.parser.test
+cpp_namespace io.fsq.spindle.codegen.parser.test
+php_namespace io.fsq.spindle.codegen.parser.test
+py_module io.fsq.spindle.codegen.parser.test
+perl_package io.fsq.spindle.codegen.parser.test
+ruby_namespace io.fsq.spindle.codegen.parser.test
+smalltalk_category io.fsq.spindle.codegen.parser.test
+smalltalk_prefix io.fsq.spindle.codegen.parser.test
+java_package io.fsq.spindle.codegen.parser.test
+scala_package io.fsq.spindle.codegen.parser.test
+cocoa_package io.fsq.spindle.codegen.parser.test
+csharp_namespace io.fsq.spindle.codegen.parser.test
+xsd_namespace "io.fsq.spindle.codegen.parser.test"

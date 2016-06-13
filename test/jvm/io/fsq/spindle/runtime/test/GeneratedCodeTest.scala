@@ -5,12 +5,12 @@ package io.fsq.spindle.runtime.test
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import io.fsq.spindle.common.thrift.bson.TBSONProtocol
 import io.fsq.spindle.common.thrift.json.TReadableJSONProtocol
-import io.fsq.spindle.thriftexample.av.gen.Movie
-import io.fsq.spindle.thriftexample.av.gen.MovieTypedefs.{MinutesId, MovieId}
-import io.fsq.spindle.thriftexample.gen.{Content, MutableTvListingEntry, TvListingEntry}
-import io.fsq.spindle.thriftexample.gen.TvlistingTypedefs.{MyLong, MyObjectId, MyString}
-import io.fsq.spindle.thriftexample.people.gen.{ContactInfo, Gender, Person, PhoneNumber, PhoneType}
-import io.fsq.spindle.thriftexample.talent.gen.{Actor, CrewMember}
+import io.fsq.thriftexample.av.gen.Movie
+import io.fsq.thriftexample.av.gen.MovieTypedefs.{MinutesId, MovieId}
+import io.fsq.thriftexample.gen.{Content, MutableTvListingEntry, TvListingEntry}
+import io.fsq.thriftexample.gen.TvlistingTypedefs.{MyLong, MyObjectId, MyString}
+import io.fsq.thriftexample.people.gen.{ContactInfo, Gender, Person, PhoneNumber, PhoneType}
+import io.fsq.thriftexample.talent.gen.{Actor, CrewMember}
 import org.apache.thrift.protocol.{TBinaryProtocol, TProtocolFactory}
 import org.apache.thrift.transport.{TMemoryBuffer, TTransport}
 import org.bson.types.ObjectId
@@ -278,7 +278,7 @@ class GeneratedCodeTest {
   /* this test should just compile */
   @Test
   def testIdImplicits {
-    import io.fsq.spindle.thriftexample.gen.TvlistingTypedefImplicits._
+    import io.fsq.thriftexample.gen.TvlistingTypedefImplicits._
 
     def takesMyObjectId(x: MyObjectId) {}
     def takesMyString(x: MyString) {}

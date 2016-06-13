@@ -2,9 +2,11 @@
 
 package io.fsq.spindle.runtime.test
 
-import io.fsq.spindle.codegen.test.gen.{BinaryStruct, TestStruct, TestStructNoUnknownFieldsTracking}
+import io.fsq.spindle.codegen.binary.test.gen.BinaryStruct
 import io.fsq.spindle.common.thrift.json.TReadableJSONProtocol
 import io.fsq.spindle.runtime.{MetaRecord, Record}
+import io.fsq.spindle.runtime.common.gen.TestStruct
+import io.fsq.spindle.runtime.test.gen.TestStructNoUnknownFieldsTracking
 import java.nio.ByteBuffer
 import org.apache.thrift.{TBase, TDeserializer}
 import org.apache.thrift.transport.{TMemoryBuffer, TMemoryInputTransport}

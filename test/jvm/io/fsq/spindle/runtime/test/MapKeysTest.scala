@@ -2,7 +2,7 @@
 
 package io.fsq.spindle.runtime.test
 
-import io.fsq.spindle.codegen.test.gen.MapWithI32Keys
+import io.fsq.spindle.codegen.runtime.map_keys.test.gen.MapWithI32Keys
 import io.fsq.spindle.common.thrift.base.NonStringMapKeyException
 import io.fsq.spindle.runtime.{KnownTProtocolNames, TProtocolInfo}
 import org.apache.thrift.transport.TMemoryBuffer

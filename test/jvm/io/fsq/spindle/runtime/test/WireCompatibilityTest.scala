@@ -2,9 +2,21 @@
 
 package io.fsq.spindle.runtime.test
 
-import io.fsq.spindle.codegen.test.gen._
 import io.fsq.spindle.common.thrift.json.TReadableJSONProtocol
 import io.fsq.spindle.runtime.{KnownTProtocolNames, MetaRecord, TProtocolInfo}
+import io.fsq.spindle.runtime.common.gen.{TestStruct, TestStructCollections, TestStructNestedCollections,
+    TestStructNoBinary, TestStructNoBool, TestStructNoByte, TestStructNoDouble, TestStructNoI16, TestStructNoI32,
+    TestStructNoI64, TestStructNoList, TestStructNoMap, TestStructNoMyBinary, TestStructNoSet, TestStructNoString,
+    TestStructNoStruct}
+import io.fsq.spindle.runtime.enums.gen.{NewTestEnum, StructWithNewEnumField, StructWithOldEnumField}
+import io.fsq.spindle.runtime.structs.gen.{InnerStruct, InnerStructNoUnknownFieldsTracking, StructWithNoFields}
+import io.fsq.spindle.runtime.test.gen.{TestStructInnerStructNoI32, TestStructInnerStructNoI32RetiredFields,
+    TestStructInnerStructNoString, TestStructInnerStructNoStringNoUnknownFieldsTracking,
+    TestStructInnerStructNoUnknownFieldsTracking, TestStructNoBoolNoUnknownFieldsTracking,
+    TestStructNoBoolRetiredFields, TestStructNoBoolRetiredFieldsNoUnknownFieldsTracking,
+    TestStructNoUnknownFieldsTracking, TestStructNoUnknownFieldsTrackingExceptInnerStruct,
+    TestStructNoUnknownFieldsTrackingInnerStructNoString,
+    TestStructNoUnknownFieldsTrackingInnerStructNoStringNoUnknownFieldsTracking}
 import java.nio.ByteBuffer
 import net.liftweb.json.{Diff, JsonAST, JsonParser, Printer}
 import org.apache.thrift.{TBase, TDeserializer, TFieldIdEnum}
@@ -12,8 +24,6 @@ import org.apache.thrift.protocol.TType
 import org.apache.thrift.transport.{AutoExpandingBufferReadTransport, TMemoryBuffer}
 import org.junit.{Assert, Test}
 import org.pantsbuild.junit.annotations.TestSerial
-
-
 
 class WireCompatibilityTest {
 

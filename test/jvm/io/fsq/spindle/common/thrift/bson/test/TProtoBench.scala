@@ -3,9 +3,10 @@
 package io.fsq.spindle.common.thrift.bson.test
 
 import com.mongodb.DBObject
-import io.fsq.spindle.codegen.test.gen._
 import io.fsq.spindle.common.thrift.bson.{TBSONBinaryProtocol, TBSONObjectProtocol}
 import io.fsq.spindle.runtime.UntypedRecord
+import io.fsq.spindle.runtime.common.gen.TestStruct
+import io.fsq.spindle.runtime.structs.gen.InnerStruct
 import java.io.{ByteArrayInputStream, InputStream}
 import java.nio.ByteBuffer
 import org.apache.thrift.protocol.{TProtocol, TProtocolUtil, TType}

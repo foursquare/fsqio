@@ -7,7 +7,7 @@ import org.junit.Assert._
 import org.junit.Test
 
 class ThriftCodegenTest {
-  val base = "test/thrift/io/fsq/spindle/parser/test"
+  val base = "test/thrift/io/fsq/spindle/codegen/parser/test"
 
   @Test
   def testParseDuplicateWireName(): Unit = {

@@ -9,7 +9,7 @@ import org.junit.Assert.{assertEquals, assertTrue}
 import org.junit.Test
 
 class ThriftParserTest {
-  val base = "test/thrift/io/fsq/spindle/parser/test"
+  val base = "test/thrift/io/fsq/spindle/codegen/parser/test"
 
   @Test
   def testParseDuplicate(): Unit = {
@@ -34,9 +34,9 @@ class ThriftParserTest {
     val program = ThriftParser.parseProgram(base + "/parse_header.thrift.testdata")
 
     assertEquals(program.includes.size, 2)
-    assertTrue(program.includes.forall(_.path == "com/foursquare/spindle/parser/parse_program.thrift"))
+    assertTrue(program.includes.forall(_.path == "io/fsq/spindle/parser/test/parse_program.thrift"))
     assertEquals(program.namespaces.size, 15)
-    assertTrue(program.namespaces.forall(_.name == "com.foursquare.spindle.codegen.parser"))
+    assertTrue(program.namespaces.forall(_.name == "io.fsq.spindle.codegen.parser.test"))
   }
 
   @Test

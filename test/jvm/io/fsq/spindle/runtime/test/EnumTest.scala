@@ -2,8 +2,9 @@
 
 package io.fsq.spindle.runtime.test
 
-import io.fsq.spindle.codegen.test.gen._
 import io.fsq.spindle.runtime.{KnownTProtocolNames, TProtocolInfo}
+import io.fsq.spindle.runtime.enums.gen.{NewTestEnum, OldTestEnum, StructWithNewEnumField, StructWithOldEnumField,
+    TestEnum}
 import org.apache.thrift.TBase
 import org.apache.thrift.transport.{TMemoryBuffer, TTransport}
 import org.junit.Assert.assertEquals

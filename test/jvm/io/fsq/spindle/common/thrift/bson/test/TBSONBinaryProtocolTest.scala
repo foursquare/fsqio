@@ -3,9 +3,12 @@
 package io.fsq.spindle.common.thrift.bson.test
 
 import com.mongodb.{BasicDBObjectBuilder, DBObject}
-import io.fsq.spindle.codegen.test.gen._
 import io.fsq.spindle.common.thrift.bson.{TBSONBinaryProtocol, TBSONObjectProtocol}
 import io.fsq.spindle.runtime.UntypedRecord
+import io.fsq.spindle.runtime.common.gen.{RawTestStruct, RawTestStructOidList, TestStruct, TestStructNestedCollections}
+import io.fsq.spindle.runtime.structs.gen.InnerStruct
+import io.fsq.spindle.runtime.test.gen.{RawTestStructNoBoolNoUnknownFieldsTracking,
+    TestStructNoBoolNoUnknownFieldsTracking}
 import java.io.{ByteArrayInputStream, InputStream}
 import java.nio.ByteBuffer
 import java.util.Arrays

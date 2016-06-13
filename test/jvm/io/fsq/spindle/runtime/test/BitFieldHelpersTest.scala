@@ -2,7 +2,7 @@
 
 package io.fsq.spindle.runtime.test
 
-import io.fsq.spindle.codegen.test.gen.{ChildStruct16, ChildStruct32, ChildStruct64, ChildStruct7, ParentStruct}
+import io.fsq.spindle.codegen.binary.test.gen.{ChildStruct16, ChildStruct32, ChildStruct64, ChildStruct7, ParentStruct}
 import io.fsq.spindle.runtime.BitFieldHelpers
 import org.junit.Test
 import org.specs.SpecsMatchers
