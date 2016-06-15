@@ -11,6 +11,11 @@ import java.io.InputStream
 
 trait SpindleQueryExecutor extends QueryExecutor[UntypedMetaRecord, UntypedRecord] {
   def dbCollectionFactory: SpindleDBCollectionFactory
+  def bulk[M <: UntypedMetaRecord, R <: UntypedRecord](
+    clauses: Seq[BulkOperation[M, R]],
+    ordered: Boolean = false,
+    writeConcern: WriteConcern = WriteConcern.NORMAL
+  ): Option[BulkWriteResult]
 }
 
 class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory) extends SpindleQueryExecutor {
@@ -56,10 +61,10 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
     super.insert(record, writeConcern)
   }
 
-  def bulk[M <: UntypedMetaRecord, R <: UntypedRecord](
+  override def bulk[M <: UntypedMetaRecord, R <: UntypedRecord](
       clauses: Seq[BulkOperation[M, R]],
-      ordered: Boolean = false,
-      writeConcern: WriteConcern = WriteConcern.NORMAL
+      ordered: Boolean,
+      writeConcern: WriteConcern
     ): Option[BulkWriteResult] = {
     clauses.headOption.map(firstClause => {
       val meta = firstClause match {
