@@ -170,8 +170,8 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
       err_msg = []
       for spec, symbol in errors:
         err_msg.append("")
-        err_msg.append("Symbol:" + symbol)
-        err_msg.append("Target:" + spec)
+        err_msg.append("Symbol: " + symbol)
+        err_msg.append("Target: " + spec)
       err_msg.append('Failed to map scala libraries to used symbols.  See error output above.')
       raise Exception('\n'.join(err_msg))
     return used_addresses
