@@ -33,7 +33,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
 
   def count[M <: MB, State](query: Query[M, _, State],
                             readPreference: Option[ReadPreference] = None)
-                           (implicit ev: ShardingOk[M, State]): Long = {
+                           (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Long = {
     if (optimizer.isEmptyQuery(query)) {
       0L
     } else {
@@ -44,7 +44,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
   def countDistinct[M <: MB, V, State](query: Query[M, _, State],
                                        readPreference: Option[ReadPreference] = None)
                                       (field: M => Field[V, M])
-                                      (implicit ev: ShardingOk[M, State]): Long = {
+                                      (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Long = {
     if (optimizer.isEmptyQuery(query)) {
       0L
     } else {
@@ -55,7 +55,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
   def distinct[M <: MB, V, State](query: Query[M, _, State],
                                   readPreference: Option[ReadPreference] = None)
                                  (field: M => Field[V, M])
-                                 (implicit ev: ShardingOk[M, State]): Seq[V] = {
+                                 (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Seq[V] = {
     if (optimizer.isEmptyQuery(query)) {
       Nil
     } else {
@@ -67,7 +67,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
 
   def fetchList[M <: MB, R, State](query: Query[M, R, State],
                                    readPreference: Option[ReadPreference] = None)
-                                  (implicit ev: ShardingOk[M, State]): List[R] = {
+                                  (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): List[R] = {
     if (optimizer.isEmptyQuery(query)) {
       Nil
     } else {
@@ -112,7 +112,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
   def foreach[M <: MB, R, State](query: Query[M, R, State],
                                  readPreference: Option[ReadPreference] = None)
                                 (f: R => Unit)
-                                (implicit ev: ShardingOk[M, State]): Unit = {
+                                (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Unit = {
     if (optimizer.isEmptyQuery(query)) {
       ()
     } else {
@@ -141,7 +141,8 @@ trait QueryExecutor[MB, RB] extends Rogue {
   )(
     f: List[R] => List[T]
   )(
-    implicit ev: ShardingOk[M, State]
+    implicit ev: ShardingOk[M, State],
+    ev2: M !<:< MongoDisallowed
   ): List[T] = {
     if (optimizer.isEmptyQuery(query)) {
       Nil
@@ -180,7 +181,8 @@ trait QueryExecutor[MB, RB] extends Rogue {
   )(
     f: Seq[R] => Seq[T]
   )(
-    implicit ev: ShardingOk[M, State]
+    implicit ev: ShardingOk[M, State],
+    ev2: M !<:< MongoDisallowed
   ): Seq[T] = {
     if (optimizer.isEmptyQuery(query)) {
       Nil
@@ -202,7 +204,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
   def bulkDelete_!![M <: MB, State](query: Query[M, _, State],
                                     writeConcern: WriteConcern = defaultWriteConcern)
                                    (implicit ev1: Required[State, Unselected with Unlimited with Unskipped],
-                                    ev2: ShardingOk[M, State]): Unit = {
+                                    ev2: ShardingOk[M, State], ev3: M !<:< MongoDisallowed): Unit = {
     if (optimizer.isEmptyQuery(query)) {
       ()
     } else {
