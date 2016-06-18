@@ -10,9 +10,9 @@ import org.junit.Assert._
 import org.junit.rules.TemporaryFolder
 
 class CodegenSampleTest {
-  val SampleFolder = "src/thrift/com/twitter/thrift/descriptors"
-  val OutFolder = "com/twitter/thrift/descriptors"
-  val Filenames = Vector("java_thrift_descriptors.java", "thrift_descriptors.scala")
+  val SampleFolder = "test/jvm/io/fsq/spindle/codegen/binary/test/gen"
+  val OutFolder = "io/fsq/spindle/codegen/binary/test/gen"
+  val Filenames = Vector("java_test_programs.java", "test_programs.scala")
   val Message = "The thrift_descriptor samples didn't match. %s has been overwritten with the expected value."
 
   val outDir = new TemporaryFolder()
@@ -28,9 +28,10 @@ class CodegenSampleTest {
       "--template", "src/resources/io/fsq/ssp/codegen/scala/record.ssp",
       "--java_template", "src/resources/io/fsq/ssp/codegen/javagen/record.ssp",
       "--extension", "scala",
+      "--thrift_include", "src/thrift",
       "--namespace_out", outDir.getRoot.getAbsolutePath,
       "--working_dir", workingDir.getRoot.getAbsolutePath,
-      "src/thrift/com/twitter/thrift/descriptors/thrift_descriptors.thrift"
+      "test/jvm/io/fsq/spindle/codegen/binary/test/gen/test_programs.thrift"
     ))
 
     val noMatchFiles = Filenames.filterNot(filename => {

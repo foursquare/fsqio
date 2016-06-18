@@ -7,5 +7,6 @@ junit_tests(
     '3rdparty:junit',
     'src/jvm/io/fsq/spindle/codegen/binary',
     'src/jvm/io/fsq/spindle/codegen/runtime',
+    'src/thrift/io/fsq/common/thrift/descriptors/programs/gen',  # runtime dependency.
   ],
 )
