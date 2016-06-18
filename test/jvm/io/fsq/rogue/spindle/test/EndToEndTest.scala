@@ -476,7 +476,7 @@ class EndToEndTest extends JUnitMustMatchers {
     db.count(Q(ThriftVenue).where(_.id in venuesToKeep.map(_.id))) must_== venuesToKeep.length
   }
 
-  @Test
+  @TestSerial
   def testBulkReplaceOne: Unit = {
     val venues = (1 to 5).map(i => baseTestVenue().toBuilder().userid(i).result())
     val VenueUserIdToReplace = 31415
@@ -549,7 +549,7 @@ class EndToEndTest extends JUnitMustMatchers {
       1, db.count(Q(ThriftVenue).where(_.id eqs original2.id).and(_.userid eqs 3141591)))
   }
 
-  @Test
+  @TestSerial
   def testBulkUpdate: Unit = {
     val venuesToUpdate = (1 to 5).map(_ => baseTestVenue().toBuilder().userid(1).result())
     val venuesToNotUpdate = (1 to 3).map(_ => baseTestVenue().toBuilder().userid(1).result())
