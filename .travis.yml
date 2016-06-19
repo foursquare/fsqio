@@ -41,9 +41,9 @@ before_script: |
     tar xzf jdk-8u40-linux-x64.tar.gz -C ~/opt
   fi
 
-# TODO(mateo): Enable an error on buildgen diff.
 script: |
   uname -a
   ./pants buildgen
+  git diff --exit-code || exit "$?"
   ./pants compile src::
   ./pants test test::
