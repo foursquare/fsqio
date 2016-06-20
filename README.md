@@ -1,6 +1,8 @@
 # Foursquare Fsq.io
 ### All of Foursquare's open source code in a single repo.
 
+[![Build Status](https://travis-ci.org/foursquare/fsqio.svg?branch=master)](https://travis-ci.org/foursquare/fsqio)
+
 All Foursquare code lives in a single repository, an architecture generally called a monorepo.
 `Fsq.io` is a subset of that internal monorepo. `Fsq.io` holds many of Foursquare's
 open source projects that had previously lived in their own separate Github repos. Foursquare contributes
