@@ -4,6 +4,7 @@ python_library(
   name = 'register',
   sources = ['register.py', '__init__.py'],
   dependencies = [
+    '3rdparty/python:pantsbuild.pants',
     ':validate',
     'src/python/fsqio/pants/buildgen/core:buildgen',
     'src/python/fsqio/pants/buildgen/core:buildgen_aggregate_targets',
@@ -33,4 +34,7 @@ python_library(
 python_library(
   name = 'validate',
   sources = ['validate.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:pantsbuild.pants',
+  ],
 )

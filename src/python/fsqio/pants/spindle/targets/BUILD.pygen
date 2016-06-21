@@ -3,9 +3,15 @@
 python_library(
   name = 'spindle_thrift_library',
   sources = ['spindle_thrift_library.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:pantsbuild.pants',
+  ],
 )
 
 python_library(
   name = 'ssp_template',
   sources = ['ssp_template.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:pantsbuild.pants',
+  ],
 )

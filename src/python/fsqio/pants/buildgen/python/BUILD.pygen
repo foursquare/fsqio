@@ -3,6 +3,7 @@ python_library(
   name = 'buildgen_python',
   sources = ['buildgen_python.py', '__init__.py'],
   dependencies = [
+    '3rdparty/python:pantsbuild.pants',
     ':python_import_parser',
     ':third_party_map_python',
     'src/python/fsqio/pants/buildgen/core:buildgen_task',
@@ -14,6 +15,9 @@ python_library(
 python_library(
   name = 'map_python_exported_symbols',
   sources = ['map_python_exported_symbols.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:pantsbuild.pants',
+  ],
 )
 
 python_library(

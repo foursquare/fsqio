@@ -3,4 +3,7 @@
 python_library(
   name = 'buildgen_subsystem',
   sources = ['buildgen_subsystem.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:pantsbuild.pants',
+  ],
 )

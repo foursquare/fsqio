@@ -5,6 +5,7 @@ python_library(
   sources = ['build_file_manipulator.py', '__init__.py'],
   dependencies = [
     '3rdparty/python:ansicolors',
+    '3rdparty/python:pantsbuild.pants',
   ],
 )
 
@@ -12,6 +13,7 @@ python_library(
   name = 'buildgen',
   sources = ['buildgen.py', '__init__.py'],
   dependencies = [
+    '3rdparty/python:pantsbuild.pants',
     ':buildgen_task',
   ],
 )
@@ -20,6 +22,7 @@ python_library(
   name = 'buildgen_aggregate_targets',
   sources = ['buildgen_aggregate_targets.py', '__init__.py'],
   dependencies = [
+    '3rdparty/python:pantsbuild.pants',
     ':buildgen_target_bag',
     ':buildgen_task',
   ],
@@ -29,6 +32,7 @@ python_library(
   name = 'buildgen_base',
   sources = ['buildgen_base.py', '__init__.py'],
   dependencies = [
+    '3rdparty/python:pantsbuild.pants',
     'src/python/fsqio/pants/buildgen/core/subsystems:buildgen_subsystem',
   ],
 )
@@ -36,12 +40,16 @@ python_library(
 python_library(
   name = 'buildgen_target_bag',
   sources = ['buildgen_target_bag.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:pantsbuild.pants',
+  ],
 )
 
 python_library(
   name = 'buildgen_task',
   sources = ['buildgen_task.py', '__init__.py'],
   dependencies = [
+    '3rdparty/python:pantsbuild.pants',
     ':build_file_manipulator',
     ':buildgen_base',
     ':third_party_map_util',
@@ -51,21 +59,33 @@ python_library(
 python_library(
   name = 'buildgen_timestamp',
   sources = ['buildgen_timestamp.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:pantsbuild.pants',
+  ],
 )
 
 python_library(
   name = 'map_derived_targets',
   sources = ['map_derived_targets.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:pantsbuild.pants',
+  ],
 )
 
 python_library(
   name = 'map_sources_to_addresses',
   sources = ['map_sources_to_addresses.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:pantsbuild.pants',
+  ],
 )
 
 python_library(
   name = 'source_analysis_task',
   sources = ['source_analysis_task.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:pantsbuild.pants',
+  ],
 )
 
 python_library(

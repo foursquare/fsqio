@@ -3,6 +3,7 @@ python_library(
   name = 'buildgen_scala',
   sources = ['buildgen_scala.py', '__init__.py'],
   dependencies = [
+    '3rdparty/python:pantsbuild.pants',
     'src/python/fsqio/pants/buildgen/core:buildgen_task',
   ],
 )
@@ -11,6 +12,7 @@ python_library(
   name = 'map_scala_library_used_addresses',
   sources = ['map_scala_library_used_addresses.py', '__init__.py'],
   dependencies = [
+    '3rdparty/python:pantsbuild.pants',
     'src/python/fsqio/pants/buildgen/core:buildgen_base',
     'src/python/fsqio/pants/buildgen/core:third_party_map_util',
     'src/python/fsqio/pants/buildgen/jvm:third_party_map_jvm',
@@ -21,6 +23,7 @@ python_library(
   name = 'scala_exported_symbols',
   sources = ['scala_exported_symbols.py', '__init__.py'],
   dependencies = [
+    '3rdparty/python:pantsbuild.pants',
     'src/python/fsqio/pants/buildgen/core:source_analysis_task',
     'src/python/fsqio/pants/buildgen/jvm:scalac_buildgen_task_mixin',
   ],
@@ -30,6 +33,7 @@ python_library(
   name = 'scala_used_symbols',
   sources = ['scala_used_symbols.py', '__init__.py'],
   dependencies = [
+    '3rdparty/python:pantsbuild.pants',
     'src/python/fsqio/pants/buildgen/core:source_analysis_task',
     'src/python/fsqio/pants/buildgen/jvm:scalac_buildgen_task_mixin',
   ],

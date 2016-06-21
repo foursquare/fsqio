@@ -22,7 +22,7 @@ fi
 
 
 if [ -z "$PANTSBINARY" ]; then
-  exec .pantsenv/bin/pants "$@"
+  exec .pvenvs/fs/bin/pants "$@"
 else
   export PYTHONPATH=src/python
   exec $PANTSBINARY "$@"

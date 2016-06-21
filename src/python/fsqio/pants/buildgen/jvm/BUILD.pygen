@@ -3,6 +3,7 @@ python_library(
   name = 'map_jvm_symbol_to_source_tree',
   sources = ['map_jvm_symbol_to_source_tree.py', '__init__.py'],
   dependencies = [
+    '3rdparty/python:pantsbuild.pants',
     'src/python/fsqio/pants/buildgen/core:symbol_tree',
   ],
 )
@@ -10,16 +11,25 @@ python_library(
 python_library(
   name = 'map_java_exported_symbols',
   sources = ['map_java_exported_symbols.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:pantsbuild.pants',
+  ],
 )
 
 python_library(
   name = 'map_third_party_jar_symbols',
   sources = ['map_third_party_jar_symbols.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:pantsbuild.pants',
+  ],
 )
 
 python_library(
   name = 'scalac_buildgen_task_mixin',
   sources = ['scalac_buildgen_task_mixin.py', '__init__.py'],
+  dependencies = [
+    '3rdparty/python:pantsbuild.pants',
+  ],
 )
 
 python_library(
