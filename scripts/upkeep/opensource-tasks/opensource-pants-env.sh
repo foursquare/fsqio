@@ -10,7 +10,7 @@ PYTHON=${PYTHON:-$(which python2.7)}
 FSQIO_HOME="${FSQIO_HOME:-${HOME}/.cache/fsqio/setup}"
 PANTS_BOOTSTRAP="${FSQIO_HOME}/bootstrap"
 
-VENV_VERSION=13.1.2
+VENV_VERSION=15.0.1
 
 VENV_PACKAGE=virtualenv-${VENV_VERSION}
 VENV_TARBALL=${VENV_PACKAGE}.tar.gz
@@ -65,7 +65,6 @@ function bootstrap_pants {
       staging_dir=$(tempdir "${PANTS_BOOTSTRAP}") && \
       "${PYTHON}" "${venv_path}/virtualenv.py" "${staging_dir}/install" && \
       source "${staging_dir}/install/bin/activate" && \
-      pip install "${pants_requirement}" && \
       pip install -r "${FOURSQUARE_REQUIREMENTS}" && \
       ln -s "${staging_dir}/install" "${staging_dir}/${pants_version}" && \
       mv "${staging_dir}/${pants_version}" "${PANTS_BOOTSTRAP}/${pants_version}"
