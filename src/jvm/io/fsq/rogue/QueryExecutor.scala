@@ -215,7 +215,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
   def updateOne[M <: MB, State](
       query: ModifyQuery[M, State],
       writeConcern: WriteConcern = defaultWriteConcern
-  )(implicit ev: RequireShardKey[M, State]): Unit = {
+  )(implicit ev: RequireShardKey[M, State], ev2: M !<:< MongoDisallowed): Unit = {
     if (optimizer.isEmptyQuery(query)) {
       ()
     } else {
@@ -226,7 +226,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
   def upsertOne[M <: MB, State](
       query: ModifyQuery[M, State],
       writeConcern: WriteConcern = defaultWriteConcern
-  )(implicit ev: RequireShardKey[M, State]): Unit = {
+  )(implicit ev: RequireShardKey[M, State], ev2: M !<:< MongoDisallowed): Unit = {
     if (optimizer.isEmptyQuery(query)) {
       ()
     } else {
