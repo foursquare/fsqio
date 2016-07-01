@@ -34,12 +34,6 @@ parser.add_option("--mongo", dest="mongo", default=None, help="host:port of mong
 
 (options, args) = parser.parse_args()
 
-mongo_version_str = subprocess.Popen('dependencies/mongodb/bin/mongo --version', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True).stdout.readline().split(' v')[-1]
-mongo_version = mongo_version_str.split('.')
-if mongo_version[0] < 2 or mongo_version[1] < 4:
-  print 'need at least mongo 2.4, you have: %s' % mongo_version_str
-  sys.exit(1)
-
 user_specified_basepath = False
 basepath = ''
 if len(args) != 0:
