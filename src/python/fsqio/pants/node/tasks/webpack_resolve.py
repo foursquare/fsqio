@@ -62,7 +62,7 @@ class WebPackResolve(NodeResolve):
 
   @classmethod
   def implementation_version(cls):
-    return super(WebPackResolve, cls).implementation_version() + [('WebPackResolve', 2)]
+    return super(WebPackResolve, cls).implementation_version() + [('WebPackResolve', 3)]
 
   @classmethod
   def global_subsystems(cls):
@@ -100,10 +100,12 @@ class WebPackResolve(NodeResolve):
       webpack_distribution_target = self.create_synthetic_target(self.fingerprint)
       build_graph = self.context.build_graph
       for vt in invalidation_check.all_vts:
-        resolver_for_target_type = self._resolver_for_target(vt.target).global_instance()
         results_dir = vt.results_dir
         if not vt.valid:
-          safe_mkdir(results_dir, clean=True)
+          # NOTE(mateo): safe_mkdir is bugged for tasks upstream, realpath is to avoid overrwriting results_dir symlink.
+          # https://github.com/pantsbuild/pants/issues/4051
+          safe_mkdir(os.path.realpath(results_dir), clean=True)
+          resolver_for_target_type = self._resolver_for_target(vt.target).global_instance()
           resolver_for_target_type.resolve_target(self, vt.target, results_dir, node_paths)
         node_paths.resolved(vt.target, results_dir)
         build_graph.inject_dependency(

@@ -10,4 +10,6 @@ junit_tests(
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/fhttp',
   ],
+  # NOTE(mateo): These tests appear to not be threadsafe. They fail when ran with any type of concurrency.
+  concurrency="SERIAL",
 )

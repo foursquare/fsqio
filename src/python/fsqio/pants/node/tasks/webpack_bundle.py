@@ -12,8 +12,9 @@ from __future__ import (
 )
 
 import os.path
+from zipfile import ZIP_DEFLATED
 
-from pants.fs.archive import TarArchiver
+from pants.fs.archive import ZipArchiver
 from pants.task.task import Task
 from pants.util.dirutil import safe_mkdir
 
@@ -30,14 +31,19 @@ class WebPackBundle(Task):
   def product_types(cls):
     return ['webpack_bundle']
 
+  @property
+  def cache_target_dirs(self):
+    return False
+
   def execute(self):
+
     targets = [t for t in self.context.targets() if isinstance(t, WebPack.Resources)]
     for target in targets:
       concrete_target = target.concrete_derived_from
       bundle_dir = os.path.join(self.get_options().pants_distdir, 'webpack-bundles', concrete_target.id)
 
       safe_mkdir(bundle_dir, clean=True)
-      archiver = TarArchiver(mode='w:gz', extension='tgz')
+      archiver = ZipArchiver(ZIP_DEFLATED, extension='zip')
       archiver.create(
         basedir=target.target_base,
         outdir=bundle_dir,

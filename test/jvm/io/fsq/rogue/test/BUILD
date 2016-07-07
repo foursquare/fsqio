@@ -11,4 +11,6 @@ junit_tests(
     'src/jvm/io/fsq/rogue',
     'src/jvm/io/fsq/rogue/index',
   ],
+  # NOTE(mateo): These tests appear to not be threadsafe. They fail when ran with any type of concurrency.
+  concurrency="SERIAL",
 )

@@ -27,10 +27,10 @@ def global_subsystems():
 def register_goals():
   Goal.register('webpack', 'Build Node.js webpack modules.')
 
-  Goal.by_name('repl').uninstall_task('node')
   Goal.by_name('test').uninstall_task('node')
   Goal.by_name('resolve').uninstall_task('node')
+  Goal.by_name('repl').uninstall_task('node')
 
   task(name='webpack-resolve', action=WebPackResolve).install('webpack')
-  task(name='webpack', action=WebPack).install('webpack')
-  task(name='webpack-bundle', action=WebPackBundle).install('webpack')
+  task(name='webpack-gen', action=WebPack).install('webpack')
+  task(name='webpack-bundle', action=WebPackBundle).install('bundle')

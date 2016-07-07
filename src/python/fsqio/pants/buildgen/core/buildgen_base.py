@@ -21,8 +21,8 @@ class BuildgenBase(Task):
   """"A base task that provides the buildgen subsystem to its implementers."""
 
   @classmethod
-  def global_subsystems(cls):
-    return super(BuildgenBase, cls).global_subsystems() + (BuildgenSubsystem.Factory,)
+  def subsystem_dependencies(cls):
+    return super(BuildgenBase, cls).subsystem_dependencies() + (BuildgenSubsystem.Factory,)
 
   @classmethod
   def implementation_version(cls):

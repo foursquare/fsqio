@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import
 
+from pants.goal.goal import Goal
 from pants.goal.task_registrar import TaskRegistrar as task
 from pants.task.task import Task
 
@@ -21,4 +22,6 @@ def register_goals():
     def execute(self):
       pass
 
+  Goal.by_name('compile').uninstall_task('jvm-dep-check')
+  Goal.by_name('dep-usage').uninstall_task('jvm')
   task(name='validate-graph', action=ForceValidation).install('gen')

@@ -19,4 +19,6 @@ junit_tests(
     'test/jvm/io/fsq/util/compiler/test',
     'test/thrift/io/fsq/spindle/rogue/test',
   ],
+  # NOTE(mateo): These tests appear to not be threadsafe. They fail when ran with any type of concurrency.
+  concurrency="SERIAL",
 )

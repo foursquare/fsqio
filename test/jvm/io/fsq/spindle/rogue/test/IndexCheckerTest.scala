@@ -12,12 +12,15 @@ import io.fsq.spindle.runtime.UntypedMetaRecord
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 import org.junit._
+import org.pantsbuild.junit.annotations.TestSerial
 import org.specs2.matcher.JUnitMustMatchers
 import scala.collection.immutable.ListMap
 
 /**
  * Test spindle index annotations.
  */
+
+@TestSerial
 class MongoIndexCheckerTest extends JUnitMustMatchers {
   type IndexModelType = ThriftIndexTestModel
   val db = new TestDatabaseService
@@ -46,7 +49,7 @@ class MongoIndexCheckerTest extends JUnitMustMatchers {
     ))
   }
 
-  @Test
+  @TestSerial
   def testGetIndexesWithMutuallyRecursiveStructs {
     val indexesOpt = db.dbCollectionFactory.getIndexes(Q(MutuallyRecursive1))
     indexesOpt.map(_.map(_.toString)) must_== Some(List(
