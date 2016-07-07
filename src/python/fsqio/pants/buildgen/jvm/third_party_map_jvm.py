@@ -379,7 +379,7 @@ jvm_third_party_map = {
       'classutil': 'classutil',
     },
     'canova': {
-      'api': 'canova',
+      'api': 'canova16',
     },
     'codehaus': {
       'jackson': 'jackson',
@@ -392,17 +392,17 @@ jvm_third_party_map = {
     },
     'deeplearning4j': {
       'datasets': {
-        'canova': 'deeplearning4j',
+        'canova': 'deeplearning4j310',
       },
-      'eval': 'deeplearning4j',
-      'optimize': 'deeplearning4j',
+      'eval': 'deeplearning4j310',
+      'optimize': 'deeplearning4j310',
       'nn': {
-        'api': 'deeplearning4j',
-        'conf': 'deeplearning4j',
-        'multilayer': 'deeplearning4j',
-        'weights': 'deeplearning4j',
+        'api': 'deeplearning4j310',
+        'conf': 'deeplearning4j310',
+        'multilayer': 'deeplearning4j310',
+        'weights': 'deeplearning4j310',
       },
-      'util': 'deeplearning4j',
+      'util': 'deeplearning4j310',
     },
     'elasticsearch': {
       'DEFAULT': 'elasticsearch',
@@ -448,7 +448,7 @@ jvm_third_party_map = {
       'javascript': 'rhino',
     },
     'nd4j': {
-      'linalg': 'nd4j',
+      'linalg': 'nd4j310',
     },
     'objectweb': {
       'asm': 'asm'

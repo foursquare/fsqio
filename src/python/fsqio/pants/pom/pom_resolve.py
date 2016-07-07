@@ -142,7 +142,7 @@ def traverse_project_graph(
       dep_graph.add_provided_artifacts(maven_dep.coordinate, fetcher.repo, [jar_coord])
     else:
       dep_graph.add_provided_artifacts(maven_dep.coordinate, fetcher.repo, [])
-  elif pom.coordinate.packaging in ('bundle', 'jar'):
+  elif pom.coordinate.packaging in ('bundle', 'jar', 'maven-plugin'):
     # Always treat this as a jar
     if maven_dep.type != 'jar':
       raise Exception(
