@@ -14,7 +14,6 @@ from __future__ import (
 import os
 import time
 
-from pants.base.build_environment import get_buildroot
 from pants.task.task import Task
 
 
@@ -22,5 +21,5 @@ class BuildgenTimestamp(Task):
   """Log when buildgen was last ran in a findable place"""
 
   def execute(self):
-    with open(os.path.join(get_buildroot(), '.buildgen_timestamp'), 'w') as f:
+    with open(os.path.join(self.get_options().pants_workdir, '.buildgen_timestamp'), 'w') as f:
       f.write(str(int(time.time())))
