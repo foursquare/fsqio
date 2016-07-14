@@ -267,7 +267,7 @@ function success(data, bulkInputs) {
       sectionDiv.append(mapDiv);
 
       var opts = {
-         layers: new L.TileLayer.MapQuestOpen.OSM(),
+        layers: new L.TileLayer.OpenStreetMap(),
         attributionControl: false
       }
 
