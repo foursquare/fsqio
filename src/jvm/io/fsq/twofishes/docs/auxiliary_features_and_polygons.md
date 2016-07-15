@@ -31,6 +31,6 @@ If you put a geojson (or shapefile) in data/private/polygons, along with a .mapp
   ```sh
     ./src/jvm/io/fsq/twofishes/scripts/serve.py output/
   ```
-- View it!  http://localhost:8081/static/geocoder.html 
+- View it!  http://localhost:8081/twofishes-static/geocoder.html 
 
 

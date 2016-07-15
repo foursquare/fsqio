@@ -195,7 +195,7 @@ pom_target(
     'src/jvm/io/fsq/twofishes/indexer/util',
     'src/jvm/io/fsq/twofishes/replayer',
     'src/jvm/io/fsq/twofishes/server',
-    'src/jvm/io/fsq/twofishes/server/resources/static',
+    'src/jvm/io/fsq/twofishes/server/resources/twofishes-static',
     'src/jvm/io/fsq/twofishes/server/resources/warmup',
     'src/jvm/io/fsq/twofishes/util',
     'src/jvm/io/fsq/twofishes/util/data',

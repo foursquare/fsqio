@@ -35,7 +35,7 @@ Almost every parameter in [GeocodeRequest](https://github.com/foursquare/fsqio/b
 
 The combined json interface allows you to construct queries out of these parameters like <http://demo.twofishes.net/?query=new%20york&lang=es&maxInterpretations=4>
 
-These queries also work as parameters to the debug interface either after the ? or the # as seen at <http://demo.twofishes.net/static/geocoder.html#query=new%20york&lang=es&maxInterpretations=4> or <http://demo.twofishes.net/static/geocoder.html?query=new%20york&lang=es&maxInterpretations=4>
+These queries also work as parameters to the debug interface either after the ? or the # as seen at <http://demo.twofishes.net/twofishes-static/geocoder.html#query=new%20york&lang=es&maxInterpretations=4> or <http://demo.twofishes.net/twofishes-static/geocoder.html?query=new%20york&lang=es&maxInterpretations=4>
 
 - query=[geocode query] -- For geocoding. The server will attempt to geocode as much of the string (from left to right) as possible
 - ll=[lat,lng] -- latlng as comma separated double ie, 40.74,-74.0

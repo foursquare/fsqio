@@ -204,7 +204,7 @@ function success(data, bulkInputs) {
 
   function linkifySlugs(str, group1, group2) {
     var id = group1 + ':' + group2;
-    return '<a href="/static/geocoder.html#slug=' + id + '">' + id + '</a>';
+    return '<a href="/twofishes-static/geocoder.html#slug=' + id + '">' + id + '</a>';
   }
 
   _(data.debugLines).each(function(l) {
@@ -353,7 +353,7 @@ function success(data, bulkInputs) {
 
       var myIcon = L.icon({
         iconAnchor: [8, 8],
-        iconUrl: '/static/leaflet/images/red_dot.png',
+        iconUrl: '/twofishes-static/leaflet/images/red_dot.png',
       });
 
       if (data.requestWktGeometry) {

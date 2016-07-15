@@ -173,8 +173,8 @@ class GeocodeFetch(threading.Thread):
                    '</ul>')
         else:
           message = ('%s: <b>%s</b><ul>' % (query, title) +
-                   '<li><a href="%s">OLD</a>%s' % (options.serverOld + '/static/geocoder.html#' + param_str, oldMessage) +
-                   '<li><a href="%s">NEW</a>%s' % (options.serverNew + '/static/geocoder.html#' + param_str, newMessage) +
+                   '<li><a href="%s">OLD</a>%s' % (options.serverOld + '/twofishes-static/geocoder.html#' + param_str, oldMessage) +
+                   '<li><a href="%s">NEW</a>%s' % (options.serverNew + '/twofishes-static/geocoder.html#' + param_str, newMessage) +
                     '</ul>')
 
         for i in xrange(0, lineCount):

@@ -451,7 +451,7 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
       thriftRequest
     }
 
-    if (path.startsWith("/static/")) {
+    if (path.startsWith("/twofishes-static/")) {
       val dataRead = {
         inputStreamToByteArray(getClass.getResourceAsStream("/io/fsq/twofishes/server/resources" + path))
       }
@@ -495,7 +495,7 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
       }
     } else {
       val response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND)
-      val msg = new BufferedSource(getClass.getResourceAsStream("/io/fsq/twofishes/server/resources/static/index.html")).getLines.mkString("\n")
+      val msg = new BufferedSource(getClass.getResourceAsStream("/io/fsq/twofishes/server/resources/twofishes-static/index.html")).getLines.mkString("\n")
       response.setContent(ChannelBuffers.copiedBuffer(msg, CharsetUtil.UTF_8))
       response.headers.add("Content-Length", response.getContent.readableBytes.toString)
       Future.value(response)

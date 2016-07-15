@@ -26,7 +26,7 @@ scala_library(
     'src/jvm/io/fsq/twofishes/core',
     'src/jvm/io/fsq/twofishes/country',
     'src/jvm/io/fsq/twofishes/hacks',
-    'src/jvm/io/fsq/twofishes/server/resources/static',
+    'src/jvm/io/fsq/twofishes/server/resources/twofishes-static',
     'src/jvm/io/fsq/twofishes/server/resources/warmup',
     'src/jvm/io/fsq/twofishes/util',
     'src/thrift/io/fsq/twofishes',

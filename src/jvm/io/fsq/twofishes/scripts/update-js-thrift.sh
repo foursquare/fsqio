@@ -1,3 +1,3 @@
 #!/bin/sh
 
-thrift --gen js -o server/src/main/resources/static/ interface/src/main/thrift/geocoder.thrift 
+thrift --gen js -o server/src/main/resources/twofishes-static/ interface/src/main/thrift/geocoder.thrift
