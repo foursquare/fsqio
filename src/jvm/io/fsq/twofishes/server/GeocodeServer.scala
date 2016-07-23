@@ -147,9 +147,19 @@ class GeocodeServerImpl(
   enablePrivateEndpoints: Boolean = false,
   queryFuturePool: FuturePool = FuturePool(StatsWrappedExecutors.create(24, 100, "geocoder"))
 ) extends Geocoder.ServiceIface with Logging {
+
   if (doWarmup) {
+    warmup()
+    val labels = Stats.getLabels()
+    Stats.clearAll()
+    labels.foreach({case (k, v) => Stats.setLabel(k, v)})
+    System.gc()
+  }
+
+  // TODO(jacob): remove Awaits and futurize this
+  def warmup(): Unit = {
     for {
-      time <- 0.to(2)
+      time <- 0 to 2
     } {
       val batchSize = 50 // FIXME: magic
 
@@ -202,10 +212,6 @@ class GeocodeServerImpl(
       log.info("done")
     }
     log.info("done")
-    val labels = Stats.getLabels()
-    Stats.clearAll()
-    labels.foreach({case (k, v) => Stats.setLabel(k, v)})
-    System.gc()
   }
 
   def geocode(r: GeocodeRequest): Future[GeocodeResponse] = queryFuturePool {
