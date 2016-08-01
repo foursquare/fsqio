@@ -39,3 +39,12 @@ jar_library(
     ':scalcamacros-quasiquotes'
   ],
 )
+
+
+# Add compiler plugins to this list to enable for Fsq.io only.
+target(
+  name = 'fsqio-plugin-jars',
+  dependencies = [
+    ':scalac-macro-paradise-plugin',
+  ],
+)
