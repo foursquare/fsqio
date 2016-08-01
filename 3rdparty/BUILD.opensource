@@ -566,7 +566,43 @@ jar_library(
   ],
   jars = [
     jar(org='org.scala-lang', name = 'scala-library', rev=scala_version)
-  ]
+  ],
+)
+
+jar_library(
+  name = 'scala-compiler-' + scala_version,
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org='org.scala-lang', name = 'scala-compiler', rev=scala_version),
+  ],
+)
+
+jar_library(
+  name = 'scala-reflect-' + scala_version,
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.scala-lang', name = 'scala-reflect', rev = scala_version),
+  ],
+  dependencies = [
+    '//:scalcamacros-quasiquotes',
+  ],
+)
+
+jar_library(
+  name = 'scalaj-time',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'org.scalaj', name = 'scalaj-time', rev = '0.8'),
+  ],
 )
 
 jar_library(

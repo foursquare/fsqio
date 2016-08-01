@@ -10,7 +10,7 @@ jar_library(
 name = 'buildgen-emit-used-symbols',
  jars = [
    sjar(org = 'io.fsq', name = 'buildgen-emit-used-symbols', rev = '1.1.0'),
- ]
+ ],
 )
 
 
@@ -18,5 +18,24 @@ jar_library(
  name = 'buildgen-emit-exported-symbols',
  jars = [
    sjar(org = 'io.fsq', name = 'buildgen-emit-exported-symbols', rev = '1.1.0'),
- ]
+ ],
+)
+
+
+jar_library(
+  name = 'scalcamacros-quasiquotes',
+  jars = [
+    sjar(org = 'org.scalamacros', name = 'quasiquotes', rev = '2.1.0'),
+  ],
+)
+
+
+jar_library(
+  name = 'scalac-macro-paradise-plugin',
+  jars = [
+    jar(org = 'org.scalamacros', name = 'paradise_2.10.4', rev = '2.1.0'),
+  ],
+  dependencies = [
+    ':scalcamacros-quasiquotes'
+  ],
 )
