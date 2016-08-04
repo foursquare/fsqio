@@ -132,6 +132,7 @@ jvm_third_party_map = {
       },
       'inject': 'guice',
       'javascript': 'closure',
+      'protobuf': 'protobuf-java',
       'template': 'closure-templates',
       'zxing': 'zxing',
     },
