@@ -46,7 +46,9 @@ jvm_third_party_map = {
       'core': 'esri-geometry-api',
       'hadoop': 'spatial-sdk-hive'
     },
-    'facebook': 'presto-jdbc',
+    'facebook': {
+      'presto': 'presto-main',
+    },
     'fasterxml': {
       'jackson': 'jackson-scala',
     },
