@@ -317,6 +317,15 @@ jar_library(
   ],
 )
 
+
+jar_library(
+  name='hamcrest-core',
+  jars = [
+    jar(org='org.hamcrest', name = 'hamcrest-core', rev='1.3'),
+  ],
+)
+
+
 jar_library(
   name = 'icu4j',
   tags = [

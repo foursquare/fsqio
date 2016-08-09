@@ -157,6 +157,9 @@ jvm_third_party_map = {
       'elasticsearch': 'wonderdog'
     },
     'jcraft': 'jsch',
+    'jayway': {
+      'restassured': 'restassured'
+    },
     'maxmind': 'geoip',
     'mongodb': {
       'DEFAULT': 'mongodb',
@@ -442,6 +445,7 @@ jvm_third_party_map = {
       'DEFAULT': 'gt-shapefile'
     },
     'hamcrest': 'junit',
+    'hamcrest-lib': 'hamcrest-lib',
     'I0Itec': {
       'zkclient': 'kafka',
     },
