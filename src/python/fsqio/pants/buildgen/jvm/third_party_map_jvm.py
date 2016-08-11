@@ -383,8 +383,8 @@ jvm_third_party_map = {
       'argot': 'argot',
       'classutil': 'classutil',
     },
-    'canova': {
-      'api': 'canova16',
+    'datavec': {
+      'api': 'datavec310',
     },
     'codehaus': {
       'jackson': 'jackson',
@@ -397,7 +397,7 @@ jvm_third_party_map = {
     },
     'deeplearning4j': {
       'datasets': {
-        'canova': 'deeplearning4j310',
+        'datavec': 'deeplearning4j310',
       },
       'eval': 'deeplearning4j310',
       'optimize': 'deeplearning4j310',
