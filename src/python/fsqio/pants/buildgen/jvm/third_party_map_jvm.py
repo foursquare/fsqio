@@ -383,17 +383,13 @@ jvm_third_party_map = {
       'argot': 'argot',
       'classutil': 'classutil',
     },
-    'datavec': {
-      'api': 'datavec310',
-    },
     'codehaus': {
       'jackson': 'jackson',
     },
-    'eclipse': {
-      'jetty': {
-        'server': 'jetty-server',
-        'servlet': 'jetty-servlet',
-      }
+    'datavec': {
+      'api': 'datavec310',
+      'image': 'datavec310',
+      'javacv': 'javacv',
     },
     'deeplearning4j': {
       'datasets': {
@@ -404,10 +400,17 @@ jvm_third_party_map = {
       'nn': {
         'api': 'deeplearning4j310',
         'conf': 'deeplearning4j310',
+        'graph': 'deeplearning4j310',
         'multilayer': 'deeplearning4j310',
         'weights': 'deeplearning4j310',
       },
       'util': 'deeplearning4j310',
+    },
+    'eclipse': {
+      'jetty': {
+        'server': 'jetty-server',
+        'servlet': 'jetty-servlet',
+      }
     },
     'elasticsearch': {
       'DEFAULT': 'elasticsearch',
@@ -515,3 +518,4 @@ jvm_third_party_map = {
   },
   'zemberek': 'zemberek',
 }
+
