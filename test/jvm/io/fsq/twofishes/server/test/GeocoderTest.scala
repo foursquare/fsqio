@@ -4,6 +4,7 @@ package io.fsq.twofishes.server.test
 import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBWriter, WKTReader}
 import io.fsq.common.scala.Lists.Implicits._
+import io.fsq.specs2.FSSpecificationWithJUnit
 import io.fsq.twofishes.gen.{CellGeometry, FeatureGeometry, FeatureName, FeatureNameFlags, GeocodeFeature,
     GeocodePoint, GeocodeRequest, GeocodeServingFeature, MutableGeocodeServingFeature, ResponseIncludes,
     ScoringFeatures, YahooWoeType}
@@ -11,7 +12,6 @@ import io.fsq.twofishes.server.{GeocodeRequestDispatcher, GeocodeServerConfigSin
     ReverseGeocoderImpl}
 import io.fsq.twofishes.util.{GeometryUtils, GeonamesId, NameNormalizer, ShapefileS2Util, StoredFeatureId}
 import java.nio.ByteBuffer
-import org.specs2.mutable.SpecificationWithJUnit
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{HashMap, ListBuffer}
 
@@ -151,7 +151,7 @@ class MockGeocodeStorageReadService extends GeocodeStorageReadService {
 }
 
 // TODO: See if there's a way to clean up the extra noise this sends to stderr.
-class GeocoderSpec extends SpecificationWithJUnit {
+class GeocoderSpec extends FSSpecificationWithJUnit {
   GeocodeServerConfigSingleton.init(Array(
     "--vm_map_count", "65530",
     "--hfile_basepath", ""

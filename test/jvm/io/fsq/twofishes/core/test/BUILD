@@ -10,5 +10,6 @@ junit_tests(
     'src/jvm/io/fsq/twofishes/core',
     'src/jvm/io/fsq/twofishes/util',
     'src/thrift/io/fsq/twofishes',
+    'test/jvm/io/fsq/specs2',
   ],
 )

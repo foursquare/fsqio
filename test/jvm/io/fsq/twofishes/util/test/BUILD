@@ -5,7 +5,7 @@ junit_tests(
   sources = globs('*.scala'),
   dependencies = [
     '3rdparty:mongodb',
-    '3rdparty:specs2',
     'src/jvm/io/fsq/twofishes/util',
+    'test/jvm/io/fsq/specs2',
   ],
 )

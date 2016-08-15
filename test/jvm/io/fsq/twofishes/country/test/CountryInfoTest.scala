@@ -1,11 +1,11 @@
 package io.fsq.twofishes.country.test
 
+import io.fsq.specs2.FSSpecificationWithJUnit
 import io.fsq.twofishes.country.{CountryInfo, CountryUtils}
 import org.specs2.matcher.MatchersImplicits
-import org.specs2.mutable.SpecificationWithJUnit
 
 // TODO: See if there's a way to clean up the extra noise this sends to stderr.
-class CountryUtilsSpec extends SpecificationWithJUnit with MatchersImplicits {
+class CountryUtilsSpec extends FSSpecificationWithJUnit with MatchersImplicits {
   "US should exist" in {
     CountryUtils.getNameByCode("US") mustEqual Some("United States")
     CountryUtils.getNameByCode("USA") mustEqual Some("United States")

@@ -1,11 +1,11 @@
 package io.fsq.twofishes.country.test
 
+import io.fsq.specs2.FSSpecificationWithJUnit
 import io.fsq.twofishes.country.TimeZoneInfo
 import org.specs2.matcher.MatchersImplicits
-import org.specs2.mutable.SpecificationWithJUnit
 
 // TODO: See if there's a way to clean up the extra noise this sends to stderr.
-class TimeZoneInfoSpec extends SpecificationWithJUnit with MatchersImplicits {
+class TimeZoneInfoSpec extends FSSpecificationWithJUnit with MatchersImplicits {
   "timezone lookup works" in {
     TimeZoneInfo.lookupTzID("America/Anchorage").map(_.cc) mustEqual Some("US")
   }

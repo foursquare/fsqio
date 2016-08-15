@@ -6,5 +6,6 @@ junit_tests(
   dependencies = [
     '3rdparty:specs2',
     'src/jvm/io/fsq/twofishes/country',
+    'test/jvm/io/fsq/specs2',
   ],
 )

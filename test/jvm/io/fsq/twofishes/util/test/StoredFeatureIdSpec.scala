@@ -1,12 +1,12 @@
 package io.fsq.twofishes.util.test
 
+import io.fsq.specs2.FSSpecificationWithJUnit
 import io.fsq.twofishes.util.{FeatureNamespace, GeonamesNamespace, GeonamesZip, GeonamesZipNamespace,
     MaponicsNamespace, StoredFeatureId}
 import org.bson.types.ObjectId
-import org.specs2.mutable.SpecificationWithJUnit
 
 // TODO: See if there's a way to clean up the extra noise this sends to stderr.
-class StoredFeatureIdSpec extends SpecificationWithJUnit {
+class StoredFeatureIdSpec extends FSSpecificationWithJUnit {
   def testConversion(humStr: String, nsId: Long, longId: Long, oid: ObjectId, ns: FeatureNamespace) = {
     val fidOpt = StoredFeatureId.fromHumanReadableString(humStr)
     val fid = fidOpt.get
