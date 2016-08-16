@@ -15,7 +15,6 @@ from collections import defaultdict
 from copy import deepcopy
 import errno
 import functools
-import hashlib
 from itertools import chain, izip
 import json
 import logging
@@ -30,10 +29,10 @@ from pants.backend.jvm.jar_dependency_utils import M2Coordinate, ResolvedJar
 from pants.backend.jvm.targets.jar_library import JarLibrary
 from pants.backend.jvm.tasks.classpath_products import ClasspathProducts
 from pants.base.fingerprint_strategy import TaskIdentityFingerprintStrategy
-from pants.base.payload_field import stable_json_sha1
 from pants.base.specs import DescendantAddresses
 from pants.invalidation.cache_manager import VersionedTargetSet
 from pants.task.task import Task
+from pants.util.memo import memoized_property
 from requests_futures.sessions import FuturesSession
 
 from fsqio.pants.pom.coordinate import Coordinate
@@ -259,31 +258,6 @@ class MissingResourceException(Exception):
   """Indicates that no resource matching that maven coordinate was found."""
 
 
-class PomResolveFingerprintStrategy(TaskIdentityFingerprintStrategy):
-  """A FingerprintStrategy with the addition of global exclusions and pins."""
-
-  def __init__(self, global_exclusions=None, global_pinned_versions=None):
-    self._extra_fingerprint_digest = stable_json_sha1([
-      sorted(list(global_exclusions or [])),
-      {str(key): val for key, val in (global_pinned_versions or {}).items()},
-    ])
-
-  def compute_fingerprint(self, target):
-    hasher = hashlib.sha1()
-    hasher.update(target.payload.fingerprint())
-    hasher.update(self._extra_fingerprint_digest)
-    return hasher.hexdigest()
-
-  def __hash__(self):
-    return hash((type(self), self._extra_fingerprint_digest))
-
-  def __eq__(self, other):
-    return (
-      type(self) == type(other) and
-      self._extra_fingerprint_digest == other._extra_fingerprint_digest
-    )
-
-
 class PomResolve(Task):
 
   @classmethod
@@ -293,6 +267,7 @@ class PomResolve(Task):
       '--cache-dir',
       default='~/.pom2',
       advanced=True,
+      fingerprint=True,
       help='Cache resolved pom artifacts in this directory.',
     )
     register(
@@ -300,6 +275,7 @@ class PomResolve(Task):
       type=list,
       member_type=dict,
       advanced=True,
+      fingerprint=True,
       help='A list of dicts representing coordinates { org: a, name: b } '
            'to exclude globally from consideration.',
     )
@@ -308,6 +284,7 @@ class PomResolve(Task):
       type=list,
       member_type=dict,
       advanced=True,
+      fingerprint=True,
       help='A list of dicts representing coordinates { org: a, name: b, rev: x.y.z } to '
            'explicitly pin during resolution.',
     )
@@ -348,6 +325,7 @@ class PomResolve(Task):
       type=list,
       member_type=dict,
       advanced=False,
+      fingerprint=True,
       help='A list of maps {name: url} that point to maven-style repos, preference is left-to-right.',
     )
 
@@ -375,19 +353,19 @@ class PomResolve(Task):
       'target_to_maven_coordinate_closure',
     ]
 
-  @property
+  @memoized_property
   def target_to_maven_coordinate_closure(self):
     return self.context.products.get_data('target_to_maven_coordinate_closure', lambda: {})
 
-  @property
+  @memoized_property
   def maven_coordinate_to_provided_artifacts(self):
     return self.context.products.get_data('maven_coordinate_to_provided_artifacts', lambda: {})
 
-  @property
+  @memoized_property
   def artifact_symlink_dir(self):
     return os.path.join(self.workdir, 'syms')
 
-  @property
+  @memoized_property
   def pom_cache_dir(self):
     return os.path.expanduser(self.get_options().cache_dir)
 
@@ -534,6 +512,10 @@ class PomResolve(Task):
       self._all_jar_libs = set(t for t in third_party_libs if isinstance(t, JarLibrary))
     return self._all_jar_libs
 
+  @classmethod
+  def implementation_version(cls):
+    return super(PomResolve, cls).implementation_version() + [('PomResolve', 1)]
+
   def execute(self):
 
     # Pants does no longer allows options to be tuples or sets. So we use lists of dicts and then convert into
@@ -566,7 +548,7 @@ class PomResolve(Task):
     invalidation_context_manager = self.invalidated(
       self.all_jar_libs,
       invalidate_dependents=False,
-      fingerprint_strategy=PomResolveFingerprintStrategy(global_exclusions, global_pinned_versions),
+      fingerprint_strategy=TaskIdentityFingerprintStrategy(self),
     )
 
     with invalidation_context_manager as invalidation_check:
@@ -597,10 +579,8 @@ class PomResolve(Task):
           self.target_to_maven_coordinate_closure[target.id] = list(dep_graph.artifact_closure())
         copied_coord_to_artifacts = deepcopy(global_dep_graph._coord_to_provided_artifacts)
         self.maven_coordinate_to_provided_artifacts.update(copied_coord_to_artifacts)
+
         safe_mkdir(vts_workdir)
-        # NOTE: These products are only used by pom-ivy-diff, which is only there for debugging.
-        # It will probably go away within a few months, at which point these products optionally
-        # can too.  But they might also be useful to future downstream tasks.
         analysis = {
           'target_to_maven_coordinate_closure': self.target_to_maven_coordinate_closure,
           'maven_coordinate_to_provided_artifacts': self.maven_coordinate_to_provided_artifacts,
@@ -642,17 +622,14 @@ class PomResolve(Task):
         for artifact in self.maven_coordinate_to_provided_artifacts[coord]:
           all_artifacts.add(artifact)
 
-    classpath_dump_file = self.get_options().dump_classpath_file
-    if classpath_dump_file:
-      with open(classpath_dump_file, 'wb') as f:
-          f.write('FINGERPRINT: {}\n'.format(global_vts.cache_key.hash))
-          for artifact in sorted(all_artifacts):
-            f.write('{}\n'.format(artifact))
-      logger.info('Dumped classpath file to {}'.format(classpath_dump_file))
-
     with self.context.new_workunit('fetch-artifacts'):
       coord_to_artifact_symlinks = self._fetch_artifacts(local_override_versions)
 
+    # TODO(mateo): Inline source jar fetching into the invalidation block. Modify `fetch_artifacts` to work with
+    # either jar type and delete the fetch_source_jars special casing. Very very low priority.
+
+    # My naive idea would be to not resolve a fetcher for a source jar, but to just attempt and download an accompanying
+    # source jar for every successful jar fetch, if the bit is set, skipping misses.
     if self.get_options().fetch_source_jars:
       with self.context.new_workunit('fetch-source-jars'):
         symlink_dir = os.path.join(
@@ -663,6 +640,14 @@ class PomResolve(Task):
         if not os.path.exists(symlink_dir):
           self._fetch_source_jars(fetchers, symlink_dir)
         stderr('\nFetched source jars to {}'.format(symlink_dir))
+
+    classpath_dump_file = self.get_options().dump_classpath_file
+    if classpath_dump_file:
+      with open(classpath_dump_file, 'wb') as f:
+          f.write('FINGERPRINT: {}\n'.format(global_vts.cache_key.hash))
+          for artifact in sorted(all_artifacts):
+            f.write('{}\n'.format(artifact))
+      logger.info('Dumped classpath file to {}'.format(classpath_dump_file))
 
     classpath_info_filename = self.get_options().write_classpath_info_to_file
     if classpath_info_filename:
@@ -747,7 +732,9 @@ class PomResolve(Task):
     with self.context.new_workunit('download-source-jars'):
       self._download_artifacts(artifacts_to_download)
     with self.context.new_workunit('symlink-source-jars'):
-      safe_mkdir(symlink_dir)
+
+      # Force a rebuild of the symlinks if the cache key has changed, in case the download location has changed.
+      safe_mkdir(symlink_dir, clean=True)
       for artifact in artifacts_to_symlink:
         cached_artifact_path = os.path.join(self.pom_cache_dir, artifact.artifact_path)
         symlinked_artifact_path = os.path.join(
@@ -810,8 +797,11 @@ class PomResolve(Task):
     products = self.context.products
     # Coordinate -> set(relative path to symlink of artifact in symlink farm)
     coord_to_artifact_symlinks = defaultdict(set)
+
     # Demanded by some downstream tasks
+    safe_mkdir(self.pom_cache_dir)
     products.safe_create_data('ivy_cache_dir', lambda: self.pom_cache_dir)
+
     coords = set(
       Coordinate(*t)
       for t in chain.from_iterable(self.target_to_maven_coordinate_closure.values())
@@ -824,11 +814,15 @@ class PomResolve(Task):
           raise Exception("Something went wrong! {} was mapped to an artifact {} with no "
                           "associated repo: ".format(coord, artifact))
         cached_artifact_path = os.path.join(self.pom_cache_dir, artifact.artifact_path)
+
         if not os.path.exists(cached_artifact_path):
           artifacts_to_download.add(artifact)
     self._download_artifacts(artifacts_to_download)
 
+    # TODO(mateo): Rename. I think that Foursquare still needs this product but it is a deprecated concept upstream.
+    # There is no ivy involved in this anymore.
     ivy_symlink_map = self.context.products.get_data('ivy_resolve_symlink_map', dict)
+    safe_mkdir(self.artifact_symlink_dir, clean=True)
     for coord in coords:
       for artifact in self.maven_coordinate_to_provided_artifacts[coord]:
         local_override_key = (artifact.groupId, artifact.artifactId, artifact.version)
