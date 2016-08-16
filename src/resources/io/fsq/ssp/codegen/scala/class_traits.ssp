@@ -14,6 +14,7 @@ trait ${cls.name}
 #for (pkField <- cls.primaryKeyField)
     with _root_.io.fsq.spindle.runtime.HasPrimaryKey[${pkField.renderType.text}, ${cls.name}]
 #end
+    with _root_.scala.math.Ordered[${cls.name}]
     with org.apache.thrift.TBase[${cls.name}, ${cls.name}._Fields] {
 
   override def meta: ${cls.name}Meta

@@ -13,8 +13,15 @@ object ${baseName}Typedefs {
   trait __${typedef.typeAlias}Tag
 #if (typedef.renderType.hasOrdering)
   object __${typedef.typeAlias}Tag {
-    implicit val ordering: scala.math.Ordering[${typedef.typeAlias}] =
-      implicitly[scala.math.Ordering[${typedef.renderType.boxedText}]].asInstanceOf[scala.math.Ordering[${typedef.typeAlias}]]
+    implicit val ordering: _root_.scala.math.Ordering[${typedef.typeAlias}] = {
+      implicitly[_root_.scala.math.Ordering[${typedef.renderType.boxedText}]].asInstanceOf[_root_.scala.math.Ordering[${typedef.typeAlias}]]
+    }
+
+    implicit val comparator: _root_.java.util.Comparator[${typedef.typeAlias}] = {
+      new _root_.java.util.Comparator[${typedef.typeAlias}] {
+        override def compare(x: ${typedef.typeAlias}, y: ${typedef.typeAlias}): Int = ordering.compare(x, y)
+      }
+    }
   }
 #end
   type ${typedef.typeAlias} = _root_.io.fsq.spindle.runtime.Id[${typedef.renderType.boxedText}, __${typedef.typeAlias}Tag]
@@ -28,6 +35,12 @@ object ${baseName}Typedefs {
 trait ${baseName}TypedefImplicits {
 #for (typedef <- typedefs)
 #if (typedef.newType)
+  implicit val ${typedef.typeAlias}Ordering: _root_.scala.math.Ordering[${baseName}Typedefs.${typedef.typeAlias}] = {
+    ${baseName}Typedefs.__${typedef.typeAlias}Tag.ordering
+  }
+  implicit val ${typedef.typeAlias}Comparator: _root_.java.util.Comparator[${baseName}Typedefs.${typedef.typeAlias}] = {
+    ${baseName}Typedefs.__${typedef.typeAlias}Tag.comparator
+  }
 #if (typedef.renderType.boxedText == "org.bson.types.ObjectId")
   implicit def stringTo${typedef.typeAlias}(x: String): ${baseName}Typedefs.${typedef.typeAlias} =
     ${baseName}Typedefs.${typedef.typeAlias}(new org.bson.types.ObjectId(x))

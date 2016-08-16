@@ -13,6 +13,18 @@ object ${cls.name} extends ${cls.name}Meta {
 <% render("class_companion_builder.ssp", Map("cls" -> cls)) %>
 
   implicit val companionProvider: ${cls.name}CompanionProvider = new ${cls.name}CompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[${cls.name}] = {
+    new _root_.scala.math.Ordering[${cls.name}] {
+      override def compare(x: ${cls.name}, y: ${cls.name}): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[${cls.name}] = {
+    new _root_.java.util.Comparator[${cls.name}] {
+      override def compare(x: ${cls.name}, y: ${cls.name}): Int = x.compare(y)
+    }
+  }
 }
 
 class ${cls.name}Meta

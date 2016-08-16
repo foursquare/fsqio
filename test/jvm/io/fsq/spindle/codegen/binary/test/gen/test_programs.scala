@@ -171,6 +171,18 @@ object Program extends ProgramMeta {
   def newBuilder: Program.Builder.AllUnspecified = new Builder(Program.createRawRecord)
 
   implicit val companionProvider: ProgramCompanionProvider = new ProgramCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Program] = {
+    new _root_.scala.math.Ordering[Program] {
+      override def compare(x: Program, y: Program): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Program] = {
+    new _root_.java.util.Comparator[Program] {
+      override def compare(x: Program, y: Program): Int = x.compare(y)
+    }
+  }
 }
 
 class ProgramMeta
@@ -560,6 +572,7 @@ trait Program
     extends JavaProgram[io.fsq.common.thrift.descriptors.constants.gen.Const, io.fsq.common.thrift.descriptors.enums.gen.Enum, io.fsq.common.thrift.descriptors.headers.gen.Include, io.fsq.common.thrift.descriptors.headers.gen.Namespace, io.fsq.common.thrift.descriptors.services.gen.Service, io.fsq.common.thrift.descriptors.structs.gen.Exception, io.fsq.common.thrift.descriptors.structs.gen.Struct, io.fsq.common.thrift.descriptors.structs.gen.Union, io.fsq.common.thrift.descriptors.types.gen.TypeRegistry, io.fsq.common.thrift.descriptors.types.gen.Typedef,
       Program, RawProgram, ProgramMeta
     ]
+    with _root_.scala.math.Ordered[Program]
     with org.apache.thrift.TBase[Program, Program._Fields] {
 
   override def meta: ProgramMeta

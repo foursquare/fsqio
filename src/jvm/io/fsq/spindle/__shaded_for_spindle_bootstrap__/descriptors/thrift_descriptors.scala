@@ -110,6 +110,18 @@ object SimpleBaseType extends io.fsq.spindle.__shaded_for_spindle_bootstrap__.ru
     case null => new UnknownWireValue(v)
     case x: SimpleBaseType => x
   }
+
+  implicit val __$ordering: _root_.scala.math.Ordering[SimpleBaseType] = {
+    new _root_.scala.math.Ordering[SimpleBaseType] {
+      override def compare(x: SimpleBaseType, y: SimpleBaseType): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[SimpleBaseType] = {
+    new _root_.java.util.Comparator[SimpleBaseType] {
+      override def compare(x: SimpleBaseType, y: SimpleBaseType): Int = x.compare(y)
+    }
+  }
 }
 
 sealed abstract class Requiredness private (
@@ -162,6 +174,18 @@ object Requiredness extends io.fsq.spindle.__shaded_for_spindle_bootstrap__.runt
     case null => new UnknownWireValue(v)
     case x: Requiredness => x
   }
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Requiredness] = {
+    new _root_.scala.math.Ordering[Requiredness] {
+      override def compare(x: Requiredness, y: Requiredness): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Requiredness] = {
+    new _root_.java.util.Comparator[Requiredness] {
+      override def compare(x: Requiredness, y: Requiredness): Int = x.compare(y)
+    }
+  }
 }
 
 
@@ -205,6 +229,18 @@ object Include extends IncludeMeta {
   def newBuilder: Include.Builder.AllUnspecified = new Builder(Include.createRawRecord)
 
   implicit val companionProvider: IncludeCompanionProvider = new IncludeCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Include] = {
+    new _root_.scala.math.Ordering[Include] {
+      override def compare(x: Include, y: Include): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Include] = {
+    new _root_.java.util.Comparator[Include] {
+      override def compare(x: Include, y: Include): Int = x.compare(y)
+    }
+  }
 }
 
 class IncludeMeta
@@ -610,6 +646,18 @@ object Namespace extends NamespaceMeta {
   def newBuilder: Namespace.Builder.AllUnspecified = new Builder(Namespace.createRawRecord)
 
   implicit val companionProvider: NamespaceCompanionProvider = new NamespaceCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Namespace] = {
+    new _root_.scala.math.Ordering[Namespace] {
+      override def compare(x: Namespace, y: Namespace): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Namespace] = {
+    new _root_.java.util.Comparator[Namespace] {
+      override def compare(x: Namespace, y: Namespace): Int = x.compare(y)
+    }
+  }
 }
 
 class NamespaceMeta
@@ -1094,6 +1142,18 @@ object Annotation extends AnnotationMeta {
   def newBuilder: Annotation.Builder.AllUnspecified = new Builder(Annotation.createRawRecord)
 
   implicit val companionProvider: AnnotationCompanionProvider = new AnnotationCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Annotation] = {
+    new _root_.scala.math.Ordering[Annotation] {
+      override def compare(x: Annotation, y: Annotation): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Annotation] = {
+    new _root_.java.util.Comparator[Annotation] {
+      override def compare(x: Annotation, y: Annotation): Int = x.compare(y)
+    }
+  }
 }
 
 class AnnotationMeta
@@ -1585,6 +1645,18 @@ object BaseType extends BaseTypeMeta {
   def newBuilder: BaseType.Builder.AllUnspecified = new Builder(BaseType.createRawRecord)
 
   implicit val companionProvider: BaseTypeCompanionProvider = new BaseTypeCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[BaseType] = {
+    new _root_.scala.math.Ordering[BaseType] {
+      override def compare(x: BaseType, y: BaseType): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[BaseType] = {
+    new _root_.java.util.Comparator[BaseType] {
+      override def compare(x: BaseType, y: BaseType): Int = x.compare(y)
+    }
+  }
 }
 
 class BaseTypeMeta
@@ -2086,6 +2158,18 @@ object ListType extends ListTypeMeta {
   def newBuilder: ListType.Builder.AllUnspecified = new Builder(ListType.createRawRecord)
 
   implicit val companionProvider: ListTypeCompanionProvider = new ListTypeCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[ListType] = {
+    new _root_.scala.math.Ordering[ListType] {
+      override def compare(x: ListType, y: ListType): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[ListType] = {
+    new _root_.java.util.Comparator[ListType] {
+      override def compare(x: ListType, y: ListType): Int = x.compare(y)
+    }
+  }
 }
 
 class ListTypeMeta
@@ -2485,6 +2569,18 @@ object SetType extends SetTypeMeta {
   def newBuilder: SetType.Builder.AllUnspecified = new Builder(SetType.createRawRecord)
 
   implicit val companionProvider: SetTypeCompanionProvider = new SetTypeCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[SetType] = {
+    new _root_.scala.math.Ordering[SetType] {
+      override def compare(x: SetType, y: SetType): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[SetType] = {
+    new _root_.java.util.Comparator[SetType] {
+      override def compare(x: SetType, y: SetType): Int = x.compare(y)
+    }
+  }
 }
 
 class SetTypeMeta
@@ -2890,6 +2986,18 @@ object MapType extends MapTypeMeta {
   def newBuilder: MapType.Builder.AllUnspecified = new Builder(MapType.createRawRecord)
 
   implicit val companionProvider: MapTypeCompanionProvider = new MapTypeCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[MapType] = {
+    new _root_.scala.math.Ordering[MapType] {
+      override def compare(x: MapType, y: MapType): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[MapType] = {
+    new _root_.java.util.Comparator[MapType] {
+      override def compare(x: MapType, y: MapType): Int = x.compare(y)
+    }
+  }
 }
 
 class MapTypeMeta
@@ -3381,6 +3489,18 @@ object ContainerType extends ContainerTypeMeta {
   def newBuilder: ContainerType.Builder.AllUnspecified = new Builder(ContainerType.createRawRecord)
 
   implicit val companionProvider: ContainerTypeCompanionProvider = new ContainerTypeCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[ContainerType] = {
+    new _root_.scala.math.Ordering[ContainerType] {
+      override def compare(x: ContainerType, y: ContainerType): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[ContainerType] = {
+    new _root_.java.util.Comparator[ContainerType] {
+      override def compare(x: ContainerType, y: ContainerType): Int = x.compare(y)
+    }
+  }
 }
 
 class ContainerTypeMeta
@@ -3886,6 +4006,18 @@ object Typeref extends TyperefMeta {
   def newBuilder: Typeref.Builder.AllUnspecified = new Builder(Typeref.createRawRecord)
 
   implicit val companionProvider: TyperefCompanionProvider = new TyperefCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Typeref] = {
+    new _root_.scala.math.Ordering[Typeref] {
+      override def compare(x: Typeref, y: Typeref): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Typeref] = {
+    new _root_.java.util.Comparator[Typeref] {
+      override def compare(x: Typeref, y: Typeref): Int = x.compare(y)
+    }
+  }
 }
 
 class TyperefMeta
@@ -4291,6 +4423,18 @@ object Type extends TypeMeta {
   def newBuilder: Type.Builder.AllUnspecified = new Builder(Type.createRawRecord)
 
   implicit val companionProvider: TypeCompanionProvider = new TypeCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Type] = {
+    new _root_.scala.math.Ordering[Type] {
+      override def compare(x: Type, y: Type): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Type] = {
+    new _root_.java.util.Comparator[Type] {
+      override def compare(x: Type, y: Type): Int = x.compare(y)
+    }
+  }
 }
 
 class TypeMeta
@@ -4792,6 +4936,18 @@ object Typedef extends TypedefMeta {
   def newBuilder: Typedef.Builder.AllUnspecified = new Builder(Typedef.createRawRecord)
 
   implicit val companionProvider: TypedefCompanionProvider = new TypedefCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Typedef] = {
+    new _root_.scala.math.Ordering[Typedef] {
+      override def compare(x: Typedef, y: Typedef): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Typedef] = {
+    new _root_.java.util.Comparator[Typedef] {
+      override def compare(x: Typedef, y: Typedef): Int = x.compare(y)
+    }
+  }
 }
 
 class TypedefMeta
@@ -5463,6 +5619,18 @@ object TypeRegistry extends TypeRegistryMeta {
   def newBuilder: TypeRegistry.Builder.AllUnspecified = new Builder(TypeRegistry.createRawRecord)
 
   implicit val companionProvider: TypeRegistryCompanionProvider = new TypeRegistryCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[TypeRegistry] = {
+    new _root_.scala.math.Ordering[TypeRegistry] {
+      override def compare(x: TypeRegistry, y: TypeRegistry): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[TypeRegistry] = {
+    new _root_.java.util.Comparator[TypeRegistry] {
+      override def compare(x: TypeRegistry, y: TypeRegistry): Int = x.compare(y)
+    }
+  }
 }
 
 class TypeRegistryMeta
@@ -6001,6 +6169,18 @@ object Const extends ConstMeta {
   def newBuilder: Const.Builder.AllUnspecified = new Builder(Const.createRawRecord)
 
   implicit val companionProvider: ConstCompanionProvider = new ConstCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Const] = {
+    new _root_.scala.math.Ordering[Const] {
+      override def compare(x: Const, y: Const): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Const] = {
+    new _root_.java.util.Comparator[Const] {
+      override def compare(x: Const, y: Const): Int = x.compare(y)
+    }
+  }
 }
 
 class ConstMeta
@@ -6662,6 +6842,18 @@ object EnumElement extends EnumElementMeta {
   def newBuilder: EnumElement.Builder.AllUnspecified = new Builder(EnumElement.createRawRecord)
 
   implicit val companionProvider: EnumElementCompanionProvider = new EnumElementCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[EnumElement] = {
+    new _root_.scala.math.Ordering[EnumElement] {
+      override def compare(x: EnumElement, y: EnumElement): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[EnumElement] = {
+    new _root_.java.util.Comparator[EnumElement] {
+      override def compare(x: EnumElement, y: EnumElement): Int = x.compare(y)
+    }
+  }
 }
 
 class EnumElementMeta
@@ -7351,6 +7543,18 @@ object Enum extends EnumMeta {
   def newBuilder: Enum.Builder.AllUnspecified = new Builder(Enum.createRawRecord)
 
   implicit val companionProvider: EnumCompanionProvider = new EnumCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Enum] = {
+    new _root_.scala.math.Ordering[Enum] {
+      override def compare(x: Enum, y: Enum): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Enum] = {
+    new _root_.java.util.Comparator[Enum] {
+      override def compare(x: Enum, y: Enum): Int = x.compare(y)
+    }
+  }
 }
 
 class EnumMeta
@@ -8090,6 +8294,18 @@ object Field extends FieldMeta {
   def newBuilder: Field.Builder.AllUnspecified = new Builder(Field.createRawRecord)
 
   implicit val companionProvider: FieldCompanionProvider = new FieldCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Field] = {
+    new _root_.scala.math.Ordering[Field] {
+      override def compare(x: Field, y: Field): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Field] = {
+    new _root_.java.util.Comparator[Field] {
+      override def compare(x: Field, y: Field): Int = x.compare(y)
+    }
+  }
 }
 
 class FieldMeta
@@ -9049,6 +9265,18 @@ object Struct extends StructMeta {
   def newBuilder: Struct.Builder.AllUnspecified = new Builder(Struct.createRawRecord)
 
   implicit val companionProvider: StructCompanionProvider = new StructCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Struct] = {
+    new _root_.scala.math.Ordering[Struct] {
+      override def compare(x: Struct, y: Struct): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Struct] = {
+    new _root_.java.util.Comparator[Struct] {
+      override def compare(x: Struct, y: Struct): Int = x.compare(y)
+    }
+  }
 }
 
 class StructMeta
@@ -9756,6 +9984,18 @@ object Union extends UnionMeta {
   def newBuilder: Union.Builder.AllUnspecified = new Builder(Union.createRawRecord)
 
   implicit val companionProvider: UnionCompanionProvider = new UnionCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Union] = {
+    new _root_.scala.math.Ordering[Union] {
+      override def compare(x: Union, y: Union): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Union] = {
+    new _root_.java.util.Comparator[Union] {
+      override def compare(x: Union, y: Union): Int = x.compare(y)
+    }
+  }
 }
 
 class UnionMeta
@@ -10463,6 +10703,18 @@ object Exception extends ExceptionMeta {
   def newBuilder: Exception.Builder.AllUnspecified = new Builder(Exception.createRawRecord)
 
   implicit val companionProvider: ExceptionCompanionProvider = new ExceptionCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Exception] = {
+    new _root_.scala.math.Ordering[Exception] {
+      override def compare(x: Exception, y: Exception): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Exception] = {
+    new _root_.java.util.Comparator[Exception] {
+      override def compare(x: Exception, y: Exception): Int = x.compare(y)
+    }
+  }
 }
 
 class ExceptionMeta
@@ -11202,6 +11454,18 @@ object Function extends FunctionMeta {
   def newBuilder: Function.Builder.AllUnspecified = new Builder(Function.createRawRecord)
 
   implicit val companionProvider: FunctionCompanionProvider = new FunctionCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Function] = {
+    new _root_.scala.math.Ordering[Function] {
+      override def compare(x: Function, y: Function): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Function] = {
+    new _root_.java.util.Comparator[Function] {
+      override def compare(x: Function, y: Function): Int = x.compare(y)
+    }
+  }
 }
 
 class FunctionMeta
@@ -12223,6 +12487,18 @@ object Service extends ServiceMeta {
   def newBuilder: Service.Builder.AllUnspecified = new Builder(Service.createRawRecord)
 
   implicit val companionProvider: ServiceCompanionProvider = new ServiceCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Service] = {
+    new _root_.scala.math.Ordering[Service] {
+      override def compare(x: Service, y: Service): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Service] = {
+    new _root_.java.util.Comparator[Service] {
+      override def compare(x: Service, y: Service): Int = x.compare(y)
+    }
+  }
 }
 
 class ServiceMeta
@@ -13117,6 +13393,18 @@ object Program extends ProgramMeta {
   def newBuilder: Program.Builder.AllUnspecified = new Builder(Program.createRawRecord)
 
   implicit val companionProvider: ProgramCompanionProvider = new ProgramCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[Program] = {
+    new _root_.scala.math.Ordering[Program] {
+      override def compare(x: Program, y: Program): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[Program] = {
+    new _root_.java.util.Comparator[Program] {
+      override def compare(x: Program, y: Program): Int = x.compare(y)
+    }
+  }
 }
 
 class ProgramMeta
@@ -14645,6 +14933,18 @@ object SimpleContainerType extends SimpleContainerTypeMeta {
   def newBuilder: SimpleContainerType.Builder.AllUnspecified = new Builder(SimpleContainerType.createRawRecord)
 
   implicit val companionProvider: SimpleContainerTypeCompanionProvider = new SimpleContainerTypeCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[SimpleContainerType] = {
+    new _root_.scala.math.Ordering[SimpleContainerType] {
+      override def compare(x: SimpleContainerType, y: SimpleContainerType): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[SimpleContainerType] = {
+    new _root_.java.util.Comparator[SimpleContainerType] {
+      override def compare(x: SimpleContainerType, y: SimpleContainerType): Int = x.compare(y)
+    }
+  }
 }
 
 class SimpleContainerTypeMeta
@@ -15241,6 +15541,18 @@ object SimpleType extends SimpleTypeMeta {
   def newBuilder: SimpleType.Builder.AllUnspecified = new Builder(SimpleType.createRawRecord)
 
   implicit val companionProvider: SimpleTypeCompanionProvider = new SimpleTypeCompanionProvider
+
+  implicit val __$ordering: _root_.scala.math.Ordering[SimpleType] = {
+    new _root_.scala.math.Ordering[SimpleType] {
+      override def compare(x: SimpleType, y: SimpleType): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[SimpleType] = {
+    new _root_.java.util.Comparator[SimpleType] {
+      override def compare(x: SimpleType, y: SimpleType): Int = x.compare(y)
+    }
+  }
 }
 
 class SimpleTypeMeta

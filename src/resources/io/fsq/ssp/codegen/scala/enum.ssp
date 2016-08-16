@@ -21,7 +21,10 @@ sealed abstract class ${enum.name} private (
     override val id: Int,
     override val name: String,
     override val stringValue: String
-) extends _root_.io.fsq.spindle.runtime.Enum[${enum.name}] with Java${enum.name} with org.apache.thrift.TEnum {
+) extends _root_.io.fsq.spindle.runtime.Enum[${enum.name}]
+  with Java${enum.name}
+  with org.apache.thrift.TEnum {
+
   override def toString: String = stringValue
   override def getValue: Int = id
   override def meta = ${enum.name}
@@ -87,5 +90,17 @@ object ${enum.name} extends _root_.io.fsq.spindle.runtime.EnumMeta[${enum.name}]
   override def findByStringValueOrUnknown(v: String): ${enum.name} = findByStringValueOrNull(v) match {
     case null => new UnknownWireValue(v)
     case x: ${enum.name} => x
+  }
+
+  implicit val __$ordering: _root_.scala.math.Ordering[${enum.name}] = {
+    new _root_.scala.math.Ordering[${enum.name}] {
+      override def compare(x: ${enum.name}, y: ${enum.name}): Int = x.compare(y)
+    }
+  }
+
+  implicit val __$comparator: _root_.java.util.Comparator[${enum.name}] = {
+    new _root_.java.util.Comparator[${enum.name}] {
+      override def compare(x: ${enum.name}, y: ${enum.name}): Int = x.compare(y)
+    }
   }
 }
