@@ -4,20 +4,16 @@ import com.twitter.conversions.time._
 import com.twitter.finagle.builder.ClientBuilder
 import com.twitter.finagle.thrift.{ThriftClientFramedCodec, ThriftClientRequest}
 import com.twitter.util.Future
-import io.fsq.twofishes.gen.{BulkReverseGeocodeRequest, BulkSlugLookupRequest, GeocodeRequest, Geocoder}
+import io.fsq.twofishes.gen.Geocoder
 import java.io.{File, FileWriter}
 import java.nio._
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.{BytesWritable, NullWritable, SequenceFile}
 import org.apache.hadoop.io.SequenceFile.Reader
-import org.apache.thrift._
-import org.apache.thrift.protocol.{TBinaryProtocol, TMessage, TProtocol, TProtocolFactory, _}
-import org.apache.thrift.transport._
+import org.apache.thrift.TBase
+import org.apache.thrift.protocol.{TBinaryProtocol, TMessage, TProtocol, TProtocolFactory, TProtocolUtil, TType}
 import scala.collection.JavaConverters._
-import org.apache.hadoop.io.DataOutputBuffer;
-
-import com.twitter.util.Future
 
 object ThriftPrinter {
   def typeStr(t: Byte): String = {
