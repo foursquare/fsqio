@@ -388,6 +388,7 @@ jvm_third_party_map = {
     },
     'datavec': {
       'api': 'datavec310',
+      'common': 'datavec310',
       'image': 'datavec310',
       'javacv': 'javacv',
     },
