@@ -59,13 +59,15 @@ First time setup
 
 Data import
 ===========
-*   mongod --dbpath /local/directory/for/output/
-*   If you want to import countries: ./src/jvm/io/fsq/twofishes/scripts/parse.py -c US /output/dir (Note that you can specify list of countries separating them by comma: US,GB,RU)
-*   If you want to import world: ./src/jvm/io/fsq/twofishes/scripts/parse.py -w /output/dir
+*   mongod --dbpath /mongo_db_data_path
+*   If you want to import countries: ./src/jvm/io/fsq/twofishes/scripts/parse.py -c US /output_dir (Note that you can specify list of countries separating them by comma: US,GB,RU)
+*   If you want to import world: ./src/jvm/io/fsq/twofishes/scripts/parse.py -w /output_dir
 
 Serving
 =======
-*   ./src/jvm/io/fsq/twofishes/scripts/serve.py -p 8080 /output/dir – Where /output/dir will contain a subdirectory whose name will be the date of the most recent build, for example `2013-02-25-01-08-23.803740`. You need to point to this subdirectory or to a folder called `latest` which is created during the build process (in the twofishes directory) and is a symlink to the most recent dated subdirectory.
+*   ./pants binary src/jvm/io/fsq/twofishes/server:server-bin
+*   ./src/jvm/io/fsq/twofishes/scripts/serve.py -p 8080 /output_dir – Where /output_dir is the data import folder used above and will contain a subdirectory whose name will be the date of the most recent import, for example `2013-02-25-01-08-23.803740`. 
+    *   Alternatively: java -jar dist/server-bin.jar --hfile_basepath /output_dir
 *   server should be responding to finagle-thrift on the port specified (8080 by default), and responding to http requests at the next port up: <http://localhost:8081/?query=rego+park+ny> <http://localhost:8081/twofishes-static/geocoder.html#rego+park>
 *   use the --host flag to specify a bind address (defaults to 0.0.0.0)
 *   to enable hotfixes and allow refreshing, use the --hotfix\_basepath and --enable\_private\_endpoints params as detailed under [Hotfixes](#hotfixes) below 
