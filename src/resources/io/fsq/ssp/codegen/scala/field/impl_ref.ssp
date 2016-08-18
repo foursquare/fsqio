@@ -6,7 +6,7 @@
 <%@ val cls: StructLike %>
 <%@ val field: ScalaField %>
   // Field #${field.identifier} - ${field.name}
-  private var ${field.varName}: ${field.renderType.text} = ${field.renderType.defaultText}  // Underlying type: ${field.renderType.underlying.text}
+  private[this] var ${field.varName}: ${field.renderType.text} = ${field.renderType.defaultText}  // Underlying type: ${field.renderType.underlying.text}
 #if (field.defaultValueIsSet)
   override def ${field.escapedName}: ${field.renderType.text} = ${field.name}OrDefault
 #elseif (field.builderRequired)

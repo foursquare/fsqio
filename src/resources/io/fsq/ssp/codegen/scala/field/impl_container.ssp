@@ -8,7 +8,7 @@
 <% val container: String = field.renderType.underlying.asInstanceOf[ContainerRenderType].container %>
 <% val emptyContainer: String = field.renderType.underlying.asInstanceOf[ContainerRenderType].emptyContainer %>
   // Field #${field.identifier} - ${field.name}
-  private var ${field.varName}: ${field.renderType.text} = ${field.renderType.defaultText}  // Underlying type: ${field.renderType.underlying.text}
+  private[this] var ${field.varName}: ${field.renderType.text} = ${field.renderType.defaultText}  // Underlying type: ${field.renderType.underlying.text}
   override def ${field.escapedName}: ${field.renderType.text} = ${field.name}OrDefault
   override def ${field.escapedName}_=(x: ${field.renderType.text}): Unit = { ${field.varName} = x }
   override def ${field.name}Option: Option[${field.renderType.text}] = if (${field.isSetName}) Some(${field.varName}) else None

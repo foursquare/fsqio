@@ -7,8 +7,8 @@
 <%@ val field: ScalaField %>
 <%@ val renderType: RenderType = field.renderType %>
   // Field #${field.identifier} - ${field.name}
-  private var ${field.varName}: ${renderType.text} = ${renderType.defaultText}  // Underlying type: ${renderType.underlying.text}
-  private var ${field.isSetVar}: Boolean = false
+  private[this] var ${field.varName}: ${renderType.text} = ${renderType.defaultText}  // Underlying type: ${renderType.underlying.text}
+  private[this] var ${field.isSetVar}: Boolean = false
   override def ${field.escapedName}: ${renderType.text} = ${field.name}OrDefault
   override def ${field.escapedName}_=(x: ${renderType.text}): Unit = { ${field.varName} = x ; ${field.isSetVar} = true }
   override def ${field.name}Option: Option[${renderType.text}] = if (${field.isSetName}) Some(${field.varName}) else None

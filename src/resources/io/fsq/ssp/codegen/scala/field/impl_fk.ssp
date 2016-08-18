@@ -4,8 +4,8 @@
   import _root_.io.fsq.spindle.codegen.runtime.ScalaField
 %>
 <%@ val field: ScalaField %>
-  private var ${field.varName}Obj: AnyRef = null
-  private var ${field.varName}AlternateObj: AnyRef = null
+  private[this] var ${field.varName}Obj: AnyRef = null
+  private[this] var ${field.varName}AlternateObj: AnyRef = null
   override def ${field.name}Fk[R <: _root_.io.fsq.spindle.runtime.Record[R] with _root_.io.fsq.spindle.runtime.HasPrimaryKey[${field.renderType.text}, R]](meta: _root_.io.fsq.spindle.runtime.MetaRecord[R, _]): Option[R] = {
     if (${field.isSetName}) {
       if (${field.varName}Obj != null) {

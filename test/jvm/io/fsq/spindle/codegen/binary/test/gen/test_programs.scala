@@ -972,7 +972,7 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
 
   // fields
   // Field #1 - namespaces
-  private var _namespaces: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]
+  private[this] var _namespaces: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]
   override def namespaces: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace] = namespacesOrDefault
   override def namespaces_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]): Unit = { _namespaces = x }
   override def namespacesOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]] = if (namespacesIsSet) Some(_namespaces) else None
@@ -982,7 +982,7 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
   override def namespacesIsSet: Boolean = _namespaces != null
   override def namespacesUnset(): Unit = { _namespaces = null }
   // Field #2 - includes
-  private var _includes: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]
+  private[this] var _includes: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]
   override def includes: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include] = includesOrDefault
   override def includes_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]): Unit = { _includes = x }
   override def includesOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]] = if (includesIsSet) Some(_includes) else None
@@ -992,7 +992,7 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
   override def includesIsSet: Boolean = _includes != null
   override def includesUnset(): Unit = { _includes = null }
   // Field #3 - constants
-  private var _constants: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]
+  private[this] var _constants: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]
   override def constants: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const] = constantsOrDefault
   override def constants_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]): Unit = { _constants = x }
   override def constantsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]] = if (constantsIsSet) Some(_constants) else None
@@ -1002,7 +1002,7 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
   override def constantsIsSet: Boolean = _constants != null
   override def constantsUnset(): Unit = { _constants = null }
   // Field #4 - enums
-  private var _enums: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]
+  private[this] var _enums: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]
   override def enums: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum] = enumsOrDefault
   override def enums_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]): Unit = { _enums = x }
   override def enumsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]] = if (enumsIsSet) Some(_enums) else None
@@ -1012,7 +1012,7 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
   override def enumsIsSet: Boolean = _enums != null
   override def enumsUnset(): Unit = { _enums = null }
   // Field #5 - typedefs
-  private var _typedefs: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]
+  private[this] var _typedefs: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]
   override def typedefs: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef] = typedefsOrDefault
   override def typedefs_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]): Unit = { _typedefs = x }
   override def typedefsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]] = if (typedefsIsSet) Some(_typedefs) else None
@@ -1022,7 +1022,7 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
   override def typedefsIsSet: Boolean = _typedefs != null
   override def typedefsUnset(): Unit = { _typedefs = null }
   // Field #6 - structs
-  private var _structs: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]
+  private[this] var _structs: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]
   override def structs: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct] = structsOrDefault
   override def structs_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]): Unit = { _structs = x }
   override def structsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]] = if (structsIsSet) Some(_structs) else None
@@ -1032,7 +1032,7 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
   override def structsIsSet: Boolean = _structs != null
   override def structsUnset(): Unit = { _structs = null }
   // Field #7 - unions
-  private var _unions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]
+  private[this] var _unions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]
   override def unions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union] = unionsOrDefault
   override def unions_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]): Unit = { _unions = x }
   override def unionsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]] = if (unionsIsSet) Some(_unions) else None
@@ -1042,7 +1042,7 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
   override def unionsIsSet: Boolean = _unions != null
   override def unionsUnset(): Unit = { _unions = null }
   // Field #8 - exceptions
-  private var _exceptions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]
+  private[this] var _exceptions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]
   override def exceptions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception] = exceptionsOrDefault
   override def exceptions_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]): Unit = { _exceptions = x }
   override def exceptionsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]] = if (exceptionsIsSet) Some(_exceptions) else None
@@ -1052,7 +1052,7 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
   override def exceptionsIsSet: Boolean = _exceptions != null
   override def exceptionsUnset(): Unit = { _exceptions = null }
   // Field #9 - services
-  private var _services: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]
+  private[this] var _services: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]
   override def services: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service] = servicesOrDefault
   override def services_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]): Unit = { _services = x }
   override def servicesOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]] = if (servicesIsSet) Some(_services) else None
@@ -1062,7 +1062,7 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
   override def servicesIsSet: Boolean = _services != null
   override def servicesUnset(): Unit = { _services = null }
   // Field #98 - typeRegistry
-  private var _typeRegistry: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry = null  // Underlying type: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry
+  private[this] var _typeRegistry: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry = null  // Underlying type: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry
   override def typeRegistry: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry = typeRegistryOrThrow
   override def typeRegistry_=(x: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry): Unit = { _typeRegistry = x }
   override def typeRegistryOption: Option[io.fsq.common.thrift.descriptors.types.gen.TypeRegistry] = if (typeRegistryIsSet) Some(_typeRegistry) else None
