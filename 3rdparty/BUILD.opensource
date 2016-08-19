@@ -228,6 +228,7 @@ jar_library(
     sjar(org = 'com.twitter', name = 'finagle-serversets', rev = finagle_rev),
     sjar(org = 'com.twitter', name = 'finagle-thrift', rev = finagle_rev),
     sjar(org = 'com.twitter', name = 'finagle-memcached', rev = finagle_rev),
+    sjar(org = 'com.twitter', name = 'finagle-memcachedx', rev = finagle_rev),
   ],
 )
 
