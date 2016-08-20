@@ -1073,7 +1073,7 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
   // end fields
 
 
-  private var unknownFields: List[_root_.io.fsq.spindle.runtime.UnknownFields] = Nil
+  private[this] var unknownFields: List[_root_.io.fsq.spindle.runtime.UnknownFields] = Nil
 
 
   override def write(oprot: org.apache.thrift.protocol.TProtocol): Unit = {
@@ -1164,7 +1164,7 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
       _typeRegistry.write(oprot)
       oprot.writeFieldEnd()
     }
-  if (io.fsq.spindle.runtime.RuntimeHelpers.preserveUnknownFields(this)) {
+  if (unknownFields.nonEmpty && io.fsq.spindle.runtime.RuntimeHelpers.preserveUnknownFields(this)) {
     unknownFields.reverse foreach { _.write(oprot) }
   }
     oprot.writeFieldStop()

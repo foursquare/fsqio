@@ -19,7 +19,7 @@ final class Raw${cls.name} extends #if(clsContainer.nonEmpty)Java${clsContainer}
 
 <%-- A list, because we may read a single record from multiple protocols: Unknown fields serialized
     using protocol P1 may contain nested unknown fields previously serialized using protocol P2. --%>
-  private var unknownFields: List[_root_.io.fsq.spindle.runtime.UnknownFields] = Nil
+  private[this] var unknownFields: List[_root_.io.fsq.spindle.runtime.UnknownFields] = Nil
 
 <% render("class_impls_write.ssp", Map("cls" -> cls)) %>
 

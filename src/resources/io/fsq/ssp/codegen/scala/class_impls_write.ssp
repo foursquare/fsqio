@@ -9,7 +9,7 @@
       oprot.writeFieldEnd()
     }
 #end
-  if (io.fsq.spindle.runtime.RuntimeHelpers.preserveUnknownFields(this)) {
+  if (unknownFields.nonEmpty && io.fsq.spindle.runtime.RuntimeHelpers.preserveUnknownFields(this)) {
     unknownFields.reverse foreach { _.write(oprot) }
   }
     oprot.writeFieldStop()
