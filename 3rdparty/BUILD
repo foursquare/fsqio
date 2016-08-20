@@ -1,7 +1,7 @@
 # If we internally fork an otherwise publicly available jar, add the public jar targets here.
 
 def sjar(org, name, **kwargs):
-  scala_jar_version = '2.10'
+  scala_jar_version = '2.11'
   return jar(org = org, name = '%s_%s' % (name, scala_jar_version), **kwargs)
 
 # Keep in sync with 3rdparty/BUILD.hadoop
@@ -167,20 +167,9 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.scala-tools.testing', name = 'specs', rev = '1.6.9'),
+    sjar(org = 'org.scala-tools.testing', name = 'specs_2.10', rev = '1.6.9'),
   ],
   dependencies = [
     ':mockito'
-  ],
-)
-
-jar_library(
-  name = 'twitter-util-async',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    sjar(org = 'com.foursquare', name = 'twitter-util-async', rev = '1.0.0'),
   ],
 )
