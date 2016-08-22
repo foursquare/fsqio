@@ -267,7 +267,6 @@ class PomResolve(Task):
       '--cache-dir',
       default='~/.pom2',
       advanced=True,
-      fingerprint=True,
       help='Cache resolved pom artifacts in this directory.',
     )
     register(
