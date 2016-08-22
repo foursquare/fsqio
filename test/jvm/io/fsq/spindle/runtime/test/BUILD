@@ -10,7 +10,6 @@ junit_tests(
     '3rdparty:lift-json',
     '3rdparty:mongodb',
     '3rdparty:phonenumbers',
-    '3rdparty:specs',
     '3rdparty:thrift',
     'src/jvm/io/fsq/spindle/common/thrift/base',
     'src/jvm/io/fsq/spindle/common/thrift/bson',

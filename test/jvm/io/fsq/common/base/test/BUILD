@@ -5,7 +5,6 @@ junit_tests(
   sources = globs('*.scala'),
   dependencies = [
     '3rdparty:junit',
-    '3rdparty:specs',
     'src/jvm/io/fsq/common/base',
   ],
 )

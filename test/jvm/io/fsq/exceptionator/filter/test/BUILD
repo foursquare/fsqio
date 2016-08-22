@@ -9,7 +9,6 @@ junit_tests(
   dependencies = [
     '3rdparty:finagle',
     '3rdparty:junit',
-    '3rdparty:specs',
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/exceptionator/filter',
     'src/jvm/io/fsq/exceptionator/model/io',

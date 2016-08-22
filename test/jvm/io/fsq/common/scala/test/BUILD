@@ -6,7 +6,6 @@ junit_tests(
   dependencies = [
     '3rdparty:junit',
     '3rdparty:scalacheck',
-    '3rdparty:specs',
     'src/jvm/io/fsq/common/scala',
   ],
 )

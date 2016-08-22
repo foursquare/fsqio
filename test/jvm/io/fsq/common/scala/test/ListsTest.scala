@@ -4,38 +4,37 @@ package io.fsq.common.scala.test
 
 import io.fsq.common.scala.{Lists, TryO}
 import io.fsq.common.scala.Identity._
-import org.junit.{Assert, Test}
+import org.junit.{Assert => A, Test}
 import org.scalacheck.{ConsoleReporter, Prop, Test => Check}
-import org.specs.SpecsMatchers
 import scala.collection.mutable.{Map => MutableMap}
 
-class ListsTest extends SpecsMatchers with Lists.Implicits {
+class ListsTest extends Lists.Implicits {
 
   private def mustPass(p: Prop) = {
     val res = Check.check(Check.Parameters.default, p)
     ConsoleReporter(1).onTestResult(this.getClass.getName, res)
-    Assert.assertTrue(res.passed)
+    A.assertTrue(res.passed)
   }
 
   @Test
-  def testHasTypes {
+  def testHasTypes(): Unit = {
     val list = List[Int](1, 2, 3, 4, 5)
     val set = Set[String]("a", "b", "c")
     val map = Map[Int, String](1 -> "1", 2 -> "2", 3 -> "3")
 
-    list.has(3) must_== true
-    list.has(-1) must_== false
+    A.assertTrue(list.has(3))
+    A.assertFalse(list.has(-1))
 
-    set.has("a") must_== true
-    set.has("d") must_== false
+    A.assertTrue(set.has("a"))
+    A.assertFalse(set.has("d"))
 
-    map.has(1 -> "1") must_== true
-    map.has(1 -> "2") must_== false
-    map.has(4 -> "4") must_== false
+    A.assertTrue(map.has(1 -> "1"))
+    A.assertFalse(map.has(1 -> "2"))
+    A.assertFalse(map.has(4 -> "4"))
   }
 
   @Test
-  def testRemoveAll {
+  def testRemoveAll(): Unit = {
     val propRemovedElements = Prop.forAll { (l1: List[Int], l2: List[Int]) => {
       val r = Lists.removeAll(l1, l2)
       l2.forall(i => !r.has(i))
@@ -64,7 +63,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testAggregate {
+  def testAggregate(): Unit = {
     def getKey(i: Int) = i % 5
     def agg1(prev: Option[Int], next: Int) = prev.getOrElse(0) + next
     def agg2(prev: Option[List[Int]], next: Int) = next :: prev.getOrElse(Nil)
@@ -77,7 +76,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testCartesianProduct {
+  def testCartesianProduct(): Unit = {
     val propLength1 = Prop.forAll { (l1: List[Int], l2: List[Int]) => {
       val r = Lists.product(l1, l2)
       r.length == l1.length * l2.length
@@ -109,7 +108,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testPowerSet {
+  def testPowerSet(): Unit = {
     val propLength = Prop.forAll { (l1: List[Int]) => {
       val l1t = l1.take(10)
       val r = Lists.powerset(l1t)
@@ -128,7 +127,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testZipWith {
+  def testZipWith(): Unit = {
     val prop = Prop.forAll { (l1: List[Int], l2: List[Int]) => {
       val r1 = Lists.zipWith(l1, l2)(_ + _)
       val r2 = Lists.zipWith(r1, l1)(_ - _)
@@ -139,13 +138,13 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testUnfold {
+  def testUnfold(): Unit = {
     val r = List.unfold(0){ i => if (i == 10) None else Some((i+1, i))}
-    r must_== (0 to 9).toList
+    A.assertEquals((0 to 9).toList, r)
   }
 
   @Test
-  def testMkJoin {
+  def testMkJoin(): Unit = {
     val prop = Prop.forAll { (l1: List[Int]) => {
       val r = l1.mkJoin(0)
       r.zipWithIndex.forall{ case (e, i) => {
@@ -160,7 +159,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testFlatGroupBy {
+  def testFlatGroupBy(): Unit = {
     val prop = Prop.forAll { (l1: List[Int]) => {
       val r = l1.flatGroupBy(e => if (e % 3 == 0) None else Some(e % 3))
       r.get(0) == None && (0 to 2).forall(n => r.getOrElse(n, Nil).forall(e => e % 3 == n))
@@ -169,7 +168,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testMapAccum {
+  def testMapAccum(): Unit = {
     val prop = Prop.forAll { (l1: List[Int]) => {
       val (acc, r) = l1.mapAccum(0){ case (acc, e) => (acc + e, acc)}
       acc == l1.sum && r.zipWithIndex.forall { case (e, i) => {
@@ -180,7 +179,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testFlatMapAccum {
+  def testFlatMapAccum(): Unit = {
     val prop = Prop.forAll { (l1: List[Int]) => {
       val (acc, r) = l1.flatMapAccum(0){ case (acc, e) => (acc + e, List(acc, 0))}
       acc == l1.sum && r.zipWithIndex.forall { case (e, i) => {
@@ -195,7 +194,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testRemoveDuplicatesOn {
+  def testRemoveDuplicatesOn(): Unit = {
     val propId = Prop.forAll { (l1: List[Int]) => {
       val r = l1.distinctBy(x => x)
       r == l1.distinct
@@ -214,7 +213,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testCountDistinctOn {
+  def testCountDistinctOn(): Unit = {
     val propId = Prop.forAll { (l1: List[Int]) => {
       val r = l1.countDistinctBy(x => x)
       r == l1.distinct.length
@@ -231,7 +230,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testMinByOption {
+  def testMinByOption(): Unit = {
     val propId = Prop.forAll { (l1: List[Int]) => {
       l1.minOption.forall(_ == l1.min)
     }} label "identity"
@@ -252,7 +251,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testMaxByOption {
+  def testMaxByOption(): Unit = {
     val propId = Prop.forAll { (l1: List[Int]) => {
       l1.maxOption.forall(_ == l1.max)
     }} label "identity"
@@ -273,10 +272,10 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testCollectFirst {
+  def testCollectFirst(): Unit = {
     val xs = List(1, 2, 3, 4, 5)
-    xs.collectFirstOpt(Some(_).filter(_ > 2)) must_== Some(3)
-    xs.collectFirstOpt(Some(_).filter(_ > 5)) must_== None
+    A.assertEquals(Some(3), xs.collectFirstOpt(Some(_).filter(_ > 2)))
+    A.assertEquals(None, xs.collectFirstOpt(Some(_).filter(_ > 5)))
 
     class ThrowAfter3 extends Iterator[Int] {
       var x = -1
@@ -290,18 +289,18 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
     }
 
     val danger = new ThrowAfter3().toTraversable
-    danger.collectFirstOpt(Some(_).filter(_ > 2)) must_== Some(3)
+    A.assertEquals(Some(3),danger.collectFirstOpt(Some(_).filter(_ > 2)))
   }
 
   @Test
-  def testGroupWhile {
+  def testGroupWhile(): Unit = {
     val xs = List(1,2,3,11,12,13,21,22)
-    xs.groupWhile(_ / 10 == _ / 10) must_== List(List(1,2,3),List(11,12,13), List(21,22))
-    List.empty[Int].groupWhile(_ == _) must_== Nil
+    A.assertEquals(List(List(1,2,3),List(11,12,13), List(21,22)), xs.groupWhile(_ / 10 == _ / 10))
+    A.assertEquals(Nil, List.empty[Int].groupWhile(_ == _))
   }
 
   @Test
-  def testCrowd {
+  def testCrowd(): Unit = {
     val prop = Prop.forAll { (l1: List[Int]) => {
       val f = (x: Int) => x % 2
       val r = l1.crowd(3, f)
@@ -311,7 +310,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testChunkMap {
+  def testChunkMap(): Unit = {
     val propFn1 = Prop.forAll { (l1: List[Int]) => {
       val f = (xs: List[Int]) => xs.sum
       l1.chunkMap(5)(f) == l1.grouped(5).toList.map(f)
@@ -327,7 +326,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testChunkFlatMap {
+  def testChunkFlatMap(): Unit = {
     val propFn1 = Prop.forAll { (l1: List[Int]) => {
       val f = (xs: List[Int]) => xs.take(3)
       l1.chunkMap(5)(f) == l1.grouped(5).toList.map(f)
@@ -343,7 +342,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testFilterOutWith {
+  def testFilterOutWith(): Unit = {
     val prop = Prop.forAll { (l1: List[Int]) => {
       val evens = new scala.collection.mutable.ListBuffer[Int]
       val r = l1.filterOutWith(_ % 2 == 0, evens += _)
@@ -353,7 +352,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testSample {
+  def testSample(): Unit = {
     val prop = Prop.forAll { (l1: List[Int], n: Int) => {
       val l1d = l1.distinct
       val l1dSet = l1d.toSet
@@ -366,7 +365,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testNth {
+  def testNth(): Unit = {
     val prop = Prop.forAll { (l1: List[Int]) => {
       val l1s = l1.sorted
       (0 to l1.length).forall { idx =>
@@ -377,7 +376,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testSortByDesc {
+  def testSortByDesc(): Unit = {
     val propId = Prop.forAll { (l1: List[Int]) => {
       val f = (x: Int) => x
       l1.sortByDesc(f) == l1.sortBy(f).reverse
@@ -399,7 +398,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def distinctCounts {
+  def distinctCounts(): Unit = {
     val prop = Prop.forAll { (l1: List[Int]) => {
       val l1m = l1.map(_ % 5)
       val r = l1m.distinctCounts
@@ -409,59 +408,59 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testToMapBy {
+  def testToMapBy(): Unit = {
     // Empty input
-    Assert.assertTrue(Seq.empty[Int].toMapBy(x => (x -> (x + 10))) equals Map.empty[Int, Int])
+    A.assertTrue(Seq.empty[Int].toMapBy(x => (x -> (x + 10))) equals Map.empty[Int, Int])
 
     val testValue = Seq(1, 2, 3).toMapBy(x => (x -> (x + 10)))
     val result = Map(1 -> 11, 2 -> 12, 3 -> 13)
-    Assert.assertTrue(testValue equals result)
+    A.assertTrue(testValue equals result)
   }
 
   @Test
-  def testToMutableMapBy {
+  def testToMutableMapBy(): Unit = {
     // Empty input
-    Assert.assertTrue(Seq.empty[Int].toMutableMapBy(x => (x -> (x + 10))) equals MutableMap.empty[Int, Int])
+    A.assertTrue(Seq.empty[Int].toMutableMapBy(x => (x -> (x + 10))) equals MutableMap.empty[Int, Int])
 
     val testValue = Seq(1, 2, 3).toMutableMapBy(x => (x -> (x + 10)))
     val result = MutableMap(1 -> 11, 2 -> 12, 3 -> 13)
-    Assert.assertTrue(testValue equals result)
+    A.assertTrue(testValue equals result)
   }
 
   @Test
-  def testToMapByKey {
+  def testToMapByKey(): Unit = {
     //Empty input
-    Assert.assertTrue(Seq.empty[Int].toMapByKey(x => x) equals Map.empty[Int, Int])
+    A.assertTrue(Seq.empty[Int].toMapByKey(x => x) equals Map.empty[Int, Int])
 
     val testValue = Seq(1 -> "a", 2 -> "b").toMapByKey(_._1)
     val result = Map(1 -> (1, "a"), 2 -> (2, "b"))
-    Assert.assertTrue(testValue equals result)
+    A.assertTrue(testValue equals result)
   }
 
   @Test
-  def testGroupByKeyValue {
+  def testGroupByKeyValue(): Unit = {
     // Empty input
-    Assert.assertTrue(Seq.empty[Int].groupByKeyValue(x => (x -> x)) equals Map.empty[Int, Seq[Int]])
+    A.assertTrue(Seq.empty[Int].groupByKeyValue(x => (x -> x)) equals Map.empty[Int, Seq[Int]])
 
     val testValue = Seq(1 -> "a", 2 -> "a", 1 -> "b").groupByKeyValue(x => x)
     val result = Map(1 -> Seq("a", "b"), 2 -> Seq("a"))
 
-    Assert.assertTrue(testValue equals result)
+    A.assertTrue(testValue equals result)
   }
 
   @Test
-  def testToMapAccumValues {
+  def testToMapAccumValues(): Unit = {
     // Empty input
-    Assert.assertTrue(Seq.empty[(Int, Int)].toMapAccumValues equals Map.empty[Int, Seq[Int]])
+    A.assertTrue(Seq.empty[(Int, Int)].toMapAccumValues equals Map.empty[Int, Seq[Int]])
 
     val testValue = Seq(1 -> "a", 2 -> "a", 1 -> "b").toMapAccumValues
     val result = Map(1 -> Seq("a", "b"), 2 -> Seq("a"))
 
-    Assert.assertTrue(testValue equals result)
+    A.assertTrue(testValue equals result)
   }
 
   @Test
-  def testInvert {
+  def testInvert(): Unit = {
     val prop = Prop.forAll { (l1: List[Int]) => {
       val m = l1.groupBy(_ % 5)
       val mii = m.invert.invert
@@ -471,7 +470,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testFlattenValues {
+  def testFlattenValues(): Unit = {
     val prop = Prop.forAll { (l1: List[Int]) => {
       val m = l1.map(n => math.abs(n % 100000)).groupBy(_ % 10)
       val mopt = (0 to 9).map(k => k -> m.get(k)).toMap
@@ -482,7 +481,7 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testFlatMapValues {
+  def testFlatMapValues(): Unit = {
     val prop = Prop.forAll { (l1: List[Int]) => {
       val m = l1.map(n => math.abs(n % 100000)).groupBy(_ % 10).mappedValues(_.head)
       val mopt = (0 to 9).map(k => k -> m.get(k)).toMap
@@ -501,104 +500,109 @@ class ListsTest extends SpecsMatchers with Lists.Implicits {
   }
 
   @Test
-  def testSlidingPairsLists {
-    Assert.assertTrue(List(1,2,3).slidingPairs =? List((1,2), (2,3)))
-    Assert.assertTrue(List(1,2,3,4).slidingPairs =? List((1,2), (2,3), (3,4)))
-    Assert.assertTrue(List(1).slidingPairs =? Nil)
-    Assert.assertTrue(Nil.slidingPairs =? Nil)
+  def testSlidingPairsLists(): Unit = {
+    A.assertTrue(List(1,2,3).slidingPairs =? List((1,2), (2,3)))
+    A.assertTrue(List(1,2,3,4).slidingPairs =? List((1,2), (2,3), (3,4)))
+    A.assertTrue(List(1).slidingPairs =? Nil)
+    A.assertTrue(Nil.slidingPairs =? Nil)
   }
 
   @Test
-  def testSlidingPairsSeqs {
-    Assert.assertTrue(Seq(1,2,3).slidingPairs =? Seq((1,2), (2,3)))
-    Assert.assertTrue(Seq(1,2,3).slidingPairs =? Seq((1,2), (2,3)))
-    Assert.assertTrue(Seq(1,2,3,4).slidingPairs =? Seq((1,2), (2,3), (3,4)))
-    Assert.assertTrue(Seq(1).slidingPairs =? Seq())
-    Assert.assertTrue(Seq().slidingPairs =? Seq())
+  def testSlidingPairsSeqs(): Unit = {
+    A.assertTrue(Seq(1,2,3).slidingPairs =? Seq((1,2), (2,3)))
+    A.assertTrue(Seq(1,2,3).slidingPairs =? Seq((1,2), (2,3)))
+    A.assertTrue(Seq(1,2,3,4).slidingPairs =? Seq((1,2), (2,3), (3,4)))
+    A.assertTrue(Seq(1).slidingPairs =? Seq())
+    A.assertTrue(Seq().slidingPairs =? Seq())
   }
 
   @Test
-  def testSlidingPairsIterables {
-    Assert.assertTrue(Iterable(1,2,3).slidingPairs =? Iterable((1,2), (2,3)))
-    Assert.assertTrue(Iterable(1,2,3,4).slidingPairs =? Iterable((1,2), (2,3), (3,4)))
-    Assert.assertTrue(Iterable(1).slidingPairs =? Iterable())
-    Assert.assertTrue(Iterable().slidingPairs =? Iterable())
+  def testSlidingPairsIterables(): Unit = {
+    A.assertTrue(Iterable(1,2,3).slidingPairs =? Iterable((1,2), (2,3)))
+    A.assertTrue(Iterable(1,2,3,4).slidingPairs =? Iterable((1,2), (2,3), (3,4)))
+    A.assertTrue(Iterable(1).slidingPairs =? Iterable())
+    A.assertTrue(Iterable().slidingPairs =? Iterable())
   }
 
   @Test
-  def testSlidingPairsOpts {
-    Assert.assertTrue(Iterable(1,2,3).slidingOptPairs =? Iterable(
+  def testSlidingPairsOpts(): Unit = {
+    A.assertTrue(Iterable(1,2,3).slidingOptPairs =? Iterable(
       (1,Some(2)),
       (2,Some(3)),
       (3, None)
     ))
-    Assert.assertTrue(Iterable(1,2,3,4).slidingOptPairs =? Iterable(
+    A.assertTrue(Iterable(1,2,3,4).slidingOptPairs =? Iterable(
       (1,Some(2)),
       (2,Some(3)),
       (3,Some(4)),
       (4, None)
     ))
-    Assert.assertTrue(Iterable(1).slidingOptPairs =? Iterable((1,None)))
-    Assert.assertTrue(Iterable().slidingOptPairs =? Iterable())
+    A.assertTrue(Iterable(1).slidingOptPairs =? Iterable((1,None)))
+    A.assertTrue(Iterable().slidingOptPairs =? Iterable())
   }
 
   @Test
-  def testTopN {
+  def testTopN(): Unit = {
     // The order isn't guaranteed, hence the Set comparison
-    Assert.assertEquals(Iterable(-1,1,2,3,4).topN(1).toSet, Set(4))
-    Assert.assertEquals(Iterable(4,3,2,1,-1).topN(1).toSet, Set(4))
-    Assert.assertEquals(Iterable(-1,1,4,3,2).topN(1).toSet, Set(4))
-    Assert.assertEquals(Iterable(-1,1,4,2,3).topN(3).toSet, Set(4,2,3))
-    Assert.assertEquals(Iterable(-1,1,4,2,3).topN(5).toSet, Set(-1,1,4,2,3))
-    Assert.assertEquals(Iterable(-1,1,4,2,3).topN(100).toSet, Set(-1,1,4,2,3))
-    Assert.assertEquals(Iterable("k", "y", "m", "x", "c", "z").topN(3).toSet, Set("x", "y", "z"))
+    A.assertEquals(Iterable(-1,1,2,3,4).topN(1).toSet, Set(4))
+    A.assertEquals(Iterable(4,3,2,1,-1).topN(1).toSet, Set(4))
+    A.assertEquals(Iterable(-1,1,4,3,2).topN(1).toSet, Set(4))
+    A.assertEquals(Iterable(-1,1,4,2,3).topN(3).toSet, Set(4,2,3))
+    A.assertEquals(Iterable(-1,1,4,2,3).topN(5).toSet, Set(-1,1,4,2,3))
+    A.assertEquals(Iterable(-1,1,4,2,3).topN(100).toSet, Set(-1,1,4,2,3))
+    A.assertEquals(Iterable("k", "y", "m", "x", "c", "z").topN(3).toSet, Set("x", "y", "z"))
   }
 
-  @Test def toListBy {
-    Assert.assertEquals(Iterable(1,2,3,4).toListBy(identity), List(1,2,3,4))
-    Assert.assertEquals(Iterable(1,2,3,4).toListBy(_ % 2 =? 0), List(false, true, false, true))
-    Assert.assertEquals(List(1,2,3,4).toListBy(_ % 2 =? 0), List(false, true, false, true))
-    Assert.assertEquals(Vector(1,2,3,4).toListBy(_ % 2 =? 0), List(false, true, false, true))
-    Assert.assertEquals(Map(1 -> Seq(10, 11), 2 -> Seq(20, 21)).toListBy(_._2).flatten.sorted, List(10, 11, 20, 21))
-    Assert.assertEquals(Iterable[Int]().toListBy(_ % 2 =? 0), Nil)
+  @Test
+  def toListBy(): Unit = {
+    A.assertEquals(Iterable(1,2,3,4).toListBy(identity), List(1,2,3,4))
+    A.assertEquals(Iterable(1,2,3,4).toListBy(_ % 2 =? 0), List(false, true, false, true))
+    A.assertEquals(List(1,2,3,4).toListBy(_ % 2 =? 0), List(false, true, false, true))
+    A.assertEquals(Vector(1,2,3,4).toListBy(_ % 2 =? 0), List(false, true, false, true))
+    A.assertEquals(Map(1 -> Seq(10, 11), 2 -> Seq(20, 21)).toListBy(_._2).flatten.sorted, List(10, 11, 20, 21))
+    A.assertEquals(Iterable[Int]().toListBy(_ % 2 =? 0), Nil)
   }
 
-  @Test def flatToListBy {
-    Assert.assertEquals(Iterable("hi", "hello", "25").flatToListBy(TryO.toInt(_)), List(25))
-    Assert.assertEquals(Iterable("hi", "25", "hello", "25", "30").flatToListBy(TryO.toInt(_)), List(25, 25, 30))
-    Assert.assertEquals(Iterable("hi", "twenty-five", "hello").flatToListBy(TryO.toInt(_)), List[Int]())
-    Assert.assertEquals(Iterable("hi").flatToListBy(TryO.toInt(_)), List[Int]())
-    Assert.assertEquals(Iterable("25").flatToListBy(TryO.toInt(_)), List(25))
-    Assert.assertEquals(Iterable[String]().flatToListBy(TryO.toInt(_)), List[Int]())
+  @Test
+  def flatToListBy(): Unit = {
+    A.assertEquals(Iterable("hi", "hello", "25").flatToListBy(TryO.toInt(_)), List(25))
+    A.assertEquals(Iterable("hi", "25", "hello", "25", "30").flatToListBy(TryO.toInt(_)), List(25, 25, 30))
+    A.assertEquals(Iterable("hi", "twenty-five", "hello").flatToListBy(TryO.toInt(_)), List[Int]())
+    A.assertEquals(Iterable("hi").flatToListBy(TryO.toInt(_)), List[Int]())
+    A.assertEquals(Iterable("25").flatToListBy(TryO.toInt(_)), List(25))
+    A.assertEquals(Iterable[String]().flatToListBy(TryO.toInt(_)), List[Int]())
   }
 
-  @Test def toVectorBy {
-    Assert.assertEquals(Iterable(1,2,3,4).toVectorBy(identity), Vector(1,2,3,4))
-    Assert.assertEquals(Iterable(1,2,3,4).toVectorBy(_ % 2 =? 0), Vector(false, true, false, true))
-    Assert.assertEquals(List(1,2,3,4).toListBy(_ % 2 =? 0), Vector(false, true, false, true))
-    Assert.assertEquals(Vector(1,2,3,4).toListBy(_ % 2 =? 0), Vector(false, true, false, true))
-    Assert.assertEquals(Map(1 -> Seq(10, 11), 2 -> Seq(20, 21)).toListBy(_._2).flatten.sorted, Vector(10, 11, 20, 21))
-    Assert.assertEquals(Iterable[Int]().toVectorBy(_ % 2 =? 0), Vector())
-    Assert.assertEquals(Some(1).toVectorBy(identity), Vector(1))
-    Assert.assertEquals(None.toVectorBy(identity), Vector.empty)
+  @Test
+  def toVectorBy(): Unit = {
+    A.assertEquals(Iterable(1,2,3,4).toVectorBy(identity), Vector(1,2,3,4))
+    A.assertEquals(Iterable(1,2,3,4).toVectorBy(_ % 2 =? 0), Vector(false, true, false, true))
+    A.assertEquals(List(1,2,3,4).toListBy(_ % 2 =? 0), Vector(false, true, false, true))
+    A.assertEquals(Vector(1,2,3,4).toListBy(_ % 2 =? 0), Vector(false, true, false, true))
+    A.assertEquals(Map(1 -> Seq(10, 11), 2 -> Seq(20, 21)).toListBy(_._2).flatten.sorted, Vector(10, 11, 20, 21))
+    A.assertEquals(Iterable[Int]().toVectorBy(_ % 2 =? 0), Vector())
+    A.assertEquals(Some(1).toVectorBy(identity), Vector(1))
+    A.assertEquals(None.toVectorBy(identity), Vector.empty)
   }
 
-  @Test def flatToVectorBy {
-    Assert.assertEquals(Iterable("hi", "hello", "25").flatToVectorBy(TryO.toInt(_)), Vector(25))
-    Assert.assertEquals(Iterable("hi", "25", "hello", "25", "30").flatToVectorBy(TryO.toInt(_)), Vector(25, 25, 30))
-    Assert.assertEquals(Iterable("hi", "twenty-five", "hello").flatToVectorBy(TryO.toInt(_)), Vector[Int]())
-    Assert.assertEquals(Iterable("hi").flatToVectorBy(TryO.toInt(_)), Vector[Int]())
-    Assert.assertEquals(Iterable("25").flatToVectorBy(TryO.toInt(_)), Vector(25))
-    Assert.assertEquals(Iterable[String]().flatToVectorBy(TryO.toInt(_)), Vector[Int]())
+  @Test
+  def flatToVectorBy(): Unit = {
+    A.assertEquals(Iterable("hi", "hello", "25").flatToVectorBy(TryO.toInt(_)), Vector(25))
+    A.assertEquals(Iterable("hi", "25", "hello", "25", "30").flatToVectorBy(TryO.toInt(_)), Vector(25, 25, 30))
+    A.assertEquals(Iterable("hi", "twenty-five", "hello").flatToVectorBy(TryO.toInt(_)), Vector[Int]())
+    A.assertEquals(Iterable("hi").flatToVectorBy(TryO.toInt(_)), Vector[Int]())
+    A.assertEquals(Iterable("25").flatToVectorBy(TryO.toInt(_)), Vector(25))
+    A.assertEquals(Iterable[String]().flatToVectorBy(TryO.toInt(_)), Vector[Int]())
   }
 
-  @Test def flatMapFind {
-    Assert.assertEquals(Iterable("hi", "hello", "25").flatMapFind(TryO.toInt(_)), Some(25))
-    Assert.assertEquals(Iterable("hi", "25", "hello", "25").flatMapFind(TryO.toInt(_)), Some(25))
-    Assert.assertEquals(Iterable("hi", "twenty-five", "hello").flatMapFind(TryO.toInt(_)), None)
-    Assert.assertEquals(Iterable("hi").flatMapFind(TryO.toInt(_)), None)
-    Assert.assertEquals(Iterable("25").flatMapFind(TryO.toInt(_)), Some(25))
-    Assert.assertEquals(Iterable[String]().flatMapFind(TryO.toInt(_)), None)
+  @Test
+  def flatMapFind(): Unit = {
+    A.assertEquals(Iterable("hi", "hello", "25").flatMapFind(TryO.toInt(_)), Some(25))
+    A.assertEquals(Iterable("hi", "25", "hello", "25").flatMapFind(TryO.toInt(_)), Some(25))
+    A.assertEquals(Iterable("hi", "twenty-five", "hello").flatMapFind(TryO.toInt(_)), None)
+    A.assertEquals(Iterable("hi").flatMapFind(TryO.toInt(_)), None)
+    A.assertEquals(Iterable("25").flatMapFind(TryO.toInt(_)), Some(25))
+    A.assertEquals(Iterable[String]().flatMapFind(TryO.toInt(_)), None)
   }
 }
 

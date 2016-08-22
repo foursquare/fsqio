@@ -3,21 +3,17 @@
 package io.fsq.spindle.codegen.runtime.test
 
 import io.fsq.spindle.codegen.runtime.constants.test.gen.{ConstantineConstants, Foo}
-import org.junit.Assert.{assertEquals, assertFalse, assertTrue}
-import org.junit.Test
-import org.specs.SpecsMatchers
+import org.junit.{Assert => A, Test}
 
-
-class ScalaConstTest extends SpecsMatchers {
-
+class ScalaConstTest {
   @Test
-  def testConstantGeneration {
-    ConstantineConstants.LISTCONST mustEqual List(1.2, 2.1, 1.1)
-    ConstantineConstants.MAPCONST mustEqual Map("hello" -> "world", "wisconsin" -> "badgers")
-    ConstantineConstants.BOOL mustEqual true
-    ConstantineConstants.SIMPLE mustEqual "hello"
-    ConstantineConstants.CRAZY.get("foo") mustEqual Some("hello")
-    ConstantineConstants.CRAZY.get("bar") mustEqual Some(ConstantineConstants.REFERS)
-    ConstantineConstants.CRAZYENUMS.get("foo") mustEqual Some(Foo.bar)
+  def testConstantGeneration(): Unit = {
+    A.assertEquals(List(1.2, 2.1, 1.1), ConstantineConstants.LISTCONST)
+    A.assertEquals(Map("hello" -> "world", "wisconsin" -> "badgers"), ConstantineConstants.MAPCONST)
+    A.assertTrue(ConstantineConstants.BOOL)
+    A.assertEquals("hello", ConstantineConstants.SIMPLE)
+    A.assertEquals(Some("hello"), ConstantineConstants.CRAZY.get("foo"))
+    A.assertEquals(Some(ConstantineConstants.REFERS), ConstantineConstants.CRAZY.get("bar"))
+    A.assertEquals(Some(Foo.bar), ConstantineConstants.CRAZYENUMS.get("foo"))
   }
 }

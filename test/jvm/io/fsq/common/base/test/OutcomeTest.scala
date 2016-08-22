@@ -3,48 +3,47 @@
 package io.fsq.common.base.test
 
 import io.fsq.common.base.{Failure, FailureProjection, Outcome, Success}
-import org.junit.{Assert, Test}
-import org.specs.SpecsMatchers
+import org.junit.{Assert => A, Test}
 
-class OutcomeTest extends SpecsMatchers {
+class OutcomeTest {
   @Test
   def testSuccess() {
     val value = "foo"
 
     val x: Outcome[String, String] = Success(value)
-    x.isSuccess must beTrue
-    x.isFailure must beFalse
+    A.assertTrue(x.isSuccess)
+    A.assertFalse(x.isFailure)
 
     x.either match {
-      case Right(v) => v must_== value
-      case _ => Assert.fail("Success.either was not a Right")
+      case Right(v) => A.assertEquals(value, v)
+      case _ => A.fail("Success.either was not a Right")
     }
 
     x.toOption match {
-      case Some(v) => v must_== value
-      case _ => Assert.fail("Sucess.toOption was not a Some")
+      case Some(v) => A.assertEquals(value, v)
+      case _ => A.fail("Sucess.toOption was not a Some")
     }
 
-    x.fold({ v => v must_== value }, { v => Assert.fail("Success.fold must not invoke onFailure") })
+    x.fold({ v => A.assertEquals(value, v) }, { v => A.fail("Success.fold must not invoke onFailure") })
 
-    x.exists(_ == value) must beTrue
-    x.exists(_ == (value + value)) must beFalse
+    A.assertTrue(x.exists(_ == value))
+    A.assertFalse(x.exists(_ == (value + value)))
 
-    x.forall(_ == value) must beTrue
-    x.forall(_ == (value + value)) must beFalse
+    A.assertTrue(x.forall(_ == value))
+    A.assertFalse(x.forall(_ == (value + value)))
 
-    x.map(_.length) must_== Success(value.length)
-    x.flatMap(v => Success(v.length)) must_== Success(value.length)
+    A.assertEquals(Success(value.length), x.map(_.length))
+    A.assertEquals(Success(value.length), x.flatMap(v => Success(v.length)))
 
     var i = 0
     x.foreach { v => i = v.length }
-    i must_== value.length
+    A.assertEquals(value.length, i)
 
-    x.rescue(x => Success(x + "bar")) must_== Success("foo")
-    x.rescue(x => Failure(x + "bar")) must_== Success("foo")
+    A.assertEquals(Success("foo"), x.rescue(x => Success(x + "bar")))
+    A.assertEquals(Success("foo"), x.rescue(x => Failure(x + "bar")))
 
-    x.filter(x => x == "foo", "ugh") must_== Success("foo")
-    x.filter(x => x == "bar", "ugh") must_== Failure("ugh")
+    A.assertEquals(Success("foo"), x.filter(x => x == "foo", "ugh"))
+    A.assertEquals(Failure("ugh"), x.filter(x => x == "bar", "ugh"))
   }
 
   @Test
@@ -52,36 +51,36 @@ class OutcomeTest extends SpecsMatchers {
     val value = "foo"
 
     val x: Outcome[String, String] = Failure(value)
-    x.isSuccess must beFalse
-    x.isFailure must beTrue
+    A.assertFalse(x.isSuccess)
+    A.assertTrue(x.isFailure)
 
     x.either match {
-      case Left(v) => v must_== value
-      case _ => Assert.fail("Failure.either was not a Left")
+      case Left(v) => A.assertEquals(value, v)
+      case _ => A.fail("Failure.either was not a Left")
     }
 
     x.toOption match {
       case None =>
-      case _ => Assert.fail("Failure.toOption was not a None")
+      case _ => A.fail("Failure.toOption was not a None")
     }
 
-    x.fold({ v => Assert.fail("Failure.fold must not invoke onSuccess") }, { v => v must_== value })
+    x.fold({ v => A.fail("Failure.fold must not invoke onSuccess") }, { v => A.assertEquals(value, v) })
 
-    x.exists(_ == value) must beFalse
-    x.exists(_ == (value + value)) must beFalse
+    A.assertFalse(x.exists(_ == value))
+    A.assertFalse(x.exists(_ == (value + value)))
 
-    x.forall(_ == value) must beTrue
-    x.forall(_ == (value + value)) must beTrue
+    A.assertTrue(x.forall(_ == value))
+    A.assertTrue(x.forall(_ == (value + value)))
 
-    x.map(_.length) must_== x
-    x.flatMap(v => Success(v.length)) must_== x
-    x.foreach { x => Assert.fail("Failure.foreach must not invoke the closure") }
+    A.assertEquals(x, x.map(_.length))
+    A.assertEquals(x, x.flatMap(v => Success(v.length)))
+    x.foreach { x => A.fail("Failure.foreach must not invoke the closure") }
 
-    x.rescue(x => Success(x + "bar")) must_== Success("foobar")
-    x.rescue(x => Failure(x + "bar")) must_== Failure("foobar")
+    A.assertEquals(Success("foobar"), x.rescue(x => Success(x + "bar")))
+    A.assertEquals(Failure("foobar"), x.rescue(x => Failure(x + "bar")))
 
-    x.filter(x => x == "foo", "ugh") must_== Failure("foo")
-    x.filter(x => x == "bar", "ugh") must_== Failure("foo")
+    A.assertEquals(Failure("foo"), x.filter(x => x == "foo", "ugh"))
+    A.assertEquals(Failure("foo"), x.filter(x => x == "bar", "ugh"))
   }
 
   @Test
@@ -92,18 +91,18 @@ class OutcomeTest extends SpecsMatchers {
 
     sp.toOption match {
       case None =>
-      case _ => Assert.fail("Success.failure.toOption must be None")
+      case _ => A.fail("Success.failure.toOption must be None")
     }
 
-    sp.exists(_ == value) must beFalse
-    sp.exists(_ == (value + value)) must beFalse
+    A.assertFalse(sp.exists(_ == value))
+    A.assertFalse(sp.exists(_ == (value + value)))
 
-    sp.forall(_ == value) must beTrue
-    sp.forall(_ == (value + value)) must beTrue
+    A.assertTrue(sp.forall(_ == value))
+    A.assertTrue(sp.forall(_ == (value + value)))
 
-    sp.map(_.length) must haveClass[FailureProjection[String, Int]]
-    sp.flatMap(v => Some(v.length)) must beNone
-    sp.foreach { x => Assert.fail("FailureProject(Success).foreach must not invoke the closure") }
+    A.assertTrue(classOf[FailureProjection[String, Int]].isAssignableFrom(sp.map(_.length).getClass))
+    A.assertTrue(sp.flatMap(v => Some(v.length)).isEmpty)
+    sp.foreach { x => A.fail("FailureProject(Success).foreach must not invoke the closure") }
   }
 
   @Test
@@ -113,32 +112,32 @@ class OutcomeTest extends SpecsMatchers {
     val fp = Failure[String, String](value).failure
 
     fp.toOption match {
-      case Some(v) => v must_== value
-      case _ => Assert.fail("Failure.failure.toOption must be Some")
+      case Some(v) => A.assertEquals(value, v)
+      case _ => A.fail("Failure.failure.toOption must be Some")
     }
 
-    fp.exists(_ == value) must beTrue
-    fp.exists(_ == (value + value)) must beFalse
+    A.assertTrue(fp.exists(_ == value))
+    A.assertFalse(fp.exists(_ == (value + value)))
 
-    fp.forall(_ == value) must beTrue
-    fp.forall(_ == (value + value)) must beFalse
+    A.assertTrue(fp.forall(_ == value))
+    A.assertFalse(fp.forall(_ == (value + value)))
 
     fp.map(_.length) match {
-      case FailureProjection(Failure(v)) => v must_== value.length
-      case _ => Assert.fail("Failure.failure.map did not work")
+      case FailureProjection(Failure(v)) => A.assertEquals(value.length, v)
+      case _ => A.fail("Failure.failure.map did not work")
     }
 
-    fp.flatMap(v => Some(v.length)) must beSome(value.length)
+    A.assertEquals(Some(value.length), fp.flatMap(v => Some(v.length)))
 
     var i = 0
     fp.foreach { v => i = v.length }
-    i must_== value.length
+    A.assertEquals(value.length, i)
   }
 
   @Test
   def testFlatten() {
-    (Success(Success("foo"))).flatten must_== Success("foo")
-    (Success(Failure("foo"))).flatten must_== Failure("foo")
-    (Failure("foo")).flatten must_== Failure("foo")
+    A.assertEquals(Success("foo"), (Success(Success("foo"))).flatten)
+    A.assertEquals(Failure("foo"), (Success(Failure("foo"))).flatten)
+    A.assertEquals(Failure("foo"), Failure("foo").flatten)
   }
 }
