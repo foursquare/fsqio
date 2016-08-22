@@ -8,7 +8,7 @@ import org.junit.{Assert => A, Test}
 
 class FuturesTest {
   @Test
-  def testWhere() {
+  def testWhere(): Unit =  {
     A.assertEquals(None, Await.result(Futures.where(false, Future.exception(new Exception("Shouldn't be executed")))))
     A.assertEquals(None, Await.result(Futures.where(false, Future { A.fail("should not be called") })))
     A.assertEquals(None, Await.result(Futures.where(false, Future.value(4))))
@@ -16,7 +16,7 @@ class FuturesTest {
   }
 
   @Test
-  def testGroupedCollect() {
+  def testGroupedCollect(): Unit =  {
     val params = Vector(1,2,3,4,5,6,7,8)
     val results = Vector("1","2","3","4","5","6","7","8")
 

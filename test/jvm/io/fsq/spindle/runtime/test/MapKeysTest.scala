@@ -12,12 +12,12 @@ import org.junit.Test
 class MapKeysTest {
 
   @Test(expected=classOf[NonStringMapKeyException])
-  def testBSONStringOnlyMapKeys() {
+  def testBSONStringOnlyMapKeys(): Unit = {
     doTestStringOnlyMapKeys(KnownTProtocolNames.TBSONProtocol)
   }
 
   @Test(expected=classOf[NonStringMapKeyException])
-  def testTReadableJSONStringOnlyMapKeys() {
+  def testTReadableJSONStringOnlyMapKeys(): Unit =  {
     doTestStringOnlyMapKeys(KnownTProtocolNames.TReadableJSONProtocol)
   }
 

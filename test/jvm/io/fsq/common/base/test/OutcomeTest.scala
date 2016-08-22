@@ -7,7 +7,7 @@ import org.junit.{Assert => A, Test}
 
 class OutcomeTest {
   @Test
-  def testSuccess() {
+  def testSuccess(): Unit = {
     val value = "foo"
 
     val x: Outcome[String, String] = Success(value)
@@ -47,7 +47,7 @@ class OutcomeTest {
   }
 
   @Test
-  def testFailure() {
+  def testFailure(): Unit = {
     val value = "foo"
 
     val x: Outcome[String, String] = Failure(value)
@@ -84,7 +84,7 @@ class OutcomeTest {
   }
 
   @Test
-  def testFailureProjectionOfSuccess() {
+  def testFailureProjectionOfSuccess(): Unit = {
     val value = "foo"
 
     val sp = Success[String, String](value).failure
@@ -106,7 +106,7 @@ class OutcomeTest {
   }
 
   @Test
-  def testFailureProjectionOfFailure() {
+  def testFailureProjectionOfFailure(): Unit = {
     val value = "foo"
 
     val fp = Failure[String, String](value).failure
@@ -135,7 +135,7 @@ class OutcomeTest {
   }
 
   @Test
-  def testFlatten() {
+  def testFlatten(): Unit = {
     A.assertEquals(Success("foo"), (Success(Success("foo"))).flatten)
     A.assertEquals(Failure("foo"), (Success(Failure("foo"))).flatten)
     A.assertEquals(Failure("foo"), Failure("foo").flatten)

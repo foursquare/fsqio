@@ -17,12 +17,12 @@ class HexTest {
   }
 
   @Test
-  def testHexToStringLower() {
+  def testHexToStringLower(): Unit = {
     Assert.assertEquals("68692c20686f772061726520796f753f", Hex.toHexString("hi, how are you?".getBytes, true))
   }
 
   @Test
-  def testHexStringConversion() {
+  def testHexStringConversion(): Unit = {
     doTestHexStringConversion("", Array())
     doTestHexStringConversion("00", Array(0.toByte))
     doTestHexStringConversion("01", Array(1.toByte))
@@ -34,14 +34,14 @@ class HexTest {
   }
 
   @Test
-  def testSliceHexStringConversion() {
+  def testSliceHexStringConversion(): Unit = {
     val in = Array(0.toByte, 1.toByte, 2.toByte, 3.toByte, 4.toByte)
     val sliceHexStr = Hex.toHexString(in, 1, 2)
     Assert.assertEquals("0102", sliceHexStr)
   }
 
   @Test
-  def testByteBufferToHexString() {
+  def testByteBufferToHexString(): Unit = {
     val in = "Hello There"
     val bb = ByteBuffer.wrap(in.getBytes)
     val initialSize = bb.remaining
