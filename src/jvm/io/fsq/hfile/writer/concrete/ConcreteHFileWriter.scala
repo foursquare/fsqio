@@ -123,6 +123,7 @@ class ConcreteHFileWriter(
   def addKeyValue(key: Array[Byte], value: Array[Byte]): Unit = {
     if (entryCount == 0) {
       newBlock()
+      uniqueKeys += 1
     } else {
       val dupKey = isDuplicateKey(key)
       if (!dupKey) {
