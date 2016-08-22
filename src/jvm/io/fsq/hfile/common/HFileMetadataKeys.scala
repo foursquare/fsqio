@@ -16,6 +16,8 @@ trait HFileMetadataKeys {
   val ComparatorKey = "hfile.COMPARATOR"
   val NumEntries = "hfile.NUM_ENTRIES"
   val NumUniqueKeys = "hfile.NUM_UNIQUE_KEYS"
+  val TotalKeyLength = "hfile.TOTAL_KEY_LENGTH"
+  val TotalValueLength = "hfile.TOTAL_VALUE_LENGTH"
 }
 
 object HFileMetadataKeys extends HFileMetadataKeys

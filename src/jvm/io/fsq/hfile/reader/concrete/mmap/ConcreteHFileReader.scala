@@ -182,6 +182,8 @@ class ConcreteHFileReader(
     FileInfo.get(buffer)
   }
 
+  lazy val fileInfoStringMap: Map[String, String] = FileInfo.deserializeToStringMap(fileInfo.asScala.toMap)
+
   def execProcess(cmd: String): Process = {
     val args = cmd.split("""\s+""")
     val pb = new ProcessBuilder(args: _*)

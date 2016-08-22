@@ -198,6 +198,8 @@ class ConcreteHFileWriter(
     fileInfo.append((AverageValueLengthKey.getBytes(), intToBytes(avgValueLen)))
     fileInfo.append((NumEntries.getBytes(), intToBytes(entryCount)))
     fileInfo.append((NumUniqueKeys.getBytes(), intToBytes(uniqueKeys)))
+    fileInfo.append((TotalKeyLength.getBytes(), longToBytes(totalKeyLength)))
+    fileInfo.append((TotalValueLength.getBytes(), longToBytes(totalValueLength)))
 
     // This is a lie, but makes the output byte-compatible with the old output
     fileInfo.append((ComparatorKey.getBytes(), "org.apache.hadoop.hbase.util.Bytes$ByteArrayComparator".getBytes()))
