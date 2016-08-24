@@ -31,10 +31,16 @@ jar_library(
 )
 
 
-target(
+ammonite_rev = '0.7.5'
+
+jar_library(
   name = 'scala-repl',
-  dependencies = [
-    ':scalac',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org='com.lihaoyi', name = 'ammonite_2.11.8', rev=ammonite_rev)
   ],
 )
 
