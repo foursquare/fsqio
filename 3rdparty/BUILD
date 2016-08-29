@@ -159,17 +159,3 @@ jar_library(
     jar(org = 'org.jnegre.google', name = 's2-geometry', rev = '1.0')
   ]
 )
-
-jar_library(
-  name = 'specs',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    sjar(org = 'org.scala-tools.testing', name = 'specs_2.10', rev = '1.6.9'),
-  ],
-  dependencies = [
-    ':mockito'
-  ],
-)
