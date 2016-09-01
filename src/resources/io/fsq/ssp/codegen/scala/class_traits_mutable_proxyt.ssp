@@ -18,4 +18,6 @@ trait Mutable${cls.name}Proxy extends Mutable${cls.name} with ${cls.name}Proxy {
   )
 
   override def merge(that: ${cls.name}): Unit = underlying.merge(that)
+
+  override def deepMerge(that: ${cls.name}): Unit = underlying.deepMerge(that)
 }

@@ -41,6 +41,8 @@ trait ${cls.name}
 
 <% render("class_traits_mergecopy.ssp", Map("cls" -> cls)) %>
 
+<% render("class_traits_deepmergecopy.ssp", Map("cls" -> cls)) %>
+
 #if (cls.isException)
   def toException: ${clsContainer} = new ${clsContainer}(this)
 #end

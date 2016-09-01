@@ -1,0 +1,7 @@
+<%@ val cls: _root_.io.fsq.spindle.codegen.runtime.StructLike %>
+  override def deepMergeCopy(that: ${cls.name}): ${cls.name} = {
+    val ret = ${cls.name}.createRawRecord
+    ret.deepMerge(this)
+    ret.deepMerge(that)
+    ret
+  }

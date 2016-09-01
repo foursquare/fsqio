@@ -25,6 +25,7 @@ class ${cls.name}LiftAdapter(
 
   override def mutableCopy(): Mutable${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
   override def mergeCopy(that: ${cls.name}): ${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
+  override def deepMergeCopy(that: ${cls.name}): ${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
   override def mutable: Mutable${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
   override def deepCopy(): ${cls.name} = throw new UnsupportedOperationException("This is a read only adapter")
 

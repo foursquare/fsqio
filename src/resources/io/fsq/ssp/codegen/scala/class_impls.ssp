@@ -27,7 +27,11 @@ final class Raw${cls.name} extends #if(clsContainer.nonEmpty)Java${clsContainer}
 
 <% render("class_impls_merge.ssp", Map("cls" -> cls)) %>
 
+<% render("class_impls_deepmerge.ssp", Map("cls" -> cls)) %>
+
 <% render("class_impls_mergecopy.ssp", Map("cls" -> cls)) %>
+
+<% render("class_impls_deepmergecopy.ssp", Map("cls" -> cls)) %>
 
 <% render("class_impls_equals.ssp", Map("cls" -> cls)) %>
 

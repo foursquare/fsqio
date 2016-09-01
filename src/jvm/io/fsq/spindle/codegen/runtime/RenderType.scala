@@ -33,6 +33,7 @@ trait RenderType {
   def isNullable: Boolean = false
   def isContainer: Boolean = false
   def isEnum: Boolean = false
+  def isRecord: Boolean = false
   def usesSetVar: Boolean
   def hasOrdering: Boolean
   def renderValueSupported = false
@@ -150,6 +151,7 @@ case class StructRenderType(override val text: String) extends RefRenderType {
   override def fieldReadTemplate: String = "read/struct.ssp"
   override def ttype: TType = TType.STRUCT
   override def hasOrdering: Boolean = false
+  override def isRecord: Boolean = true
 }
 
 case class ExceptionRenderType(override val text: String) extends RefRenderType {
@@ -161,6 +163,7 @@ case class ExceptionRenderType(override val text: String) extends RefRenderType 
   override def fieldReadTemplate: String = "read/exception.ssp"
   override def ttype: TType = TType.STRUCT
   override def hasOrdering: Boolean = false
+  override def isRecord: Boolean = true
 }
 
 
