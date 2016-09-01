@@ -76,6 +76,25 @@ def register_goals():
     def execute(self):
       pass
 
+  # Some legacy libraries have broken javadoc - but the javadoc product is required by pom-publish and publish.jar.
+  # This mocks that product and sidesteps the javadoc generation completely. The real fix is to require working
+  # javadoc for any published lib - especially things we publish externally like Fsq.io.
+  # TODO(mateo): Fix javadoc errors for published libraries and reinstall tasks.
+  Goal.by_name('doc').uninstall_task('javadoc')
+  Goal.by_name('doc').uninstall_task('scaladoc')
+
+  class MockJavadoc(Task):
+    @classmethod
+    def product_types(cls):
+      return [
+        'javadoc', 'scaladoc'
+      ]
+
+    def execute(self):
+      pass
+
+  task(name='mockdoc', action=MockJavadoc).install('doc')
+
   task(
     name='validate-graph',
     action=ForceValidation,
