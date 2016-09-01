@@ -38,9 +38,10 @@ pom_target(
   ],
   dependencies = [
     # TODO(dan): These should probably be published in different jars.
-    'src/jvm/io/fsq/macros:macros',
     'src/jvm/io/fsq/common/concurrent',
+    'src/jvm/io/fsq/common/base:base',
     'src/jvm/io/fsq/common/scala',
+    'src/jvm/io/fsq/macros:macros',
   ],
   provides = artifact(
     org = 'io.fsq',
@@ -58,6 +59,7 @@ pom_target(
   dependencies = [
     ':rogue',
     ':spindle',
+    'src/jvm/io/fsq/common/logging:logging',
     'src/jvm/io/fsq/exceptionator/actions',
     'src/jvm/io/fsq/exceptionator/actions/concrete',
     'src/jvm/io/fsq/exceptionator/filter',
@@ -181,6 +183,7 @@ pom_target(
   dependencies = [
     ':common',
     ':spindle',
+    'src/jvm/io/fsq/common/base:base',
     'src/jvm/io/fsq/twofishes/core',
     'src/jvm/io/fsq/twofishes/country',
     'src/jvm/io/fsq/twofishes/country/data',
