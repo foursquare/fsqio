@@ -187,6 +187,7 @@ jvm_third_party_map = {
         'DEFAULT': 'finagle',
       },
       'hashing': 'twitter-util',
+      'io': 'twitter-util',
       'json': 'twitter-json',
       'logging': 'twitter-util',
       'ostrich': 'ostrich',
