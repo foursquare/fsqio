@@ -1,0 +1,68 @@
+###
+# Pulls the code from a remote Git repository, configures the web application,
+# creates a virtualenv, and collects static assets
+#
+---
+
+- name: ensure web server packages are installed
+  apt: name={{item}}
+  sudo: yes
+  with_items:
+    - git
+    - python-dev
+    - python-pip
+    - libpq-dev
+    - python-dev
+    - python-pyproj
+    - libgdal-dev
+    - gdal-bin
+    - python-gdal
+    - python-nose
+    - python-psycopg2
+    - python-software-properties
+    - build-essential
+    - unzip
+    - zip
+    - scala
+    - supervisor
+
+- name: install known_hosts file to access GitHub
+  copy: src=known_hosts dest={{ssh_dir}}/known_hosts
+
+- name: checkout latest web app code
+  git: repo={{code_repository}} version=master dest={{app_code_dir}}/{{app_name}} force=yes
+
+- name: permanently set vm.max_map_count to 131060
+  lineinfile: dest=/etc/sysctl.conf
+              regexp=''
+              insertafter=EOF
+              line='vm.max_map_count = 131060'
+  sudo: yes
+
+- name: copy the twofishes.conf supervisor config file
+  template: src=twofishes.conf.j2 dest=/etc/supervisor/conf.d/twofishes.conf
+  sudo: yes
+
+- name: create data directory for twofish if it does not exist
+  file: path={{app_code_data_dir}} state=directory mode=0777 owner=vagrant group=vagrant
+
+- name: download prebuilt data index
+  get_url: url={{ data_index_url }} dest={{app_code_data_dir}}
+
+- name:  unzip index
+  unarchive: src={{app_code_data_dir}}{{ data_index_file}} dest={{app_code_data_dir}} copy=no
+
+- name: assemble jar
+  command: ./pants binary src/jvm/io/fsq/twofishes/server:server-bin
+  args:
+    chdir: "{{app_code_dir}}/{{app_name}}"
+  register: command_result
+  failed_when: "'[complete]' not in command_result.stdout"
+
+- name: update max_map_count
+  shell: sysctl -w vm.max_map_count=131060
+  sudo: yes
+
+- name: start supervisor to run geocoder
+  service: name=supervisor state=started enabled=yes
+  sudo: yes

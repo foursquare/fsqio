@@ -1,0 +1,22 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/trusty64"
+  config.ssh.username = 'vagrant'
+  config.ssh.forward_agent = true
+
+  config.vm.define :geocoder do |geocoder|
+    geocoder.vm.network :public_network, :bridge => 'eth0', :auto_config => false
+    # Using private network fixes the thumbnail issue
+    # Ref: https://github.com/Kitware/minerva/pull/98#issuecomment-139023062
+    config.vm.network "private_network", ip: "192.168.33.12"
+    geocoder.vm.provider :virtualbox do |vb|
+       vb.customize [ "modifyvm", :id, "--name", "geocoder","--memory", 4096 ]
+  	end
+    geocoder.vm.provision "ansible" do |ansible|
+        ansible.playbook = "playbook.yml"
+        ansible.verbose = "vvvv"
+        ansible.host_key_checking = false
+    end
+  end
+end

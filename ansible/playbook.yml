@@ -1,0 +1,7 @@
+- hosts: geocoder
+  remote_user: vagrant
+  roles:
+     - common
+     - malk.java8-oracle
+     - twofish
+

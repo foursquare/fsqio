@@ -1,0 +1,2 @@
+[geocoder]
+localhost ansible_connection=local
