@@ -30,6 +30,10 @@ from fsqio.pants.buildgen.jvm.scala.scala_exported_symbols import MapScalaExport
 from fsqio.pants.buildgen.jvm.scala.scala_used_symbols import MapScalaUsedSymbols
 from fsqio.pants.buildgen.python.buildgen_python import BuildgenPython
 from fsqio.pants.buildgen.python.map_python_exported_symbols import MapPythonExportedSymbols
+from fsqio.pants.node.targets.webpack_module import WebPackModule
+from fsqio.pants.node.tasks.webpack import WebPack
+from fsqio.pants.node.tasks.webpack_bundle import WebPackBundle
+from fsqio.pants.node.tasks.webpack_resolve import WebPackResolve
 from fsqio.pants.pom.pom_resolve import PomResolve
 from fsqio.pants.publish.pom_publish import PomPublish, PomTarget
 from fsqio.pants.spindle.targets.spindle_thrift_library import SpindleThriftLibrary
@@ -53,6 +57,7 @@ def build_file_aliases():
       'scala_record_library': SpindleThriftLibrary,
       'ssp_template': SspTemplate,
       'pom_target': PomTarget,
+      'webpack_module': WebPackModule,
     },
     objects={
       'oss_sonatype_repo': oss_sonatype_repo,
@@ -75,6 +80,13 @@ def register_goals():
 
     def execute(self):
       pass
+
+  Goal.by_name('test').uninstall_task('node')
+  Goal.by_name('resolve').uninstall_task('node')
+
+  task(name='webpack', action=WebPack).install()
+  task(name='webpack-resolve', action=WebPackResolve).install()
+  task(name='webpack-bundle', action=WebPackBundle).install('webpack')
 
   # Some legacy libraries have broken javadoc - but the javadoc product is required by pom-publish and publish.jar.
   # This mocks that product and sidesteps the javadoc generation completely. The real fix is to require working
