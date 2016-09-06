@@ -32,7 +32,7 @@ jar_library(
 )
 
 
-ammonite_rev = '0.7.5'
+ammonite_rev = '0.7.6'
 
 jar_library(
   name = 'scala-repl',
