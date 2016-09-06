@@ -54,11 +54,12 @@ class WebPack(NodeTask, SimpleCodegenTask):
   @property
   def _copy_target_attributes(self):
     # Override from SimpleCodegenTask, which expects targets to have a 'provided' attribute.
+    # NOTE(Mateo): This is needed for compatability with Pants 1.1.0.
     return ['tags', 'scope']
 
   @classmethod
   def implementation_version(cls):
-    return super(WebPack, cls).implementation_version() + [('WebPack', 2.1)]
+    return super(WebPack, cls).implementation_version() + [('WebPack', 3)]
 
   @classmethod
   def prepare(cls, options, round_manager):
@@ -96,9 +97,8 @@ class WebPack(NodeTask, SimpleCodegenTask):
       )
       if result:
         raise TaskError(dedent(
+          """ webpack command:
+          \n\t{} failed with exit code {}
           """
-          webpack error:
-          \t{} failed with exit code {}
-          """
-          .format(npm_run, result)
+         .format(' '.join(npm_run.cmd), result)
         ))
