@@ -532,7 +532,7 @@ class PomResolve(Task):
     # Overrrides converted to { (org, name, rev): /path/to/artifact, ... }
     override_tuples = {}
     for override in self.get_options().local_override_versions:
-      override_tuples[(override['org'], override['name'], override['rev'])] = override['artifact_path']
+      override_tuples[(override['org'], override['name'])] = override['artifact_path']
 
     # Exclusions converted to [(org, name), ...]
     global_exclusion_tuples = []
@@ -824,14 +824,17 @@ class PomResolve(Task):
     safe_mkdir(self.artifact_symlink_dir, clean=True)
     for coord in coords:
       for artifact in self.maven_coordinate_to_provided_artifacts[coord]:
-        local_override_key = (artifact.groupId, artifact.artifactId, artifact.version)
+        local_override_key = (artifact.groupId, artifact.artifactId)
         if local_override_key not in local_override_versions:
           cached_artifact_path = os.path.realpath(os.path.join(self.pom_cache_dir, artifact.artifact_path))
         else:
           cached_artifact_path = os.path.realpath(local_override_versions[local_override_key])
           if not os.path.exists(cached_artifact_path):
             raise Exception('Local override for {} at {} does not exist.'.format(artifact, cached_artifact_path))
-
+          # TODO(mateo): Use regular logging for info - print is not great and does not respect --quiet.
+          # But atm, log levels for pom-resolve is either overwhelming or not enough info. pom-resolve should probably
+          # be broken up into multiple tasks some day. This setting is only used for local development in any case.
+          print("\n* Using local override for {}:\n\t{}".format(artifact, cached_artifact_path))
         symlinked_artifact_path = os.path.join(self.artifact_symlink_dir, artifact.artifact_path)
         safe_mkdir(os.path.dirname(symlinked_artifact_path))
 
