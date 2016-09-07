@@ -17,6 +17,7 @@ cache:
     # Removing fsqio and pants virtualenvs from the cache until the upkeep refactor- it doesn't respect dep changes atm.
     # - $HOME/.cache/fsqio
     # - $HOME/.cache/pants
+    - $HOME/.cache/pip
     - $HOME/.ivy2/pants
     # The install location for our managed JDK install.
     - $HOME/opt
