@@ -1,7 +1,5 @@
 
-
 python_library(
-  name = 'python',
+  name = 'fsqio',
   sources = globs('*.py'),
 )
-
