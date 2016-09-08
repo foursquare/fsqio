@@ -32,16 +32,19 @@ jar_library(
 )
 
 
-ammonite_rev = '0.7.6'
+target(
+  name='scala-repl',
+  dependencies = [
+    ':ammonite',
+    ':scalac',
+  ],
+)
+
 
 jar_library(
-  name = 'scala-repl',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
+  name = 'ammonite',
   jars = [
-    jar(org='com.lihaoyi', name = 'ammonite_2.11.8', rev=ammonite_rev)
+    jar(org='com.lihaoyi', name = 'ammonite_2.11.8', rev='0.7.6')
   ],
 )
 
