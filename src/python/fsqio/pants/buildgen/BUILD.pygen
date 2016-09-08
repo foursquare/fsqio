@@ -1,9 +1,0 @@
-
-python_library(
-  name = 'buildgen_spindle',
-  sources = ['buildgen_spindle.py', '__init__.py'],
-  dependencies = [
-    '3rdparty/python:pantsbuild.pants',
-    'src/python/fsqio/pants/buildgen/jvm/scala:buildgen_scala',
-  ],
-)

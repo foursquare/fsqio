@@ -1,8 +1,8 @@
 # Copyright 2016 Foursquare Labs Inc. All Rights Reserved.
 
 python_library(
-  name = 'buildgen_subsystem',
-  sources = ['buildgen_subsystem.py', '__init__.py'],
+  name = 'subsystems',
+  sources = globs('*.py'),
   dependencies = [
     '3rdparty/python:pantsbuild.pants',
   ],

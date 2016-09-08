@@ -26,13 +26,21 @@ from fsqio.pants.spindle.tasks.spindle_task import SpindleTask
 
 
 class BuildSpindle(SpindleTask):
-  """Compile spindle in a shelled pants invocation before using it for codegen.
+  """
+  Build spindle in a shelled pants invocation before using it for limited codegen.
 
   This task is specialized to build just one target - the spindle codegen binary. The spindle binary requires
   spindle to do codegen for itself in order to build. This self-dependency has required this hijack of
   the round engine by shelling into a separate pants invocation.
 
   This task should have as few side-effects as possible!
+
+  It allows a sane workflow when modifying the Spindle source, by forcing the circular dependency to point to the
+  frozen checkout of the binary source.
+
+  This task should only be installed if you intend to modify Spindle source code or ssp files. If so, make sure your
+  build has access to the the frozen checkout at src/jvm/io/fsq/spindle/__shaded_for_spindle_bootstrap__ in addition
+  to the Spindle source code that you will be changing.
   """
 
   PANTS_SCRIPT_NAME = 'pants'
