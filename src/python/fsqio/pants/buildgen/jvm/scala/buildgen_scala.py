@@ -11,13 +11,11 @@ from __future__ import (
   with_statement,
 )
 
-from pants.backend.jvm.targets.java_tests import JavaTests
-from pants.backend.jvm.targets.scala_library import ScalaLibrary
-
 from fsqio.pants.buildgen.core.buildgen_task import BuildgenTask
 
 
 class BuildgenScala(BuildgenTask):
+
   @classmethod
   def prepare(cls, options, round_manager):
     super(BuildgenScala, cls).prepare(options, round_manager)
@@ -34,8 +32,8 @@ class BuildgenScala(BuildgenTask):
     ]
 
   @property
-  def types_operated_on(self):
-    return (ScalaLibrary, JavaTests)
+  def supported_target_aliases(self):
+    return ('java_tests', 'junit_tests', 'scala_library')
 
   @property
   def _scala_library_to_used_addresses(self):

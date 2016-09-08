@@ -18,7 +18,6 @@ import re
 from pants.backend.jvm.targets.scala_library import ScalaLibrary
 
 from fsqio.pants.buildgen.jvm.scala.buildgen_scala import BuildgenScala
-from fsqio.pants.spindle.targets.spindle_thrift_library import SpindleThriftLibrary
 
 
 class ThriftDependencyMapper(object):
@@ -84,20 +83,20 @@ class BuildgenSpindle(BuildgenScala):
     return self.context.products.get_data('scala_library_to_used_addresses')
 
   @property
-  def types_operated_on(self):
-    return (SpindleThriftLibrary,)
+  def supported_target_aliases(self):
+    return ('spindle_thrift_library', 'scala_record_library')
 
   def buildgen_target(self, spindle_target):
     source_dependencies = ThriftDependencyMapper().target_source_dependencies(spindle_target)
     def filtered_target_addresses(addresses, allowed_target_types=()):
       for address in addresses:
         target = self.context.build_graph.get_target(address)
-        if isinstance(target, allowed_target_types):
+        if target.type_alias in allowed_target_types:
           yield address
     included_addresses = set(chain.from_iterable(
       filtered_target_addresses(
         self._source_mapper.target_addresses_for_source(source),
-        SpindleThriftLibrary,
+        self.supported_target_aliases,
       )
       for source in source_dependencies
     ))

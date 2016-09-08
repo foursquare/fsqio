@@ -92,7 +92,14 @@ class BuildgenTask(BuildgenBase):
   def execute(self):
     def task_targets():
       for target in self.context.target_roots:
-        if isinstance(target, self.types_operated_on) and target.type_alias not in self.target_alias_blacklist:
+        # TODO(mateo): Rework these type checks now that they have all settled on string comparisons.
+        # NOTE: For instance - can we combine 'supported_target_aliases' and 'managed_dependency_aliases'?
+        # Probably the best compromise would be to go to labels, i.e. 'if t.is_scala or (t.is_java && t.is_test)'
+        # while supporting the blacklisting of a given type_aliases as needed.
+        # Using labels would allow us to avoid importing arbitrary target types, continue to set these values in config,
+        # while also giving us the benefit of the type system managing subclasses and so forth.
+
+        if target.type_alias in self.supported_target_aliases and target.type_alias not in self.target_alias_blacklist:
           yield target
     targets = sorted(list(task_targets()))
     if self.get_options().level == 'debug':

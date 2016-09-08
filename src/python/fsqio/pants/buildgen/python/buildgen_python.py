@@ -18,8 +18,6 @@ import logging
 import os
 from textwrap import dedent
 
-from pants.backend.python.targets.python_library import PythonLibrary
-from pants.backend.python.targets.python_tests import PythonTests
 from pants.base.build_environment import get_buildroot
 from pants.base.exceptions import TaskError
 from pants.base.payload_field import stable_json_sha1
@@ -129,8 +127,8 @@ class BuildgenPython(BuildgenTask):
     return True
 
   @memoized_property
-  def types_operated_on(self):
-    return (PythonLibrary, PythonTests)
+  def supported_target_aliases(self):
+    return ('python_library', 'python_tests')
 
   @memoized_property
   def third_party_target_aliases(self):
