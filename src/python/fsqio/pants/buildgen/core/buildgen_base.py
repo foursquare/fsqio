@@ -24,6 +24,10 @@ class BuildgenBase(Task):
   def global_subsystems(cls):
     return super(BuildgenBase, cls).global_subsystems() + (BuildgenSubsystem.Factory,)
 
+  @classmethod
+  def implementation_version(cls):
+    return super(BuildgenBase, cls).implementation_version() + [('BuildgenBase', 1)]
+
   @memoized_property
   def buildgen_subsystem(self):
     # TODO(pl): When pants is a proper library dep, remove this ignore.
