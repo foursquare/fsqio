@@ -99,6 +99,9 @@ class Import(object):
   def __repr__(self):
     return self.render()
 
+class SourceFileException(Exception):
+  """Indicate a problem parsing a source file."""
+
 class PythonImportParser(object):
 
   def __init__(self, source_path, first_party_packages):
@@ -107,11 +110,8 @@ class PythonImportParser(object):
 
   @cached_property
   def source_code(self):
-    try:
-      with open(self.source_path, 'rb') as f:
-        return f.read().decode('utf-8')
-    except Exception as e:
-      raise Exception('Error opening source: {}\n{}'.format(self.source_path, e))
+    with open(self.source_path, 'rb') as f:
+      return f.read().decode('utf-8')
 
   @cached_property
   def source_lines(self):
@@ -127,7 +127,7 @@ class PythonImportParser(object):
     try:
       return ast.parse(self.source_code.encode('utf-8'), mode='exec')
     except Exception as e:
-      raise Exception('Failed to parse python source: {}\n{}'.format(self.source_path, e))
+      raise SourceFileException('\nFailed to parse: {}\n{}'.format(self.source_path, e))
 
   @cached_property
   def first_non_import_index(self):

@@ -287,8 +287,19 @@ class BuildgenPython(BuildgenTask):
     target_used_symbols = set()
     addresses_used_by_target = set()
     for source_candidate in source_files:
-      target_used_symbols.update(self.get_used_symbols(source_candidate))
-
+      try:
+        used_symbols = self.get_used_symbols(source_candidate)
+      except Exception as e:
+        raise Exception(
+          dedent(
+            """
+            {}\n
+            Source file: {}
+            Referenced by: {}
+            """.format(e, source_candidate, target.address.spec)
+          )
+        )
+      target_used_symbols.update(used_symbols)
     for symbol in target_used_symbols:
 
       prefix = symbol.split('.')[0]
