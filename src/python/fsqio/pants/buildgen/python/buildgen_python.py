@@ -30,7 +30,7 @@ from pants.util.memo import memoized_property
 from fsqio.pants.buildgen.core.buildgen_task import BuildgenTask
 from fsqio.pants.buildgen.core.symbol_tree import SymbolTreeNode
 from fsqio.pants.buildgen.core.third_party_map_util import check_manually_defined
-from fsqio.pants.buildgen.python.python_import_parser import PythonImportParser
+from fsqio.pants.buildgen.python.source_analysis.python_import_parser import PythonImportParser
 from fsqio.pants.buildgen.python.third_party_map_python import get_venv_map
 
 
@@ -46,6 +46,7 @@ class PythonBuildgenError(TaskError):
 
 
 class BuildgenPython(BuildgenTask):
+
   @classmethod
   def prepare(cls, options, round_manager):
     super(BuildgenPython, cls).prepare(options, round_manager)
@@ -80,7 +81,7 @@ class BuildgenPython(BuildgenTask):
       default=[],
       advanced=True,
       type=list,
-      help="List of python package names produced by the repo (e.g. ['fsqio', 'pants', ...])."
+      help="Imported prefixes that buildgen should not attempt to map to a providing target."
     )
     register(
       '--target-alias-blacklist',

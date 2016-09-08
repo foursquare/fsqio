@@ -4,11 +4,11 @@ python_library(
   sources = ['buildgen_python.py', '__init__.py'],
   dependencies = [
     '3rdparty/python:pantsbuild.pants',
-    ':python_import_parser',
     ':third_party_map_python',
     'src/python/fsqio/pants/buildgen/core:buildgen_task',
     'src/python/fsqio/pants/buildgen/core:symbol_tree',
     'src/python/fsqio/pants/buildgen/core:third_party_map_util',
+    'src/python/fsqio/pants/buildgen/python/source_analysis',
   ],
 )
 
@@ -18,11 +18,6 @@ python_library(
   dependencies = [
     '3rdparty/python:pantsbuild.pants',
   ],
-)
-
-python_library(
-  name = 'python_import_parser',
-  sources = ['python_import_parser.py', '__init__.py'],
 )
 
 python_library(
