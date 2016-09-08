@@ -32,6 +32,7 @@ from pants.base.fingerprint_strategy import TaskIdentityFingerprintStrategy
 from pants.base.specs import DescendantAddresses
 from pants.invalidation.cache_manager import VersionedTargetSet
 from pants.task.task import Task
+from pants.util.dirutil import safe_mkdir
 from pants.util.memo import memoized_property
 from requests_futures.sessions import FuturesSession
 
@@ -42,7 +43,6 @@ from fsqio.pants.pom.maven_dependency_graph import MavenDependencyGraph
 from fsqio.pants.pom.maven_version import MavenVersion, MavenVersionRangeRef
 from fsqio.pants.pom.pom import Pom
 from fsqio.pants.pom.sort_projects import CycleException
-from fsqio.pants.util.dirutil import safe_mkdir
 
 
 logger = logging.getLogger(__name__)

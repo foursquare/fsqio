@@ -6,7 +6,6 @@ python_library(
   dependencies = [
     '3rdparty/python:pantsbuild.pants',
     ':spindle_task',
-    'src/python/fsqio/pants/util',
   ],
 )
 
@@ -18,7 +17,6 @@ python_library(
     ':spindle_task',
     'src/python/fsqio/pants/spindle/targets:spindle_thrift_library',
     'src/python/fsqio/pants/spindle/targets:ssp_template',
-    'src/python/fsqio/pants/util',
   ],
 )
 

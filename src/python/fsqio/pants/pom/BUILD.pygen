@@ -57,7 +57,6 @@ python_library(
     ':maven_version',
     ':pom',
     ':sort_projects',
-    'src/python/fsqio/pants/util',
   ],
 )
 

@@ -21,9 +21,9 @@ from pants.build_graph.resources import Resources as BaseResources
 from pants.contrib.node.tasks.node_paths import NodePaths
 from pants.contrib.node.tasks.node_task import NodeTask
 from pants.util.contextutil import pushd
+from pants.util.dirutil import safe_mkdir
 
 from fsqio.pants.node.targets.webpack_module import WebPackModule
-from fsqio.pants.util.dirutil import safe_mkdir
 
 
 class WebPack(NodeTask, SimpleCodegenTask):

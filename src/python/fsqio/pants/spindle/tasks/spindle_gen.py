@@ -22,12 +22,12 @@ from pants.base.build_environment import get_buildroot
 from pants.base.exceptions import TaskError
 from pants.build_graph.address import Address
 from pants.option.custom_types import target_option
+from pants.util.dirutil import safe_mkdir
 from pants.util.memo import memoized_property
 
 from fsqio.pants.spindle.targets.spindle_thrift_library import SpindleThriftLibrary
 from fsqio.pants.spindle.targets.ssp_template import SspTemplate
 from fsqio.pants.spindle.tasks.spindle_task import SpindleTask
-from fsqio.pants.util.dirutil import safe_mkdir
 
 
 class SpindleGen(NailgunTask, SpindleTask):

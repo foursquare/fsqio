@@ -8,6 +8,5 @@ python_library(
     '3rdparty/python:pantsbuild.pants.contrib.node',
     'src/python/fsqio/pants/node/subsystems/resolvers',
     'src/python/fsqio/pants/node/targets',
-    'src/python/fsqio/pants/util',
   ],
 )

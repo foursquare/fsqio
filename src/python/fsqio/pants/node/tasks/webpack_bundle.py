@@ -15,9 +15,9 @@ import os.path
 
 from pants.fs.archive import TarArchiver
 from pants.task.task import Task
+from pants.util.dirutil import safe_mkdir
 
 from fsqio.pants.node.tasks.webpack import WebPack
-from fsqio.pants.util.dirutil import safe_mkdir
 
 
 class WebPackBundle(Task):
