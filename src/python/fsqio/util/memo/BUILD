@@ -1,9 +1,6 @@
 # Copyright 2016 Foursquare Labs Inc. All Rights Reserved.
 
 python_library(
-  name = 'util',
+  name = 'memo',
   sources = globs('*.py'),
-  dependencies = [
-    '3rdparty/python:requests',
-  ],
 )
