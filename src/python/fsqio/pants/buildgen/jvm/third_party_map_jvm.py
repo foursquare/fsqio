@@ -47,7 +47,13 @@ jvm_third_party_map = {
       'hadoop': 'spatial-sdk-hive'
     },
     'facebook': {
-      'presto': 'presto-main',
+      'presto': {
+        'DEFAULT': 'presto-main',
+        'jdbc': {
+          'DEFAULT': 'presto-jdbc',
+          'internal': 'presto-main',
+        }
+      }
     },
     'fasterxml': {
       'jackson': 'jackson-scala',
