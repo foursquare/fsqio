@@ -469,6 +469,9 @@ jvm_third_party_map = {
     'objectweb': {
       'asm': 'asm'
     },
+    'openjdk': {
+      'jmh': 'jmh'
+    },
     'openid4java': 'openid-client',
 
     'opencv': {
