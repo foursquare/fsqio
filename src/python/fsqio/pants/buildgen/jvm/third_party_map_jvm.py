@@ -10,6 +10,7 @@ jvm_third_party_map = {
     'storm': 'storm-core',
   },
   'breeze': 'breeze',
+  'caffe': 'caffe-protobuf',
   'ch': {
     'qos': {
       'logback': 'logback',
@@ -59,6 +60,7 @@ jvm_third_party_map = {
       'jackson': 'jackson-scala',
     },
     'foursquare': {
+      'caffe': 'caffe-jni',
       'common': {
         'async': 'twitter-util-async',
       },
@@ -395,9 +397,12 @@ jvm_third_party_map = {
     },
     'datavec': {
       'api': 'datavec310',
-      'common': 'datavec310',
-      'image': 'datavec310',
-      'javacv': 'javacv',
+    },
+    'eclipse': {
+      'jetty': {
+        'server': 'jetty-server',
+        'servlet': 'jetty-servlet',
+      }
     },
     'deeplearning4j': {
       'datasets': {
@@ -408,17 +413,10 @@ jvm_third_party_map = {
       'nn': {
         'api': 'deeplearning4j310',
         'conf': 'deeplearning4j310',
-        'graph': 'deeplearning4j310',
         'multilayer': 'deeplearning4j310',
         'weights': 'deeplearning4j310',
       },
       'util': 'deeplearning4j310',
-    },
-    'eclipse': {
-      'jetty': {
-        'server': 'jetty-server',
-        'servlet': 'jetty-servlet',
-      }
     },
     'elasticsearch': {
       'DEFAULT': 'elasticsearch',
@@ -536,4 +534,3 @@ jvm_third_party_map = {
   },
   'zemberek': 'zemberek',
 }
-
