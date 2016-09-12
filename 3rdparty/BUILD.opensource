@@ -362,6 +362,15 @@ jar_library(
   ]
 )
 
+jar_library(
+  name= 'jmh',
+  jars = [
+    jar(org = 'org.openjdk.jmh', name = 'jmh-core', rev = '1.14'),
+    jar(org = 'org.openjdk.jmh', name = 'jmh-generator-annprocess', rev = '1.14'),
+    jar(org = 'org.openjdk.jmh', name = 'jmh-generator-bytecode', rev = '1.14'),
+  ]
+)
+
 # NOTE: joda-convert is required when compiling against joda-time with scala. See
 # http://www.scala-lang.org/node/10575
 jar_library(
