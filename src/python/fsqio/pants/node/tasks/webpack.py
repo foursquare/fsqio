@@ -63,7 +63,6 @@ class WebPack(NodeTask, SimpleCodegenTask):
 
   @classmethod
   def prepare(cls, options, round_manager):
-    super(WebPack, cls).prepare(options, round_manager)
     # NOTE(mateo): This task should be requiring the NodePaths product - but doing so results in a goal cycle upstream.
     #  - NodePaths is a product of the NodeResolve task, so requiring it meant Webpack depended on NodeResolve.
     #  - NodeResolve was installed into the 'resolve' goal, and 'resolve' depends on 'gen' goal
@@ -75,6 +74,7 @@ class WebPack(NodeTask, SimpleCodegenTask):
     # We are forcing this to run right before gen, so the upstream resolvers will by definition not have ran.
     #
     # TODO(mateo): Fix the scheduling - it will likely require upstream changes to the Node plugin or forking NodePaths.
+    # super(Webpack, cls).prepare(options, round_manager)
     # round_manager.require_data(NodePaths)
     round_manager.require_data('webpack_distribution')
 

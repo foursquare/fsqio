@@ -19,7 +19,6 @@ from pants.util.memo import memoized_property
 
 
 class WebPackModule(NodeModule):
-  # TODO(mateo): Target depends on having webpack in the json that lists npm dependencies. Enforce that dep somewhere.
 
   @memoized_property
   def npm_json(self):

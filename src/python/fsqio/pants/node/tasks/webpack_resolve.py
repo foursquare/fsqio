@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 class WebPackResolveFingerprintStrategy(TaskIdentityFingerprintStrategy):
 
   def compute_fingerprint(self, target):
+    # TODO(mateo): Needs to mixin the node distribution from upstream node tests.
     super_fingerprint = super(WebPackResolveFingerprintStrategy, self).compute_fingerprint(target)
     if not isinstance(target, WebPackModule):
       return super_fingerprint
@@ -77,7 +78,7 @@ class WebPackResolve(NodeResolve):
 
   @classmethod
   def product_types(cls):
-    return ['webpack_distribution']
+    return ['webpack_distribution', NodePaths]
 
   def cache_target_dirs(self):
     return True
@@ -87,7 +88,6 @@ class WebPackResolve(NodeResolve):
     if not targets:
       return
 
-    # TODO(mateo): This pipeline continually downloads the node.tar for each invalidation - needs followup.
     node_paths = self.context.products.get_data(NodePaths, init_func=NodePaths)
 
     invalidation_context = self.invalidated(

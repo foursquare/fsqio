@@ -25,3 +25,7 @@ class WebPackResolver(NpmResolver):
   def register_options(cls, register):
     NodeResolve.register_resolver_for_type(WebPackModule, cls)
     super(WebPackResolver, cls).register_options(register)
+
+  def _emit_package_descriptor(self, node_task, target, results_dir, node_paths):
+    # Upstream uses BUILD files to generate the package.json. I might be interested in trying that sometime.
+    pass
