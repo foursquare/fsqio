@@ -7,6 +7,7 @@ from pants.build_graph.build_file_aliases import BuildFileAliases
 from pants.goal.goal import Goal
 from pants.goal.task_registrar import TaskRegistrar as task
 
+from fsqio.pants.node.subsystems.resolvers.webpack_resolver import WebPackResolver
 from fsqio.pants.node.targets.webpack_module import WebPackModule
 from fsqio.pants.node.tasks.webpack import WebPack
 from fsqio.pants.node.tasks.webpack_bundle import WebPackBundle
@@ -20,11 +21,16 @@ def build_file_aliases():
     },
   )
 
-def register_goals():
+def global_subsystems():
+  return (WebPackResolver,)
 
+def register_goals():
+  Goal.register('webpack', 'Build Node.js webpack modules.')
+
+  Goal.by_name('repl').uninstall_task('node')
   Goal.by_name('test').uninstall_task('node')
   Goal.by_name('resolve').uninstall_task('node')
 
-  task(name='webpack', action=WebPack).install()
-  task(name='webpack-resolve', action=WebPackResolve).install()
+  task(name='webpack-resolve', action=WebPackResolve).install('webpack')
+  task(name='webpack', action=WebPack).install('webpack')
   task(name='webpack-bundle', action=WebPackBundle).install('webpack')

@@ -64,7 +64,19 @@ class WebPack(NodeTask, SimpleCodegenTask):
   @classmethod
   def prepare(cls, options, round_manager):
     super(WebPack, cls).prepare(options, round_manager)
-    round_manager.require_data(NodePaths)
+    # NOTE(mateo): This task should be requiring the NodePaths product - but doing so results in a goal cycle upstream.
+    #  - NodePaths is a product of the NodeResolve task, so requiring it meant Webpack depended on NodeResolve.
+    #  - NodeResolve was installed into the 'resolve' goal, and 'resolve' depends on 'gen' goal
+    #  - WebPack is a SimpleCodegen subclass, so this meant that WebpackResolve depended on WebPack, obviously a cycle.
+    #  - NodeResolve also registers the product requirements of every Resolver subsystem, including ScalaJs, etc.
+    #
+    # The workaround is simply to not require NodePaths and instead enforce the WebPack -> WebPackResolve with a
+    # separate product. NodePaths is just a cache to make sure that a target is not processed by multiple resolvers.
+    # We are forcing this to run right before gen, so the upstream resolvers will by definition not have ran.
+    #
+    # TODO(mateo): Fix the scheduling - it will likely require upstream changes to the Node plugin or forking NodePaths.
+    # round_manager.require_data(NodePaths)
+    round_manager.require_data('webpack_distribution')
 
   def synthetic_target_type(self, target):
     return WebPack.Resources
@@ -78,7 +90,8 @@ class WebPack(NodeTask, SimpleCodegenTask):
       raise TaskError("No npm distribution was found!")
     node_path = node_paths.node_path(target)
     dest_dir = os.path.join(target_workdir, 'webpack')
-    safe_mkdir(target_workdir, clean=True)
+    # NOTE(mateo): The target_workdir is the 'current' symlink and not respected by clean=True. Need to fix upstream.
+    safe_mkdir(os.path.realpath(target_workdir), clean=True)
 
     # Added "bail" to the args since webpack only returns failure on failed transpiling, treating missing deps or
     # syntax errors as soft errors. This resulted in Pants returning success while the canary fails health check.

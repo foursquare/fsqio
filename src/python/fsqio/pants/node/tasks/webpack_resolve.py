@@ -68,6 +68,17 @@ class WebPackResolve(NodeResolve):
   def global_subsystems(cls):
     return super(WebPackResolve, cls).global_subsystems() + (WebPackResolver,)
 
+  @classmethod
+  def prepare(cls, options, round_manager):
+    # This purposefully clobbers the super class prepare(), because it registers the products of every Resolver
+    # subsystem, and that causes a cycle with Webpack tasks that want to add to the compile_classpath.
+    # pylint: disable=no-member
+    WebPackResolver.prepare(options, round_manager)
+
+  @classmethod
+  def product_types(cls):
+    return ['webpack_distribution']
+
   def cache_target_dirs(self):
     return True
 
