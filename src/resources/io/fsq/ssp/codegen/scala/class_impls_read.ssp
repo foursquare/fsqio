@@ -1,4 +1,21 @@
 <%@ val cls: _root_.io.fsq.spindle.codegen.runtime.StructLike %>
+#for (field <- cls.fields)
+  private def read_${field.name}(iprot: org.apache.thrift.protocol.TProtocol, field_header: org.apache.thrift.protocol.TField): Unit = {
+#if (field.renderType.isEnum)
+    if (field_header.`type` == org.apache.thrift.protocol.TType.${field.renderType.ttype.name} || field_header.`type` == org.apache.thrift.protocol.TType.ENUM) {
+#else
+    if (field_header.`type` == org.apache.thrift.protocol.TType.${field.renderType.ttype.name}) {
+#end
+<% render(field.renderType.fieldReadTemplate, Map("renderType" -> field.renderType, "lhs" -> (field.varName + " ="), "indent" -> "      ")) %>
+#if (field.renderType.usesSetVar)
+      ${field.isSetVar} = true
+#end
+    } else {
+      org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
+    }
+  }
+
+#end
   override def read(iprot: org.apache.thrift.protocol.TProtocol) {
     // Unknown fields in this read go here.
     var currentUnknownFieldsOpt: Option[_root_.io.fsq.spindle.runtime.UnknownFields] = None
@@ -28,20 +45,7 @@
       try {
         field_header.id match {
 #for (field <- cls.fields)
-          case ${field.identifier} => {  // ${field.name}
-#if (field.renderType.isEnum)
-            if (field_header.`type` == org.apache.thrift.protocol.TType.${field.renderType.ttype.name} || field_header.`type` == org.apache.thrift.protocol.TType.ENUM) {
-#else
-            if (field_header.`type` == org.apache.thrift.protocol.TType.${field.renderType.ttype.name}) {
-#end
-<% render(field.renderType.fieldReadTemplate, Map("renderType" -> field.renderType, "lhs" -> (field.varName + " ="), "indent" -> "              ")) %>
-#if (field.renderType.usesSetVar)
-              ${field.isSetVar} = true
-#end
-            } else {
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
-            }
-          }
+          case ${field.identifier} => read_${field.name}(iprot, field_header)
 #end
           case _ => {
             if (io.fsq.spindle.runtime.RuntimeHelpers.preserveUnknownFields(this)) {

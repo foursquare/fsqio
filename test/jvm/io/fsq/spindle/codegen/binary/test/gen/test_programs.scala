@@ -1179,6 +1179,235 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
     oprot.writeStructEnd()
   }
 
+  private def read_namespaces(iprot: org.apache.thrift.protocol.TProtocol, field_header: org.apache.thrift.protocol.TField): Unit = {
+
+    if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
+      _namespaces = {
+        val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
+        val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.headers.gen.Namespace]
+        var i: Int = tlist.size
+        builder.sizeHint(tlist.size)
+        while (i > 0) {
+          builder += ({
+            val s = io.fsq.common.thrift.descriptors.headers.gen.Namespace.createRawRecord
+            s.read(iprot)
+            s
+          })
+          i -= 1
+        }
+        builder.result()
+      }
+      iprot.readListEnd()
+    } else {
+      org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
+    }
+  }
+
+  private def read_includes(iprot: org.apache.thrift.protocol.TProtocol, field_header: org.apache.thrift.protocol.TField): Unit = {
+
+    if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
+      _includes = {
+        val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
+        val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.headers.gen.Include]
+        var i: Int = tlist.size
+        builder.sizeHint(tlist.size)
+        while (i > 0) {
+          builder += ({
+            val s = io.fsq.common.thrift.descriptors.headers.gen.Include.createRawRecord
+            s.read(iprot)
+            s
+          })
+          i -= 1
+        }
+        builder.result()
+      }
+      iprot.readListEnd()
+    } else {
+      org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
+    }
+  }
+
+  private def read_constants(iprot: org.apache.thrift.protocol.TProtocol, field_header: org.apache.thrift.protocol.TField): Unit = {
+
+    if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
+      _constants = {
+        val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
+        val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.constants.gen.Const]
+        var i: Int = tlist.size
+        builder.sizeHint(tlist.size)
+        while (i > 0) {
+          builder += ({
+            val s = io.fsq.common.thrift.descriptors.constants.gen.Const.createRawRecord
+            s.read(iprot)
+            s
+          })
+          i -= 1
+        }
+        builder.result()
+      }
+      iprot.readListEnd()
+    } else {
+      org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
+    }
+  }
+
+  private def read_enums(iprot: org.apache.thrift.protocol.TProtocol, field_header: org.apache.thrift.protocol.TField): Unit = {
+
+    if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
+      _enums = {
+        val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
+        val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.enums.gen.Enum]
+        var i: Int = tlist.size
+        builder.sizeHint(tlist.size)
+        while (i > 0) {
+          builder += ({
+            val s = io.fsq.common.thrift.descriptors.enums.gen.Enum.createRawRecord
+            s.read(iprot)
+            s
+          })
+          i -= 1
+        }
+        builder.result()
+      }
+      iprot.readListEnd()
+    } else {
+      org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
+    }
+  }
+
+  private def read_typedefs(iprot: org.apache.thrift.protocol.TProtocol, field_header: org.apache.thrift.protocol.TField): Unit = {
+
+    if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
+      _typedefs = {
+        val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
+        val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.types.gen.Typedef]
+        var i: Int = tlist.size
+        builder.sizeHint(tlist.size)
+        while (i > 0) {
+          builder += ({
+            val s = io.fsq.common.thrift.descriptors.types.gen.Typedef.createRawRecord
+            s.read(iprot)
+            s
+          })
+          i -= 1
+        }
+        builder.result()
+      }
+      iprot.readListEnd()
+    } else {
+      org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
+    }
+  }
+
+  private def read_structs(iprot: org.apache.thrift.protocol.TProtocol, field_header: org.apache.thrift.protocol.TField): Unit = {
+
+    if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
+      _structs = {
+        val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
+        val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.structs.gen.Struct]
+        var i: Int = tlist.size
+        builder.sizeHint(tlist.size)
+        while (i > 0) {
+          builder += ({
+            val s = io.fsq.common.thrift.descriptors.structs.gen.Struct.createRawRecord
+            s.read(iprot)
+            s
+          })
+          i -= 1
+        }
+        builder.result()
+      }
+      iprot.readListEnd()
+    } else {
+      org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
+    }
+  }
+
+  private def read_unions(iprot: org.apache.thrift.protocol.TProtocol, field_header: org.apache.thrift.protocol.TField): Unit = {
+
+    if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
+      _unions = {
+        val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
+        val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.structs.gen.Union]
+        var i: Int = tlist.size
+        builder.sizeHint(tlist.size)
+        while (i > 0) {
+          builder += ({
+            val s = io.fsq.common.thrift.descriptors.structs.gen.Union.createRawRecord
+            s.read(iprot)
+            s
+          })
+          i -= 1
+        }
+        builder.result()
+      }
+      iprot.readListEnd()
+    } else {
+      org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
+    }
+  }
+
+  private def read_exceptions(iprot: org.apache.thrift.protocol.TProtocol, field_header: org.apache.thrift.protocol.TField): Unit = {
+
+    if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
+      _exceptions = {
+        val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
+        val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.structs.gen.Exception]
+        var i: Int = tlist.size
+        builder.sizeHint(tlist.size)
+        while (i > 0) {
+          builder += ({
+            val s = io.fsq.common.thrift.descriptors.structs.gen.Exception.createRawRecord
+            s.read(iprot)
+            s
+          })
+          i -= 1
+        }
+        builder.result()
+      }
+      iprot.readListEnd()
+    } else {
+      org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
+    }
+  }
+
+  private def read_services(iprot: org.apache.thrift.protocol.TProtocol, field_header: org.apache.thrift.protocol.TField): Unit = {
+
+    if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
+      _services = {
+        val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
+        val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.services.gen.Service]
+        var i: Int = tlist.size
+        builder.sizeHint(tlist.size)
+        while (i > 0) {
+          builder += ({
+            val s = io.fsq.common.thrift.descriptors.services.gen.Service.createRawRecord
+            s.read(iprot)
+            s
+          })
+          i -= 1
+        }
+        builder.result()
+      }
+      iprot.readListEnd()
+    } else {
+      org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
+    }
+  }
+
+  private def read_typeRegistry(iprot: org.apache.thrift.protocol.TProtocol, field_header: org.apache.thrift.protocol.TField): Unit = {
+
+    if (field_header.`type` == org.apache.thrift.protocol.TType.STRUCT) {
+      _typeRegistry = ({
+        val s = io.fsq.common.thrift.descriptors.types.gen.TypeRegistry.createRawRecord
+        s.read(iprot)
+        s
+      })
+    } else {
+      org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
+    }
+  }
+
   override def read(iprot: org.apache.thrift.protocol.TProtocol) {
     // Unknown fields in this read go here.
     var currentUnknownFieldsOpt: Option[_root_.io.fsq.spindle.runtime.UnknownFields] = None
@@ -1207,225 +1436,16 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
 
       try {
         field_header.id match {
-          case 1 => {  // namespaces
-
-            if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
-              _namespaces = {
-                val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
-                val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.headers.gen.Namespace]
-                var i: Int = tlist.size
-                builder.sizeHint(tlist.size)
-                while (i > 0) {
-                  builder += ({
-                    val s = io.fsq.common.thrift.descriptors.headers.gen.Namespace.createRawRecord
-                    s.read(iprot)
-                    s
-                  })
-                  i -= 1
-                }
-                builder.result()
-              }
-              iprot.readListEnd()
-            } else {
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
-            }
-          }
-          case 2 => {  // includes
-
-            if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
-              _includes = {
-                val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
-                val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.headers.gen.Include]
-                var i: Int = tlist.size
-                builder.sizeHint(tlist.size)
-                while (i > 0) {
-                  builder += ({
-                    val s = io.fsq.common.thrift.descriptors.headers.gen.Include.createRawRecord
-                    s.read(iprot)
-                    s
-                  })
-                  i -= 1
-                }
-                builder.result()
-              }
-              iprot.readListEnd()
-            } else {
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
-            }
-          }
-          case 3 => {  // constants
-
-            if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
-              _constants = {
-                val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
-                val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.constants.gen.Const]
-                var i: Int = tlist.size
-                builder.sizeHint(tlist.size)
-                while (i > 0) {
-                  builder += ({
-                    val s = io.fsq.common.thrift.descriptors.constants.gen.Const.createRawRecord
-                    s.read(iprot)
-                    s
-                  })
-                  i -= 1
-                }
-                builder.result()
-              }
-              iprot.readListEnd()
-            } else {
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
-            }
-          }
-          case 4 => {  // enums
-
-            if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
-              _enums = {
-                val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
-                val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.enums.gen.Enum]
-                var i: Int = tlist.size
-                builder.sizeHint(tlist.size)
-                while (i > 0) {
-                  builder += ({
-                    val s = io.fsq.common.thrift.descriptors.enums.gen.Enum.createRawRecord
-                    s.read(iprot)
-                    s
-                  })
-                  i -= 1
-                }
-                builder.result()
-              }
-              iprot.readListEnd()
-            } else {
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
-            }
-          }
-          case 5 => {  // typedefs
-
-            if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
-              _typedefs = {
-                val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
-                val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.types.gen.Typedef]
-                var i: Int = tlist.size
-                builder.sizeHint(tlist.size)
-                while (i > 0) {
-                  builder += ({
-                    val s = io.fsq.common.thrift.descriptors.types.gen.Typedef.createRawRecord
-                    s.read(iprot)
-                    s
-                  })
-                  i -= 1
-                }
-                builder.result()
-              }
-              iprot.readListEnd()
-            } else {
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
-            }
-          }
-          case 6 => {  // structs
-
-            if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
-              _structs = {
-                val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
-                val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.structs.gen.Struct]
-                var i: Int = tlist.size
-                builder.sizeHint(tlist.size)
-                while (i > 0) {
-                  builder += ({
-                    val s = io.fsq.common.thrift.descriptors.structs.gen.Struct.createRawRecord
-                    s.read(iprot)
-                    s
-                  })
-                  i -= 1
-                }
-                builder.result()
-              }
-              iprot.readListEnd()
-            } else {
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
-            }
-          }
-          case 7 => {  // unions
-
-            if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
-              _unions = {
-                val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
-                val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.structs.gen.Union]
-                var i: Int = tlist.size
-                builder.sizeHint(tlist.size)
-                while (i > 0) {
-                  builder += ({
-                    val s = io.fsq.common.thrift.descriptors.structs.gen.Union.createRawRecord
-                    s.read(iprot)
-                    s
-                  })
-                  i -= 1
-                }
-                builder.result()
-              }
-              iprot.readListEnd()
-            } else {
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
-            }
-          }
-          case 8 => {  // exceptions
-
-            if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
-              _exceptions = {
-                val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
-                val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.structs.gen.Exception]
-                var i: Int = tlist.size
-                builder.sizeHint(tlist.size)
-                while (i > 0) {
-                  builder += ({
-                    val s = io.fsq.common.thrift.descriptors.structs.gen.Exception.createRawRecord
-                    s.read(iprot)
-                    s
-                  })
-                  i -= 1
-                }
-                builder.result()
-              }
-              iprot.readListEnd()
-            } else {
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
-            }
-          }
-          case 9 => {  // services
-
-            if (field_header.`type` == org.apache.thrift.protocol.TType.LIST) {
-              _services = {
-                val tlist: org.apache.thrift.protocol.TList = iprot.readListBegin()
-                val builder = scala.collection.immutable.Vector.newBuilder[io.fsq.common.thrift.descriptors.services.gen.Service]
-                var i: Int = tlist.size
-                builder.sizeHint(tlist.size)
-                while (i > 0) {
-                  builder += ({
-                    val s = io.fsq.common.thrift.descriptors.services.gen.Service.createRawRecord
-                    s.read(iprot)
-                    s
-                  })
-                  i -= 1
-                }
-                builder.result()
-              }
-              iprot.readListEnd()
-            } else {
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
-            }
-          }
-          case 98 => {  // typeRegistry
-
-            if (field_header.`type` == org.apache.thrift.protocol.TType.STRUCT) {
-              _typeRegistry = ({
-                val s = io.fsq.common.thrift.descriptors.types.gen.TypeRegistry.createRawRecord
-                s.read(iprot)
-                s
-              })
-            } else {
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field_header.`type`)
-            }
-          }
+          case 1 => read_namespaces(iprot, field_header)
+          case 2 => read_includes(iprot, field_header)
+          case 3 => read_constants(iprot, field_header)
+          case 4 => read_enums(iprot, field_header)
+          case 5 => read_typedefs(iprot, field_header)
+          case 6 => read_structs(iprot, field_header)
+          case 7 => read_unions(iprot, field_header)
+          case 8 => read_exceptions(iprot, field_header)
+          case 9 => read_services(iprot, field_header)
+          case 98 => read_typeRegistry(iprot, field_header)
           case _ => {
             if (io.fsq.spindle.runtime.RuntimeHelpers.preserveUnknownFields(this)) {
               currentUnknownFields().readUnknownField(iprot, field_header, this)  // May call this method recursively.
