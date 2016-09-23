@@ -410,6 +410,15 @@ class FSTraversable[CC[X] <: Traversable[X], T, Repr <: TraversableLike[T, Repr]
     None
   }
 
+  def tailOption: Option[Repr] = {
+    val tail = xs.drop(1)
+    if (tail.nonEmpty) {
+      Some(tail)
+    } else {
+      None
+    }
+  }
+
   /**
    * Return a list of lists divided by the provided predicate.
    */
