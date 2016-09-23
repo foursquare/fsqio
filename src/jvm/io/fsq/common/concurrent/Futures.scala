@@ -55,7 +55,7 @@ object Futures {
 
   /**
    * Blocks on the future, until the future completes, or the timeout is reached. There are three possibilities:
-   *   a) The future completes succesfully, and it's value is returned.
+   *   a) The future completes successfully, and its value is returned.
    *   b) The future times out, and default is returned.
    *   c) The future throws an exception, and then this call will throw.
    *
@@ -181,7 +181,7 @@ object Futures {
     Futures.groupedCollect(params, limit)(tryF)
   }
 
-  /** runs the yield block of a for comprehension in an explicit exection context
+  /** runs the yield block of a for comprehension in an explicit execution context
    *
    * xF, yF might be finagle futures, runYieldInPool will
    * run doBlockingWork in a safe execution context.
@@ -190,7 +190,8 @@ object Futures {
    *   x <- xF
    *   y <- yF
    *   _ <- Futures.runYieldInPool(pool)
-   * } yield doBlockingWork*/
+   * } yield doBlockingWork
+   */
   def runYieldInPool(pool: FuturePool): PoolJumper = new DefaultPoolJumper(pool)
 
   /**
