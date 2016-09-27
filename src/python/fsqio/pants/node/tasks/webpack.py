@@ -45,7 +45,7 @@ class WebPack(NodeTask, SimpleCodegenTask):
 
   @classmethod
   def product_types(cls):
-    return [WebPack.Resources, 'compile_classpath']
+    return super(WebPack, cls).product_types() + [WebPack.Resources, 'compile_classpath']
 
   @property
   def cache_target_dirs(self):
