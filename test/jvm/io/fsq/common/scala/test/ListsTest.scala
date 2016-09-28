@@ -604,5 +604,21 @@ class ListsTest extends Lists.Implicits {
     A.assertEquals(Iterable("25").flatMapFind(TryO.toInt(_)), Some(25))
     A.assertEquals(Iterable[String]().flatMapFind(TryO.toInt(_)), None)
   }
+
+  @Test
+  def partitionN(): Unit = {
+    A.assertEquals(
+      (0 to 10).partitionN(),
+      Vector(Vector(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+    )
+    A.assertEquals(
+      (0 to 10).partitionN((x: Int) => x % 2 =? 0),
+      Vector(Vector(0, 2, 4, 6, 8, 10), Vector(1, 3, 5, 7, 9))
+    )
+    A.assertEquals(
+      (0 to 10).partitionN((x: Int) => x % 3 =? 0, (x: Int) => x % 5 =? 0),
+      Vector(Vector(0, 3, 6, 9), Vector(5, 10), Vector(1, 2, 4, 7, 8))
+    )
+  }
 }
 

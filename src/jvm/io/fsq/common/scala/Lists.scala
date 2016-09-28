@@ -478,6 +478,30 @@ class FSTraversable[CC[X] <: Traversable[X], T, Repr <: TraversableLike[T, Repr]
     }
     builder.result().sortBy(- _._2)
   }
+
+  /**
+   * Partition a list by an arbitrary set of predicates. The output is a list of lists, where the
+   * index in that list indicates which predicate the element passed. The remainder (those elements
+   * that did not pass any test) is stored at index `fs.size`.
+   *
+   * Example:
+   *   (0 to 10).partitionN((x: Int) => x % 3 =? 0, (x: Int) => x % 5 =? 0)
+   *   // returns: Vector(Vector(0, 3, 6, 9), Vector(5, 10), Vector(1, 2, 4, 7, 8))
+   */
+  def partitionN(fs: (T => Boolean)*): Seq[Seq[T]] = {
+    // Want 1 more than the size of the function list, since we need space for the remainder list.
+    val builders = new Array[scala.collection.mutable.Builder[T, Vector[T]]](fs.size + 1)
+    (0 to fs.size).foreach(i => {
+      builders(i) = Vector.newBuilder[T]
+    })
+    val fsWithIndex = fs.zipWithIndex
+    val sizeOfFunctionList = fs.size
+    xs.foreach(x => {
+      val index = fsWithIndex.find({ case (f, i) => f(x) }).map(_._2).getOrElse(sizeOfFunctionList)
+      builders(index) += x
+    })
+    builders.toVector.map(_.result())
+  }
 }
 
 class FSSet[
