@@ -778,6 +778,52 @@ class FSIterable[CC[X] <: Iterable[X], T, Repr <: IterableLike[T, Repr] with Gen
     val ysSet = ys.toSet
     xs.exists(x => ysSet.contains(x))
   }
+
+  /**
+   * Like `zip`, but doesn't stop until *both* iterables are exhausted. The length
+   * of the result will be max(firstList.size, secondList.size).
+   */
+  def zipOption[U](ys: Iterable[U]): CC[(Option[T], Option[U])] = {
+    val builder = newBuilder[(Option[T], Option[U])]
+    val iter1 = xs.iterator
+    val iter2 = ys.iterator
+    while (iter1.hasNext || iter2.hasNext) {
+      val item1 = if (iter1.hasNext) Some(iter1.next) else None
+      val item2 = if (iter2.hasNext) Some(iter2.next) else None
+      builder += (item1 -> item2)
+    }
+    builder.result()
+  }
+
+  /**
+   * Like `zip`, but continues even after the second iterable has been exhausted.
+   */
+  def zipLeftOption[U](ys: Iterable[U]): CC[(T, Option[U])] = {
+    val builder = newBuilder[(T, Option[U])]
+    val iter1 = xs.iterator
+    val iter2 = ys.iterator
+    while (iter1.hasNext) {
+      val item1 = iter1.next
+      val item2 = if (iter2.hasNext) Some(iter2.next) else None
+      builder += (item1 -> item2)
+    }
+    builder.result()
+  }
+
+  /**
+   * Like `zip`, but continues even after the first iterable has been exhausted.
+   */
+  def zipRightOption[U](ys: Iterable[U]): CC[(Option[T], U)] = {
+    val builder = newBuilder[(Option[T], U)]
+    val iter1 = xs.iterator
+    val iter2 = ys.iterator
+    while (iter2.hasNext) {
+      val item1 = if (iter1.hasNext) Some(iter1.next) else None
+      val item2 = iter2.next
+      builder += (item1 -> item2)
+    }
+    builder.result()
+  }
 }
 
 class FSSeq[CC[X] <: Seq[X], T, Repr <: SeqLike[T, Repr] with GenericTraversableTemplate[T, CC]](

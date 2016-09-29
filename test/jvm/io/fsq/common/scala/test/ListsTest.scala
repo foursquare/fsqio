@@ -620,5 +620,47 @@ class ListsTest extends Lists.Implicits {
       Vector(Vector(0, 3, 6, 9), Vector(5, 10), Vector(1, 2, 4, 7, 8))
     )
   }
+
+  @Test
+  def zipOption(): Unit = {
+    A.assertEquals(Iterable("one1", "two1").zipOption(Iterable("one2", "two2", "three2")),
+      Vector((Some("one1"), Some("one2")), (Some("two1"), Some("two2")), (None, Some("three2")))
+    )
+    A.assertEquals(Iterable("one1", "two1", "three1").zipOption(Iterable("one2", "two2")),
+      Vector((Some("one1"), Some("one2")), (Some("two1"), Some("two2")), (Some("three1"), None))
+    )
+    A.assertEquals(Iterable("one1", "two1").zipOption(Iterable("one2", "two2")),
+      Vector((Some("one1"), Some("one2")), (Some("two1"), Some("two2")))
+    )
+    A.assertEquals(Iterable().zipOption(Iterable()), Vector())
+  }
+
+  @Test
+  def zipLeftOption(): Unit = {
+    A.assertEquals(Iterable("one1", "two1").zipLeftOption(Iterable("one2", "two2", "three2")),
+      Vector(("one1", Some("one2")), ("two1", Some("two2")))
+    )
+    A.assertEquals(Iterable("one1", "two1", "three1").zipLeftOption(Iterable("one2", "two2")),
+      Vector(("one1", Some("one2")), ("two1", Some("two2")), ("three1", None))
+    )
+    A.assertEquals(Iterable("one1", "two1").zipLeftOption(Iterable("one2", "two2")),
+      Vector(("one1", Some("one2")), ("two1", Some("two2")))
+    )
+    A.assertEquals(Iterable().zipLeftOption(Iterable()), Vector())
+  }
+
+  @Test
+  def zipRightOption(): Unit = {
+    A.assertEquals(Iterable("one1", "two1").zipRightOption(Iterable("one2", "two2", "three2")),
+      Vector((Some("one1"), "one2"), (Some("two1"), "two2"), (None, "three2"))
+    )
+    A.assertEquals(Iterable("one1", "two1", "three1").zipRightOption(Iterable("one2", "two2")),
+      Vector((Some("one1"), "one2"), (Some("two1"), "two2"))
+    )
+    A.assertEquals(Iterable("one1", "two1").zipRightOption(Iterable("one2", "two2")),
+      Vector((Some("one1"), "one2"), (Some("two1"), "two2"))
+    )
+    A.assertEquals(Iterable().zipRightOption(Iterable()), Vector())
+  }
 }
 
