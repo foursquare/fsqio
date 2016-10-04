@@ -94,6 +94,7 @@ class ScalacBuildgenTaskMixin(JvmToolTaskMixin):
             'package': package,
             'exported_symbols': list(set(exported_symbols) - set([package])),
           }
+
     finally:
       shutil.rmtree(output_dir)
     return exported_symbols_by_source

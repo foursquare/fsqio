@@ -44,7 +44,6 @@ class MapScalaUsedSymbols(ScalacBuildgenTaskMixin, SourceAnalysisTask, NailgunTa
     super(MapScalaUsedSymbols, cls).prepare(options, round_manager)
     round_manager.require_data('scala_source_to_exported_symbols')
     round_manager.require_data('third_party_jar_symbols')
-    round_manager.require_data('jvm_build_tools_classpath_callbacks')
 
   def analyze_sources(self, sources):
     products = self.context.products

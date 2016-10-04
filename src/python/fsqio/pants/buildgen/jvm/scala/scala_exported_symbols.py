@@ -42,7 +42,6 @@ class MapScalaExportedSymbols(NailgunTask, SourceAnalysisTask, ScalacBuildgenTas
   @classmethod
   def prepare(cls, options, round_manager):
     super(MapScalaExportedSymbols, cls).prepare(options, round_manager)
-    round_manager.require_data('jvm_build_tools_classpath_callbacks')
     round_manager.require_data('scala')
 
   def analyze_sources(self, sources):
