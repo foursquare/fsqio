@@ -78,6 +78,14 @@ class WebPack(NodeTask, SimpleCodegenTask):
     # round_manager.require_data(NodePaths)
     round_manager.require_data('webpack_distribution')
 
+  @classmethod
+  def register_options(cls, register):
+    super(WebPack, cls).register_options(register)
+    register(
+      '--destination-dir', type=str, advanced=True, default='webpack',
+      help='The directory prefix for webpack resources to go in'
+    )
+
   def synthetic_target_type(self, target):
     return WebPack.Resources
 
@@ -89,7 +97,7 @@ class WebPack(NodeTask, SimpleCodegenTask):
     if not node_paths:
       raise TaskError("No npm distribution was found!")
     node_path = node_paths.node_path(target)
-    dest_dir = os.path.join(target_workdir, 'webpack')
+    dest_dir = os.path.join(target_workdir, self.get_options().destination_dir)
     # NOTE(mateo): The target_workdir is the 'current' symlink and not respected by clean=True. Need to fix upstream.
     safe_mkdir(os.path.realpath(target_workdir), clean=True)
 

@@ -118,7 +118,7 @@ class WebPackResolve(NodeResolve):
     spec_path = os.path.join(os.path.relpath(self.workdir, get_buildroot()))
     name = "webpack-distribution-{}".format(global_fingerprint)
     address = Address(spec_path=spec_path, target_name=name)
-    logger.debug("Addinng synthetic WebPackDistribution target: {}".format(name))
+    logger.debug("Adding synthetic WebPackDistribution target: {}".format(name))
     new_target = self.context.add_new_target(
       address,
       WebPackDistribution,
