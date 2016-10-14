@@ -9,7 +9,7 @@ import io.fsq.rogue.lift.LiftRogue._
 import java.util.Calendar
 import java.util.regex.Pattern
 import org.bson.types.ObjectId
-import org.junit.{After, Before, Ignore, Test}
+import org.junit.{After, Before, Test}
 import org.specs2.matcher.JUnitMustMatchers
 
 /**
@@ -166,30 +166,20 @@ class EndToEndTest extends JUnitMustMatchers {
     Venue.where(_._id eqs v.id).select(_.claims.subselect(_.userid)).fetch() must_== List(None)
   }
 
-  @Ignore("These tests are broken because DummyField doesn't know how to convert a String to an Enum")
   def testSelectEnumSubfield: Unit = {
     val v = baseTestVenue().save(true)
 
-    // This behavior is broken because we get a String back from mongo, and at
-    // that point we only have a DummyField for the subfield, and that doesn't
-    // know how to convert the String to an Enum.
-
     val statuses: List[Option[VenueClaimBson.status.MyType]] =
           Venue.where(_._id eqs v.id).select(_.lastClaim.subselect(_.status)) .fetch()
-    // This assertion works.
-    statuses must_== List(Some("Approved"))
-    // This assertion is what we want, and it fails.
-    // statuses must_== List(Some(ClaimStatus.approved))
+
+    statuses must_== List(Some(ClaimStatus.approved))
 
     val subuseridsAndStatuses: List[(Option[List[Long]], Option[List[VenueClaimBson.status.MyType]])] =
           Venue.where(_._id eqs v.id)
                .select(_.claims.subselect(_.userid), _.claims.subselect(_.status))
                .fetch()
-    // This assertion works.
-    subuseridsAndStatuses must_== List((Some(List(1234, 5678)), Some(List("Pending approval", "Approved"))))
 
-    // This assertion is what we want, and it fails.
-    // subuseridsAndStatuses must_== List((Some(List(1234, 5678)), Some(List(ClaimStatus.pending, ClaimStatus.approved))))
+    subuseridsAndStatuses must_== List((Some(List(1234, 5678)), Some(List(ClaimStatus.pending, ClaimStatus.approved))))
   }
 
   @Test
