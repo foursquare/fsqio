@@ -12,7 +12,7 @@ import io.fsq.rogue.spindle.test.gen.{ThriftClaimStatus, ThriftLike, ThriftTip, 
 import io.fsq.rogue.spindle.test.gen.IdsTypedefs.{LikeId, TipId, VenueClaimId, VenueId}
 import java.util.regex.Pattern
 import org.bson.types.ObjectId
-import org.junit.{After, Assert, Ignore, Test}
+import org.junit.{After, Assert, Test}
 import org.pantsbuild.junit.annotations.TestSerial
 import org.specs2.matcher.JUnitMustMatchers
 
@@ -192,32 +192,21 @@ class EndToEndTest extends JUnitMustMatchers {
     db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.claims.sub.select(_.userid))) must_== List(None)
   }
 
-  /* TODO(rogue-named-enums) */
-  @Ignore("These tests are broken because DummyField doesn't know how to convert a String to an Enum")
   def testSelectEnumSubfield: Unit = {
     val v = db.insert(baseTestVenue())
 
-    // This behavior is broken because we get a String back from mongo, and at
-    // that point we only have a DummyField for the subfield, and that doesn't
-    // know how to convert the String to an Enum.
-
     val statuses: Seq[Option[ThriftClaimStatus]] =
       db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.lastClaim.sub.select(_.status)))
-    // This assertion works.
-    statuses must_== Vector(Some("Approved"))
-    // This assertion is what we want, and it fails.
-    // statuses must_== Vector(Some(ThriftClaimStatus.approved))
 
-    /* TODO(rogue-sub-on-listfield)
-    val subuseridsAndStatuses: List[(Option[List[Long]], Option[List[ThriftClaimStatus]])] =
+    statuses must_== Vector(Some(ThriftClaimStatus.approved))
+
+    // TODO(rogue-sub-on-listfield)
+
+    val subuseridsAndStatuses: Seq[(Option[Seq[Option[Long]]], Option[Seq[Option[io.fsq.rogue.spindle.test.gen.ThriftClaimStatus]]])] =
       db.fetch(Q(ThriftVenue).where(_.id eqs v.id)
         .select(_.claims.sub.select(_.userid), _.claims.sub.select(_.status)))
-    // This assertion works.
-    subuseridsAndStatuses must_== List((Some(List(1234, 5678)), Some(List("Pending approval", "Approved"))))
-    */
 
-    // This assertion is what we want, and it fails.
-    // subuseridsAndStatuses must_== List((Some(List(1234, 5678)), Some(List(ThriftClaimStatus.pending, ThriftClaimStatus.approved))))
+    subuseridsAndStatuses must_== List((Some(List(1234, 5678)), Some(List(ThriftClaimStatus.pending, ThriftClaimStatus.approved))))
   }
 
   @Test
