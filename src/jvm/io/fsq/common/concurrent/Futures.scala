@@ -3,7 +3,8 @@
 package io.fsq.common.concurrent
 
 import com.twitter.finagle.{GlobalRequestTimeoutException, IndividualRequestTimeoutException}
-import com.twitter.util.{Await, Duration, Future, FuturePool, TimeoutException => TUTimeoutException, Timer, Try}
+import com.twitter.util.{Await, Duration, Future, FuturePool, Stopwatch, TimeoutException => TUTimeoutException, Timer,
+    Try}
 import io.fsq.macros.StackElement
 import java.util.concurrent.TimeoutException
 
@@ -204,5 +205,20 @@ object Futures {
     } catch {
       case t: Throwable => Future.exception(t)
     }
+  }
+
+  /**
+   * Returns a new Future whose return value will be a tuple of the value of
+   * `futureFunc`, and the number of milliseconds that elapsed between
+   * calling `time` and the completion of `futureFunc`. Note that if you create
+   * `futureFunc` before wrapping it in`time`, then the time returned might be
+   * less than the actual amount of time that `futureFunc` ran.
+   *
+   */
+  def time[T](futureFunc: => Future[T]): Future[(T, Int)] = {
+    val elapsed = Stopwatch.start()
+    futureFunc.map(x => {
+      (x, elapsed().inMilliseconds.toInt)
+    })
   }
 }
