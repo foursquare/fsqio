@@ -21,14 +21,40 @@ def safe_rmtree(directory):
   shutil.rmtree(directory, ignore_errors=True)
 
 
-def safe_mkdir(directory, clean=False):
+def safe_mkdir(directory, clean=False, mode=0777):
   """Ensure a directory is present.
 
   If it's not there, create it.  If it is, no-op. If clean is True, ensure the dir is empty."""
   if clean:
     safe_rmtree(directory)
   try:
-    os.makedirs(directory)
+    makedirs_with_mode(directory, mode)
   except OSError as e:
     if e.errno != errno.EEXIST:
       raise
+
+
+def makedirs_with_mode(name, mode=0777):
+  """makedirs_with_mode(path [, mode=0777])
+
+  Super-mkdir; create a leaf directory and all intermediate ones.
+  Works like mkdir, except that any intermediate path segment (not
+  just the rightmost) will be created if it does not exist.  This is
+  recursive. Also explicitly chmod's the created dirs since os.mkdirs does not guarantee that
+  permissions are correctly set on all systems.
+
+  """
+  head, tail = os.path.split(name)
+  if not tail:
+    head, tail = os.path.split(head)
+  if head and tail and not os.path.exists(head):
+    try:
+      makedirs_with_mode(head, mode)
+    except OSError, e:
+      # be happy if someone already created the path
+      if e.errno != errno.EEXIST:
+        raise
+    if tail == os.curdir:           # xxx/newdir/. exists if xxx/newdir exists
+      return
+  os.mkdir(name, mode)
+  os.chmod(name, mode)
