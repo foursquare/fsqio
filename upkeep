@@ -41,6 +41,11 @@ if [ "$1" == "force" ]; then
   exec ./scripts/upkeep/force.sh "$@"
 fi
 
+if [ "$1" == "check" ]; then
+  shift
+  exec ./scripts/upkeep/check.sh "$@"
+fi
+
 if [ "$1" != "" ]; then
   exec ./scripts/upkeep/run.sh "$@"
 fi
