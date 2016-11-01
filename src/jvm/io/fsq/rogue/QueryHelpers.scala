@@ -76,7 +76,7 @@ object QueryHelpers {
   }
 
   class DefaultQueryConfig extends QueryConfig {
-    override def defaultWriteConcern: WriteConcern = WriteConcern.SAFE
+    override def defaultWriteConcern: WriteConcern = WriteConcern.ACKNOWLEDGED
     /**
      * Batch size to set on the underlying DBCursor.
      * None = take value from the query if specified

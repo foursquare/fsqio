@@ -11,14 +11,14 @@ class TestDatabaseService extends SpindleDatabaseService(new TestDBCollectionFac
 }
 
 class TestDBCollectionFactory extends SpindleDBCollectionFactory {
-  val mongoClient = TrivialORM.mongo
+  val mongoClient = TrivialORM.mongoClient
 
   override def getPrimaryDB(meta: UntypedMetaRecord): DB = {
     val identifierStr = SpindleHelpers.getIdentifier(meta)
     if (identifierStr != "rogue_mongo") {
       throw new Exception("The mongo_identifier annotation in the Thrift definition must be rogue_mongo for these tests.")
     }
-    mongoClient.getDB(identifierStr)
+    new DB(mongoClient, identifierStr)
   }
   override val indexCache = None
 }

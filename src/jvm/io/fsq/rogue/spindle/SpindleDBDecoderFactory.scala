@@ -4,7 +4,7 @@ package io.fsq.rogue.spindle
 
 import com.mongodb.{DBCallback, DBCollection, DBDecoder, DBDecoderFactory, DBObject}
 import io.fsq.spindle.runtime.{UntypedMetaRecord, UntypedRecord}
-import java.io.InputStream
+import java.io.{ByteArrayInputStream, InputStream}
 import org.bson.{BSONCallback, BSONObject}
 
 case class SpindleDBDecoderFactory(
@@ -21,11 +21,11 @@ case class SpindleDBDecoder(
   def decode(is: InputStream, collection: DBCollection): DBObject = {
     recordReader(meta, is)
   }
+  def decode(bytes: Array[Byte], collection: DBCollection): DBObject = {
+    decode(new ByteArrayInputStream(bytes), collection)
+  }
 
   def getDBCallback(collection: DBCollection): DBCallback = {
-    throw new UnsupportedOperationException()
-  }
-  def decode(bytes: Array[Byte], collection: DBCollection): DBObject = {
     throw new UnsupportedOperationException()
   }
   def readObject(bytes: Array[Byte]): BSONObject = {

@@ -14,7 +14,7 @@ trait SpindleQueryExecutor extends QueryExecutor[UntypedMetaRecord, UntypedRecor
   def bulk[M <: UntypedMetaRecord, R <: UntypedRecord](
     clauses: Seq[BulkOperation[M, R]],
     ordered: Boolean = false,
-    writeConcern: WriteConcern = WriteConcern.NORMAL
+    writeConcern: WriteConcern = WriteConcern.UNACKNOWLEDGED
   ): Option[BulkWriteResult]
 }
 
@@ -25,7 +25,7 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
   }
 
   override def writeSerializer(record: UntypedRecord): SpindleRogueWriteSerializer = new SpindleRogueWriteSerializer
-  override def defaultWriteConcern: WriteConcern = WriteConcern.SAFE
+  override def defaultWriteConcern: WriteConcern = WriteConcern.ACKNOWLEDGED
 
   // allow this to be overridden to substitute alternative deserialization methods
   def newBsonStreamDecoder(): (UntypedMetaRecord, InputStream) => SpindleDBObject = {

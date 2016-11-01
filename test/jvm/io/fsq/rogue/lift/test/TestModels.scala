@@ -27,7 +27,7 @@ object RogueTestMongo extends ConnectionIdentifier {
   private var mongo: Option[MongoClient] = None
 
   def connectToMongo = {
-    mongo = Some(TrivialORM.mongo)
+    mongo = Some(TrivialORM.mongoClient)
     MongoDB.defineDb(RogueTestMongo, mongo.get, "rogue-test")
   }
 

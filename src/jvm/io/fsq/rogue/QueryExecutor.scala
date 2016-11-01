@@ -2,7 +2,7 @@
 
 package io.fsq.rogue
 
-import com.mongodb.{DBObject, MongoException, ReadPreference, WriteConcern}
+import com.mongodb.{DBObject, DuplicateKeyException, ReadPreference, WriteConcern}
 import io.fsq.field.Field
 import io.fsq.rogue.MongoHelpers.{MongoModify, MongoSelect}
 import io.fsq.spindle.types.MongoDisallowed
@@ -233,7 +233,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
       try {
         adapter.modify(query, upsert = true, multi = false, writeConcern = writeConcern)
       } catch {
-        case r: RogueException if r.getCause() != null && r.getCause().isInstanceOf[MongoException.DuplicateKey] => {
+        case r: RogueException if r.getCause() != null && r.getCause().isInstanceOf[DuplicateKeyException] => {
           /* NOTE: have to retry upserts that fail with duplicate key,
            * see https://jira.mongodb.org/browse/SERVER-14322
            */
@@ -279,7 +279,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
         val s = readSerializer[M, R](query.query.meta, query.query.select)
         adapter.findAndModify(query, returnNew, upsert = true, remove = false)(s.fromDBObject _)
       } catch {
-        case r: RogueException if r.getCause() != null && r.getCause().isInstanceOf[MongoException.DuplicateKey] => {
+        case r: RogueException if r.getCause() != null && r.getCause().isInstanceOf[DuplicateKeyException] => {
           /* NOTE: have to retry upserts that fail with duplicate key,
            * see https://jira.mongodb.org/browse/SERVER-14322
            */

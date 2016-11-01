@@ -27,7 +27,7 @@ object TrivialORM {
     def toDBObject(record: R): DBObject
   }
 
-  lazy val mongo = {
+  lazy val mongoClient = {
     val (host, port) = Option(System.getProperty("default.mongodb.server")).map({ str =>
       val arr = str.split(':')
       (arr(0), arr(1).toInt)
@@ -63,9 +63,11 @@ object TrivialORM {
   }
 
   class MyQueryExecutor extends QueryExecutor[Meta[_], Record] {
-    override val adapter = new MongoJavaDriverAdapter[Meta[_], Record](new MyDBCollectionFactory(mongo.getDB("test")))
+    override val adapter = new MongoJavaDriverAdapter[Meta[_], Record](
+      new MyDBCollectionFactory(new DB(mongoClient, "test"))
+    )
     override val optimizer = new QueryOptimizer
-    override val defaultWriteConcern: WriteConcern = WriteConcern.SAFE
+    override val defaultWriteConcern: WriteConcern = WriteConcern.ACKNOWLEDGED
 
     protected def readSerializer[M <: Meta[_], R](
       meta: M,

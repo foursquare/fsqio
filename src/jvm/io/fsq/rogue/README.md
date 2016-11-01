@@ -81,7 +81,7 @@ For "find" query objects
     query.foreach{v: Venue => ... }
     query.paginate(pageSize)
     query.fetchBatch(pageSize){vs: List[Venue] => ...}
-    query.bulkDelete_!!(WriteConcern.SAFE)
+    query.bulkDelete_!!(WriteConcern.ACKNOWLEDGED)
     query.findAndDeleteOne()
     query.explain()
     query.iterate(handler)

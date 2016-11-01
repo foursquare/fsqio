@@ -2,6 +2,7 @@
 
 package io.fsq.rogue.spindle.test
 
+import com.mongodb.DB
 import io.fsq.rogue.Rogue._
 import io.fsq.rogue.spindle.{SpindleDBCollectionFactory, SpindleDatabaseService, SpindleQuery}
 import io.fsq.rogue.spindle.test.gen.TestStruct
@@ -15,7 +16,7 @@ class TestSpindleDBService {
   def testSimpleStruct {
     val dbService = new SpindleDatabaseService(
       new SpindleDBCollectionFactory {
-        override def getPrimaryDB(meta: UntypedMetaRecord) = TrivialORM.mongo.getDB("test")
+        override def getPrimaryDB(meta: UntypedMetaRecord) = new DB(TrivialORM.mongoClient, "test")
         override def indexCache = None
       }
     )
