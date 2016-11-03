@@ -5,6 +5,7 @@ package io.fsq.spindle.common.thrift.base;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.TException;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 public class ThriftDateTimeHelper {
   public static void write(TProtocol oprot, org.joda.time.DateTime value) throws TException {
@@ -17,9 +18,9 @@ public class ThriftDateTimeHelper {
 
   public static DateTime read(TProtocol iprot, long value) throws TException {
     if (iprot instanceof SerializeDatesAsSeconds) {
-      return new org.joda.time.DateTime(value * 1000);
+      return new org.joda.time.DateTime(value * 1000, DateTimeZone.UTC);
     } else {
-      return new org.joda.time.DateTime(value);
+      return new org.joda.time.DateTime(value, DateTimeZone.UTC);
     }
   }
 }
