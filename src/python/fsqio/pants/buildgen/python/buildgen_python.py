@@ -359,12 +359,12 @@ class BuildgenPython(BuildgenTask):
         # Both of these return a target spec string if there is a match and None otherwise.
         dep = check_manually_defined(symbol, self.get_options().third_party_map) or import_map.get(prefix)
         if not dep:
-
-          msg = (dedent("""While running python buildgen, a symbol was found without a known providing target.
+          msg = dedent("""
+            While running python buildgen, a symbol was found without a known providing target.
             Target: {}
             Symbol: {}
             """.format(target.address.spec, symbol)
-          ))
+          )
           # TODO(mateo): Make this exception fail-slow. Better to gather all bg failures and print at end.
           if self.get_options().fatal:
             raise PythonBuildgenError(msg)
