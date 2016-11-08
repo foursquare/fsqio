@@ -72,6 +72,10 @@ jvm_third_party_map = {
       'geo': {
         'quadtree': 'country-revgeo',
         'shapefile': {
+          'cbsa': {
+            'CbsaByNameShapefile': 'cbsa-name-shapefiles',
+            'CbsaByIdShapefile': 'cbsa-id-shapefiles',
+          },
           'continent': 'continent-shapefiles',
           'country': 'cc-shapefiles',
           'dma': {
