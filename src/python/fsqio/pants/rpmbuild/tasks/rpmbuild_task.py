@@ -176,13 +176,17 @@ class RpmbuildTask(Task):
       run_container_cmd = [
         self.get_options().docker,
         'run',
+        '--attach=stdout',
+        '--attach=stderr',
         '--name={}'.format(container_name),
         image_name,
       ]
       with self.docker_workunit(name='run-container', cmd=run_container_cmd) as workunit:
         try:
           self.context.log.debug('Executing: {}'.format(' '.join(run_container_cmd)))
-          subprocess.check_call(run_container_cmd, stdout=workunit.output('stdout'), stderr=workunit.output('stderr'))
+          subprocess.check_call(run_container_cmd,
+                                stdout=workunit.output('stdout'),
+                                stderr=workunit.output('stderr'))
         except subprocess.CalledProcessError as e:
           raise TaskError('Failed to run build container: {0}'.format(e))
 
@@ -231,9 +235,7 @@ class RpmbuildTask(Task):
     except KeyError:
       raise TaskError('Unknown platform {}'.format(platform_key))
 
-    with self.invalidated(self.context.targets(self.is_rpm_spec)) as invalidation_check:
-      for vt in invalidation_check.invalid_vts:
-        target = vt.target
-        with temporary_dir(cleanup=not self.get_options().keep_build_products) as build_dir:
-          self.context.log.debug('Build directory: {}'.format(build_dir))
-          self.build_rpm(platform, target, build_dir)
+    for target in self.context.targets(self.is_rpm_spec):
+      with temporary_dir(cleanup=not self.get_options().keep_build_products) as build_dir:
+        self.context.log.debug('Build directory: {}'.format(build_dir))
+        self.build_rpm(platform, target, build_dir)
