@@ -74,7 +74,7 @@ class RpmbuildTask(Task):
 
   @staticmethod
   def write_stream(r, w):
-    size = 1024 * 1024 * 1024  # 1 GB
+    size = 1024 * 1024  # 1 MB
     buf = r.read(size)
     while buf:
       w.write(buf)
