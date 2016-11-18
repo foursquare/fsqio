@@ -143,18 +143,25 @@ object Futures {
    * If we generate a large list of futures at once, we risk overloading the future pool. This
    * allows us to generate futures in small groups and chain them together.
    * Maintains the order of the Iterable.
+   *
+   * groupedCollect runs f on up to limit of params at a time, collecting and then doing the next batch. This means you
+   * are bound by the slowest of each batch of Futures
    */
   def groupedCollect[T, U](params: Iterable[T], limit: Int)(f: T => Future[U]): Future[Seq[U]] = {
-    // NOTE: We reverse the sequence twice, so that we are prepending to the Seq
-    // instead of appending, which will be faster when the Seq is a linked list.
-    // We also foldLeft instead of foldRight, to handle the case when params is an Iterator, and
-    // so we are not required to consume the whole Iterator before proceeding.
     params.grouped(limit)
       .foldLeft(Future.value(Seq.empty[U]))((previousValuesF, nextParams) => for {
         previousValues <- previousValuesF
         nextValues <- Future.collect(nextParams.toVector.map(p => f(p)))
       } yield nextValues.reverse ++ previousValues)
       .map(_.reverse)
+  }
+
+  /**
+   * groupedCollectWithBatch performs the same operation as groupedCollect but does a .grouped on the input params first
+   * Effectively, you get up to limit Futures running over group items from params at any given time.
+   */
+  def groupedCollectWithBatch[T, U](params: Iterable[T], batchSize: Int, maxFutures: Int)(f: Iterable[T] => Future[U]): Future[Seq[U]] = {
+    Futures.groupedCollect(params.grouped(batchSize).toList, maxFutures)(f)
   }
 
   /**
