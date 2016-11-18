@@ -237,15 +237,16 @@ class RpmbuildTask(Task):
 
     finally:
       # Remove the build container.
-      if container_name:
+      if container_name and not self.get_options().keep_build_products:
         remove_container_cmd = [self.get_options().docker, 'rm', container_name]
         with self.docker_workunit(name='remove-build-container', cmd=remove_container_cmd) as workunit:
           subprocess.call(remove_container_cmd, stdout=workunit.output('stdout'), stderr=workunit.output('stderr'))
 
       # Remove the build image.
-      remove_image_cmd = [self.get_options().docker, 'rmi', image_name]
-      with self.docker_workunit(name='remove-build-image', cmd=remove_image_cmd) as workunit:
-        subprocess.call(remove_image_cmd, stdout=workunit.output('stdout'), stderr=workunit.output('stderr'))
+      if not self.get_options().keep_build_products:
+        remove_image_cmd = [self.get_options().docker, 'rmi', image_name]
+        with self.docker_workunit(name='remove-build-image', cmd=remove_image_cmd) as workunit:
+          subprocess.call(remove_image_cmd, stdout=workunit.output('stdout'), stderr=workunit.output('stderr'))
 
   def execute(self):
     platform_key = self.get_options().platform
