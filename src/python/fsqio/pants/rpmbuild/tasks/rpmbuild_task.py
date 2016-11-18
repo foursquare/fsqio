@@ -33,9 +33,11 @@ from fsqio.pants.rpmbuild.targets.rpm_spec import RpmSpecTarget
 # TODO(tdyas): Put this in pants.ini defaults.
 PLATFORMS = {
   'centos6': {
+    'id': 'centos6',
     'base': 'centos:6.8',
   },
   'centos7': {
+    'id': 'centos7',
     'base': 'centos:7',
   },
 }
@@ -64,6 +66,10 @@ class RpmbuildTask(Task):
       advanced=True,
       help='Do not remove the build directory passed to Docker.'
     )
+    register('--docker-build-context-files', type=list, default=[], advanced=True,
+             help='Files to copy into the Docker build context.')
+    register('--docker-build-setup-commands', type=list, default=[], advanced=True,
+             help='Dockerfile commands to inject at top of Dockerfile used for RPM builder image')
 
   def __init__(self, *args, **kwargs):
     super(RpmbuildTask, self).__init__(*args, **kwargs)
@@ -136,10 +142,21 @@ class RpmbuildTask(Task):
       f.write('rpmbuild -ba {}\n'.format(spec_basename))
     os.chmod(os.path.join(build_dir, 'build_rpm.sh'), 0555)
 
+    # Copy globally-configured files into build directory.
+    for context_file_path_template in self.get_options().docker_build_context_files:
+      context_file_path = context_file_path_template.format(platform_id=platform['id'])
+      shutil.copy(context_file_path, build_dir)
+
+    # Determine setup commands.
+    setup_commands = [
+      {'command': command.format(platform_id=platform['id'])}
+      for command in self.get_options().docker_build_setup_commands]
+
     # Write the Dockerfile for this build.
     generator = Generator(
       resource_string(__name__, 'dockerfile_template.mustache'),
       image=platform['base'],
+      setup_commands=setup_commands,
       spec_basename=spec_basename,
       build_reqs={'reqs': ' '.join(build_reqs)} if build_reqs else None,
       local_sources=local_sources,
