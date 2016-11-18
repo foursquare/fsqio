@@ -3,7 +3,6 @@
 package io.fsq.rogue.index
 
 import io.fsq.field.Field
-import io.fsq.spindle.runtime.{FieldDescriptor, MetaRecord, Record, StructFieldDescriptor}
 import scala.collection.immutable.ListMap
 
 trait UntypedMongoIndex {
@@ -117,7 +116,7 @@ case class IndexBuilder[M](rec: M) {
       m1: IndexModifier,
       f2: M => Field[_, M],
       m2: IndexModifier
-  ): MongoIndex2[M] = 
+  ): MongoIndex2[M] =
     MongoIndex2[M](f1(rec), m1, f2(rec), m2)
 
   def index(
@@ -171,11 +170,4 @@ case class IndexBuilder[M](rec: M) {
       m6: IndexModifier
   ): MongoIndex6[M] =
     MongoIndex6[M](f1(rec), m1, f2(rec), m2, f3(rec), m3, f4(rec), m4, f5(rec), m5, f6(rec), m6)
-}
-
-class SpindleIndexSubField[R <: Record[R], MR <: MetaRecord[R,MR], ER <: Record[ER], EM <: MetaRecord[ER,EM]](
-  parent: StructFieldDescriptor[R, MR, ER, EM],
-  subField: FieldDescriptor[_, ER, EM]) extends Field[ER,MR] {
-  def name = parent.name + "." + subField.name
-  def owner = parent.owner
 }

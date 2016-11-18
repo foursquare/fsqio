@@ -1,13 +1,14 @@
 // Copyright 2016 Foursquare Labs Inc. All Rights Reserved.
 
-package io.fsq.rogue.index.test
+package io.fsq.rogue.spindle.test
 
-import io.fsq.rogue.index.{Asc, Desc, Hashed, IndexBuilder, SpindleIndexSubField}
+import io.fsq.rogue.index.{Asc, Desc, Hashed, IndexBuilder}
+import io.fsq.rogue.spindle.SpindleIndexSubField
 import io.fsq.rogue.spindle.test.gen.{ThriftVenue, ThriftVenueClaimBson, ThriftVenueMeta}
 import org.junit.Test
 import org.specs2.matcher.JUnitMustMatchers
 
-class MongoIndexTest extends JUnitMustMatchers {
+class SpindleMongoIndexTest extends JUnitMustMatchers {
   @Test
   def testIndexGeneration(): Unit = {
     IndexBuilder[ThriftVenueMeta](ThriftVenue).index(_.id, Asc).toString must_== "_id:1"

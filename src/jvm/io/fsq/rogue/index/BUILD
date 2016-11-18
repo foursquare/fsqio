@@ -5,6 +5,5 @@ scala_library(
   sources = globs('*.scala'),
   dependencies = [
     'src/jvm/io/fsq/field',
-    'src/jvm/io/fsq/spindle/runtime',
   ],
 )

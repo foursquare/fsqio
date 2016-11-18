@@ -11,6 +11,7 @@ junit_tests(
     '3rdparty:specs2',
     'src/jvm/io/fsq/field',
     'src/jvm/io/fsq/rogue',
+    'src/jvm/io/fsq/rogue/index',
     'src/jvm/io/fsq/rogue/indexchecker',
     'src/jvm/io/fsq/rogue/spindle',
     'src/jvm/io/fsq/spindle/runtime',
