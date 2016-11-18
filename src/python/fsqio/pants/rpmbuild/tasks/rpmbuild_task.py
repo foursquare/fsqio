@@ -56,6 +56,8 @@ class RpmbuildTask(Task):
              help='Name of the docker command to invoke.')
     register('--keep-build-products', type=bool, advanced=True,
              help='Do not remove the build directory passed to Docker.')
+    register('--docker-build-no-cache', type=bool, advanced=True,
+             help='Do not cache the results of `docker build`.')
     register('--docker-build-context-files', type=list, default=[], advanced=True,
              help='Files to copy into the Docker build context.')
     register('--docker-build-setup-commands', type=list, default=[], advanced=True,
@@ -174,11 +176,14 @@ class RpmbuildTask(Task):
       build_image_cmd = [
         self.get_options().docker,
         'build',
-        #'--no-cache',  # TODO(tdyas): Figure out if docker caching is trustworthy again.
+      ]
+      if self.get_options().docker_build_no_cache:
+        build_image_cmd.append('--no-cache')
+      build_image_cmd.extend([
         '-t',
         image_name,
         build_dir,
-      ]
+      ])
       with self.docker_workunit(name='build-image', cmd=build_image_cmd) as workunit:
         try:
           self.context.log.debug('Executing: {}'.format(' '.join(build_image_cmd)))
