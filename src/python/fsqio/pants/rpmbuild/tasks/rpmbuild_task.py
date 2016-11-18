@@ -60,6 +60,10 @@ class RpmbuildTask(Task):
              help='Files to copy into the Docker build context.')
     register('--docker-build-setup-commands', type=list, default=[], advanced=True,
              help='Dockerfile commands to inject at top of Dockerfile used for RPM builder image')
+    register('--shell-before', type=bool, advanced=True,
+             help='Drop to a shell before invoking `rpmbuild`')
+    register('--shell-after', type=bool, advanced=True,
+             help='Drop to a shell after invoking `rpmbuild`')
 
   def __init__(self, *args, **kwargs):
     super(RpmbuildTask, self).__init__(*args, **kwargs)
@@ -125,12 +129,16 @@ class RpmbuildTask(Task):
     remote_sources = [{'url': rs, 'basename': os.path.basename(rs)} for rs in target.remote_sources]
 
     # Write the entry point script.
+    entrypoint_generator = Generator(
+      resource_string(__name__, 'build_rpm.sh.mustache'),
+      spec_basename=spec_basename,
+      pre_commands=[{'command': '/bin/bash -i'}] if self.get_options().shell_before else [],
+      post_commands=[{'command': '/bin/bash -i'}] if self.get_options().shell_after else [],
+    )
     entrypoint_path = os.path.join(build_dir, 'build_rpm.sh')
     with open(entrypoint_path, 'wb') as f:
-      f.write('#!/bin/sh\n')
-      f.write('cd /home/rpmuser/rpmbuild/SPECS\n')
-      f.write('rpmbuild -ba {}\n'.format(spec_basename))
-    os.chmod(os.path.join(build_dir, 'build_rpm.sh'), 0555)
+      f.write(entrypoint_generator.render())
+    os.chmod(entrypoint_path, 0555)
 
     # Copy globally-configured files into build directory.
     for context_file_path_template in self.get_options().docker_build_context_files:
@@ -143,7 +151,7 @@ class RpmbuildTask(Task):
       for command in self.get_options().docker_build_setup_commands]
 
     # Write the Dockerfile for this build.
-    generator = Generator(
+    dockerfile_generator = Generator(
       resource_string(__name__, 'dockerfile_template.mustache'),
       image=platform['base'],
       setup_commands=setup_commands,
@@ -154,7 +162,7 @@ class RpmbuildTask(Task):
     )
     dockerfile_path = os.path.join(build_dir, 'Dockerfile')
     with open(dockerfile_path, 'wb') as f:
-      f.write(generator.render())
+      f.write(dockerfile_generator.render())
 
     # Generate a UUID to identify the image.
     image_base_name = 'rpm-image-{}'.format(uuid.uuid4())
@@ -186,8 +194,12 @@ class RpmbuildTask(Task):
         '--attach=stdout',
         '--attach=stderr',
         '--name={}'.format(container_name),
-        image_name,
       ]
+      if self.get_options().shell_before or self.get_options().shell_after:
+        run_container_cmd.extend(['-i', '-t'])
+      run_container_cmd.extend([
+        image_name,
+      ])
       with self.docker_workunit(name='run-container', cmd=run_container_cmd) as workunit:
         try:
           self.context.log.debug('Executing: {}'.format(' '.join(run_container_cmd)))
