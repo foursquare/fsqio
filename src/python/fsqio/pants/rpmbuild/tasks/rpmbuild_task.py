@@ -50,22 +50,12 @@ class RpmbuildTask(Task):
   @classmethod
   def register_options(cls, register):
     super(RpmbuildTask, cls).register_options(register)
-    register(
-      '--platform',
-      default='centos7',
-      help='Sets the platform to build RPMS for.',
-    )
-    register(
-      '--docker',
-      default='docker',
-      help='Name of the docker command to invoke.'
-    )
-    register(
-      '--keep-build-products',
-      type=bool,
-      advanced=True,
-      help='Do not remove the build directory passed to Docker.'
-    )
+    register('--platform', default='centos7',
+             help='Sets the platform to build RPMS for.')
+    register('--docker', default='docker',
+             help='Name of the docker command to invoke.')
+    register('--keep-build-products', type=bool, advanced=True,
+             help='Do not remove the build directory passed to Docker.')
     register('--docker-build-context-files', type=list, default=[], advanced=True,
              help='Files to copy into the Docker build context.')
     register('--docker-build-setup-commands', type=list, default=[], advanced=True,
