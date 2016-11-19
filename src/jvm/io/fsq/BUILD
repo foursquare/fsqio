@@ -139,7 +139,7 @@ pom_target(
     'src/jvm/io/fsq/rogue/index',
     'src/jvm/io/fsq/rogue/indexchecker',
     'src/jvm/io/fsq/rogue/lift',
-    'src/jvm/io/fsq/spindle/types',
+    'src/jvm/io/fsq/rogue/types',
   ],
   provides = artifact(
     org = 'io.fsq',
@@ -164,7 +164,7 @@ pom_target(
     'src/jvm/io/fsq/spindle/common/thrift/bson',
     'src/jvm/io/fsq/spindle/common/thrift/json',
     'src/jvm/io/fsq/spindle/runtime',
-    'src/jvm/io/fsq/spindle/types:types',
+    'src/jvm/io/fsq/rogue/types:types',
   ],
   provides = artifact(
     org = 'io.fsq',

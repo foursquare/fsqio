@@ -5,7 +5,7 @@ package io.fsq.rogue
 import com.mongodb.{DBObject, DuplicateKeyException, ReadPreference, WriteConcern}
 import io.fsq.field.Field
 import io.fsq.rogue.MongoHelpers.{MongoModify, MongoSelect}
-import io.fsq.spindle.types.MongoDisallowed
+import io.fsq.rogue.types.MongoDisallowed
 import scala.collection.mutable.{Builder, ListBuffer}
 
 trait RogueReadSerializer[R] {
