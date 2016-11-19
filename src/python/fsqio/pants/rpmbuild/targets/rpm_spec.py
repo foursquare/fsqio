@@ -19,7 +19,12 @@ from six import string_types
 
 
 class RpmSpecTarget(Target):
-  """Target for a RPM spec file defining how to build a RPM package."""
+  """Define how to build a RPM given its "spec" and related "SOURCES".
+
+  This target defines how to build a RPM package (Red Hat Package Manager) given the "spec" file
+  and related sources used by the spec. Invoke the `rpmbuild` task on this target to build all
+  RPMs defined in the spec.
+  """
 
   @classmethod
   def alias(cls):

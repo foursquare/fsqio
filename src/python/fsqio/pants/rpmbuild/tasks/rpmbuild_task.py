@@ -44,8 +44,11 @@ PLATFORMS = {
 
 
 class RpmbuildTask(Task):
-  """Build a RpmSpecTarget into one or more RPMs using a consistent build environment
-  in a Docker container.
+  """Build RPM packages for Red Hat-compatible Linux distributions.
+
+  This task builds RPM packages (Red Hat Package Manager) given a RPM "spec" file and references
+  to the file(s) with which to populate the RPM "SOURCES" directory. The task uses Docker to
+  ensure a consistent build environment for running the `rpmbuild` command.
   """
   @classmethod
   def register_options(cls, register):
