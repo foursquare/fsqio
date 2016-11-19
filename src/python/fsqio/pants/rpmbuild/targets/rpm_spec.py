@@ -75,5 +75,4 @@ class RpmSpecTarget(Target):
     if len(payload.rpm_spec.relative_to_buildroot()) != 1:
       raise TargetDefinitionException(self, 'spec must be a single relative file path')
 
-    # TODO(tdyas): Marked as `no_cache` because RPMs are not currently stored in artifact cache.
-    super(RpmSpecTarget, self).__init__(address=address, payload=payload, no_cache=True, **kwargs)
+    super(RpmSpecTarget, self).__init__(address=address, payload=payload, **kwargs)
