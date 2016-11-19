@@ -215,7 +215,7 @@ class RpmbuildTask(Task):
           raise TaskError('Failed to run build container: {0}'.format(e))
 
       # Extract the built RPMs from the container.
-      output_dir = os.path.join(get_buildroot(), 'dist', 'rpmbuild')
+      output_dir = os.path.join(self.get_options().pants_distdir, 'rpmbuild')
       safe_mkdir(output_dir)
       extract_rpms_cmd = [
         self.get_options().docker,
