@@ -29,15 +29,12 @@ from pkg_resources import resource_string
 from fsqio.pants.rpmbuild.targets.rpm_spec import RpmSpecTarget
 
 
-# Maps platform names to information about the specific platform.
-# TODO(tdyas): Put this in pants.ini defaults.
-PLATFORMS = {
+# Default supported platforms
+DEFAULT_PLATFORMS = {
   'centos6': {
-    'id': 'centos6',
     'base': 'centos:6.8',
   },
   'centos7': {
-    'id': 'centos7',
     'base': 'centos:7',
   },
 }
@@ -50,9 +47,12 @@ class RpmbuildTask(Task):
   to the file(s) with which to populate the RPM "SOURCES" directory. The task uses Docker to
   ensure a consistent build environment for running the `rpmbuild` command.
   """
+
   @classmethod
   def register_options(cls, register):
     super(RpmbuildTask, cls).register_options(register)
+    register('--platforms', type=dict, default=DEFAULT_PLATFORMS,
+             help='Supported distributions on which to build RPMs')
     register('--platform', default='centos7',
              help='Sets the platform to build RPMS for.')
     register('--docker', default='docker',
@@ -259,7 +259,8 @@ class RpmbuildTask(Task):
   def execute(self):
     platform_key = self.get_options().platform
     try:
-      platform = PLATFORMS[platform_key]
+      platform = self.get_options().platforms[platform_key]
+      platform['id'] = platform_key
     except KeyError:
       raise TaskError('Unknown platform {}'.format(platform_key))
 
