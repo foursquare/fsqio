@@ -28,8 +28,12 @@ class MongoJavaDriverAdapter[MB, RB](
   import MongoHelpers.MongoBuilder._
   import QueryHelpers._
 
-  private[rogue] def runCommand[M <: MB, T](descriptionFunc: () => String,
-                                            query: Query[M, _, _])(f: => T): T = {
+  def runCommand[M <: MB, T](
+    descriptionFunc: () => String,
+    query: Query[M, _, _]
+  )(
+    f: => T
+  ): T = {
     // Use nanoTime instead of currentTimeMillis to time the query since
     // currentTimeMillis only has 10ms granularity on many systems.
     val start = System.nanoTime
