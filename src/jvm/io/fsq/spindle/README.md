@@ -55,6 +55,7 @@ Many people have contributed:
 - David Blackman
 - David Taylor
 - Jackson Davis
+- Jacob Van De Weert
 - Jason Liszka
 - Jorge Ortiz
 - Matthew Rathbone

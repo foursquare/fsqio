@@ -139,7 +139,6 @@ pom_target(
     'src/jvm/io/fsq/rogue/index',
     'src/jvm/io/fsq/rogue/indexchecker',
     'src/jvm/io/fsq/rogue/lift',
-    'src/jvm/io/fsq/rogue/spindle',
     'src/jvm/io/fsq/spindle/types',
   ],
   provides = artifact(

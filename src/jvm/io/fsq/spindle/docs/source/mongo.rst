@@ -39,15 +39,15 @@ execution method on the query, the query must be sent to a ``SpindleDatabaseServ
 
 For example::
 
-    import io.fsq.rogue.spindle.{SpindleQuery => Q}
-    import io.fsq.rogue.spindle.SpindleRogue._
+    import io.fsq.spindle.rogue.{SpindleQuery => Q}
+    import io.fsq.spindle.rogue.SpindleRogue._
 
     val q = Q(Checkin).where(_.userId eqs 646).and(_.photoCount > 0)
     val checkins = db.fetch(q)
 
 Here is a basic ``SpindleDatabaseService`` implementation::
 
-    import io.fsq.rogue.spindle.{SpindleDBCollectionFactory, SpindleDatabaseService}
+    import io.fsq.spindle.rogue.{SpindleDBCollectionFactory, SpindleDatabaseService}
     import io.fsq.spindle.runtime.UntypedMetaRecord
     import com.mongodb.{DB, Mongo, MongoClient, MongoURI}
 
