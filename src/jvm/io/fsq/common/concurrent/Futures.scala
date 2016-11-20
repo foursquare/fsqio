@@ -3,10 +3,11 @@
 package io.fsq.common.concurrent
 
 import com.twitter.finagle.{GlobalRequestTimeoutException, IndividualRequestTimeoutException}
-import com.twitter.util.{Await, Duration, Future, FuturePool, Stopwatch, TimeoutException => TUTimeoutException, Timer,
-    Try}
+import com.twitter.util.{Await, Duration, Future, FuturePool, Promise, Stopwatch,
+    TimeoutException => TUTimeoutException, Timer, Try}
 import io.fsq.macros.StackElement
-import java.util.concurrent.TimeoutException
+import java.util.concurrent.{ArrayBlockingQueue, TimeoutException}
+import scala.collection.JavaConverters.asJavaCollectionConverter
 
 /**
  * Handy helpers for dealing with Futures.
@@ -143,17 +144,36 @@ object Futures {
    * If we generate a large list of futures at once, we risk overloading the future pool. This
    * allows us to generate futures in small groups and chain them together.
    * Maintains the order of the Iterable.
-   *
-   * groupedCollect runs f on up to limit of params at a time, collecting and then doing the next batch. This means you
-   * are bound by the slowest of each batch of Futures
    */
   def groupedCollect[T, U](params: Iterable[T], limit: Int)(f: T => Future[U]): Future[Seq[U]] = {
-    params.grouped(limit)
-      .foldLeft(Future.value(Seq.empty[U]))((previousValuesF, nextParams) => for {
-        previousValues <- previousValuesF
-        nextValues <- Future.collect(nextParams.toVector.map(p => f(p)))
-      } yield nextValues.reverse ++ previousValues)
-      .map(_.reverse)
+    if (params.isEmpty) {
+      Future.value(Seq.empty[U])
+
+    } else if (params.size <= limit) {
+      Future.collect(params.toVector.map(f(_)))
+
+    } else {
+      val (initial, others) = params.zipWithIndex.splitAt(limit)
+      val othersQueue = new ArrayBlockingQueue(others.size, false, others.asJavaCollection)
+      val results = Vector.fill(params.size)(new Promise[U])
+      @volatile var exceptional = false
+
+      def compute(param: T, index: Int): Unit = results(index).become({
+        f(param)
+          .onFailure(_ => exceptional = true)
+          .onSuccess(_ => if (!exceptional) {
+            Option(othersQueue.poll()).foreach({
+              case (nextParam, nextIndex) => compute(nextParam, nextIndex)
+            })
+          })
+      })
+
+      // Kick off our initial batch of computation. Upon completion, each Future will
+      // pull another param from the queue and start it on its merry way without waiting
+      // for the entire batch to finish.
+      initial.foreach({ case (param, index) => compute(param, index) })
+      Future.collect(results)
+    }
   }
 
   /**

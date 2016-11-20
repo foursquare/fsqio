@@ -7,5 +7,6 @@ junit_tests(
     '3rdparty:junit',
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/common/concurrent',
+    'src/jvm/io/fsq/common/scala',
   ],
 )
