@@ -58,7 +58,6 @@ pom_target(
   ],
   dependencies = [
     ':rogue',
-    ':spindle',
     'src/jvm/io/fsq/common/logging:logging',
     'src/jvm/io/fsq/exceptionator/actions',
     'src/jvm/io/fsq/exceptionator/actions/concrete',
@@ -134,7 +133,6 @@ pom_target(
   ],
   dependencies = [
     ':field',
-    ':spindle',
     'src/jvm/io/fsq/rogue',
     'src/jvm/io/fsq/rogue/index',
     'src/jvm/io/fsq/rogue/indexchecker',
