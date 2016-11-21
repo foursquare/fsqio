@@ -253,6 +253,14 @@ class FSTraversableOnce[T, CC[X] <: TraversableOnce[X]](val xs: CC[T]) extends A
       reservoir
     }
   }
+
+  def sumBy[B](f: T => B)(implicit num: Numeric[B]): B = {
+    var sum = num.zero
+    for(x <- xs) {
+      sum = num.plus(sum, f(x))
+    }
+    sum
+  }
 }
 
 class FSTraversable[CC[X] <: Traversable[X], T, Repr <: TraversableLike[T, Repr]](

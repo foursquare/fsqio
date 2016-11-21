@@ -662,5 +662,15 @@ class ListsTest extends Lists.Implicits {
     )
     A.assertEquals(Iterable().zipRightOption(Iterable()), Vector())
   }
+
+  @Test
+  def sumBy(): Unit = {
+    A.assertTrue(Iterable(1, 2, 3, 4).sumBy(identity) equals 10)
+    A.assertTrue(Iterable(1, 2, 3, 4).sumBy(_ * 10) equals 100)
+    A.assertTrue(Vector(1, 2, 3, 4, -10).sumBy(identity) equals 0)
+    A.assertTrue(List(("a", 1), ("b", 2)).sumBy(_._2) equals 3)
+    A.assertTrue(Iterable[Int]().sumBy(identity) equals 0)
+    A.assertTrue(Set("75").sumBy(_.toInt) equals 75)
+  }
 }
 
