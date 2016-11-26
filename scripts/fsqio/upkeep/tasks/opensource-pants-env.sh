@@ -15,10 +15,10 @@ PANTS_BOOTSTRAP="${FSQIO_HOME}/bootstrap"
 
 VENV_VERSION=15.0.1
 
-VENV_PACKAGE=virtualenv-${VENV_VERSION}
-VENV_TARBALL=${VENV_PACKAGE}.tar.gz
+VENV_PACKAGE="virtualenv-${VENV_VERSION}"
+VENV_TARBALL="${VENV_PACKAGE}.tar.gz"
 
-FOURSQUARE_REQUIREMENTS="3rdparty/python/requirements.txt"
+FOURSQUARE_REQUIREMENTS="${BUILD_ROOT}/3rdparty/python/requirements.txt"
 
 # The high-level flow:
 # 1.) Grab pants version from pants.ini or default to latest.

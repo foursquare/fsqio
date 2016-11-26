@@ -2,52 +2,53 @@
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
 # Pass variables to children
-set -a
+set -ea
 
-# Use the presence of the 'scripts/upkeep/tasks' folder to determine if we are in in the Opensource repo.
-if [[ -e scripts/upkeep/tasks ]]; then
-  TASKS='tasks'
+# Only try to redefine BUILD_ROOT if this is being used as the entry point.
+[ -z "${BUILD_ROOT+x}" ] && BUILD_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+DEPENDENCIES_ROOT="${BUILD_ROOT}/dependencies"
+UPKEEPROOT="${BUILD_ROOT}/scripts/fsqio/upkeep"
+mkdir -p "${DEPENDENCIES_ROOT}"
+
+# Use the presence of the 'scripts/foursquare' folder to determine if we are in in Fsq.io repo.
+if [[ -e "scripts/foursquare" ]]; then
+  ENV_FILE='scripts/foursquare/upkeep/env.sh'
 else
-  TASKS='opensource-tasks'
+  ENV_FILE="${UPKEEPROOT}/env.sh"
 fi
 
 # Symlink the proper environmental variables script to the buildroot.
-ln -sf scripts/upkeep/"$TASKS"/env.sh environ.sh
+ln -sf "${ENV_FILE}" environ.sh
 source environ.sh
+source "${UPKEEPROOT}/util.sh"
 
-if [ "$1" == "--help" ]; then
-  echo ""
-  echo "upkeep: ensure tasks required to maintain a working dev env are run when needed."
-  echo ""
-  echo "Usage:"
-  echo " - \`./upkeep\` with no args will check that all required tasks are up-to-date."
-  echo " - \`./upkeep <task>\` will run a particular task and update its status."
-  echo " - \`./upkeep force <task> \"reason\"\` require eveyone to (re-)run <task>."
-  echo ""
-  echo "Tasks are just shell scripts in scripts/upkeep/tasks, found by appending '.sh' to <task>."
-  echo "Each task also has a file in scripts/upkeep/required used to specify when it needs to be run."
-  echo "When a task is run, the current value of its 'required' file is copied to a 'current' file."
-  echo "If 'current' does not match 'required', \`./upkeep\` will run the task."
-  echo "\`./upkeep force <task>\` updates the contents of the task's 'required' file."
-  echo ""
-  echo "Available tasks:"
-  for i in `ls scripts/upkeep/tasks | cut -d. -f1 | sort`; do echo "    $i"; done
-  echo ""
-  exit
-fi
+# TODO(mateo): add an option to list downstream tasks.
+case "$1" in
+  "help"|"--help"|"-h" )
+    print_help
+    exit
+    ;;
+  "force"|"check" )
+    action="$1"
+    args=( "${@:2}" )
+    ;;
+  '')
+    action='check'
+    args=()
+    ;;
+  "tasks" )
+    print_all_tasks
+    exit
+    ;;
+  "task-list" )
+    all_task_names
+    exit
+    ;;
+  *)
+    action='run'
+    args=( "${@:1}" )
+    ;;
+esac
 
-if [ "$1" == "force" ]; then
-  shift
-  exec ./scripts/upkeep/force.sh "$@"
-fi
-
-if [ "$1" == "check" ]; then
-  shift
-  exec ./scripts/upkeep/check.sh "$@"
-fi
-
-if [ "$1" != "" ]; then
-  exec ./scripts/upkeep/run.sh "$@"
-fi
-
-exec ./scripts/upkeep/check.sh
+[ ! -z "${action+x}" ] && exec "${UPKEEPROOT}/${action}.sh" "${args[@]}"

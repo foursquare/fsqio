@@ -1,7 +1,12 @@
 #!/bin/bash
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
-set -e
+# Pass variables to children
+set -ea
+
+# BUILD_ROOT is treated as a top-level constant if used as part of a Pants invocation.
+readonly BUILD_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export BUILD_ROOT
 
 # If the PANTS_CONFIG_OVERRIDE is set, stash for use below.
 if [ -n "$PANTS_CONFIG_OVERRIDE" ]; then
@@ -13,7 +18,11 @@ if [[ -z "$SKIP_UPKEEP" ]]; then
 fi
 
 # Copied to root by upkeep.
-source environ.sh
+if [[ -e "${BUILD_ROOT}/environ.sh" ]]; then
+  source "${BUILD_ROOT}/environ.sh"
+else
+  echo "Caution: No environ.sh file was found so some common environmental variables may not be defined!"
+fi
 
 # If the PANTS_INI was set above, then override the default PANTS_CONFIG_OVERRIDE in environ.sh.
 if [ -n "$PANTS_INI" ]; then
@@ -25,5 +34,5 @@ if [ -z "$PANTSBINARY" ]; then
   exec .pvenvs/fs/bin/pants "$@"
 else
   export PYTHONPATH=src/python
-  exec $PANTSBINARY "$@"
+  exec "$PANTSBINARY" "$@"
 fi
