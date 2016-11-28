@@ -11,11 +11,11 @@ DEPENDENCIES_ROOT="${BUILD_ROOT}/dependencies"
 UPKEEPROOT="${BUILD_ROOT}/scripts/fsqio/upkeep"
 mkdir -p "${DEPENDENCIES_ROOT}"
 
-# Use the presence of the 'scripts/foursquare' folder to determine if we are in in Fsq.io repo.
+# Use the presence of 'scripts/foursquare' folder to determine if in Fsq.io or internal monorepo.
 if [[ -e "scripts/foursquare" ]]; then
-  ENV_FILE='scripts/foursquare/upkeep/env.sh'
+  ENV_FILE='scripts/foursquare/upkeep/libs/env.sh'
 else
-  ENV_FILE="${UPKEEPROOT}/env.sh"
+  ENV_FILE="${UPKEEPROOT}/libs/env.sh"
 fi
 
 # Symlink the proper environmental variables script to the buildroot.
