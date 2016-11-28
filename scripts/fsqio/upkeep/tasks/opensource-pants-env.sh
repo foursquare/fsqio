@@ -7,7 +7,10 @@ set -e
 
 PYTHON=${PYTHON:-$(which python2.7)}
 
-FSQIO_HOME="${FSQIO_HOME:-${HOME}/.cache/fsqio/setup}"
+# Pants respects XDG_HOME settings, and will use that for the pants_bootstrapdir if it is set.
+CACHEDIR="${XDG_CACHE_HOME:-${HOME}/.cache}"
+
+FSQIO_HOME="${CACHEDIR}/fsqio/setup"
 PANTS_BOOTSTRAP="${FSQIO_HOME}/bootstrap"
 
 VENV_VERSION=15.0.1
