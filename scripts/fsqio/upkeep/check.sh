@@ -16,8 +16,8 @@ task_number=0
 function check() {
   # This function looks for a task file and compares the associated required and current files.
   # If the contents of those files differ, the file is considered 'required' and is scheduled to be run.
-  task_name="$1"
-  task_file=$(all_matched_files "tasks" "${task_name}.sh")
+  task_name="${1}"
+  task_file=$(find_upkeep_file "tasks" "${task_name}.sh")
   upkeep_namespace=$(get_upkeep_namespace ${task_file})
   required_file="${upkeep_namespace}/required/${task_name}"
 
@@ -39,7 +39,6 @@ function check() {
 check_list=( "$@" )
 check_list=${check_list:-$(all_task_names)}
 for candidate in ${check_list[@]}; do
-  validate_task "${candidate}"
   check "${candidate}"
 done
 

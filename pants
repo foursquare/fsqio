@@ -13,9 +13,6 @@ if [ -n "$PANTS_CONFIG_OVERRIDE" ]; then
   PANTS_INI="$PANTS_CONFIG_OVERRIDE"
 fi
 
-if [[ -z "$SKIP_UPKEEP" ]]; then
-  ./upkeep
-fi
 
 # Copied to root by upkeep.
 if [[ -e "${BUILD_ROOT}/environ.sh" ]]; then

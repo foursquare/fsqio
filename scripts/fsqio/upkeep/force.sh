@@ -37,9 +37,8 @@ function force() {
   fi
 
   for task in ${tasks[@]}; do
-    validate_task "${task}"
     stamp=$(($stamp + 10))
-    task_script=$(all_matched_files "tasks" "${forced_task}.sh")
+    task_script=$(find_upkeep_file "tasks" "${forced_task}.sh")
     upkeep_namespace=$(get_upkeep_namespace ${task_script})
 
     # Print the requirement to stdout and also overwrite the task's required file.
@@ -56,3 +55,5 @@ for forced in "${forced[@]}"; do
   stamp=$((stamp + 1000))
   force "${forced}"
 done
+
+# TODO(mateo): Instead of printing the requirement strings, this should print the final sorted task order.
