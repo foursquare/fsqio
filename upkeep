@@ -3,12 +3,14 @@
 
 # Pass variables to children
 set -eoa pipefail
+set +a
+# BUILD_ROOT is treated as a top-level constant and should always be derived from here.
+readonly BUILD_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export BUILD_ROOT
+export UPKEEPROOT="${BUILD_ROOT}/scripts/fsqio/upkeep"
+export DEPENDENCIES_ROOT="${BUILD_ROOT}/dependencies"
 
-# Only try to redefine BUILD_ROOT if this is being used as the entry point.
-[ -z "${BUILD_ROOT+x}" ] && BUILD_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-# Location of common upkeep machinery.
-UPKEEPROOT="${BUILD_ROOT}/scripts/fsqio/upkeep"
+ENV_FILE_LOCATION="${BUILD_ROOT}/environ.sh"
 
 # Symlink the proper environmental variables script to the buildroot, using 'scripts/foursquare' to check if in Fsq.io.
 if [[ -e "scripts/foursquare" ]]; then
@@ -16,9 +18,9 @@ if [[ -e "scripts/foursquare" ]]; then
 else
   repo_env="${UPKEEPROOT}/libs/env.sh"
 fi
-ln -sf "${repo_env}" environ.sh
+ln -sf "${repo_env}" "${ENV_FILE_LOCATION}"
 
-source environ.sh
+source "${ENV_FILE_LOCATION}"
 source "${UPKEEPROOT}/util.sh"
 
 # TODO: namespaces=( $(ls -d scripts/*/upkeep) )
@@ -68,7 +70,7 @@ case "$1" in
     ;;
 esac
 
-cmd=$(upkeep_cmd "${action}")
-
-exec ${cmd} "${args[@]}"
-
+if [ "$0" = "$BASH_SOURCE" ]; then
+  cmd=$(upkeep_cmd "${action}")
+  exec ${cmd} "${args[@]}"
+fi

@@ -4,29 +4,12 @@
 # Pass variables to children
 set -ea
 
-# BUILD_ROOT is treated as a top-level constant if used as part of a Pants invocation.
-readonly BUILD_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export BUILD_ROOT
+# TODO: The empty quotes are to avoid passing args to upkeep, need a better way to handle this.
+source upkeep ''
+source "${ENV_FILE_LOCATION}"
 
-# If the PANTS_CONFIG_OVERRIDE is set, stash for use below.
-if [ -n "$PANTS_CONFIG_OVERRIDE" ]; then
-  PANTS_INI="$PANTS_CONFIG_OVERRIDE"
-fi
-
-
-# Copied to root by upkeep.
-if [[ -e "${BUILD_ROOT}/environ.sh" ]]; then
-  source "${BUILD_ROOT}/environ.sh"
-else
-  echo "Caution: No environ.sh file was found so some common environmental variables may not be defined!"
-fi
-
-# If the PANTS_INI was set above, then override the default PANTS_CONFIG_OVERRIDE in environ.sh.
-if [ -n "$PANTS_INI" ]; then
-  export PANTS_CONFIG_OVERRIDE="$PANTS_INI"
-fi
-
-
+# We could just execute upkeep if we were okay with pants magically knowing to source 'environ.sh' path.
+"${BUILD_ROOT}/upkeep"
 if [ -z "$PANTSBINARY" ]; then
   exec .pvenvs/fs/bin/pants "$@"
 else

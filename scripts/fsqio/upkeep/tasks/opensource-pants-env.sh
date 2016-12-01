@@ -5,7 +5,9 @@
 
 set -e
 
-PYTHON=${PYTHON:-$(which python2.7)}
+# Transitive song and dance in order to enforce priority order of CANONICAL_PYTHON -> PYTHON -> $(which python2.7)
+CANONICAL_PYTHON=${CANONICAL_PYTHON:-${PYTHON}}
+PYTHON=${CANONICAL_PYTHON:-$(which python2.7)}
 
 # Pants respects XDG_HOME settings, and will use that for the pants_bootstrapdir if it is set.
 CACHEDIR="${XDG_CACHE_HOME:-${HOME}/.cache}"
@@ -17,6 +19,7 @@ VENV_VERSION=15.0.1
 
 VENV_PACKAGE="virtualenv-${VENV_VERSION}"
 VENV_TARBALL="${VENV_PACKAGE}.tar.gz"
+
 
 FOURSQUARE_REQUIREMENTS="${BUILD_ROOT}/3rdparty/python/requirements.txt"
 

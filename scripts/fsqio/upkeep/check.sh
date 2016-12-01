@@ -52,7 +52,6 @@ if [ "${#sorted[@]}" != 0 ]; then
     required_name=${i##* }
     echo -e "\t ${required_name}"
   done
-  echo ""
 fi
 
 # Run the task in the above sorted order.

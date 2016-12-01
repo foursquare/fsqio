@@ -4,7 +4,7 @@
 # Librarys for common functions useful to the upkeep pipeline.
 
 # Register any new upkeep roots here (but why?).
-set -eo pipefail
+set -eoa pipefail
 
 function get_upkeep_namespace() {
   if [[ "${1}" == *"scripts/foursquare"* ]]; then
