@@ -2,7 +2,7 @@
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
 # Pass variables to children
-set -eoa pipefail
+set -eo pipefail
 set +a
 # BUILD_ROOT is treated as a top-level constant and should always be derived from here.
 readonly BUILD_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -23,18 +23,19 @@ ln -sf "${repo_env}" "${ENV_FILE_LOCATION}"
 source "${ENV_FILE_LOCATION}"
 source "${UPKEEPROOT}/util.sh"
 
-# TODO: namespaces=( $(ls -d scripts/*/upkeep) )
+# TODO(mateo): be more precise with namespaces, a la `namespaces=( $(ls -d scripts/*/upkeep) )`
 
 function upkeep_cmd() {
-  if [ -z "$SKIP_UPKEEP" ]; then
+  # SKIP_TASKS allows callers (like the git hooks) to skip upkeep tasks but still execute scripts, like ./python.
+  # Essentially means "void SKIP_UPKEEP for this command."
+  if [ -z "${SKIP_UPKEEP}" ] || [ ! -z "${SKIP_TASKS}" ]; then
     if [ ! -f "${1}" ]; then
       exit_with_failure "No upkeep file found at: ${1}"
     fi
-    echo "${1}"
+    echo "$@"
   fi
 }
 
-# TODO(mateo): add an option to list downstream tasks.
 case "$1" in
   "help"|"--help"|"-h" )
     print_help
@@ -60,9 +61,12 @@ case "$1" in
     # The script can be ${script_name}.sh under <xyz>/upkeep/scripts or be a full file path relative to the BUILD_ROOT.
     action=$(find_script "${@:2}")
     args=( "${@:3}" )
-
-    # Execute `./upkeep check' in order to run any required tasks. SKIP_UPKEEP is respected transitively.
-    $(upkeep_cmd ${UPKEEPROOT}/check.sh)
+    if [ -z "${SKIP_UPKEEP}" ]; then
+      # Execute `./upkeep check' in order to run any required tasks.
+      $(upkeep_cmd ${UPKEEPROOT}/check.sh)
+    else
+      SKIP_TASKS=1
+    fi
     ;;
   *)
     action="${UPKEEPROOT}/run.sh"
@@ -71,6 +75,7 @@ case "$1" in
 esac
 
 if [ "$0" = "$BASH_SOURCE" ]; then
-  cmd=$(upkeep_cmd "${action}")
-  exec ${cmd} "${args[@]}"
+  # This must be two separate shell commands, or else the exec will return the exit code of the function's `echo` call.
+  cmd="$(upkeep_cmd ${action} ${args[@]})"
+  exec ${cmd}
 fi
