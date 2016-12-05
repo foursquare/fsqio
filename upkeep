@@ -69,7 +69,7 @@ case "$1" in
     fi
     ;;
   *)
-    action="${UPKEEPROOT}/run.sh"
+    action="${UPKEEPROOT}/execute_task.sh"
     args=( "${@:1}" )
     ;;
 esac
