@@ -35,6 +35,7 @@ function print_help() {
   echo ""
 }
 
+# TODO(mateo): This should list downstream tasks, ie (`python -> wheelhouse -> fs-env`)
 function print_all_tasks() {
   echo ""
   echo -e "Upkeep Tasks:"
