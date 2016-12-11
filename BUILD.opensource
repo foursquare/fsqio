@@ -44,7 +44,7 @@ target(
 jar_library(
   name = 'ammonite',
   jars = [
-    jar(org='com.lihaoyi', name = 'ammonite_2.11.8', rev='0.7.6')
+    jar(org='com.lihaoyi', name = 'ammonite_2.11.8', rev='0.8.1')
   ],
 )
 
