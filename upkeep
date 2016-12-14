@@ -18,7 +18,11 @@ if [[ -e "scripts/foursquare" ]]; then
 else
   repo_env="${UPKEEPROOT}/libs/env.sh"
 fi
-ln -sf "${repo_env}" "${ENV_FILE_LOCATION}"
+
+if [[ $(readlink "${ENV_FILE_LOCATION}") != "${repo_env}" ]]; then
+  rm -f "${ENV_FILE_LOCATION}"
+  ln -sf "${repo_env}" "${ENV_FILE_LOCATION}"
+fi
 
 source "${ENV_FILE_LOCATION}"
 source "${UPKEEPROOT}/util.sh"
