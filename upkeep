@@ -11,12 +11,13 @@ export UPKEEPROOT="${BUILD_ROOT}/scripts/fsqio/upkeep"
 export DEPENDENCIES_ROOT="${BUILD_ROOT}/dependencies"
 
 ENV_FILE_LOCATION="${BUILD_ROOT}/environ.sh"
+ENV_FILE="libs/env.sh"
 
 # Symlink the proper environmental variables script to the buildroot, using 'scripts/foursquare' to check if in Fsq.io.
-if [[ -e "scripts/foursquare" ]]; then
-  repo_env='scripts/foursquare/upkeep/libs/env.sh'
+if [[ -e "scripts/foursquare/upkeep/${ENV_FILE}" ]]; then
+  repo_env="scripts/foursquare/upkeep/${ENV_FILE}"
 else
-  repo_env="${UPKEEPROOT}/libs/env.sh"
+  repo_env="${UPKEEPROOT}/${ENV_FILE}"
 fi
 
 if [[ $(readlink "${ENV_FILE_LOCATION}") != "${repo_env}" ]]; then
