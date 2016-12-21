@@ -7,8 +7,8 @@ scala_library(
     'fscommon'
   ],
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:finagle',
-    '3rdparty:mongodb',
     '3rdparty:twitter-util',
     '3rdparty:typesafe-config',
     'src/jvm/io/fsq/exceptionator/model/io',

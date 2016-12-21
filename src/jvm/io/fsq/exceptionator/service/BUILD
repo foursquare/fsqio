@@ -12,7 +12,7 @@ scala_library(
     '3rdparty:joda-time',
     '3rdparty:lift-mongo',
     '3rdparty:lift-util',
-    '3rdparty:mongodb',
+    '3rdparty:mongodb-drivers',
     '3rdparty:netty',
     '3rdparty:ostrich',
     '3rdparty:twitter-util',

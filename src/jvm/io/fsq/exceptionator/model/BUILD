@@ -7,12 +7,12 @@ scala_library(
     'fscommon'
   ],
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:joda-time',
     '3rdparty:lift-common',
     '3rdparty:lift-json',
     '3rdparty:lift-mongo',
     '3rdparty:lift-record',
-    '3rdparty:mongodb',
     'src/jvm/io/fsq/exceptionator/model/io',
     'src/jvm/io/fsq/exceptionator/util',
     'src/jvm/io/fsq/rogue',

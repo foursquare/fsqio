@@ -4,8 +4,8 @@ junit_tests(
   name = 'test',
   sources = globs('*.scala'),
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:hadoop-common',
-    '3rdparty:mongodb',
     '3rdparty:specs2',
     'src/jvm/io/fsq/twofishes/core',
     'src/jvm/io/fsq/twofishes/util',

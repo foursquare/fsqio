@@ -4,6 +4,6 @@ scala_library(
   name = 'scala',
   sources = globs('*.scala'),
   dependencies = [
-    '3rdparty:mongodb',
+    '3rdparty:bson',
   ],
 )

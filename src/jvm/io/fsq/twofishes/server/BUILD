@@ -5,6 +5,7 @@ scala_library(
   name = 'server',
   sources = globs('*.scala'),
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:country-revgeo',
     '3rdparty:finagle',
     '3rdparty:gt-geojson',
@@ -12,7 +13,6 @@ scala_library(
     '3rdparty:hbase',
     '3rdparty:jackson',
     '3rdparty:jts',
-    '3rdparty:mongodb',
     '3rdparty:netty',
     '3rdparty:ostrich',
     '3rdparty:s2',

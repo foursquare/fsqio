@@ -5,6 +5,7 @@ scala_library(
   sources = globs('*.scala'),
   dependencies = [
     '3rdparty:akka',
+    '3rdparty:bson',
     '3rdparty:casbah',
     '3rdparty:commons-net',
     '3rdparty:country-revgeo',
@@ -13,7 +14,7 @@ scala_library(
     '3rdparty:json4s',
     '3rdparty:jts',
     '3rdparty:language-detect',
-    '3rdparty:mongodb',
+    '3rdparty:mongodb-drivers',
     '3rdparty:ostrich',
     '3rdparty:rockymadden',
     '3rdparty:s2',

@@ -68,8 +68,11 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.mongodb', name = 'casbah-core', rev = '2.7.5')
-  ]
+    sjar(org = 'org.mongodb', name = 'casbah-core', rev = '2.7.5'),
+  ],
+  dependencies = [
+    ':mongo-java-driver-unpacked',
+  ],
 )
 
 cascading_rev = '2.6.3'
@@ -492,6 +495,73 @@ jar_library(
   jars = [
     jar(org = 'org.mockito', name = 'mockito-core', rev = '1.9.5')
   ]
+)
+
+mongo_rev = '3.4.0'
+
+jar_library(
+  name = 'bson',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.mongodb', name = 'bson', rev = mongo_rev),
+  ],
+)
+
+jar_library(
+  name = 'mongodb-core',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.mongodb', name = 'mongodb-driver-core', rev = mongo_rev),
+  ],
+)
+
+jar_library(
+  name = 'mongodb-driver',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.mongodb', name = 'mongodb-driver', rev = mongo_rev),
+  ],
+)
+
+jar_library(
+  name = 'mongodb-driver-async',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.mongodb', name = 'mongodb-driver-async', rev = mongo_rev),
+  ],
+)
+
+target(
+  name = 'mongodb-drivers',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  dependencies = [
+    ':mongodb-core',
+    ':mongodb-driver',
+    ':mongodb-driver-async',
+  ],
+)
+
+target(
+  name = 'mongo-java-driver-unpacked',
+  dependencies = [
+    ':bson',
+    ':mongodb-drivers',
+  ],
 )
 
 jar_library(

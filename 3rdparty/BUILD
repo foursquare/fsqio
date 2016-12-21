@@ -62,7 +62,7 @@ jar_library(
       sjar(org = 'net.liftweb', name = 'lift-mongodb', rev = liftVer, intransitive = True),
   ],
   dependencies = [
-    '3rdparty:mongodb',
+    '3rdparty:mongo-java-driver-unpacked',
   ],
 )
 
@@ -135,17 +135,6 @@ jar_library(
   ],
   jars = [
     sjar(org = 'net.liftweb', name = 'lift-util', rev = liftVer)
-  ]
-)
-
-jar_library(
-  name = 'mongodb',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    jar(org = 'org.mongodb', name = 'mongo-java-driver', rev = '2.13.0-rc0')
   ]
 )
 

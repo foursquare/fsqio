@@ -5,7 +5,7 @@ java_library(
   dependencies = [
     '3rdparty:joda-time',
     '3rdparty:jmh',
-    '3rdparty:mongodb',
+    
     '3rdparty:thrift',
     'test/thrift/io/fsq/spindle/benchmark',
     'test/thrift/io/fsq/spindle/runtime/structs/gen',

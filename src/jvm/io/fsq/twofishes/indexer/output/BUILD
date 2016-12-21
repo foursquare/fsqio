@@ -8,7 +8,7 @@ scala_library(
     '3rdparty:hadoop-common',
     '3rdparty:hbase',
     '3rdparty:jts',
-    '3rdparty:mongodb',
+    '3rdparty:mongodb-drivers',
     '3rdparty:salat',
     '3rdparty:thrift',
     '3rdparty:twitter-util',

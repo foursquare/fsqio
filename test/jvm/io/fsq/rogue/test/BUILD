@@ -5,7 +5,7 @@ junit_tests(
   sources = globs('*.scala'),
   dependencies = [
     '3rdparty:junit',
-    '3rdparty:mongodb',
+    '3rdparty:mongodb-drivers',
     '3rdparty:specs2',
     'src/jvm/io/fsq/field',
     'src/jvm/io/fsq/rogue',

@@ -7,8 +7,8 @@ scala_library(
     'fscommon'
   ],
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:joda-time',
-    '3rdparty:mongodb',
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/exceptionator/filter',
     'src/jvm/io/fsq/exceptionator/model',

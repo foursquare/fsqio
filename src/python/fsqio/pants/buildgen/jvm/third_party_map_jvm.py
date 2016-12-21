@@ -166,7 +166,7 @@ jvm_third_party_map = {
     },
     'maxmind': 'geoip',
     'mongodb': {
-      'DEFAULT': 'mongodb',
+      'DEFAULT': 'mongodb-drivers',
       'casbah': 'casbah',
     },
     'mchange': {
@@ -398,7 +398,7 @@ jvm_third_party_map = {
     'atilika': {
       'kuromoji': 'kuromoji',
     },
-    'bson': 'mongodb',
+    'bson': 'bson',
     'bytedeco': 'tesseract-javacpp',
     'clapper': {
       'argot': 'argot',

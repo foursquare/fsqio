@@ -7,11 +7,11 @@ scala_library(
     'fscommon'
   ],
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:finagle',
     '3rdparty:joda-time',
     '3rdparty:lift-common',
     '3rdparty:lift-json',
-    '3rdparty:mongodb',
     '3rdparty:ostrich',
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/common/logging',

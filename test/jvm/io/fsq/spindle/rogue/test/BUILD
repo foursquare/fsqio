@@ -4,10 +4,11 @@ junit_tests(
   name = 'test',
   sources = globs('*.scala'),
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:joda-time',
     '3rdparty:junit',
     '3rdparty:junit-runner',
-    '3rdparty:mongodb',
+    '3rdparty:mongodb-drivers',
     '3rdparty:specs2',
     'src/jvm/io/fsq/field',
     'src/jvm/io/fsq/rogue',

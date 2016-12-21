@@ -4,10 +4,10 @@ scala_library(
   name = 'util',
   sources = globs('*.scala'),
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:caliper',
     '3rdparty:gt-shapefile',
     '3rdparty:jts',
-    '3rdparty:mongodb',
     '3rdparty:ostrich',
     '3rdparty:s2',
     '3rdparty:scala-reflect',

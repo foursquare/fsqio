@@ -4,13 +4,13 @@ scala_library(
   name = 'util',
   sources = globs('*.scala'),
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:cascading',
     '3rdparty:gt-geojson',
     '3rdparty:gt-shapefile',
     '3rdparty:hadoop-common',
     '3rdparty:hadoop-mapreduce-client',
     '3rdparty:jts',
-    '3rdparty:mongodb',
     '3rdparty:scala-reflect',
     '3rdparty:scalding',
     '3rdparty:slf4j-log4j',  # Runtime dep.

@@ -4,11 +4,11 @@ junit_tests(
   name = 'test',
   sources = globs('*.scala'),
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:jackson',
     '3rdparty:junit',
     '3rdparty:junit-runner',
     '3rdparty:lift-json',
-    '3rdparty:mongodb',
     '3rdparty:phonenumbers',
     '3rdparty:thrift',
     'src/jvm/io/fsq/spindle/common/thrift/base',

@@ -4,7 +4,8 @@ scala_library(
   name = 'rogue',
   sources = globs('*.scala'),
   dependencies = [
-    '3rdparty:mongodb',
+    '3rdparty:bson',
+    '3rdparty:mongodb-drivers',
     '3rdparty:thrift',
     'src/jvm/io/fsq/field',
     'src/jvm/io/fsq/rogue',
