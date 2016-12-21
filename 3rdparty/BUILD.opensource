@@ -612,6 +612,17 @@ jar_library(
 )
 
 jar_library(
+  name = 'scala-reflect',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.scala-lang', name = 'scala-reflect', rev = '2.11.8'),
+  ],
+)
+
+jar_library(
   name = 'scala-xml',
   tags = [
     'opensource',

@@ -10,6 +10,7 @@ scala_library(
     '3rdparty:mongodb',
     '3rdparty:ostrich',
     '3rdparty:s2',
+    '3rdparty:scala-reflect',
     '3rdparty:slf4s',
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/common/scala',

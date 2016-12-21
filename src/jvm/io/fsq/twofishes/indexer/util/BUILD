@@ -11,6 +11,7 @@ scala_library(
     '3rdparty:hadoop-mapreduce-client',
     '3rdparty:jts',
     '3rdparty:mongodb',
+    '3rdparty:scala-reflect',
     '3rdparty:scalding',
     '3rdparty:slf4j-log4j',  # Runtime dep.
     '3rdparty:thrift',

@@ -524,6 +524,7 @@ jvm_third_party_map = {
       'parsing': 'scala-parser-combinators',
       'DEFAULT': 'SKIP',
     },
+    'reflect': 'scala-reflect',
     'xml': 'scala-xml',
     'DEFAULT': 'SKIP',
   },
