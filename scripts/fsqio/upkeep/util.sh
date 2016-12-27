@@ -117,7 +117,10 @@ function print_output() {
 }
 
 function exit_with_failure() {
-  echo -en $(red_output "UPKEEP FAILURE!\n") >&2
-  echo -en $(red_output "$@\n") >&2
+  red_output "\nUPKEEP FAILURE! "
+  # TODO(mateo): May be better to allow the task to decide about colored output here.
+  for i in "$@"; do
+    red_output "${i}\n"
+  done
   exit -1
 }
