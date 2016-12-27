@@ -9,4 +9,6 @@ junit_tests(
     'src/jvm/io/fsq/common/concurrent',
     'src/jvm/io/fsq/common/scala',
   ],
+  # NOTE(mateo): These tests appear to not be threadsafe. They fail when ran with any type of concurrency.
+  concurrency='SERIAL',
 )
