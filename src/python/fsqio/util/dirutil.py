@@ -21,8 +21,22 @@ def safe_rmtree(directory):
   shutil.rmtree(directory, ignore_errors=True)
 
 
-def safe_mkdir(directory, clean=False, mode=0777):
+def safe_mkdir(directory, clean=False):
   """Ensure a directory is present.
+
+  If it's not there, create it.  If it is, no-op. If clean is True, ensure the dir is empty."""
+  if clean:
+    safe_rmtree(directory)
+  try:
+    os.makedirs(directory)
+  except OSError as e:
+    if e.errno != errno.EEXIST:
+      raise
+
+# NOTE(mateo):
+# safe_deep_mkdir and makedirs_with_mode are not proven safe for Pants plugins and are POC from an Fsqio standpoint.
+def safe_deep_mkdir(directory, clean=False, mode=0777):
+  """Ensure a directory is present recursively, with permission bits set.
 
   If it's not there, create it.  If it is, no-op. If clean is True, ensure the dir is empty."""
   if clean:
@@ -32,7 +46,6 @@ def safe_mkdir(directory, clean=False, mode=0777):
   except OSError as e:
     if e.errno != errno.EEXIST:
       raise
-
 
 def makedirs_with_mode(name, mode=0777):
   """makedirs_with_mode(path [, mode=0777])
