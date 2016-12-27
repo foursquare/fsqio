@@ -8,12 +8,22 @@ scalac_plugin(
     name = 'buildgen.plugin.emit_used_symbols',
     repo = oss_sonatype_repo,
     ),
-  sources = globs('*.scala')
+  sources = globs('*.scala'),
+  dependencies = [
+    '3rdparty:scalac',
+    '3rdparty:scala-reflect',
+  ],
 )
 
 jvm_binary(
   name = 'emit_used_symbols-binary',
   dependencies = [
     ':emit_used_symbols',
+    '3rdparty:scalac',
+    '3rdparty:scala-reflect',
+  ],
+  tags = [
+    'opensource',
+    'fscommon',
   ],
 )

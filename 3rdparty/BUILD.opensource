@@ -649,28 +649,6 @@ jar_library(
 )
 
 jar_library(
-  name = 'scalaj-time',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    sjar(org = 'org.scalaj', name = 'scalaj-time', rev = '0.8'),
-  ],
-)
-
-jar_library(
-  name = 'scalacheck',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    sjar(org = 'org.scalacheck', name = 'scalacheck', rev = '1.10.1')
-  ]
-)
-
-jar_library(
   name = 'scala-parser-combinators',
   tags = [
     'opensource',
@@ -678,6 +656,17 @@ jar_library(
   ],
   jars = [
     sjar(org = 'org.scala-lang.modules', name = 'scala-parser-combinators', rev = '1.0.4'),
+  ],
+)
+
+jar_library(
+  name = 'scala-library',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org='org.scala-lang', name = 'scala-library', rev=scala_version)
   ],
 )
 
@@ -700,6 +689,39 @@ jar_library(
   ],
   jars = [
     sjar(org = 'org.scala-lang.modules', name = 'scala-xml', rev = '1.0.5'),
+  ],
+)
+
+jar_library(
+  name = 'scalac',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org='org.scala-lang', name = 'scala-compiler', rev=scala_version),
+  ],
+)
+
+jar_library(
+  name = 'scalacheck',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'org.scalacheck', name = 'scalacheck', rev = '1.10.1')
+  ]
+)
+
+jar_library(
+  name = 'scalaj-time',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'org.scalaj', name = 'scalaj-time', rev = '0.8'),
   ],
 )
 
