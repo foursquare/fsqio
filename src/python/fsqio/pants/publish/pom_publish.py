@@ -121,10 +121,13 @@ class PomPublish(JarPublish, JarBuilderTask):
     return self.coordinate(jar.org, jar.name, rev or jar.rev)
 
   def generate_pom(self, tgt, version, path):
-    closure = tgt.closure()
-    pom_deps = [t for t in closure if isinstance(t, PomTarget) and t is not tgt]
+    closure = [t for t in tgt.closure() if t is not tgt]
+
+    # Remove all transitive deps of Pom dependencies and then add back the pom_dep itself.
+    pom_deps = [t for t in closure if isinstance(t, PomTarget)]
     for pom in pom_deps:
       closure -= pom.closure()
+      closure.add(pom)
     dependencies = OrderedDict()
     for dep in closure:
       if isinstance(dep, PomTarget):
