@@ -40,6 +40,7 @@ pom_target(
     # TODO(dan): These should probably be published in different jars.
     'src/jvm/io/fsq/common/concurrent',
     'src/jvm/io/fsq/common/base:base',
+    'src/jvm/io/fsq/common/logging:logging',
     'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/macros:macros',
   ],
@@ -57,8 +58,8 @@ pom_target(
     'src/resources/io/fsq/exceptionator',
   ],
   dependencies = [
+    ':common',
     ':rogue',
-    'src/jvm/io/fsq/common/logging:logging',
     'src/jvm/io/fsq/exceptionator/actions',
     'src/jvm/io/fsq/exceptionator/actions/concrete',
     'src/jvm/io/fsq/exceptionator/filter',
@@ -158,15 +159,31 @@ pom_target(
     'src/jvm/io/fsq/spindle/codegen/binary',
     'src/jvm/io/fsq/spindle/codegen/parser',
     'src/jvm/io/fsq/spindle/codegen/runtime',
-    'src/jvm/io/fsq/spindle/common/thrift/base',
-    'src/jvm/io/fsq/spindle/common/thrift/bson',
-    'src/jvm/io/fsq/spindle/common/thrift/json',
     'src/jvm/io/fsq/spindle/runtime',
-    'src/jvm/io/fsq/rogue/types:types',
+    'src/jvm/io/fsq/spindle/common/thrift/base:base',
+    'src/jvm/io/fsq/spindle/common/thrift/bson:bson',
+    'src/jvm/io/fsq/spindle/common/thrift/json:json',
   ],
   provides = artifact(
     org = 'io.fsq',
     name = 'spindle_2.11',
+    repo = oss_sonatype_repo,
+  ),
+)
+
+pom_target(
+  name = 'spindle.rogue',
+  prefixes = [
+    'src/jvm/io/fsq/spindle/rogue',
+  ],
+  dependencies = [
+    ':rogue',
+    ':spindle',
+    'src/jvm/io/fsq/spindle/rogue:rogue',
+  ],
+  provides = artifact(
+    org = 'io.fsq',
+    name = 'spindle.rogue_2.11',
     repo = oss_sonatype_repo,
   ),
 )
@@ -180,7 +197,6 @@ pom_target(
   dependencies = [
     ':common',
     ':spindle',
-    'src/jvm/io/fsq/common/base:base',
     'src/jvm/io/fsq/twofishes/core',
     'src/jvm/io/fsq/twofishes/country',
     'src/jvm/io/fsq/twofishes/country/data',
