@@ -1,38 +1,25 @@
 sudo: false
-
 services:
-  - mongodb
-
+- mongodb
 before_cache:
-  - find . -name "*.py[co]" -print -delete
-  - rm -fv $HOME/.ivy2/pants/*.{css,properties,xml,xsl}
-  - rm -rf $HOME/.cache/pants/stats
-
+- find . -name "*.py[co]" -print -delete
+- rm -fv $HOME/.ivy2/pants/*.{css,properties,xml,xsl}
+- rm -rf $HOME/.cache/pants/stats
 cache:
   directories:
-    # These three are Fsq.io specific and hold artifacts that were intended to be managed by a shared artifact cache.
-    - .local_artifact_cache/fsqio_pants_pom_pom_resolve_PomResolve
-    - .local_artifact_cache/fsqio_pants_spindle_tasks_build_spindle_BuildSpindle
-    - $HOME/.pom2
-    # Removing fsqio and pants virtualenvs from the cache until the upkeep refactor- it doesn't respect dep changes atm.
-    # - $HOME/.cache/fsqio
-    # - $HOME/.cache/pants
-    - $HOME/.cache/pip
-    - $HOME/.ivy2/pants
-    # The install location for our managed JDK install.
-    - $HOME/opt
-
+  - ".local_artifact_cache/fsqio_pants_pom_pom_resolve_PomResolve"
+  - ".local_artifact_cache/fsqio_pants_spindle_tasks_build_spindle_BuildSpindle"
+  - "$HOME/.pom2"
+  - "$HOME/.cache/pip"
+  - "$HOME/.ivy2/pants"
+  - "$HOME/opt"
 language: python
-
 python:
-  - "2.7"
-
+- '2.7'
 env:
   global:
-    - JAVA_HOME="$HOME/opt/jdk1.8.0_40"
-    - PANTS_CONFIG_OVERRIDE="['pants.ini', 'pants-travis-ci.ini']"
-
-# Travis does not enable much JDK configuration within Python projects, so we download a JDK and cache it.
+  - JAVA_HOME="$HOME/opt/jdk1.8.0_40"
+  - PANTS_CONFIG_OVERRIDE="['pants.ini', 'pants-travis-ci.ini']"
 before_script: |
   if ! "$HOME"/opt/jdk1.8.0_40/bin/java -version; then
     mkdir -p ~/opt
@@ -41,10 +28,16 @@ before_script: |
       "http://download.oracle.com/otn-pub/java/jdk/8u40-b25/jdk-8u40-linux-x64.tar.gz"
     tar xzf jdk-8u40-linux-x64.tar.gz -C ~/opt
   fi
-
 script: |
   uname -a
   ./pants buildgen
   git diff --exit-code || exit "$?"
+  echo "Running under PANTS_CONFIG_OVERRIDE: ${PANTS_CONFIG_OVERRIDE}"
   ./pants compile src::
   ./pants test test::
+notifications:
+  slack:
+    rooms:
+      secure: ZCX+tF3/xdmoFvYbndI+Ck+5DEUWL0OK+IHDDZwRKyG6XGvkV6wnUE+GFMulMGghDQSX9FIQLEtsFNyR+fB24MrY4CY/bTxUDuSUrtDOwNRDYCAP9RnqG5DCYT2XHJh2GjFjUenn0nvfz+WI7zpFLbMuj2ImoQDRW7mX7k2tgCXW4EFZrKwkP7Knu3MqDoZz7j4UbZt2RorvrNHrjUNWl6bhZUO3HkAj1GRXRi4v76ksBMhK1feHmbT2dGXSUVsP+uSMpEx7oALQo4yTU/4K2Oji1TUomoU6P3O20nrHWeUccCJTexBksrhObDjT3WS9pCQ/G6BoZpqdGSrtJwAzyLb2Em7V8YNf2uTE8eJ0Uw5+psPBR8DdrxxSSDfODrShPi8+DcWzOK8aWTg7h3IweSiE5ma8OVqucrrY5xMwkzy80OYgJHzEAqDoBoMp5YJiQ3rHAYBZdt0axUNVgIQ626UwuWnLpeZW8TVrHcopyu9MFqDBTaadaY+tMpj92FkgndesfKqmuArrJcLPhb7o5M6juLbjtA8HHrJBFL4fG1p3hki0XHt39Aqxo60+LSOFNua3/KRkr+QcGqzP1HJVQbgslVHQNT9RanCk4O44LCcyaQOzEa2BK1G20xPGRN+2whN+pvNgmqs1XU7FhLh8LJ0hkSmANYrJqP2ICpVVUVg=
+    on_success: always
+    on_failure: always
