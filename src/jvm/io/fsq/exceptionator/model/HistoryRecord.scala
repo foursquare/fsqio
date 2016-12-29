@@ -3,7 +3,6 @@
 package io.fsq.exceptionator.model
 
 import _root_.io.fsq.exceptionator.util.Config
-import _root_.io.fsq.rogue._
 import _root_.io.fsq.rogue.index.{Asc, Desc, IndexedRecord}
 import _root_.io.fsq.rogue.lift.LiftRogue._
 import net.liftweb.common.Box

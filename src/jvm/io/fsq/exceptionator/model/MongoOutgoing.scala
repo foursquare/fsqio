@@ -2,7 +2,6 @@
 package io.fsq.exceptionator.model
 
 import _root_.io.fsq.exceptionator.model.io.{BucketId, Outgoing}
-import _root_.io.fsq.rogue.lift.LiftRogue._
 import net.liftweb.json.JsonDSL._
 import net.liftweb.json._
 import org.bson.types.ObjectId
