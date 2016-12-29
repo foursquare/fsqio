@@ -3,6 +3,8 @@
 package io.fsq.rogue.adapter
 
 import com.mongodb.client.MongoCollection
+import com.mongodb.client.model.CountOptions
+import org.bson.conversions.Bson
 
 
 object BlockingResult {
@@ -37,4 +39,13 @@ class BlockingMongoClientAdapter[Document, MetaRecord, Record](
 ) with BlockingResult.Implicits {
 
   override def wrapEmptyResult[T](value: T): BlockingResult[T] = new BlockingResult[T](value)
+
+  override protected def countImpl(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson,
+    options: CountOptions
+  ): BlockingResult[Long] = {
+    collection.count(filter, options)
+  }
 }

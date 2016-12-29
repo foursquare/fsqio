@@ -4,8 +4,20 @@ package io.fsq.rogue.adapter
 
 import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoCollection
+import com.mongodb.client.model.CountOptions
 import io.fsq.common.scala.Identity._
+import org.bson.conversions.Bson
 
+
+object MongoCallback {
+  trait Implicits {
+    implicit def scalaLongToJavaLong[Result[_]](
+      callback: MongoCallback[Result, Long]
+    ): MongoCallback[Result, java.lang.Long] = {
+      callback.asInstanceOf[MongoCallback[Result, java.lang.Long]]
+    }
+  }
+}
 
 trait MongoCallback[Result[_], T] extends SingleResultCallback[T] {
 
@@ -48,9 +60,20 @@ class AsyncMongoClientAdapter[Document, MetaRecord, Record, Result[_]](
   callbackFactory: MongoCallbackFactory[Result]
 ) extends MongoClientAdapter[MongoCollection, Document, MetaRecord, Record, Result](
   collectionFactory
-) {
+) with MongoCallback.Implicits {
 
   override def wrapEmptyResult[T](value: T): Result[T] = {
     callbackFactory.wrapEmptyResult(value)
+  }
+
+  override protected def countImpl(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson,
+    options: CountOptions
+  ): Result[Long] = {
+    val callback = callbackFactory.newCallback[Long]
+    collection.count(filter, options, callback)
+    callback.result
   }
 }

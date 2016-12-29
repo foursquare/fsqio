@@ -2,7 +2,11 @@
 
 package io.fsq.rogue.adapter
 
+import com.mongodb.ReadPreference
+import com.mongodb.client.model.CountOptions
 import io.fsq.rogue.{Query, QueryHelpers, RogueException}
+import io.fsq.rogue.MongoHelpers.MongoBuilder
+import org.bson.conversions.Bson
 
 
 abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Record, Result[_]](
@@ -36,6 +40,39 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
       }
     } finally {
       QueryHelpers.logger.log(query, instanceName, descriptionFunc(), (System.nanoTime - start) / 1000000)
+    }
+  }
+
+  protected def countImpl(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson,
+    options: CountOptions
+  ): Result[Long]
+
+  // TODO(jacob): We should get rid of the option to send down a read preference here and
+  //    just use the one on the query.
+  def count[
+    M <: MetaRecord
+  ](
+    query: Query[M, _, _],
+    readPreferenceOpt: Option[ReadPreference]
+  ): Result[Long] = {
+    val queryClause = QueryHelpers.transformer.transformQuery(query)
+    QueryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
+    val collection = collectionFactory.getMongoCollection(query, readPreferenceOpt)
+    val descriptionFunc = () => MongoBuilder.buildConditionString("count", query.collectionName, queryClause)
+    // TODO(jacob): This cast will always succeed, but it should be removed once there is a
+    //    version of MongoBuilder that speaks the new CRUD api.
+    val condition = MongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+    val options = {
+      new CountOptions()
+        .limit(queryClause.lim.getOrElse(0))
+        .skip(queryClause.sk.getOrElse(0))
+    }
+
+    runCommand(descriptionFunc, queryClause) {
+      countImpl(collection)(condition, options)
     }
   }
 }
