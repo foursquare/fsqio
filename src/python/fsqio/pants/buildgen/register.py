@@ -3,10 +3,6 @@
 
 from __future__ import absolute_import
 
-import os
-
-from pants.backend.jvm.repository import Repository
-from pants.base.build_environment import get_buildroot
 from pants.build_graph.build_file_aliases import BuildFileAliases
 from pants.goal.task_registrar import TaskRegistrar as task
 
@@ -30,19 +26,10 @@ from fsqio.pants.buildgen.python.buildgen_python import BuildgenPython
 from fsqio.pants.buildgen.python.map_python_exported_symbols import MapPythonExportedSymbols
 
 
-oss_sonatype_repo = Repository(
-  name='oss_sonatype_repo',
-  url='https://oss.sonatype.org/#stagingRepositories',
-  push_db_basedir=os.path.join(get_buildroot(), 'pushdb'),
-)
-
 def build_file_aliases():
   return BuildFileAliases(
     targets={
       'buildgen_target_bag': BuildgenTargetBag,
-    },
-    objects={
-      'oss_sonatype_repo': oss_sonatype_repo,
     },
   )
 
