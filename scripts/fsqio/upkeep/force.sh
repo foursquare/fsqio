@@ -4,56 +4,40 @@ set -a
 
 # The timestamp is used to determine task order at runtime.
 # Tasks are separated from their dependent tasks by 10 and from independently requested tasks by 1000.
-# It's a hack, you should Google an improvement.
+# It's a hack, you should implement an improvement.
 # Task dependency DAGs are unconnected components with only outbound edges, could be toposorted.
 
 stamp=$(date +%s)
 
-# 'force' takes a single task as an argument and orders that task, along with any declared downstream tasks.
+
 function force() {
-  forced_task="$1"
-  downstream_tasks_file=$(all_matched_files "downstream-tasks" ${forced_task})
+  forced_name="$1"
+  task_script=$(find_upkeep_file "tasks" "${forced_name}.sh") || exit_with_failure "No task found for: ${forced_name}!"
+  downstream_tasks_file=$(find_upkeep_file "downstream-tasks" ${forced_name})
 
-  if [ -f "${downstream_tasks_file}" ]; then
-    IFS=$'\n' read -d '' -r -a tasks < "${downstream_tasks_file}"
-    red_output "Task '${forced_task}' requires downstream tasks:\n"
-    red_output "\t$(echo ${tasks[@]})\n\n"
-
-    for prospective in "${tasks[@]}"; do
-      upkeep_namespace=$(get_upkeep_namespace ${downstream_tasks_file})
-      task_file="${upkeep_namespace}/tasks/${prospective}.sh"
-
-      if [ ! -f "${task_file}" ]; then
-        # Note: All downstream tasks must share the same 'scripts/${foo}/upkeep/tasks' namespace.
-        red_output "Task was not found at: "
-        echo -en "${task_file}!\n"
-        exit_with_failure "'upkeep force ${forced_task}' requested an invalid downstream task: '${prospective}'!"
-      fi
-    done
-    # Force the original task first.
-    tasks=( "${forced_task}" "${tasks[@]}" )
-  else
-    tasks=( "${forced_task}" )
+  downstream_tasks=( $(get_task_and_downstream "${forced_name}") )
+  if [[ "${#downstream_tasks[@]}" -gt 1 ]]; then
+    colorized_warn "Task '${forced_name}' requires downstream tasks:\n"
+    colorized_warn "\t$(echo ${downstream_tasks[@]})\n"
   fi
 
-  for task in ${tasks[@]}; do
-    stamp=$(($stamp + 10))
-    task_script=$(find_upkeep_file "tasks" "${forced_task}.sh")
-    upkeep_namespace=$(get_upkeep_namespace ${task_script})
+  for forced_task in "${downstream_tasks[@]}"; do
+    task_script=$(find_upkeep_file "tasks" "${forced_task}.sh") || \
+    exit_with_failure "'${forced_name}' required a downstream task that could not be found: '${forced_task}'"
 
-    # Print the requirement to stdout and also overwrite the task's required file.
-    # This requirement string has semantic meaning and is parsed for scheduling purposes!
-    # Please be aware that changing this string may require changes to the parsing logic in check.sh.
-    requirement_string="${stamp}: './upkeep force "$forced_task"' required ${task}"
-    echo "${requirement_string}" | tee "${upkeep_namespace}/required/${task}"
+    stamp=$(($stamp + 10))
+    forced_required=$(find_upkeep_file "required" "${forced_task}") ||  \
+      exit_with_failure  \
+      "${task_script} registered a downstream task with no found 'required' file." "\tCheck ${downstream_tasks_file}"
+
+    # This requirement string has semantic meaning and a schema that is parsed as part of the scheduler!
+    requirement_string="${stamp}: './upkeep force "$forced_name"' required ${forced_task}"
+    echo "${requirement_string}" | tee "${forced_required}"
   done
 }
 
-# Timestamp value is exclusively used to determine execution order.
-forced=( "$@" )
-for forced in "${forced[@]}"; do
+passed_tasks=( "$@" )
+for forced in "${passed_tasks[@]}"; do
   stamp=$((stamp + 1000))
   force "${forced}"
 done
-
-# TODO(mateo): Instead of printing the requirement strings, this should print the final sorted task order.

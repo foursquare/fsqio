@@ -4,7 +4,8 @@
 # Pass variables to children
 set -eo pipefail
 set +a
-# BUILD_ROOT is treated as a top-level constant and should always be derived from here.
+
+# BUILD_ROOT is purposfully read-only- it must be exclusively inherited from this definition.
 readonly BUILD_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export BUILD_ROOT
 export UPKEEPROOT="${BUILD_ROOT}/scripts/fsqio/upkeep"
@@ -13,7 +14,7 @@ export DEPENDENCIES_ROOT="${BUILD_ROOT}/dependencies"
 ENV_FILE_LOCATION="${BUILD_ROOT}/environ.sh"
 ENV_FILE="libs/env.sh"
 
-# Symlink the proper environmental variables script to the buildroot, using 'scripts/foursquare' to check if in Fsq.io.
+# Symlink the proper environmental variables file.
 if [[ -e "scripts/foursquare/upkeep/${ENV_FILE}" ]]; then
   repo_env="scripts/foursquare/upkeep/${ENV_FILE}"
 else
@@ -28,12 +29,46 @@ fi
 source "${ENV_FILE_LOCATION}"
 source "${UPKEEPROOT}/util.sh"
 
-# TODO(mateo): be more precise with namespaces, a la `namespaces=( $(ls -d scripts/*/upkeep) )`
+# Default to not SKIP_UPKEEP
+SKIP_UPKEEP=${SKIP_UPKEEP:-0}
+
+# Check for options.
+upkeep_args=()
+
+for opt in $@; do
+  case ${opt} in
+    "--all" )
+      DOWNSTREAM_TASKS="true"
+      upkeep_args=( "${upkeep_args[@]}" $(all_task_names) )
+      ;;
+    "--no-downstream" )
+      DOWNSTREAM_TASKS="false"
+      ;;
+    "--downstream" )
+      DOWNSTREAM_TASKS="true"
+      ;;
+    "--skip-tasks" )
+      SKIP_UPKEEP=1
+      ;;
+    "--no-skip-tasks" )
+      SKIP_UPKEEP=0
+      ;;
+    * )
+      # Try and catch bad options - while allowing passthrough for ./upkeep run.
+      if [[ "${upkeep_args[0]}" != 'run' ]] && [[ "${opt}" != "-*help" ]] && [[ "${opt}" == -* ]]; then
+        colorized_error "Bad task name: ${opt}"
+        print_help
+        exit_with_failure "Bad invocation: No upkeep option: ${opt}\n"
+      fi
+      upkeep_args=( "${upkeep_args[@]}" "${opt}")
+      ;;
+  esac
+done
 
 function upkeep_cmd() {
-  # SKIP_TASKS allows callers (like the git hooks) to skip upkeep tasks but still execute scripts, like ./python.
+  # ONLY_SKIP_TASKS allows callers (like the git hooks) to skip upkeep tasks but still execute scripts, like ./python.
   # Essentially means "void SKIP_UPKEEP for this command."
-  if [ -z "${SKIP_UPKEEP}" ] || [ ! -z "${SKIP_TASKS}" ]; then
+  if [[ ${SKIP_UPKEEP} -eq 0 ]] || [[ $ONLY_SKIP_TASKS -eq 1 ]]; then
     if [ ! -f "${1}" ]; then
       exit_with_failure "No upkeep file found at: ${1}"
     fi
@@ -41,46 +76,61 @@ function upkeep_cmd() {
   fi
 }
 
-case "$1" in
-  "help"|"--help"|"-h" )
+# Route based on arguments.
+case "${upkeep_args[0]}" in
+  "--help"|"help"|"-h" )
     print_help
     exit
     ;;
-  "force"|"check" )
-    action="${UPKEEPROOT}/${1}.sh"
-    args=( "${@:2}" )
+  "force" )
+    DOWNSTREAM_TASKS=${DOWNSTREAM_TASKS:-"true"}
+    action="${UPKEEPROOT}/force.sh"
+    args=( "${upkeep_args[@]:1}" )
     ;;
-  '')
+  "check"|'')
+    # Check disables downstream - honestly it should probably not be surfaced as a top-level command anymore.
+    DOWNSTREAM_TASKS="false"
     action="${UPKEEPROOT}/check.sh"
-    args=()
+    args=( "${upkeep_args[@]:1}" )
     ;;
   "tasks" )
-    print_all_tasks
+    DOWNSTREAM_TASKS=${DOWNSTREAM_TASKS:-"false"}
+    print_all_tasks "${upkeep_args[@]}"
     exit
     ;;
   "task-list" )
+    DOWNSTREAM_TASKS=${DOWNSTREAM_TASKS:-"false"}
     all_task_names
     exit
     ;;
   "run" )
+    script_name="${upkeep_args[1]}"
     # The script can be ${script_name}.sh under <xyz>/upkeep/scripts or be a full file path relative to the BUILD_ROOT.
-    action=$(find_script "${@:2}")
-    args=( "${@:3}" )
-    if [ -z "${SKIP_UPKEEP}" ]; then
-      # Execute `./upkeep check' in order to run any required tasks.
-      $(upkeep_cmd ${UPKEEPROOT}/check.sh)
-    else
-      SKIP_TASKS=1
+    action=$(find_upkeep_file "scripts" "${script_name}.sh") || action="${BUILD_ROOT}/${script_name}"
+    [ -f "${action}" ] || exit_with_failure "Could not find matching script: ${script_name}"
+
+    args=( "${upkeep_args[@]:2}" )
+    # Execute `./upkeep check' in order to run any required tasks and then turn on SKIP for future upkeep calls.
+    if [[ ! SKIP_UPKEEP -eq 1 ]]; then
+      ${UPKEEPROOT}/check.sh
     fi
+    # Disable task-related upkeep operations but allow others (essentially run) to continue.
+    ONLY_SKIP_TASKS=1
+    SKIP_UPKEEP=1
     ;;
   *)
+    # This is should already default to "false", but adding a guard here. The downstream task implementation uses git
+    # operations and is probably not safe to automate. Until the implementation improves, the --downstream flag should
+    # only be invoked from the command line, akin to a `git reset` for upkeep.
+    DOWNSTREAM_TASKS=${DOWNSTREAM_TASKS:-"false"}
     action="${UPKEEPROOT}/execute_task.sh"
-    args=( "${@:1}" )
+    args=( "${upkeep_args[@]:0}" )
     ;;
 esac
 
 if [ "$0" = "$BASH_SOURCE" ]; then
-  # This must be two separate shell commands, or else the exec will return the exit code of the function's `echo` call.
+  # This must be two separate shell commands or else exec will return the exit code of the function's `echo` call.
   cmd="$(upkeep_cmd ${action} ${args[@]})"
+  export SKIP_UPKEEP=$SKIP_UPKEEP
   exec ${cmd}
 fi
