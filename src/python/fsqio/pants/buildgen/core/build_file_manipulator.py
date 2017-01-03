@@ -12,12 +12,13 @@ from __future__ import (
 )
 
 import ast
-import colors
 from difflib import unified_diff
 import logging
+import os
 import re
 import sys
 
+import colors
 from pants.build_graph.address import Address, BuildFileAddress
 
 
@@ -143,9 +144,7 @@ class BuildFileManipulator(object):
                         .format(build_file=build_file,
                                 target_type=call.func.id,
                                 name_value=keyword.value))
-      raise BuildTargetParseError('Could not find name parameter to target call'
-                                  'with target type {target_type}'
-                                  .format(target_type=call.func.id))
+      return os.path.basename(build_file.spec_path)
 
     calls_by_name = dict((name_from_call(call), call) for call in target_calls)
     if name not in calls_by_name:
