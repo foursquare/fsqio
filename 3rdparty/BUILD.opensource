@@ -915,17 +915,6 @@ jar_library(
   ],
 )
 
-jar_library(
-  name = 'thrift-text',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    jar(org = 'com.twitter.common', name = 'thrift-text', rev = '0.0.1')
-  ],
-)
-
 twitter_util_rev = '6.24.0'
 jar_library(
   name = 'twitter-util',
