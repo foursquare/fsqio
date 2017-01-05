@@ -14,6 +14,8 @@ from __future__ import (
 from copy import deepcopy
 import unittest
 
+from pants.util.memo import memoized_property
+
 from fsqio.pants.buildgen.core.third_party_map_util import merge_map
 
 
@@ -24,8 +26,9 @@ class TestThirdPartyMapUtil(unittest.TestCase):
 
   # TODO(mateo): Test the check_if_manually_defined logic.
 
-  def setUp(self):
-    self.default_map = {
+  @memoized_property
+  def _default(self):
+    return {
       'ansicolors': '3rdparty/python:ansicolors',
       'apache': {
         'aurora': '3rdparty/python:apache.aurora.client',
@@ -48,32 +51,34 @@ class TestThirdPartyMapUtil(unittest.TestCase):
       'yaml': '3rdparty/python:PyYAML',
     }
 
-    self.additional_map = {
-       'ansicolors': '/elsewhere:ansicolors',
-       'apache': '/elsewhere:apache.aurora.client',
-       'fsqio': {
-         'buildgen': {
-            'core': '/elsewhere:buildgen-core',
-            'python': '/elsewhere:buildgen-jvm',
-          },
-       },
-       'twitter': {
-          'common': {
-            'collections': '/elsewhere:twitter.common.collections',
-            'confluence': '/elsewhere:twitter.common.confluence',
-            'log': '/elsewhere:twitter.common.log',
-          },
-          'finagle': {
-            'DEFAULT': 'a_bird_name',
-          }
-       },
-       'yaml': '/elsewhere/python:PyYAML',
-     }
+  @memoized_property
+  def _additional(self):
+    return {
+     'ansicolors': '/elsewhere:ansicolors',
+     'apache': '/elsewhere:apache.aurora.client',
+     'fsqio': {
+       'buildgen': {
+          'core': '/elsewhere:buildgen-core',
+          'python': '/elsewhere:buildgen-jvm',
+        },
+     },
+     'twitter': {
+        'common': {
+          'collections': '/elsewhere:twitter.common.collections',
+          'confluence': '/elsewhere:twitter.common.confluence',
+          'log': '/elsewhere:twitter.common.log',
+        },
+        'finagle': {
+          'DEFAULT': 'a_bird_name',
+        }
+     },
+     'yaml': '/elsewhere/python:PyYAML',
+  }
 
-  def test_merge_output(self):
-    # Maybe not so useful as a unittest, but good for an example to module consumers.
-    merge_map(self.default_map, self.additional_map)
-    expected_merged_map = {
+  @memoized_property
+  def _expected_merge_results(self):
+    # This is just the expected returned map when you run the fixture.
+    return {
       'ansicolors': '/elsewhere:ansicolors',
       'apache': '/elsewhere:apache.aurora.client',
       'boto': None,
@@ -93,38 +98,66 @@ class TestThirdPartyMapUtil(unittest.TestCase):
           }
         },
         'yaml': '/elsewhere/python:PyYAML'
-    }
-    self.assertEqual(self.default_map, expected_merged_map)
+      }
+
+  def _map_fixture(self):
+    return self._default, self._additional
+
+  def test_merge_output(self):
+    # Maybe not so useful as a unittest, but good for an example to module consumers.
+    # Remember - the merge has the not great property of updating the map in place - so default will become merged.
+    default, additional = self._map_fixture()
+    self.assertNotEqual(default, self._expected_merge_results)
+
+    # Do the merge, now should be equal.
+    merge_map(default, additional)
+    self.assertEqual(default, self._expected_merge_results)
 
   def test_merge_empty(self):
-    additional_map = {}
-    self.assertEqual(self.default_map, merge_map(self.default_map, additional_map))
+    # No changes are made to the map if it is merged with an empty dict.
+    default, _ = self._map_fixture()
+    copied = deepcopy(default)
+
+    self.assertEqual(default, copied)
+    merge_map(default, {})
+    self.assertEqual(default, copied)
 
   def test_merge_value_of_none(self):
-    merge_map(self.default_map, self.additional_map)
-    self.assertEqual(self.default_map['boto'], None)
+    default, additional = self._map_fixture()
+    merge_map(default, additional)
+    self.assertEqual(default['boto'], None)
 
   def test_merge_contains_all_keys(self):
-    copied_map = deepcopy(self.default_map)
-    copied_map.update(self.additional_map)
+    default, additional = self._map_fixture()
+    # A pure update - this only tells us that the top-level map entries are as expected.
+    copied_map = deepcopy(default)
+    copied_map.update(additional)
 
-    merge_map(self.default_map, self.additional_map)
-    self.assertEqual(len(copied_map), len(self.default_map))
+    merge_map(default, additional)
+    self.assertEqual(len(copied_map), len(default))
+    self.assertEqual(sorted(copied_map.keys()), sorted(default.keys()))
 
   def test_merge_simple_override(self):
-    self.assertNotEqual(self.default_map['ansicolors'], self.additional_map['ansicolors'])
-    merge_map(self.default_map, self.additional_map)
-    self.assertEqual(self.default_map['ansicolors'], self.additional_map['ansicolors'])
+    default, additional = self._map_fixture()
+    # Store a copy of additional to show it is not modified.
+    stored_additional = deepcopy(additional)
+    self.assertEqual(additional, stored_additional)
+
+    self.assertNotEqual(default['ansicolors'], additional['ansicolors'])
+    merge_map(default, additional)
+    self.assertEqual(default['ansicolors'], additional['ansicolors'])
+    self.assertEqual(additional, stored_additional)
 
   def test_merge_nested_overrides(self):
-    self.assertEqual(self.default_map['twitter']['common']['log'], '3rdparty/python:twitter.common.log')
-    merge_map(self.default_map, self.additional_map)
+    default, additional = self._map_fixture()
+    self.assertEqual(default['twitter']['common']['log'], '3rdparty/python:twitter.common.log')
+    merge_map(default, additional)
 
     # Test that entries that are defined in the additional_map are updated.
-    self.assertEqual(self.default_map['twitter']['common']['log'], '/elsewhere:twitter.common.log')
+    self.assertEqual(default['twitter']['common']['log'], '/elsewhere:twitter.common.log')
 
     # If both subtrees have the same height, the leaf should only change if explicitly overriden.
-    self.assertEqual(self.default_map['twitter']['common']['dirutil'], '3rdparty/python:twitter.common.dirutil')
+    self.assertEqual(default['twitter']['common']['dirutil'], '3rdparty/python:twitter.common.dirutil')
 
   def test_merge_clobber_subtree(self):
     # If an additional_map entry has less levels than the default_map, then the replace the entire subtree with the
@@ -132,36 +165,41 @@ class TestThirdPartyMapUtil(unittest.TestCase):
 
     # A use case would be wanting to override all apache entries to be one library, no matter how many levels are
     # defined by the default_map.
-    self.assertTrue(isinstance(self.default_map['apache'], dict))
-    merge_map(self.default_map, self.additional_map)
-    self.assertTrue(isinstance(self.default_map['apache'], unicode))
-    self.assertEqual(self.default_map['apache'], self.additional_map['apache'])
+    default, additional = self._map_fixture()
+    self.assertTrue(isinstance(default['apache'], dict))
+    merge_map(default, additional)
+    self.assertTrue(isinstance(default['apache'], unicode))
+    self.assertEqual(default['apache'], additional['apache'])
 
   def test_merge_new_keys(self):
-    self.assertNotIn('fsqio', self.default_map)
-    merge_map(self.default_map, self.additional_map)
-    self.assertIn('fsqio', self.default_map)
-    self.assertIn('buildgen', self.default_map['fsqio'])
-    self.assertTrue(isinstance(self.default_map['fsqio'], dict))
+    default, additional = self._map_fixture()
+    self.assertNotIn('fsqio', default)
+    merge_map(default, additional)
+    self.assertIn('fsqio', default)
+    self.assertIn('buildgen', default['fsqio'])
+    self.assertTrue(isinstance(default['fsqio'], dict))
 
   def test_merge_after_nested_entry(self):
     # Make sure that any recursive function calls return to finish the final entries.
-    self.assertNotEqual(self.default_map['yaml'], self.additional_map['yaml'])
-    merge_map(self.default_map, self.additional_map)
-    self.assertEqual(self.default_map['yaml'], self.additional_map['yaml'])
-    self.assertEqual(self.additional_map['yaml'], '/elsewhere/python:PyYAML')
+    default, additional = self._map_fixture()
+    self.assertNotEqual(default['yaml'], additional['yaml'])
+    merge_map(default, additional)
+    self.assertEqual(default['yaml'], additional['yaml'])
+    self.assertEqual(additional['yaml'], '/elsewhere/python:PyYAML')
 
   def test_merge_default(self):
     # If the additional_map defines a DEFAULT, then we assume that the additional_map defines the world of accepted
     # mappings and only use the additional_map entries for that subtree.
-    self.assertEqual(self.default_map['twitter']['finagle']['memcached']['clazz'], '3rdparty/python:finagle-memcached')
-    self.assertGreater(len(self.default_map['twitter']['finagle']), 1)
+    default, additional = self._map_fixture()
 
-    merge_map(self.default_map, self.additional_map)
+    self.assertEqual(default['twitter']['finagle']['memcached']['clazz'], '3rdparty/python:finagle-memcached')
+    self.assertGreater(len(default['twitter']['finagle']), 1)
+
+    merge_map(default, additional)
 
     # Since additional_map has 'DEFAULT' defined, all deeper nodes in the original map are discarded if not explictly
     # included in the additional_map.
-    self.assertEqual(len(self.default_map['twitter']['finagle']), 1)
-    self.assertIn('DEFAULT', self.default_map['twitter']['finagle'])
-    self.assertEqual(self.default_map['twitter']['finagle']['DEFAULT'], 'a_bird_name')
+    self.assertEqual(len(default['twitter']['finagle']), 1)
+    self.assertIn('DEFAULT', default['twitter']['finagle'])
+    self.assertEqual(default['twitter']['finagle']['DEFAULT'], 'a_bird_name')
 
