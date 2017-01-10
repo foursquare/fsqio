@@ -16,9 +16,10 @@ from itertools import chain
 import json
 import os
 import re
-from zipfile import ZipFile
+from zipfile import BadZipfile, ZipFile
 
 from pants.backend.jvm.targets.jar_library import JarLibrary
+from pants.base.exceptions import TaskError
 from pants.invalidation.cache_manager import VersionedTargetSet
 from pants.task.task import Task
 from pants.util.dirutil import safe_mkdir
@@ -48,22 +49,35 @@ class MapThirdPartyJarSymbols(Task):
   CLASS_NAME_RE = re.compile(r'[a-zA-Z]\w*')
 
   def fully_qualified_classes_from_jar(self, jar_abspath):
-    with closing(ZipFile(jar_abspath)) as dep_zip:
-      for qualified_file_name in dep_zip.namelist():
-        match = self.CLASSFILE_RE.match(qualified_file_name)
-        if match is not None:
-          file_part = match.groupdict()['file_part']
-          path_parts = match.groupdict()['path_parts']
-          path_parts = filter(None, path_parts.split('/'))
-          package = '.'.join(path_parts)
-          non_anon_file_part = file_part.split('$$')[0]
-          nested_classes = non_anon_file_part.split('$')
-          for i in range(len(nested_classes)):
-            if not self.CLASS_NAME_RE.match(nested_classes[i]):
-              break
-            nested_class_name = '.'.join(nested_classes[:i + 1])
-            fully_qualified_class = '.'.join([package, nested_class_name])
-            yield fully_qualified_class
+    jar_contents = self._dump_jar_contents(jar_abspath)
+    classlist = set()
+    for qualified_file_name in self._dump_jar_contents(jar_abspath):
+      match = self.CLASSFILE_RE.match(qualified_file_name)
+      if match is not None:
+        file_part = match.groupdict()['file_part']
+        path_parts = match.groupdict()['path_parts']
+        path_parts = filter(None, path_parts.split('/'))
+        package = '.'.join(path_parts)
+        non_anon_file_part = file_part.split('$$')[0]
+        nested_classes = non_anon_file_part.split('$')
+        for i in range(len(nested_classes)):
+          if not self.CLASS_NAME_RE.match(nested_classes[i]):
+            break
+          nested_class_name = '.'.join(nested_classes[:i + 1])
+          fully_qualified_class = '.'.join([package, nested_class_name])
+          classlist.add(fully_qualified_class)
+    return classlist
+
+  def _dump_jar_contents(self, jar_abspath):
+    # TODO(mateo): Should convert to context.util.open_zip which, it turns out, is pretty damn similar to this method.
+    try:
+      with closing(ZipFile(jar_abspath)) as dep_zip:
+        return dep_zip.namelist()
+    except BadZipfile as e:
+      raise TaskError(
+        "Could not unzip jar file: {}\nYou may have a corrupted file. Delete it and try again: {}"
+        .format(e, os.path.realpath(jar_abspath))
+      )
 
   def execute(self):
     products = self.context.products
@@ -83,7 +97,7 @@ class MapThirdPartyJarSymbols(Task):
         for jar_path in sorted(all_jars):
           if os.path.splitext(jar_path)[1] != '.jar':
             continue
-          fully_qualified_classes = list(set(self.fully_qualified_classes_from_jar(jar_path)))
+          fully_qualified_classes = list(self.fully_qualified_classes_from_jar(jar_path))
           calculated_analysis['jar_to_symbols_exported'][jar_path] = {
             'fully_qualified_classes': fully_qualified_classes,
           }
