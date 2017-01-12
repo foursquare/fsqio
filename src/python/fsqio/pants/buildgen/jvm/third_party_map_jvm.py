@@ -190,6 +190,7 @@ jvm_third_party_map = {
     },
     'twitter': {
       'algebird': 'algebird',
+      'chill': 'chill',
       'common': 'zookeeper-lock',
       'concurrent': 'twitter-util',
       'conversions': 'twitter-util',
@@ -208,7 +209,10 @@ jvm_third_party_map = {
       'ostrich': 'ostrich',
       'parrot': 'iago',
       'penguin': 'korean-text',
-      'scalding': 'scalding',
+      'scalding': {
+        'platform': 'scalding-hadoop-test',
+        'DEFAULT': 'scalding',
+      },
       'thrift': {
         'ServiceInstance': 'zookeeper-lock',
       },
@@ -229,6 +233,9 @@ jvm_third_party_map = {
   'de': {
     'bwaldvogel': {
       'liblinear': 'liblinear',
+    },
+    'javakaffee': {
+      'kryoserializers': 'kryo-serializers',
     },
     'micromata': {
       'opengis': 'JavaAPIforKml'

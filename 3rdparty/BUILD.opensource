@@ -767,6 +767,28 @@ jar_library(
 )
 
 jar_library(
+  name = 'chill',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    sjar(org = 'com.twitter', name = 'chill', rev = '0.5.2'),
+  ],
+)
+
+jar_library(
+  name = 'kryo-serializers',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'de.javakaffee', name = 'kryo-serializers', rev = '0.41'),
+  ],
+)
+
+jar_library(
   name = 'scopt',
   tags = [
     'opensource',
