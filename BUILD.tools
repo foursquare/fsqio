@@ -1,0 +1,5 @@
+# coding=utf-8
+# Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
+
+# Mock BUILD.tools dropped due to assumption by the upstream Pants test-infra.
+# https://github.com/pantsbuild/pants/issues/4179
