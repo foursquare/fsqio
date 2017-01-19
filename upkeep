@@ -106,7 +106,7 @@ case "${upkeep_args[0]}" in
   "run" )
     script_name="${upkeep_args[1]}"
     # The script can be ${script_name}.sh under <xyz>/upkeep/scripts or be a full file path relative to the BUILD_ROOT.
-    action=$(find_upkeep_file "scripts" "${script_name}.sh") || action="${BUILD_ROOT}/${script_name}"
+    action=$(find_upkeep_file "scripts" "${script_name}") || action="${BUILD_ROOT}/${script_name}"
     [ -f "${action}" ] || exit_with_failure "Could not find matching script: ${script_name}"
 
     args=( "${upkeep_args[@]:2}" )
