@@ -2,10 +2,6 @@ package io.fsq.twofishes.indexer.output
 
 import com.mongodb.Bytes
 import com.mongodb.casbah.Imports._
-import com.novus.salat._
-import com.novus.salat.annotations._
-import com.novus.salat.dao._
-import com.novus.salat.global._
 import io.fsq.common.scala.Identity._
 import io.fsq.twofishes.core.Indexes
 import io.fsq.twofishes.indexer.mongo.MongoGeocodeDAO
@@ -13,6 +9,10 @@ import io.fsq.twofishes.indexer.util.SlugEntryMap
 import io.fsq.twofishes.util.StoredFeatureId
 import java.io._
 import org.apache.hadoop.hbase.util.Bytes._
+import salat._
+import salat.annotations._
+import salat.dao._
+import salat.global._
 import scala.collection.JavaConverters._
 
 class IdIndexer(

@@ -2,11 +2,11 @@
 package io.fsq.twofishes.indexer.mongo
 
 import com.mongodb.casbah.Imports._
-import com.novus.salat._
-import com.novus.salat.annotations._
-import com.novus.salat.dao._
-import com.novus.salat.global._
 import io.fsq.twofishes.util.StoredFeatureId
+import salat._
+import salat.annotations._
+import salat.dao._
+import salat.global._
 
 case class NameIndex(
   name: String,
@@ -27,7 +27,7 @@ case class NameIndex(
 object NameIndexDAO extends SalatDAO[NameIndex, String](
   collection = MongoIndexerConnection()("geocoder")("name_index")) {
   def makeIndexes() {
-    collection.ensureIndex(DBObject("name" -> 1, "excludeFromPrefixIndex" -> 1, "pop" -> -1))
-    collection.ensureIndex(DBObject("fid" -> 1, "lang" -> 1, "name" -> 1))
+    collection.createIndex(DBObject("name" -> 1, "excludeFromPrefixIndex" -> 1, "pop" -> -1))
+    collection.createIndex(DBObject("fid" -> 1, "lang" -> 1, "name" -> 1))
   }
 }

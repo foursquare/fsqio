@@ -2,15 +2,15 @@
 package io.fsq.twofishes.indexer.mongo
 
 import com.mongodb.casbah.Imports._
-import com.novus.salat.dao.SalatDAO
-import com.novus.salat.global._
 import io.fsq.twofishes.indexer.util.GeocodeRecord
+import salat.dao.SalatDAO
+import salat.global._
 
 object MongoGeocodeDAO extends SalatDAO[GeocodeRecord, ObjectId](
   collection = MongoIndexerConnection()("geocoder")("features")) {
   def makeIndexes() {
-    collection.ensureIndex(DBObject("hasPoly" -> -1))
-    collection.ensureIndex(DBObject("loc" -> "2dsphere", "_woeType" -> -1))
-    collection.ensureIndex(DBObject("polyId" -> 1))
+    collection.createIndex(DBObject("hasPoly" -> -1))
+    collection.createIndex(DBObject("loc" -> "2dsphere", "_woeType" -> -1))
+    collection.createIndex(DBObject("polyId" -> 1))
   }
 }

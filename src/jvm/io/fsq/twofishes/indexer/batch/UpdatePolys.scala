@@ -2,14 +2,13 @@
 package io.fsq.twofishes.indexer.batch
 
 import com.mongodb.casbah.Imports._
-import com.novus.salat._
-import com.novus.salat.annotations._
-import com.novus.salat.dao._
-import com.novus.salat.global._
 import io.fsq.twofishes.gen._
 import io.fsq.twofishes.indexer.importers.geonames._
 import io.fsq.twofishes.indexer.mongo.MongoGeocodeStorageService
-import io.fsq.twofishes.util.GeonamesNamespace
+import salat._
+import salat.annotations._
+import salat.dao._
+import salat.global._
 
 object UpdatePolys {
   def main(args: Array[String]) {

@@ -8,7 +8,6 @@ scala_library(
     '3rdparty:salat',
     'src/jvm/io/fsq/twofishes/indexer/importers/geonames',
     'src/jvm/io/fsq/twofishes/indexer/mongo',
-    'src/jvm/io/fsq/twofishes/util',
     'src/thrift/io/fsq/twofishes',
   ],
 )

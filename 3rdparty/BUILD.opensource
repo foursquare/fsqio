@@ -68,7 +68,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.mongodb', name = 'casbah-core', rev = '2.7.5'),
+    sjar(org = 'org.mongodb', name = 'casbah-core', rev = '3.1.1'),
   ],
   dependencies = [
     ':mongo-java-driver-unpacked',
@@ -644,7 +644,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.novus', name = 'salat', rev = '1.9.9')
+    sjar(org = 'com.github.salat', name = 'salat', rev = '1.10.0')
   ]
 )
 

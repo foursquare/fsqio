@@ -2,11 +2,11 @@
 package io.fsq.twofishes.indexer.mongo
 
 import com.mongodb.casbah.Imports._
-import com.novus.salat._
-import com.novus.salat.annotations._
-import com.novus.salat.dao._
-import com.novus.salat.global._
 import io.fsq.twofishes.gen.GeocodePoint
+import salat._
+import salat.annotations._
+import salat.dao._
+import salat.global._
 
 case class RevGeoIndex(
   cellid: Long,
@@ -25,6 +25,6 @@ case class RevGeoIndex(
 object RevGeoIndexDAO extends SalatDAO[RevGeoIndex, String](
   collection = MongoIndexerConnection()("geocoder")("revgeo_index")) {
   def makeIndexes() {
-    collection.ensureIndex(DBObject("cellid" -> -1))
+    collection.createIndex(DBObject("cellid" -> -1))
   }
 }

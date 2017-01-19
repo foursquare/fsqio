@@ -2,10 +2,6 @@ package io.fsq.twofishes.indexer.output
 
 import com.mongodb.Bytes
 import com.mongodb.casbah.Imports._
-import com.novus.salat._
-import com.novus.salat.annotations._
-import com.novus.salat.dao._
-import com.novus.salat.global._
 import com.twitter.util.{Await, Future, FuturePool}
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.indexer.mongo.MongoGeocodeDAO
@@ -14,6 +10,10 @@ import io.fsq.twofishes.util.DurationUtils
 import java.io._
 import java.util.concurrent.{CountDownLatch, Executors}
 import org.apache.hadoop.hbase.util.Bytes._
+import salat._
+import salat.annotations._
+import salat.dao._
+import salat.global._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.HashMap
 

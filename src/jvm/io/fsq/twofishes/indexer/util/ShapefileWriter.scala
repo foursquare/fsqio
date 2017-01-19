@@ -4,10 +4,10 @@
 
 // import io.fsq.twofishes.indexer.mongo.MongoGeocodeDAO
 // import com.mongodb.casbah.Imports._
-// import com.novus.salat._
-// import com.novus.salat.annotations._
-// import com.novus.salat.dao._
-// import com.novus.salat.global._
+// import salat._
+// import salat.annotations._
+// import salat.dao._
+// import salat.global._
 // import com.vividsolutions.jts.geom.{GeometryFactory, MultiPolygon, Polygon}
 // import com.vividsolutions.jts.io.WKBReader
 // import java.io.File

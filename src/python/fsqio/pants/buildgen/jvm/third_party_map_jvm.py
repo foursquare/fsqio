@@ -175,7 +175,6 @@ jvm_third_party_map = {
       }
     },
     'mysql': 'mysql',
-    'novus': 'salat',
     'opencsv': 'opencsv',
     'rockymadden': 'rockymadden',
     'thoughtworks': 'SKIP',
@@ -526,6 +525,7 @@ jvm_third_party_map = {
       'jedis': 'jedis',
     },
   },
+  'salat': 'salat',
   'scala': {
     'util': {
       'parsing': 'scala-parser-combinators',

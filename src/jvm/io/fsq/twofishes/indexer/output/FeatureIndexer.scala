@@ -2,10 +2,6 @@ package io.fsq.twofishes.indexer.output
 
 import com.mongodb.Bytes
 import com.mongodb.casbah.Imports._
-import com.novus.salat._
-import com.novus.salat.annotations._
-import com.novus.salat.dao._
-import com.novus.salat.global._
 import com.vividsolutions.jts.io.WKBReader
 import io.fsq.common.scala.Identity._
 import io.fsq.twofishes.core.Indexes
@@ -15,10 +11,14 @@ import io.fsq.twofishes.indexer.util.GeocodeRecord
 import io.fsq.twofishes.util.{GeoTools, GeometryUtils, StoredFeatureId}
 import java.io._
 import org.apache.hadoop.hbase.util.Bytes._
+import salat._
+import salat.annotations._
+import salat.dao._
+import salat.global._
 import scala.collection.JavaConverters._
 
 class FeatureIndexer(
-  override val basepath: String, 
+  override val basepath: String,
   override val fidMap: FidMap,
   polygonMap: Map[ObjectId, List[(Long, YahooWoeType)]]
 ) extends Indexer {
@@ -28,9 +28,9 @@ class FeatureIndexer(
   override val outputs = Seq(index)
 
   def makeGeocodeRecordWithoutGeometry(g: GeocodeRecord, poly: Option[PolygonIndex]): GeocodeServingFeature = {
-    val fullFeature = poly.map(p => 
+    val fullFeature = poly.map(p =>
         g.copy(
-          polygon = Some(p.polygon), 
+          polygon = Some(p.polygon),
           polygonSource = Some(p.source))
         ).getOrElse(g).toGeocodeServingFeature()
 

@@ -3,12 +3,12 @@ package io.fsq.twofishes.indexer.mongo
 
 import com.mongodb.{Bytes, DuplicateKeyException}
 import com.mongodb.casbah.Imports._
-import com.novus.salat._
-import com.novus.salat.annotations._
-import com.novus.salat.dao._
-import com.novus.salat.global._
 import io.fsq.twofishes.indexer.util.{BoundingBox, DisplayName, GeocodeRecord}
 import io.fsq.twofishes.util.StoredFeatureId
+import salat._
+import salat.annotations._
+import salat.dao._
+import salat.global._
 
 class MongoGeocodeStorageService extends GeocodeStorageWriteService {
   def getById(id: StoredFeatureId): Iterator[GeocodeRecord] = {
@@ -34,7 +34,10 @@ class MongoGeocodeStorageService extends GeocodeStorageWriteService {
       try {
         insert(record)
       } catch {
-        case e: DuplicateKeyException => Unit
+        case insertError: SalatInsertError => Option(insertError.getCause) match {
+          case Some(_: DuplicateKeyException) => ()
+          case _ => throw insertError
+        }
       }
     })
   }

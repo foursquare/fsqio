@@ -6,7 +6,6 @@ import com.foursquare.geo.quadtree.CountryRevGeo
 import com.ibm.icu.text.Transliterator
 import com.mongodb.{Bytes, MongoException}
 import com.mongodb.casbah.Imports._
-import com.novus.salat.global._
 import com.rockymadden.stringmetric.similarity.JaroWinklerMetric
 import com.rockymadden.stringmetric.transform._
 import com.twitter.ostrich.stats.Stats
@@ -28,6 +27,7 @@ import java.nio.charset.Charset
 import org.bson.types.ObjectId
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import salat.global._
 import scala.collection.JavaConverters._
 
 object LanguageDetector {
