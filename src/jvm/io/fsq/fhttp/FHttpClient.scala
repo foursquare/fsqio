@@ -11,10 +11,11 @@ import com.twitter.util.Future
 import org.jboss.netty.handler.codec.http._
 
 
-class FHttpClient ( val name: String,
-                    val hostPort: String, // host:port
-                    builder: ClientBuilder[HttpRequest, HttpResponse, Nothing, Yes, Yes] =
-                      ClientBuilder().codec(Http()).tcpConnectTimeout(1.second).hostConnectionLimit(1)) {
+class FHttpClient (
+  val name: String,
+  val hostPort: String, // host:port
+  builder: ClientBuilder[HttpRequest, HttpResponse, Nothing, Yes, Yes] =
+    ClientBuilder().codec(Http()).tcpConnectTimeout(1.second).hostConnectionLimit(1)) {
 
   object throwHttpErrorsFilter extends SimpleFilter[HttpRequest, HttpResponse] {
     def apply(request: HttpRequest, service: Service[HttpRequest, HttpResponse]) = {
