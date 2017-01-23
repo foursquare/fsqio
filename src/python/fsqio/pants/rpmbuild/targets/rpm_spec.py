@@ -38,6 +38,12 @@ class RpmSpecTarget(Target):
   def remote_sources(self):
     return self.payload.remote_sources
 
+  @staticmethod
+  def _validate_remote_source(remote_source):
+    return isinstance(remote_source, string_types) or \
+           (isinstance(remote_source, tuple) and len(remote_source) == 2 and
+            isinstance(remote_source[0], string_types) and isinstance(remote_source[1], string_types))
+
   def __init__(self,
                address=None,
                spec=None,
@@ -61,8 +67,8 @@ class RpmSpecTarget(Target):
     if spec and not isinstance(spec, string_types):
       raise TargetDefinitionException(self, 'spec must be a single relative file path')
     remote_sources = remote_sources or []
-    if not isinstance(remote_sources, list) or any([not isinstance(x, string_types) for x in remote_sources]):
-      raise TargetDefinitionException(self, 'remote_sources must be a list of strings')
+    if not isinstance(remote_sources, list) or any([not self._validate_remote_source(x) for x in remote_sources]):
+      raise TargetDefinitionException(self, 'remote_sources must be a list of either a string or tuple of two strings')
 
     payload = payload or Payload()
     payload.add_fields({

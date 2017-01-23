@@ -25,6 +25,7 @@ from pants.task.task import Task
 from pants.util.contextutil import temporary_dir
 from pants.util.dirutil import safe_mkdir
 from pkg_resources import resource_string
+from six import string_types
 
 from fsqio.pants.rpmbuild.targets.rpm_spec import RpmSpecTarget
 
@@ -131,7 +132,14 @@ class RpmbuildTask(Task):
       })
 
     # Setup information on remote sources.
-    remote_sources = [{'url': rs, 'basename': os.path.basename(rs)} for rs in target.remote_sources]
+    def convert_remote_source(remote_source):
+      if isinstance(remote_source, string_types):
+        return {'url': remote_source, 'basename': os.path.basename(remote_source)}
+      elif isinstance(remote_source, tuple):
+        return {'url': remote_source[0], 'basename': remote_source[1]}
+      else:
+        raise ValueError('invalid remote_source entry: {}'.format(remote_source))
+    remote_sources = [convert_remote_source(rs) for rs in target.remote_sources]
 
     # Write the entry point script.
     entrypoint_generator = Generator(
