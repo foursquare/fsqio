@@ -63,9 +63,9 @@ class RpmSpecTarget(Target):
     :type sources: ``Fileset`` or list of strings. Paths are relative to the
       BUILD file's directory.
     :param remote_sources: URLs for files to download and place in the rpmbuild SOURCES directory
-    :type remote_sources: list of strings
+    :type remote_sources: list[str or tuple(str, str)]
     :param defines: macro definitions to pass into rpmbuild
-    :type defines: dictionary
+    :type defines: dict[str, str]
     """
 
     self.address = address
