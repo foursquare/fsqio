@@ -141,12 +141,19 @@ class RpmbuildTask(Task):
         raise ValueError('invalid remote_source entry: {}'.format(remote_source))
     remote_sources = [convert_remote_source(rs) for rs in target.remote_sources]
 
+    # Put together rpmbuild options for defines.
+    rpmbuild_options = ''
+    for key in sorted(target.defines.keys()):
+      quoted_value = target.defines[key].replace("\\", "\\\\").replace("\"", "\\\"")
+      rpmbuild_options += ' --define="%{} {}"'.format(key, quoted_value)
+
     # Write the entry point script.
     entrypoint_generator = Generator(
       resource_string(__name__, 'build_rpm.sh.mustache'),
       spec_basename=spec_basename,
       pre_commands=[{'command': '/bin/bash -i'}] if self.get_options().shell_before else [],
       post_commands=[{'command': '/bin/bash -i'}] if self.get_options().shell_after else [],
+      rpmbuild_options=rpmbuild_options,
     )
     entrypoint_path = os.path.join(build_dir, 'build_rpm.sh')
     with open(entrypoint_path, 'wb') as f:

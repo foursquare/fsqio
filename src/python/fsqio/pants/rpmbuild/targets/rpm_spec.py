@@ -38,6 +38,10 @@ class RpmSpecTarget(Target):
   def remote_sources(self):
     return self.payload.remote_sources
 
+  @property
+  def defines(self):
+    return self.payload.defines
+
   @staticmethod
   def _validate_remote_source(remote_source):
     return isinstance(remote_source, string_types) or \
@@ -49,6 +53,7 @@ class RpmSpecTarget(Target):
                spec=None,
                sources=None,
                remote_sources=None,
+               defines=None,
                payload=None,
                **kwargs):
     """
@@ -59,6 +64,8 @@ class RpmSpecTarget(Target):
       BUILD file's directory.
     :param remote_sources: URLs for files to download and place in the rpmbuild SOURCES directory
     :type remote_sources: list of strings
+    :param defines: macro definitions to pass into rpmbuild
+    :type defines: dictionary
     """
 
     self.address = address
@@ -69,12 +76,16 @@ class RpmSpecTarget(Target):
     remote_sources = remote_sources or []
     if not isinstance(remote_sources, list) or any([not self._validate_remote_source(x) for x in remote_sources]):
       raise TargetDefinitionException(self, 'remote_sources must be a list of either a string or tuple of two strings')
+    defines = defines or {}
+    if not isinstance(defines, dict):
+      raise TargetDefinitionException(self, 'defines must be a dictionary')
 
     payload = payload or Payload()
     payload.add_fields({
       'rpm_spec': self.create_sources_field([spec], address.spec_path, key_arg='rpm_spec'),
       'sources': self.create_sources_field(sources, address.spec_path, key_arg='sources'),
       'remote_sources': PrimitiveField(remote_sources),
+      'defines': PrimitiveField(defines),
     })
 
     # Ensure that only a single spec file was resolved.
