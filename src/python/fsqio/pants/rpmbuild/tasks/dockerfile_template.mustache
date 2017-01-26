@@ -17,7 +17,7 @@ RUN rpm --rebuilddb && \
 
 {{#build_reqs}}
 RUN rpm --rebuilddb && \
-    yum install -y {{{reqs}}}
+    yum install -y --nogpgcheck {{{reqs}}}
 {{/build_reqs}}
 
 COPY {{{spec_basename}}} /home/rpmuser/rpmbuild/SPECS/{{{spec_basename}}}
