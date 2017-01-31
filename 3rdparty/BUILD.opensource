@@ -392,7 +392,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'joda-time', name = 'joda-time', rev = '2.9.6'),
+    jar(org = 'joda-time', name = 'joda-time', rev = '2.9.7'),
     jar(org = 'org.joda', name = 'joda-convert', rev = '1.2')
   ]
 )
