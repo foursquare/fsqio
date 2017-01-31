@@ -46,7 +46,7 @@ target(name='scalac',
 jar_library(
   name = 'ammonite',
   jars = [
-    jar(org='com.lihaoyi', name = 'ammonite_2.11.8', rev='COMMIT-30982ec')
+    jar(org='com.lihaoyi', name = 'ammonite_2.11.8', rev='0.8.2')
   ],
   tags = [
     'opensource',
