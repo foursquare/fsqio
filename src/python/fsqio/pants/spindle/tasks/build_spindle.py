@@ -105,7 +105,11 @@ class BuildSpindle(SpindleTask):
         vt = targets[0]
         invalid_vts_by_target = {vt.target: vt}
         if not vt.valid:
-          args = ['--build-spindle-shelled', 'bundle', '--bundle-jvm-deployjar']
+          # This disables the
+          args = [
+            '--no-cache-read', '--build-spindle-shelled', 'bundle', '--bundle-jvm-deployjar',
+            '--cache-bundle-jvm-read-from=[]', '--cache-bundle-jvm-write-to=[]',
+          ]
           args.append(self.get_options().spindle_codegen_binary)
           results = self.run_pants_no_lock(args, workunit_name='spindle-build')
 
