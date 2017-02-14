@@ -2,10 +2,10 @@
 package io.fsq.twofishes.indexer.mongo
 
 import com.mongodb.casbah.Imports._
+import io.fsq.twofishes.indexer.mongo.salatfork.SalatDAO
 import io.fsq.twofishes.util.StoredFeatureId
 import salat._
 import salat.annotations._
-import salat.dao._
 import salat.global._
 
 case class NameIndex(

@@ -2,8 +2,8 @@
 package io.fsq.twofishes.indexer.mongo
 
 import com.mongodb.casbah.Imports._
+import io.fsq.twofishes.indexer.mongo.salatfork.SalatDAO
 import io.fsq.twofishes.indexer.util.GeocodeRecord
-import salat.dao.SalatDAO
 import salat.global._
 
 object MongoGeocodeDAO extends SalatDAO[GeocodeRecord, ObjectId](

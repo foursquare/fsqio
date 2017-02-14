@@ -8,6 +8,7 @@ scala_library(
     '3rdparty:casbah',
     '3rdparty:mongodb-drivers',
     '3rdparty:salat',
+    'src/jvm/io/fsq/twofishes/indexer/mongo/salatfork',
     'src/jvm/io/fsq/twofishes/indexer/util',
     'src/jvm/io/fsq/twofishes/util',
     'src/thrift/io/fsq/twofishes',

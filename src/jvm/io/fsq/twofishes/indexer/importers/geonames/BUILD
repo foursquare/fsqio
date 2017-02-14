@@ -26,6 +26,7 @@ scala_library(
     'src/jvm/io/fsq/twofishes/country',
     'src/jvm/io/fsq/twofishes/indexer/data:langdetect',
     'src/jvm/io/fsq/twofishes/indexer/mongo',
+    'src/jvm/io/fsq/twofishes/indexer/mongo/salatfork',
     'src/jvm/io/fsq/twofishes/indexer/output',
     'src/jvm/io/fsq/twofishes/indexer/util',
     'src/jvm/io/fsq/twofishes/util',
