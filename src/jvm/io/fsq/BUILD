@@ -205,6 +205,7 @@ pom_target(
     'src/jvm/io/fsq/twofishes/indexer/data:langdetect',
     'src/jvm/io/fsq/twofishes/indexer/importers/geonames',
     'src/jvm/io/fsq/twofishes/indexer/mongo',
+    'src/jvm/io/fsq/twofishes/indexer/mongo/salatfork',
     'src/jvm/io/fsq/twofishes/indexer/output',
     'src/jvm/io/fsq/twofishes/indexer/scalding',
     'src/jvm/io/fsq/twofishes/indexer/scalding/output',

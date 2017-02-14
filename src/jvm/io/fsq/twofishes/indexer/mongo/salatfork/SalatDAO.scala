@@ -1,4 +1,10 @@
 /*
+ * NOTE(jacob): As of Feb 14, 2017 Salat does not have a release version that is compatible
+ *    with 3.X versions of casbah and the mongo-java-driver. Thus we have this fork of
+ *    SalatDAO in the meantime.
+ *
+ *
+ *
  * Copyright (c) 2010 - 2015 Novus Partners, Inc. (http://www.novus.com)
  * Copyright (c) 2015 - 2016 Rose Toomey (https://github.com/rktoomey) and other individual contributors where noted
  *
@@ -25,13 +31,14 @@
  *     StackOverflow:  http://stackoverflow.com/questions/tagged/salat
  *
  */
-package salat.dao
+package io.fsq.twofishes.indexer.mongo.salatfork
 
+import com.mongodb.{DBObject, WriteConcern}
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.MongoCursorBase
 import com.mongodb.casbah.commons.{Logging, MongoDBObject}
-import com.mongodb.{DBObject, WriteConcern}
 import salat._
+import salat.dao._
 
 /**
  * Sample DAO implementation.
@@ -341,22 +348,6 @@ abstract class SalatDAO[ObjectType <: AnyRef, ID <: Any](val collection: MongoCo
   override lazy val description = "SalatDAO[%s,%s](%s)".format(mot.runtimeClass.getSimpleName, mid.runtimeClass.getSimpleName, collection.name)
 
   /**
-   * Checks the "err" field in the write result, or the cached last error.
-   * "There should be no reason to use getError" - we found one.
-   */
-  private def defaultWriteResultErrorCheck(wr: WriteResult) = wr.getError != null || {
-    val lastError = wr.getCachedLastError
-    lastError != null && !lastError.ok()
-  }
-  /**
-   * Safety net for legacy code that is still using MongoConnection instead
-   * of MongoClient, and so will not reliably throw a MongoException.
-   */
-  private def handleLegacyErrors[T](wr: WriteResult, hasError: WriteResult => Boolean = defaultWriteResultErrorCheck _)(failure: => Nothing)(success: => T) = {
-    if (hasError(wr)) failure else success
-  }
-
-  /**
    * @param t instance of ObjectType
    *  @param wc write concern
    *  @return if insert succeeds, ID of inserted object
@@ -364,12 +355,8 @@ abstract class SalatDAO[ObjectType <: AnyRef, ID <: Any](val collection: MongoCo
   def insert(t: ObjectType, wc: WriteConcern) = {
     val dbo = decorateDBO(t)
     try {
-      val wr = collection.insert(dbo, wc)
-      handleLegacyErrors(wr) {
-        throw SalatInsertError(description, collection, wc, wr, List(dbo))
-      } {
-        dbo.getAs[ID]("_id")
-      }
+      collection.insert(dbo, wc)
+      dbo.getAs[ID]("_id")
     }
     catch {
       case mex: MongoException =>
@@ -386,14 +373,10 @@ abstract class SalatDAO[ObjectType <: AnyRef, ID <: Any](val collection: MongoCo
   def insert(docs: Traversable[ObjectType], wc: WriteConcern = defaultWriteConcern) = if (docs.nonEmpty) {
     val dbos = docs.map(decorateDBO(_)).toList
     try {
-      val wr = collection.insert(dbos: _*)
-      handleLegacyErrors(wr) {
-        throw SalatInsertError(description, collection, wc, wr, dbos)
-      } {
-        dbos.map {
-          dbo =>
-            dbo.getAs[ID]("_id") orElse collection.findOne(dbo).flatMap(_.getAs[ID]("_id"))
-        }
+      collection.insert(dbos: _*)
+      dbos.map {
+        dbo =>
+          dbo.getAs[ID]("_id") orElse collection.findOne(dbo).flatMap(_.getAs[ID]("_id"))
       }
     }
     catch {
@@ -433,13 +416,7 @@ abstract class SalatDAO[ObjectType <: AnyRef, ID <: Any](val collection: MongoCo
   def remove(t: ObjectType, wc: WriteConcern) = {
     val dbo = decorateDBO(t)
     try {
-      val wr = collection.remove(dbo, wc)
-
-      handleLegacyErrors(wr) {
-        throw SalatRemoveError(description, collection, wc, wr, List(dbo))
-      } {
-        wr
-      }
+      collection.remove(dbo, wc)
     }
     catch {
       case mex: MongoException =>
@@ -454,13 +431,7 @@ abstract class SalatDAO[ObjectType <: AnyRef, ID <: Any](val collection: MongoCo
    */
   def remove[A <% DBObject](q: A, wc: WriteConcern) = {
     try {
-      val wr = collection.remove(q, wc)
-
-      handleLegacyErrors(wr) {
-        throw SalatRemoveQueryError(description, collection, q, wc, wr)
-      } {
-        wr
-      }
+      collection.remove(q, wc)
     }
     catch {
       case mex: MongoException =>
@@ -495,13 +466,7 @@ abstract class SalatDAO[ObjectType <: AnyRef, ID <: Any](val collection: MongoCo
     val dbo = decorateDBO(t)
 
     try {
-      val wr = collection.save(dbo, wc)
-
-      handleLegacyErrors(wr) {
-        throw SalatSaveError(description, collection, wc, wr, List(dbo))
-      } {
-        wr
-      }
+      collection.save(dbo, wc)
     }
     catch {
       case mex: MongoException => throw SalatSaveError(description, collection, wc, Right(mex), List(dbo))
@@ -518,13 +483,7 @@ abstract class SalatDAO[ObjectType <: AnyRef, ID <: Any](val collection: MongoCo
    */
   def update(q: DBObject, o: DBObject, upsert: Boolean = false, multi: Boolean = false, wc: WriteConcern = defaultWriteConcern): WriteResult = {
     try {
-      val wr = collection.update(decorateQuery(q), o, upsert, multi, wc)
-
-      handleLegacyErrors(wr) {
-        throw SalatDAOUpdateError(description, collection, q, o, wc, wr, upsert, multi)
-      } {
-        wr
-      }
+      collection.update(decorateQuery(q), o, upsert, multi, wc)
     }
     catch {
       case mex: MongoException =>
