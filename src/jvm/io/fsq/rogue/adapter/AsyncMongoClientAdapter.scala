@@ -2,11 +2,13 @@
 
 package io.fsq.rogue.adapter
 
+import com.mongodb.Block
 import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoCollection
 import com.mongodb.client.model.CountOptions
 import io.fsq.common.scala.Identity._
 import org.bson.conversions.Bson
+import scala.collection.mutable.Builder
 
 
 object MongoCallback {
@@ -75,5 +77,43 @@ class AsyncMongoClientAdapter[Document, MetaRecord, Record, Result[_]](
     val callback = callbackFactory.newCallback[Long]
     collection.count(filter, options, callback)
     callback.result
+  }
+
+  override protected def countDistinctImpl(
+    count: => Long,
+    countBlock: Block[Document]
+  )(
+    collection: MongoCollection[Document]
+  )(
+    fieldName: String,
+    filter: Bson
+  ): Result[Long] = {
+    val resultCallback = callbackFactory.newCallback[Long]
+    val queryCallback = new SingleResultCallback[Void] {
+      override def onResult(result: Void, throwable: Throwable): Unit = {
+        resultCallback.onResult(count, throwable)
+      }
+    }
+    collection.distinct(fieldName, filter, collectionFactory.documentClass).forEach(countBlock, queryCallback)
+    resultCallback.result
+  }
+
+  override protected def distinctImpl[FieldType](
+    fieldsBuilder: Builder[FieldType, Seq[FieldType]],
+    appendBlock: Block[Document]
+  )(
+    collection: MongoCollection[Document]
+  )(
+    fieldName: String,
+    filter: Bson
+  ): Result[Seq[FieldType]] = {
+    val resultCallback = callbackFactory.newCallback[Seq[FieldType]]
+    val queryCallback = new SingleResultCallback[Void] {
+      override def onResult(result: Void, throwable: Throwable): Unit = {
+        resultCallback.onResult(fieldsBuilder.result(), throwable)
+      }
+    }
+    collection.distinct(fieldName, filter, collectionFactory.documentClass).forEach(appendBlock, queryCallback)
+    resultCallback.result
   }
 }

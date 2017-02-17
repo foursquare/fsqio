@@ -2,13 +2,17 @@
 
 package io.fsq.rogue.adapter
 
-import com.mongodb.ReadPreference
+import com.mongodb.{Block, ReadPreference}
 import com.mongodb.client.model.CountOptions
 import io.fsq.rogue.{Query, QueryHelpers, RogueException}
 import io.fsq.rogue.MongoHelpers.MongoBuilder
 import org.bson.conversions.Bson
+import scala.collection.mutable.Builder
 
 
+/** TODO(jacob): All of the collection methods implemented here should get rid of the
+  *     option to send down a read preference, and just use the one on the query.
+  */
 abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Record, Result[_]](
   collectionFactory: MongoCollectionFactory[MongoCollection, Document, MetaRecord, Record]
 ) {
@@ -50,8 +54,26 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
     options: CountOptions
   ): Result[Long]
 
-  // TODO(jacob): We should get rid of the option to send down a read preference here and
-  //    just use the one on the query.
+  protected def countDistinctImpl(
+    count: => Long,
+    countBlock: Block[Document]
+  )(
+    collection: MongoCollection[Document]
+  )(
+    fieldName: String,
+    filter: Bson
+  ): Result[Long]
+
+  protected def distinctImpl[FieldType](
+    fieldsBuilder: Builder[FieldType, Seq[FieldType]],
+    appendBlock: Block[Document]
+  )(
+    collection: MongoCollection[Document]
+  )(
+    fieldName: String,
+    filter: Bson
+  ): Result[Seq[FieldType]]
+
   def count[
     M <: MetaRecord
   ](
@@ -74,5 +96,57 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
     runCommand(descriptionFunc, queryClause) {
       countImpl(collection)(condition, options)
     }
+  }
+
+  private def distinctRunner[M <: MetaRecord, T](
+    resultImpl: MongoCollection[Document] => (String, Bson) => Result[T]
+  )(
+    query: Query[M, _, _],
+    fieldName: String,
+    readPreferenceOpt: Option[ReadPreference]
+  ): Result[T] = {
+    val queryClause = QueryHelpers.transformer.transformQuery(query)
+    QueryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
+    val collection = collectionFactory.getMongoCollection(query, readPreferenceOpt)
+    val descriptionFunc = () => MongoBuilder.buildConditionString("distinct", query.collectionName, queryClause)
+    // TODO(jacob): This cast will always succeed, but it should be removed once there is a
+    //    version of MongoBuilder that speaks the new CRUD api.
+    val condition = MongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+
+    runCommand(descriptionFunc, queryClause) {
+      resultImpl(collection)(fieldName, condition)
+    }
+  }
+
+  def countDistinct[M <: MetaRecord, FieldType](
+    query: Query[M, _, _],
+    fieldName: String,
+    readPreferenceOpt: Option[ReadPreference]
+  ): Result[Long] = {
+    var count = 0L
+    val countBlock = new Block[Document] {
+      override def apply(value: Document): Unit = {
+        count += 1
+      }
+    }
+
+    distinctRunner(countDistinctImpl(count, countBlock))(query, fieldName, readPreferenceOpt)
+  }
+
+  // TODO(jacob): Investigate how hard it would be to remove the cast here and instead
+  //    pass down an instance of Class[FieldType] to hand to the driver.
+  def distinct[M <: MetaRecord, FieldType](
+    query: Query[M, _, _],
+    fieldName: String,
+    readPreferenceOpt: Option[ReadPreference]
+  ): Result[Seq[FieldType]] = {
+    val fieldsBuilder = Vector.newBuilder[FieldType]
+    val appendBlock = new Block[Document] {
+      override def apply(value: Document): Unit = {
+        fieldsBuilder += value.asInstanceOf[FieldType]
+      }
+    }
+
+    distinctRunner(distinctImpl(fieldsBuilder, appendBlock))(query, fieldName, readPreferenceOpt)
   }
 }
