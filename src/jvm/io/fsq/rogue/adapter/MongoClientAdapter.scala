@@ -7,7 +7,6 @@ import com.mongodb.client.model.CountOptions
 import io.fsq.rogue.{Query, QueryHelpers, RogueException}
 import io.fsq.rogue.MongoHelpers.MongoBuilder
 import org.bson.conversions.Bson
-import scala.collection.mutable.Builder
 
 
 /** TODO(jacob): All of the collection methods implemented here should get rid of the
@@ -54,25 +53,15 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
     options: CountOptions
   ): Result[Long]
 
-  protected def countDistinctImpl(
-    count: => Long,
-    countBlock: Block[Document]
+  protected def distinctImpl[T](
+    resultAccessor: => T, // call by name
+    accumulator: Block[Document]
   )(
     collection: MongoCollection[Document]
   )(
     fieldName: String,
     filter: Bson
-  ): Result[Long]
-
-  protected def distinctImpl[FieldType](
-    fieldsBuilder: Builder[FieldType, Seq[FieldType]],
-    appendBlock: Block[Document]
-  )(
-    collection: MongoCollection[Document]
-  )(
-    fieldName: String,
-    filter: Bson
-  ): Result[Seq[FieldType]]
+  ): Result[T]
 
   def count[
     M <: MetaRecord
@@ -99,7 +88,8 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
   }
 
   private def distinctRunner[M <: MetaRecord, T](
-    resultImpl: MongoCollection[Document] => (String, Bson) => Result[T]
+    resultAccessor: => T, // call by name
+    accumulator: Block[Document]
   )(
     query: Query[M, _, _],
     fieldName: String,
@@ -114,7 +104,7 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
     val condition = MongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
 
     runCommand(descriptionFunc, queryClause) {
-      resultImpl(collection)(fieldName, condition)
+      distinctImpl(resultAccessor, accumulator)(collection)(fieldName, condition)
     }
   }
 
@@ -124,13 +114,13 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
     readPreferenceOpt: Option[ReadPreference]
   ): Result[Long] = {
     var count = 0L
-    val countBlock = new Block[Document] {
+    val counter = new Block[Document] {
       override def apply(value: Document): Unit = {
         count += 1
       }
     }
 
-    distinctRunner(countDistinctImpl(count, countBlock))(query, fieldName, readPreferenceOpt)
+    distinctRunner(count, counter)(query, fieldName, readPreferenceOpt)
   }
 
   // TODO(jacob): Investigate how hard it would be to remove the cast here and instead
@@ -141,12 +131,12 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
     readPreferenceOpt: Option[ReadPreference]
   ): Result[Seq[FieldType]] = {
     val fieldsBuilder = Vector.newBuilder[FieldType]
-    val appendBlock = new Block[Document] {
+    val appender = new Block[Document] {
       override def apply(value: Document): Unit = {
         fieldsBuilder += value.asInstanceOf[FieldType]
       }
     }
 
-    distinctRunner(distinctImpl(fieldsBuilder, appendBlock))(query, fieldName, readPreferenceOpt)
+    distinctRunner(fieldsBuilder.result(): Seq[FieldType], appender)(query, fieldName, readPreferenceOpt)
   }
 }

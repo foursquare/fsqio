@@ -8,7 +8,6 @@ import com.mongodb.async.client.MongoCollection
 import com.mongodb.client.model.CountOptions
 import io.fsq.common.scala.Identity._
 import org.bson.conversions.Bson
-import scala.collection.mutable.Builder
 
 
 object MongoCallback {
@@ -79,41 +78,22 @@ class AsyncMongoClientAdapter[Document, MetaRecord, Record, Result[_]](
     callback.result
   }
 
-  override protected def countDistinctImpl(
-    count: => Long,
-    countBlock: Block[Document]
+  override protected def distinctImpl[T](
+    resultAccessor: => T, // call by name
+    accumulator: Block[Document]
   )(
     collection: MongoCollection[Document]
   )(
     fieldName: String,
     filter: Bson
-  ): Result[Long] = {
-    val resultCallback = callbackFactory.newCallback[Long]
+  ): Result[T] = {
+    val resultCallback = callbackFactory.newCallback[T]
     val queryCallback = new SingleResultCallback[Void] {
       override def onResult(result: Void, throwable: Throwable): Unit = {
-        resultCallback.onResult(count, throwable)
+        resultCallback.onResult(resultAccessor, throwable)
       }
     }
-    collection.distinct(fieldName, filter, collectionFactory.documentClass).forEach(countBlock, queryCallback)
-    resultCallback.result
-  }
-
-  override protected def distinctImpl[FieldType](
-    fieldsBuilder: Builder[FieldType, Seq[FieldType]],
-    appendBlock: Block[Document]
-  )(
-    collection: MongoCollection[Document]
-  )(
-    fieldName: String,
-    filter: Bson
-  ): Result[Seq[FieldType]] = {
-    val resultCallback = callbackFactory.newCallback[Seq[FieldType]]
-    val queryCallback = new SingleResultCallback[Void] {
-      override def onResult(result: Void, throwable: Throwable): Unit = {
-        resultCallback.onResult(fieldsBuilder.result(), throwable)
-      }
-    }
-    collection.distinct(fieldName, filter, collectionFactory.documentClass).forEach(appendBlock, queryCallback)
+    collection.distinct(fieldName, filter, collectionFactory.documentClass).forEach(accumulator, queryCallback)
     resultCallback.result
   }
 }

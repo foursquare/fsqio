@@ -6,7 +6,6 @@ import com.mongodb.Block
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.CountOptions
 import org.bson.conversions.Bson
-import scala.collection.mutable.Builder
 
 
 object BlockingResult {
@@ -51,29 +50,16 @@ class BlockingMongoClientAdapter[Document, MetaRecord, Record](
     collection.count(filter, options)
   }
 
-  override protected def countDistinctImpl(
-    count: => Long,
-    countBlock: Block[Document]
+  override protected def distinctImpl[T](
+    resultAccessor: => T, // call by name
+    accumulator: Block[Document]
   )(
     collection: MongoCollection[Document]
   )(
     fieldName: String,
     filter: Bson
-  ): BlockingResult[Long] = {
-    collection.distinct(fieldName, filter, collectionFactory.documentClass).forEach(countBlock)
-    count
-  }
-
-  override protected def distinctImpl[FieldType](
-    fieldsBuilder: Builder[FieldType, Seq[FieldType]],
-    appendBlock: Block[Document]
-  )(
-    collection: MongoCollection[Document]
-  )(
-    fieldName: String,
-    filter: Bson
-  ): BlockingResult[Seq[FieldType]] = {
-    collection.distinct(fieldName, filter, collectionFactory.documentClass).forEach(appendBlock)
-    fieldsBuilder.result()
+  ): BlockingResult[T] = {
+    collection.distinct(fieldName, filter, collectionFactory.documentClass).forEach(accumulator)
+    resultAccessor
   }
 }
