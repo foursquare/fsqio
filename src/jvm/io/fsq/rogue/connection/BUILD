@@ -6,5 +6,6 @@ scala_library(
   dependencies = [
     '3rdparty:lift-util',
     '3rdparty:mongodb-drivers',
+    'src/jvm/io/fsq/common/scala',
   ],
 )

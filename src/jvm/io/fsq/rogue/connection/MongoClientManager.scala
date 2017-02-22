@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.connection
 
-import com.mongodb.{MongoException, ReadPreference}
+import com.mongodb.{MongoException, ReadPreference, WriteConcern}
 import java.util.concurrent.ConcurrentHashMap
 import net.liftweb.util.ConnectionIdentifier
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
@@ -34,7 +34,8 @@ abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]
     db: MongoDatabase,
     name: String,
     documentClass: Class[Document],
-    readPreferenceOpt: Option[ReadPreference]
+    readPreferenceOpt: Option[ReadPreference],
+    writeConcernOpt: Option[WriteConcern]
   ): MongoCollection[Document]
 
   def defineDb(
@@ -68,12 +69,19 @@ abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]
     name: ConnectionIdentifier,
     collectionName: String,
     documentClass: Class[Document],
-    readPreferenceOpt: Option[ReadPreference]
+    readPreferenceOpt: Option[ReadPreference] = None,
+    writeConcernOpt: Option[WriteConcern] = None
   )(
     f: MongoCollection[Document] => T
   ): T = {
     use(name)(db => {
-      val collection = getCollection(db, collectionName, documentClass, readPreferenceOpt)
+      val collection = getCollection(
+        db,
+        collectionName,
+        documentClass,
+        readPreferenceOpt,
+        writeConcernOpt
+      )
       f(collection)
     })
   }

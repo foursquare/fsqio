@@ -41,6 +41,10 @@ class BlockingMongoClientAdapter[Document, MetaRecord, Record](
 
   override def wrapEmptyResult[T](value: T): BlockingResult[T] = new BlockingResult[T](value)
 
+  override protected def getCollectionName(collection: MongoCollection[Document]): String = {
+    collection.getNamespace.getCollectionName
+  }
+
   override protected def countImpl(
     collection: MongoCollection[Document]
   )(
@@ -61,5 +65,15 @@ class BlockingMongoClientAdapter[Document, MetaRecord, Record](
   ): BlockingResult[T] = {
     collection.distinct(fieldName, filter, collectionFactory.documentClass).forEach(accumulator)
     resultAccessor
+  }
+
+  override protected def insertImpl[R <: Record](
+    collection: MongoCollection[Document]
+  )(
+    record: R,
+    document: Document
+  ): BlockingResult[R] = {
+    collection.insertOne(document)
+    record
   }
 }

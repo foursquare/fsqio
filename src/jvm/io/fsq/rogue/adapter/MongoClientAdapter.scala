@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.adapter
 
-import com.mongodb.{Block, ReadPreference}
+import com.mongodb.{Block, ReadPreference, WriteConcern}
 import com.mongodb.client.model.CountOptions
 import io.fsq.rogue.{Query, QueryHelpers, RogueException}
 import io.fsq.rogue.MongoHelpers.MongoBuilder
@@ -28,7 +28,7 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
     // Use nanoTime instead of currentTimeMillis to time the query since
     // currentTimeMillis only has 10ms granularity on many systems.
     val start = System.nanoTime
-    val instanceName: String = collectionFactory.getInstanceName(query)
+    val instanceName: String = collectionFactory.getInstanceNameFromQuery(query)
     // Note that it's expensive to call descriptionFunc, it does toString on the Query
     // the logger methods are call by name
     try {
@@ -45,6 +45,13 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
       QueryHelpers.logger.log(query, instanceName, descriptionFunc(), (System.nanoTime - start) / 1000000)
     }
   }
+
+  /* TODO(jacob): Can we move this to a better place? It needs access to the
+   *    implementation of MongoCollection used, so currently our options are either
+   *    MongoClientAdapter or MongoClientManager. Perhaps we want to abstract out some
+   *    kind of utility helper?
+   */
+  protected def getCollectionName(collection: MongoCollection[Document]): String
 
   protected def countImpl(
     collection: MongoCollection[Document]
@@ -63,6 +70,13 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
     filter: Bson
   ): Result[T]
 
+  protected def insertImpl[R <: Record](
+    collection: MongoCollection[Document]
+  )(
+    record: R,
+    document: Document
+  ): Result[R]
+
   def count[
     M <: MetaRecord
   ](
@@ -71,7 +85,7 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
   ): Result[Long] = {
     val queryClause = QueryHelpers.transformer.transformQuery(query)
     QueryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
-    val collection = collectionFactory.getMongoCollection(query, readPreferenceOpt)
+    val collection = collectionFactory.getMongoCollectionFromQuery(query, readPreferenceOpt)
     val descriptionFunc = () => MongoBuilder.buildConditionString("count", query.collectionName, queryClause)
     // TODO(jacob): This cast will always succeed, but it should be removed once there is a
     //    version of MongoBuilder that speaks the new CRUD api.
@@ -97,7 +111,7 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
   ): Result[T] = {
     val queryClause = QueryHelpers.transformer.transformQuery(query)
     QueryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
-    val collection = collectionFactory.getMongoCollection(query, readPreferenceOpt)
+    val collection = collectionFactory.getMongoCollectionFromQuery(query, readPreferenceOpt)
     val descriptionFunc = () => MongoBuilder.buildConditionString("distinct", query.collectionName, queryClause)
     // TODO(jacob): This cast will always succeed, but it should be removed once there is a
     //    version of MongoBuilder that speaks the new CRUD api.
@@ -138,5 +152,22 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
     }
 
     distinctRunner(fieldsBuilder.result(): Seq[FieldType], appender)(query, fieldName, readPreferenceOpt)
+  }
+
+  def insert[R <: Record](
+    record: R,
+    document: Document,
+    writeConcernOpt: Option[WriteConcern]
+  ): Result[R] = {
+    val collection = collectionFactory.getMongoCollectionFromRecord(record, writeConcernOpt = writeConcernOpt)
+    val collectionName = getCollectionName(collection)
+    val instanceName = collectionFactory.getInstanceNameFromRecord(record)
+    QueryHelpers.logger.onExecuteWriteCommand(
+      "insert",
+      collectionName,
+      instanceName,
+      collectionFactory.documentToString(document),
+      insertImpl(collection)(record, document)
+    )
   }
 }

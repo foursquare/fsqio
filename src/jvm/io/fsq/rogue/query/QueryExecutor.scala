@@ -14,7 +14,8 @@ import io.fsq.rogue.types.MongoDisallowed
   */
 class QueryExecutor[MongoCollection[_], Document, MetaRecord, Record, Result[_]](
   adapter: MongoClientAdapter[MongoCollection, Document, MetaRecord, Record, Result],
-  optimizer: QueryOptimizer
+  optimizer: QueryOptimizer,
+  serializer: RogueSerializer[Record, Document]
 ) extends Rogue {
 
   def defaultWriteConcern: WriteConcern = QueryHelpers.config.defaultWriteConcern
@@ -62,5 +63,12 @@ class QueryExecutor[MongoCollection[_], Document, MetaRecord, Record, Result[_]]
     } else {
       adapter.distinct(query, field(query.meta).name, readPreferenceOpt)
     }
+  }
+
+  def insert[R <: Record](
+    record: R,
+    writeConcern: WriteConcern = defaultWriteConcern
+  ): Result[R] = {
+    adapter.insert(record, serializer.writeToDocument(record), Some(writeConcern))
   }
 }

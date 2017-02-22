@@ -67,6 +67,10 @@ class AsyncMongoClientAdapter[Document, MetaRecord, Record, Result[_]](
     callbackFactory.wrapEmptyResult(value)
   }
 
+  override protected def getCollectionName(collection: MongoCollection[Document]): String = {
+    collection.getNamespace.getCollectionName
+  }
+
   override protected def countImpl(
     collection: MongoCollection[Document]
   )(
@@ -94,6 +98,22 @@ class AsyncMongoClientAdapter[Document, MetaRecord, Record, Result[_]](
       }
     }
     collection.distinct(fieldName, filter, collectionFactory.documentClass).forEach(accumulator, queryCallback)
+    resultCallback.result
+  }
+
+  override protected def insertImpl[R <: Record](
+    collection: MongoCollection[Document]
+  )(
+    record: R,
+    document: Document
+  ): Result[R] = {
+    val resultCallback = callbackFactory.newCallback[R]
+    val queryCallback = new SingleResultCallback[Void] {
+      override def onResult(result: Void, throwable: Throwable): Unit = {
+        resultCallback.onResult(record, throwable)
+      }
+    }
+    collection.insertOne(document, queryCallback)
     resultCallback.result
   }
 }

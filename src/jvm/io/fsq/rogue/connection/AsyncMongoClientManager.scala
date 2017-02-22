@@ -2,8 +2,9 @@
 
 package io.fsq.rogue.connection
 
-import com.mongodb.ReadPreference
+import com.mongodb.{ReadPreference, WriteConcern}
 import com.mongodb.async.client.{MongoClient, MongoCollection, MongoDatabase}
+import io.fsq.common.scala.Identity._
 
 
 /** MongoConnectionManager for the new async client. */
@@ -22,9 +23,11 @@ extends MongoClientManager[MongoClient, MongoDatabase, MongoCollection] {
     db: MongoDatabase,
     name: String,
     documentClass: Class[Document],
-    readPreferenceOpt: Option[ReadPreference]
+    readPreferenceOpt: Option[ReadPreference],
+    writeConcernOpt: Option[WriteConcern]
   ): MongoCollection[Document] = {
-    val collection = db.getCollection(name, documentClass)
-    readPreferenceOpt.map(collection.withReadPreference(_)).getOrElse(collection)
+    db.getCollection(name, documentClass)
+      .applyOpt(readPreferenceOpt)(_.withReadPreference(_))
+      .applyOpt(writeConcernOpt)(_.withWriteConcern(_))
   }
 }

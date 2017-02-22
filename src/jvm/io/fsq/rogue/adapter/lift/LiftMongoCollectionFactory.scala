@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.adapter.lift
 
-import com.mongodb.{BasicDBObject, ReadPreference}
+import com.mongodb.{BasicDBObject, ReadPreference, WriteConcern}
 import io.fsq.rogue.Query
 import io.fsq.rogue.adapter.MongoCollectionFactory
 import io.fsq.rogue.connection.MongoClientManager
@@ -34,24 +34,50 @@ class LiftMongoCollectionFactory[
 
   override def documentClass: Class[BasicDBObject] = classOf[BasicDBObject]
 
-  override def getMongoCollection[
+  override def documentToString(document: BasicDBObject): String = document.toString
+
+  override def getMongoCollectionFromQuery[
     M <: MongoRecord[_] with MongoMetaRecord[_]
   ](
     query: Query[M, _, _],
-    readPreferenceOpt: Option[ReadPreference]
+    readPreferenceOpt: Option[ReadPreference] = None,
+    writeConcernOpt: Option[WriteConcern] = None
   ): MongoCollection[BasicDBObject] = {
     clientManager.useCollection(
       query.meta.connectionIdentifier,
       query.collectionName,
       documentClass,
-      readPreferenceOpt
+      readPreferenceOpt,
+      writeConcernOpt
     )(
       identity
     )
   }
 
-  override def getInstanceName[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): String = {
+  override def getMongoCollectionFromRecord[R <: MongoRecord[_]](
+    record: R,
+    readPreferenceOpt: Option[ReadPreference] = None,
+    writeConcernOpt: Option[WriteConcern] = None
+  ): MongoCollection[BasicDBObject] = {
+    clientManager.useCollection(
+      record.meta.connectionIdentifier,
+      record.meta.collectionName,
+      documentClass,
+      readPreferenceOpt,
+      writeConcernOpt
+    )(
+      identity
+    )
+  }
+
+  override def getInstanceNameFromQuery[M <: MongoRecord[_] with MongoMetaRecord[_]](
+    query: Query[M, _, _]
+  ): String = {
     query.meta.connectionIdentifier.toString
+  }
+
+  override def getInstanceNameFromRecord[R <: MongoRecord[_]](record: R): String = {
+    record.meta.connectionIdentifier.toString
   }
 
   /**
