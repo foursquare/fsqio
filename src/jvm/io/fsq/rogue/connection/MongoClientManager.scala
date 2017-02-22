@@ -13,6 +13,8 @@ import scala.collection.concurrent.{Map => ConcurrentMap}
   * modeled after lift's MongoDB singleton, but in a way that abstracts out the type of
   * client used (async vs blocking). Users must implement closeClient, getDatabase, and
   * getCollection.
+  *
+  * TODO(jacob): Abstract out the ConnectionIdentifier here and cut out the lift dep.
   */
 abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]] {
 
@@ -55,6 +57,9 @@ abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]
   def getDbOrThrow(name: ConnectionIdentifier): MongoDatabase = {
     getDb(name).getOrElse(throw new MongoException(s"Mongo not found: $name"))
   }
+
+  /** Get a set of all connection ids handled by this client manager. */
+  def getConnectionIds: Set[ConnectionIdentifier] = dbs.keySet.toSet
 
   /** Executes the given function with the specified database. Throws if the database does
     * not exist. */
