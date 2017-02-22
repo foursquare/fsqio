@@ -1,0 +1,56 @@
+---
+# defaults file for twofish
+
+# app_name should be a shorthand, lowercase, no spaces version of the
+# application name since this variable will be used as a directory name
+# Also, it would be the name of the branch in the worldmap repo.
+# For example worldmap, my_geonode, master, feature1.
+app_name: fsqio
+
+# github user who owns the repository
+github_user: OpenGeoScience
+
+# version
+app_version: master
+
+# remote git repository to pull application code from, for example:
+code_repository: "https://github.com/{{ github_user }}/{{ app_name }}.git"
+
+# TODO: Allow for branch name
+
+# Server name for twofish.
+# TODO: Production IP address
+server_name: localhost:8081
+
+
+# name of the user created by the Fabric script that Ansible will use to
+# handle server tasks
+deploy_user: vagrant
+
+# server directory to put the code into that is pulled from the code
+# repository
+app_code_dir: /home/{{ deploy_user }}
+
+# app root directory
+twofishes_root: "{{app_code_dir}}/{{app_name}}/"
+twofishes_dir: src/jvm/io/fsq/twofishes
+app_code_data_dir: "{{ twofishes_root }}/{{ twofishes_dir }}/data/"
+app_code_latest_data: "{{ app_code_data_dir }}/2015-03-05-20-05-30.753698"
+
+data_index_file: 2015-03-05.zip
+data_index_url: http://twofishes.net/indexes/revgeo/{{ data_index_file }}
+
+# location of the requirements.txt flie in the code
+requirements_file: "{{app_code_dir}}/requirements.txt"
+
+# root domain name the server should run as. do not include a subdomain,
+# for example, txt2react.com
+site_url: "http://192.168.33.12/"
+ssh_dir: ~/.ssh/
+
+# server directory for the virtualenv that will be created to run the web app
+virtualenv_dir: /home/{{deploy_user}}/venvs
+
+# place where virtualenv binaries are stored
+virtualenv_bin: "{{virtualenv_dir}}/{{app_name}}/bin"
+
