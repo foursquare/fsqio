@@ -280,6 +280,7 @@ class RpmbuildTask(Task):
       raise TaskError('Unknown platform {}'.format(platform_key))
 
     for target in self.context.targets(self.is_rpm_spec):
+      # TODO - this should be under pants.d. Defer until this is converted to use DockerPlatform.
       with temporary_dir(cleanup=not self.get_options().keep_build_products) as build_dir:
         self.context.log.debug('Build directory: {}'.format(build_dir))
         self.build_rpm(platform, target, build_dir)

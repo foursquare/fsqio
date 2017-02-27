@@ -25,6 +25,10 @@ class RpmSpecTarget(Target):
   and related sources used by the spec. Invoke the `rpmbuild` task on this target to build all
   RPMs defined in the spec.
   """
+  # NOTE(mateo): Targets are generally named after what they will become, so this should become RpmTarget or RpmPackage.
+  # Additionally, I believe this plugin should also support codegenning specs from BUILD files, at least
+  # for the vanilla case where we unpack a tarball. IMO, writing the spec file is very time consuming and most need only
+  # a very common pattern. Needs discussion since it is possibly unworkable for a reason I don't know yet.
 
   @classmethod
   def alias(cls):
