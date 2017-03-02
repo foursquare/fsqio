@@ -14,6 +14,7 @@ from __future__ import (
 from pants.build_graph.build_file_aliases import BuildFileAliases
 from pants.goal.task_registrar import TaskRegistrar as task
 
+from fsqio.pants.rpmbuild.targets.remote_source import RemoteSource
 from fsqio.pants.rpmbuild.targets.rpm_spec import RpmSpecTarget
 from fsqio.pants.rpmbuild.tasks.rpmbuild_task import RpmbuildTask
 
@@ -21,6 +22,7 @@ from fsqio.pants.rpmbuild.tasks.rpmbuild_task import RpmbuildTask
 def build_file_aliases():
   return BuildFileAliases(
     targets={
+      RemoteSource.alias(): RemoteSource,
       RpmSpecTarget.alias(): RpmSpecTarget,
     }
   )

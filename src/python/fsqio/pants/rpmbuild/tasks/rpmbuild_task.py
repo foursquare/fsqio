@@ -27,6 +27,8 @@ from pants.util.dirutil import safe_mkdir
 from pkg_resources import resource_string
 from six import string_types
 
+from fsqio.pants.rpmbuild.subsystems.remote_source_fetcher import RemoteSourceFetcher
+from fsqio.pants.rpmbuild.targets.remote_source import RemoteSource
 from fsqio.pants.rpmbuild.targets.rpm_spec import RpmSpecTarget
 
 
@@ -70,6 +72,12 @@ class RpmbuildTask(Task):
              help='Drop to a shell before invoking `rpmbuild`')
     register('--shell-after', type=bool, advanced=True,
              help='Drop to a shell after invoking `rpmbuild`')
+    register('--commit-container-image', type=bool, default=False, advanced=True,
+             help='After invoking `rpmbuild`, commit the container state to a new image')
+
+  @classmethod
+  def subsystem_dependencies(cls):
+    return super(RpmbuildTask, cls).subsystem_dependencies() + (RemoteSourceFetcher.Factory.scoped(cls),)
 
   def __init__(self, *args, **kwargs):
     super(RpmbuildTask, self).__init__(*args, **kwargs)
@@ -78,6 +86,11 @@ class RpmbuildTask(Task):
   def is_rpm_spec(target):
     return isinstance(target, RpmSpecTarget)
 
+  @property
+  def create_target_dirs(self):
+    # NOTE(mateo): Flip to True once this is wired through an invalidation block and output to namespaced results_dirs.
+    return False
+
   @staticmethod
   def write_stream(r, w):
     size = 1024 * 1024  # 1 MB
@@ -85,6 +98,10 @@ class RpmbuildTask(Task):
     while buf:
       w.write(buf)
       buf = r.read(size)
+
+  @classmethod
+  def _remote_source_targets(cls, rpm_target):
+    return [t for t in rpm_target.dependencies if isinstance(t, RemoteSource)]
 
   def convert_build_req(self, raw_build_reqs):
     pkg_names = []
@@ -123,8 +140,20 @@ class RpmbuildTask(Task):
     # Resolve the build requirements.
     build_reqs = self.extract_build_reqs(rpm_spec_path)
 
-    # Copy local sources to the build directory.
+    # TODO(mateo): There is a bit of an API conflation now that we have remote_source urls and targets.
+    # Especially when you consider that there is also sources/dependencies.
+    # The distinction between these things is going to be confusing, they should be unified or at least streamlined.
+
+    # Copy sources to the buildroot. (TODO - unify these stanzas, they differ only in being relative vs absolute paths)
     local_sources = []
+    for source in self._remote_source_targets(target):
+
+      remote_source = RemoteSourceFetcher.Factory.scoped_instance(self).create(source)
+      source_path = remote_source.path
+      shutil.copy(source_path, build_dir)
+      local_sources.append({
+        'basename': os.path.basename(os.path.relpath(source_path, get_buildroot())),
+      })
     for source_rel_path in target.sources_relative_to_buildroot():
       shutil.copy(os.path.join(get_buildroot(), source_rel_path), build_dir)
       local_sources.append({
@@ -185,7 +214,8 @@ class RpmbuildTask(Task):
       f.write(dockerfile_generator.render())
 
     # Generate a UUID to identify the image.
-    image_base_name = 'rpm-image-{}'.format(uuid.uuid4())
+    uuid_identifier = uuid.uuid4()
+    image_base_name = 'rpm-image-{}'.format(uuid_identifier)
     image_name = '{}:latest'.format(image_base_name)
     container_name = None
 
@@ -210,7 +240,7 @@ class RpmbuildTask(Task):
           raise TaskError('Failed to build image: {0}'.format(e))
 
       # Run the image in a container to actually build the RPMs.
-      container_name = 'rpm-builder-{}'.format(uuid.uuid4())
+      container_name = 'rpm-container-{}'.format(uuid_identifier)
       run_container_cmd = [
         self.get_options().docker,
         'run',
@@ -233,8 +263,11 @@ class RpmbuildTask(Task):
           raise TaskError('Failed to run build container: {0}'.format(e))
 
       # Extract the built RPMs from the container.
+      # TODO(mateo): Lets convert this to output to a per-platform namespace. That uploads to RPM repos go to the
+      # correct platform all at once (e.g. dist/rpmbuilder/centos7/x86_64/foo.rpm or something).
       output_dir = os.path.join(self.get_options().pants_distdir, 'rpmbuild')
       safe_mkdir(output_dir)
+      self.context.log.info("Extracting rpm and streaming to {}...".format(output_dir))
       extract_rpms_cmd = [
         self.get_options().docker,
         'export',
@@ -251,19 +284,31 @@ class RpmbuildTask(Task):
                 self.context.log.info('Extracting {}'.format(rel_rpm_path))
                 fileobj = tar.extractfile(entry)
                 safe_mkdir(os.path.join(output_dir, os.path.dirname(rel_rpm_path)))
+
+                # NOTE(mateo): I believe it has free streaming w/ context manager/stream mode. But this doesn't hurt!
                 with open(os.path.join(output_dir, rel_rpm_path), 'wb') as f:
                   self.write_stream(fileobj, f)
 
         retcode = proc.wait()
         if retcode != 0:
           raise TaskError('Failed to extract RPMS')
+        else:
+          # Save the resulting image if asked. Eventually this image should be pushed to the registry every build,
+          # and subsequent invocations on the published RPM should simply pull and extract.
+          if self.get_options().commit_container_image:
+            commited_name = 'rpm-commited-image-{}'.format(uuid_identifier)
+            self.context.log.info('Saving container state as image...')
+            docker_commit_cmd = [self.get_options().docker, 'commit', container_name]
+            with self.docker_workunit(name='commit-to-image', cmd=docker_commit_cmd) as workunit:
+              subprocess.call(docker_commit_cmd, stdout=workunit.output('stdout'), stderr=workunit.output('stderr'))
+              self.context.log.info('Saved container as image: {}\n'.format(commited_name))
 
     finally:
       # Remove the build container.
       if container_name and not self.get_options().keep_build_products:
-        remove_container_cmd = [self.get_options().docker, 'rm', container_name]
-        with self.docker_workunit(name='remove-build-container', cmd=remove_container_cmd) as workunit:
-          subprocess.call(remove_container_cmd, stdout=workunit.output('stdout'), stderr=workunit.output('stderr'))
+          remove_container_cmd = [self.get_options().docker, 'rm', container_name]
+          with self.docker_workunit(name='remove-build-container', cmd=remove_container_cmd) as workunit:
+            subprocess.call(remove_container_cmd, stdout=workunit.output('stdout'), stderr=workunit.output('stderr'))
 
       # Remove the build image.
       if not self.get_options().keep_build_products:
@@ -280,7 +325,19 @@ class RpmbuildTask(Task):
       raise TaskError('Unknown platform {}'.format(platform_key))
 
     for target in self.context.targets(self.is_rpm_spec):
-      # TODO - this should be under pants.d. Defer until this is converted to use DockerPlatform.
+      # TODO - the build products should be under pants.d. Defer until this is converted to use DockerPlatform since
+      # that will give us a lot of the Docker handling for free.
+      #
+      # TODO(mateo): Hooking up to the DockerPlatform will make iterating a lot less painful, since we can publish
+      # the base image and the source image, so it would not need to continually rebuild the env for spec file issues.
+      # Pushing the image that was from the commited container build  better matches the Pants paradigm, which
+      # means calling a goal on an target should either result in that target executing fully or erroring.
+      # Ifrpmbuild is called on a fingerprint that has already been published, it can just docker pull and extract.
+      # This gets us reuse without full rebuilds of RPMs with the version number, which would be dangerous.
+      #
+      # TODO(mateo): We need to hook this up to the invalidation framework. I think the best way to do that is
+      # to connect this to the pushdb framework. If that is done then this can invalidate based on the payload or
+      # dependencies and also be able to build only what is needed. At that point it could auto-populate the RPM repo.
       with temporary_dir(cleanup=not self.get_options().keep_build_products) as build_dir:
         self.context.log.debug('Build directory: {}'.format(build_dir))
         self.build_rpm(platform, target, build_dir)
