@@ -2,9 +2,9 @@
 
 package io.fsq.spindle.common.thrift.serde
 
+import org.apache.thrift.{TBase, TByteArrayOutputStream, TFieldIdEnum}
 import org.apache.thrift.protocol.TCompactProtocol
 import org.apache.thrift.transport.TIOStreamTransport
-import org.apache.thrift.{TBase, TByteArrayOutputStream, TFieldIdEnum}
 
 /**
  * Custom serializer that reuses the internal byte array instead of defensively copying.
@@ -14,7 +14,7 @@ import org.apache.thrift.{TBase, TByteArrayOutputStream, TFieldIdEnum}
  */
 class ThriftReusingSerializer[T <: TBase[_ <: TBase[_, _], _ <: TFieldIdEnum]] {
   private[this] val protocolFactory = new TCompactProtocol.Factory()
-  private[this] val baos = new TByteArrayOutputStream()
+  private[this] val baos = new TByteArrayOutputStream(512)
   private[this] val transport = new TIOStreamTransport(baos)
   private[this] val prot = protocolFactory.getProtocol(transport)
 
