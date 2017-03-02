@@ -20,7 +20,7 @@ trait MongoCallback[Result[_], T] extends SingleResultCallback[T] {
 
   def result: Result[T]
 
-  protected def processResult(result: T): Unit
+  protected def processResult(value: T): Unit
   protected def processThrowable(throwable: Throwable): Unit
 
   override def onResult(result: T, throwable: Throwable): Unit = {
