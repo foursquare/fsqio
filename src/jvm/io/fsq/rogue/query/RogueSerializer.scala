@@ -2,9 +2,18 @@
 
 package io.fsq.rogue.query
 
+import io.fsq.rogue.MongoHelpers.MongoSelect
+
 
 /** TODO(jacob): Move off of this model to the new Codec system. */
-trait RogueSerializer[Record, Document] {
-  def readFromDocument(document: Document): Record
-  def writeToDocument(record: Record): Document
+trait RogueSerializer[MetaRecord, Record, Document] {
+
+  def readFromDocument[M <: MetaRecord, R <: Record](
+    meta: M,
+    selectOpt: Option[MongoSelect[M, R]]
+  )(
+    document: Document
+  ): R
+
+  def writeToDocument[R <: Record](record: R): Document
 }

@@ -15,7 +15,7 @@ import io.fsq.rogue.types.MongoDisallowed
 class QueryExecutor[MongoCollection[_], Document, MetaRecord, Record, Result[_]](
   adapter: MongoClientAdapter[MongoCollection, Document, MetaRecord, Record, Result],
   optimizer: QueryOptimizer,
-  serializer: RogueSerializer[Record, Document]
+  serializer: RogueSerializer[MetaRecord, Record, Document]
 ) extends Rogue {
 
   def defaultWriteConcern: WriteConcern = QueryHelpers.config.defaultWriteConcern
