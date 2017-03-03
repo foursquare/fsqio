@@ -2,9 +2,6 @@
 
 package io.fsq.rogue.query.test
 
-import com.mongodb.{ConnectionString, MongoClient => BlockingMongoClient, MongoClientURI}
-import com.mongodb.async.client.{MongoClientSettings, MongoClients => AsyncMongoClients}
-import com.mongodb.connection.ClusterSettings
 import com.twitter.util.{Await, Future}
 import io.fsq.common.concurrent.Futures
 import io.fsq.field.{OptionalField, RequiredField}
@@ -13,7 +10,7 @@ import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.adapter.{AsyncMongoClientAdapter, BlockingMongoClientAdapter, BlockingResult}
 import io.fsq.rogue.adapter.callback.twitter.TwitterFutureMongoCallbackFactory
 import io.fsq.rogue.connection.MongoIdentifier
-import io.fsq.rogue.connection.testlib.MongoTest
+import io.fsq.rogue.connection.testlib.RogueMongoTest
 import io.fsq.rogue.query.QueryExecutor
 import io.fsq.rogue.query.testlib.{TrivialORMMetaRecord, TrivialORMMongoCollectionFactory, TrivialORMRecord,
     TrivialORMRogueSerializer}
@@ -63,37 +60,7 @@ object SimpleRecord extends TrivialORMMetaRecord[SimpleRecord] {
 
 object TrivialORMQueryTest {
 
-  val mongoAddress = {
-    val address = Option(System.getProperty("default.mongodb.server")).getOrElse("mongodb://localhost")
-    if (!address.startsWith("mongodb://")) {
-      s"mongodb://$address"
-    } else {
-      address
-    }
-  }
   val dbName = "test"
-
-  /* NOTE(jacob): For whatever reason, the default CodecRegistry used by the async client
-   *    is exactly the same as the blocking client except for the fact that it omits the
-   *    DBObjectCodecProvider, which we need until MongoBuilder has been rewritten to use
-   *    something else.
-   *
-   * TODO(jacob): Remove the custom settings here once MongoBuilder no longer uses
-   *    DBObject.
-   */
-  val connectionString = new ConnectionString(mongoAddress)
-  val asyncMongoClientSettings = {
-    MongoClientSettings.builder
-      .codecRegistry(
-        BlockingMongoClient.getDefaultCodecRegistry
-      ).clusterSettings(
-        ClusterSettings.builder
-          .applyConnectionString(connectionString)
-          .build()
-      ).build()
-  }
-  val asyncMongoClient = AsyncMongoClients.create(asyncMongoClientSettings)
-  val blockingMongoClient = new BlockingMongoClient(new MongoClientURI(mongoAddress))
 
   trait Implicits extends Rogue {
     implicit def metaRecordToQuery[M <: TrivialORMMetaRecord[R], R <: TrivialORMRecord](
@@ -117,7 +84,7 @@ object TrivialORMQueryTest {
 }
 
 // TODO(jacob): Move basically everything in the rogue tests into here.
-class TrivialORMQueryTest extends MongoTest
+class TrivialORMQueryTest extends RogueMongoTest
   with JUnitMustMatchers
   with BlockingResult.Implicits
   with TrivialORMQueryTest.Implicits {
@@ -137,12 +104,12 @@ class TrivialORMQueryTest extends MongoTest
   override def initClientManagers(): Unit = {
     asyncClientManager.defineDb(
       SimpleRecord.mongoIdentifier,
-      TrivialORMQueryTest.asyncMongoClient,
+      asyncMongoClient,
       TrivialORMQueryTest.dbName
     )
     blockingClientManager.defineDb(
       SimpleRecord.mongoIdentifier,
-      TrivialORMQueryTest.blockingMongoClient,
+      blockingMongoClient,
       TrivialORMQueryTest.dbName
     )
   }
