@@ -5,7 +5,6 @@ scala_library(
   sources = globs('*.scala'),
   dependencies = [
     '3rdparty:bson',
-    '3rdparty:lift-util',
     '3rdparty:mongodb-drivers',
     'src/jvm/io/fsq/rogue',
     'src/jvm/io/fsq/rogue/adapter',

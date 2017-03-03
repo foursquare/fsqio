@@ -29,7 +29,7 @@ class TrivialORMMongoCollectionFactory[MongoClient, MongoDatabase, MongoCollecti
     writeConcernOpt: Option[WriteConcern] = None
   ): MongoCollection[Document] = {
     clientManager.useCollection(
-      query.meta.connectionIdentifier,
+      query.meta.mongoIdentifier,
       query.collectionName,
       documentClass,
       readPreferenceOpt,
@@ -45,7 +45,7 @@ class TrivialORMMongoCollectionFactory[MongoClient, MongoDatabase, MongoCollecti
     writeConcernOpt: Option[WriteConcern] = None
   ): MongoCollection[Document] = {
     clientManager.useCollection(
-      record.meta.connectionIdentifier,
+      record.meta.mongoIdentifier,
       record.meta.collectionName,
       documentClass,
       readPreferenceOpt,
@@ -58,11 +58,11 @@ class TrivialORMMongoCollectionFactory[MongoClient, MongoDatabase, MongoCollecti
   override def getInstanceNameFromQuery[M <: TrivialORMMetaRecord[_]](
     query: Query[M, _, _]
   ): String = {
-    query.meta.connectionIdentifier.toString
+    query.meta.mongoIdentifier.toString
   }
 
   override def getInstanceNameFromRecord[R <: TrivialORMRecord](record: R): String = {
-    record.meta.connectionIdentifier.toString
+    record.meta.mongoIdentifier.toString
   }
 
   override def getIndexes[M <: TrivialORMMetaRecord[_]](

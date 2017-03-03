@@ -12,11 +12,11 @@ import io.fsq.rogue.{InitialState, Query, QueryOptimizer, Rogue}
 import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.adapter.{AsyncMongoClientAdapter, BlockingMongoClientAdapter, BlockingResult}
 import io.fsq.rogue.adapter.callback.twitter.TwitterFutureMongoCallbackFactory
+import io.fsq.rogue.connection.MongoIdentifier
 import io.fsq.rogue.connection.testlib.MongoTest
 import io.fsq.rogue.query.QueryExecutor
 import io.fsq.rogue.query.testlib.{TrivialORMMetaRecord, TrivialORMMongoCollectionFactory, TrivialORMRecord,
     TrivialORMRogueSerializer}
-import net.liftweb.util.ConnectionIdentifier
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.junit.{Before, Test}
@@ -48,10 +48,7 @@ object SimpleRecord extends TrivialORMMetaRecord[SimpleRecord] {
 
   override val collectionName = "test_records"
 
-  override val connectionIdentifier = new ConnectionIdentifier {
-    override def jndiName: String = "test"
-    override def toString: String = jndiName
-  }
+  override val mongoIdentifier = MongoIdentifier("test")
 
   override def fromDocument(document: Document): SimpleRecord = {
     SimpleRecord(document.getInteger(a.name), document.getString(b.name))
@@ -139,12 +136,12 @@ class TrivialORMQueryTest extends MongoTest
   @Before
   override def initClientManagers(): Unit = {
     asyncClientManager.defineDb(
-      SimpleRecord.connectionIdentifier,
+      SimpleRecord.mongoIdentifier,
       TrivialORMQueryTest.asyncMongoClient,
       TrivialORMQueryTest.dbName
     )
     blockingClientManager.defineDb(
-      SimpleRecord.connectionIdentifier,
+      SimpleRecord.mongoIdentifier,
       TrivialORMQueryTest.blockingMongoClient,
       TrivialORMQueryTest.dbName
     )

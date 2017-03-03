@@ -6,7 +6,6 @@ junit_tests(
   dependencies = [
     '3rdparty:bson',
     '3rdparty:junit',
-    '3rdparty:lift-util',
     '3rdparty:mongodb-drivers',
     '3rdparty:specs2',
     '3rdparty:twitter-util',
@@ -15,6 +14,7 @@ junit_tests(
     'src/jvm/io/fsq/rogue',
     'src/jvm/io/fsq/rogue/adapter',
     'src/jvm/io/fsq/rogue/adapter/callback/twitter',
+    'src/jvm/io/fsq/rogue/connection',
     'src/jvm/io/fsq/rogue/query',
     'test/jvm/io/fsq/rogue/connection/testlib',
     'test/jvm/io/fsq/rogue/query/testlib',

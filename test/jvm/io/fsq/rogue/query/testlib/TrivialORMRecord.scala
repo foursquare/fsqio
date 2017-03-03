@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.query.testlib
 
-import net.liftweb.util.ConnectionIdentifier
+import io.fsq.rogue.connection.MongoIdentifier
 import org.bson.Document
 
 
@@ -17,7 +17,7 @@ trait TrivialORMRecord {
 
 trait TrivialORMMetaRecord[R] {
   def collectionName: String
-  def connectionIdentifier: ConnectionIdentifier
+  def mongoIdentifier: MongoIdentifier
   def fromDocument(document: Document): R
   def toDocument(record: R): Document
 }

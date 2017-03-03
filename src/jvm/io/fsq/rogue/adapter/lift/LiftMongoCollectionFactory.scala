@@ -5,7 +5,7 @@ package io.fsq.rogue.adapter.lift
 import com.mongodb.{BasicDBObject, ReadPreference, WriteConcern}
 import io.fsq.rogue.Query
 import io.fsq.rogue.adapter.MongoCollectionFactory
-import io.fsq.rogue.connection.MongoClientManager
+import io.fsq.rogue.connection.{MongoClientManager, MongoIdentifier}
 import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
 
@@ -44,7 +44,7 @@ class LiftMongoCollectionFactory[
     writeConcernOpt: Option[WriteConcern] = None
   ): MongoCollection[BasicDBObject] = {
     clientManager.useCollection(
-      query.meta.connectionIdentifier,
+      MongoIdentifier(query.meta.connectionIdentifier.jndiName),
       query.collectionName,
       documentClass,
       readPreferenceOpt,
@@ -60,7 +60,7 @@ class LiftMongoCollectionFactory[
     writeConcernOpt: Option[WriteConcern] = None
   ): MongoCollection[BasicDBObject] = {
     clientManager.useCollection(
-      record.meta.connectionIdentifier,
+      MongoIdentifier(record.meta.connectionIdentifier.jndiName),
       record.meta.collectionName,
       documentClass,
       readPreferenceOpt,
@@ -73,11 +73,11 @@ class LiftMongoCollectionFactory[
   override def getInstanceNameFromQuery[M <: MongoRecord[_] with MongoMetaRecord[_]](
     query: Query[M, _, _]
   ): String = {
-    query.meta.connectionIdentifier.toString
+    MongoIdentifier(query.meta.connectionIdentifier.jndiName).toString
   }
 
   override def getInstanceNameFromRecord[R <: MongoRecord[_]](record: R): String = {
-    record.meta.connectionIdentifier.toString
+    MongoIdentifier(record.meta.connectionIdentifier.jndiName).toString
   }
 
   /**

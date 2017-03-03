@@ -4,7 +4,6 @@ package io.fsq.rogue.connection
 
 import com.mongodb.{MongoException, ReadPreference, WriteConcern}
 import java.util.concurrent.ConcurrentHashMap
-import net.liftweb.util.ConnectionIdentifier
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.collection.concurrent.{Map => ConcurrentMap}
 
@@ -13,13 +12,11 @@ import scala.collection.concurrent.{Map => ConcurrentMap}
   * modeled after lift's MongoDB singleton, but in a way that abstracts out the type of
   * client used (async vs blocking). Users must implement closeClient, getDatabase, and
   * getCollection.
-  *
-  * TODO(jacob): Abstract out the ConnectionIdentifier here and cut out the lift dep.
   */
 abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]] {
 
-  private val dbs: ConcurrentMap[ConnectionIdentifier, (MongoClient, String)] = {
-    new ConcurrentHashMap[ConnectionIdentifier, (MongoClient, String)].asScala
+  private val dbs: ConcurrentMap[MongoIdentifier, (MongoClient, String)] = {
+    new ConcurrentHashMap[MongoIdentifier, (MongoClient, String)].asScala
   }
 
   /** Close a client connection, without removing it from the internal map. */
@@ -41,29 +38,29 @@ abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]
   ): MongoCollection[Document]
 
   def defineDb(
-    name: ConnectionIdentifier,
+    name: MongoIdentifier,
     client: MongoClient,
     dbName: String
   ): Option[(MongoClient, String)] = {
     dbs.put(name, (client, dbName))
   }
 
-  def getDb(name: ConnectionIdentifier): Option[MongoDatabase] = {
+  def getDb(name: MongoIdentifier): Option[MongoDatabase] = {
     dbs.get(name).map({
       case (client, dbName) => getDatabase(client, dbName)
     })
   }
 
-  def getDbOrThrow(name: ConnectionIdentifier): MongoDatabase = {
+  def getDbOrThrow(name: MongoIdentifier): MongoDatabase = {
     getDb(name).getOrElse(throw new MongoException(s"Mongo not found: $name"))
   }
 
   /** Get a set of all connection ids handled by this client manager. */
-  def getConnectionIds: Set[ConnectionIdentifier] = dbs.keySet.toSet
+  def getConnectionIds: Set[MongoIdentifier] = dbs.keySet.toSet
 
   /** Executes the given function with the specified database. Throws if the database does
     * not exist. */
-  def use[T](name: ConnectionIdentifier)(f: MongoDatabase => T): T = f(getDbOrThrow(name))
+  def use[T](name: MongoIdentifier)(f: MongoDatabase => T): T = f(getDbOrThrow(name))
 
   /** Executes the given function with the specified database and collection. Throws if
     * the database does not exist. */
@@ -71,7 +68,7 @@ abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]
     Document,
     T
   ](
-    name: ConnectionIdentifier,
+    name: MongoIdentifier,
     collectionName: String,
     documentClass: Class[Document],
     readPreferenceOpt: Option[ReadPreference] = None,
