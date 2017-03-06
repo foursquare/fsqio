@@ -44,6 +44,7 @@ class RemoteSource(Target):
     """
 
     # TODO(mateo): Support platform-independent bundles, which is what most source distributions will be.
+    # TODO(mateo): Add a 'release' param. For now, I have been rolling it into the version field or hardcoding it.
     self.version = version
     self.platform = platform or 'linux'
     self.arch = arch or 'x86_64'

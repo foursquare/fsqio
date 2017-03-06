@@ -82,14 +82,17 @@ class RpmbuildTask(Task):
   def __init__(self, *args, **kwargs):
     super(RpmbuildTask, self).__init__(*args, **kwargs)
 
-  @staticmethod
-  def is_rpm_spec(target):
-    return isinstance(target, RpmSpecTarget)
+  @classmethod
+  def product_types(cls):
+    return ['rpms', 'srpms']
 
   @property
   def create_target_dirs(self):
-    # NOTE(mateo): Flip to True once this is wired through an invalidation block and output to namespaced results_dirs.
-    return False
+    return True
+
+  @staticmethod
+  def is_rpm_spec(target):
+    return isinstance(target, RpmSpecTarget)
 
   @staticmethod
   def write_stream(r, w):
@@ -131,8 +134,9 @@ class RpmbuildTask(Task):
       cmd=' '.join(cmd)
     )
 
-  def build_rpm(self, platform, target, build_dir):
+  def build_rpm(self, platform, vt, build_dir):
     # Copy the spec file to the build directory.
+    target = vt.target
     rpm_spec_path = os.path.join(get_buildroot(), target.rpm_spec)
     shutil.copy(rpm_spec_path, build_dir)
     spec_basename = os.path.basename(target.rpm_spec)
@@ -199,12 +203,27 @@ class RpmbuildTask(Task):
       {'command': command.format(platform_id=platform['id'])}
       for command in self.get_options().docker_build_setup_commands]
 
+    # Get the RPMs created by the target's RpmSpecTarget dependencies.
+    rpm_products = []
+    for dep in target.dependencies:
+      if isinstance(dep, RpmSpecTarget):
+        specs = self.context.products.get('rpms')[dep]
+        if specs:
+          for dirname, relpath in specs.items():
+            for rpmpath in relpath:
+              local_rpm = os.path.join(dirname, rpmpath)
+              shutil.copy(local_rpm, build_dir)
+              rpm_products.append({
+                'local_rpm': os.path.basename(rpmpath),
+              })
+
     # Write the Dockerfile for this build.
     dockerfile_generator = Generator(
       resource_string(__name__, 'dockerfile_template.mustache'),
       image=platform['base'],
       setup_commands=setup_commands,
       spec_basename=spec_basename,
+      rpm_dependencies=rpm_products,
       build_reqs={'reqs': ' '.join(build_reqs)} if build_reqs else None,
       local_sources=local_sources,
       remote_sources=remote_sources,
@@ -262,12 +281,9 @@ class RpmbuildTask(Task):
         except subprocess.CalledProcessError as e:
           raise TaskError('Failed to run build container: {0}'.format(e))
 
+      # TODO(mateo): Convert this to output to a per-platform namespace to make it easy to upload all RPMs to the
+      # correct platform (something like: `dist/rpmbuilder/centos7/x86_64/foo.rpm`).
       # Extract the built RPMs from the container.
-      # TODO(mateo): Lets convert this to output to a per-platform namespace. That uploads to RPM repos go to the
-      # correct platform all at once (e.g. dist/rpmbuilder/centos7/x86_64/foo.rpm or something).
-      output_dir = os.path.join(self.get_options().pants_distdir, 'rpmbuild')
-      safe_mkdir(output_dir)
-      self.context.log.info("Extracting rpm and streaming to {}...".format(output_dir))
       extract_rpms_cmd = [
         self.get_options().docker,
         'export',
@@ -281,13 +297,23 @@ class RpmbuildTask(Task):
             if (name.startswith('home/rpmuser/rpmbuild/RPMS/') or name.startswith('home/rpmuser/rpmbuild/SRPMS/')) and name.endswith('.rpm'):
               rel_rpm_path = name.lstrip('home/rpmuser/rpmbuild/')
               if rel_rpm_path:
+
+                rpmdir = os.path.dirname(rel_rpm_path)
+                safe_mkdir(os.path.join(vt.results_dir, rpmdir))
+                rpmfile = os.path.join(vt.results_dir, rel_rpm_path)
+
                 self.context.log.info('Extracting {}'.format(rel_rpm_path))
                 fileobj = tar.extractfile(entry)
-                safe_mkdir(os.path.join(output_dir, os.path.dirname(rel_rpm_path)))
-
                 # NOTE(mateo): I believe it has free streaming w/ context manager/stream mode. But this doesn't hurt!
-                with open(os.path.join(output_dir, rel_rpm_path), 'wb') as f:
+                with open(rpmfile, 'wb') as f:
                   self.write_stream(fileobj, f)
+                output_dir = os.path.join(self.get_options().pants_distdir, 'rpmbuild', rpmdir)
+                safe_mkdir(output_dir)
+                shutil.copy(rpmfile, output_dir)
+                if name.startswith('home/rpmuser/rpmbuild/RPMS/'):
+                  self.context.products.get('rpms').add(vt.target, vt.results_dir).append(rel_rpm_path)
+                else:
+                  self.context.products.get('srpms').add(vt.target, vt.results_dir).append(rel_rpm_path)
 
         retcode = proc.wait()
         if retcode != 0:
@@ -324,20 +350,20 @@ class RpmbuildTask(Task):
     except KeyError:
       raise TaskError('Unknown platform {}'.format(platform_key))
 
-    for target in self.context.targets(self.is_rpm_spec):
-      # TODO - the build products should be under pants.d. Defer until this is converted to use DockerPlatform since
-      # that will give us a lot of the Docker handling for free.
-      #
-      # TODO(mateo): Hooking up to the DockerPlatform will make iterating a lot less painful, since we can publish
-      # the base image and the source image, so it would not need to continually rebuild the env for spec file issues.
-      # Pushing the image that was from the commited container build  better matches the Pants paradigm, which
-      # means calling a goal on an target should either result in that target executing fully or erroring.
-      # Ifrpmbuild is called on a fingerprint that has already been published, it can just docker pull and extract.
-      # This gets us reuse without full rebuilds of RPMs with the version number, which would be dangerous.
-      #
-      # TODO(mateo): We need to hook this up to the invalidation framework. I think the best way to do that is
-      # to connect this to the pushdb framework. If that is done then this can invalidate based on the payload or
-      # dependencies and also be able to build only what is needed. At that point it could auto-populate the RPM repo.
-      with temporary_dir(cleanup=not self.get_options().keep_build_products) as build_dir:
-        self.context.log.debug('Build directory: {}'.format(build_dir))
-        self.build_rpm(platform, target, build_dir)
+    targets = self.context.targets(self.is_rpm_spec)
+    with self.invalidated(targets, invalidate_dependents=True, topological_order=True) as invalidation_check:
+      # Use of invalidation to establish workdir and to get dependency management - all targets in context are built.
+      for vt in invalidation_check.all_vts:
+        target = vt.target
+        # TODO(mateo): Hooking up to the DockerPlatform will make iterating a lot less painful, since we can publish
+        # the base image and the source image, so it would not need to continually rebuild the env for spec file issues.
+        # Pushing the image that was from the commited container build  better matches the Pants paradigm, which
+        # means calling a goal on an target should either result in that target executing fully or erroring.
+        # If rpmbuild is called on a fingerprint that has already been published, it can just docker pull and extract.
+        # This gets us reuse without full rebuilds of RPMs with the version number, which would be dangerous.
+
+        # This still builds in a tempdir, I think tdyas will convert to DockerPlatform as a POC for that framework.
+        with temporary_dir(cleanup=not self.get_options().keep_build_products) as build_dir:
+          self.context.log.debug('Build directory: {}'.format(build_dir))
+          self.context.log.info('Building RPM: {} ...'.format(vt.target.name))
+          self.build_rpm(platform, vt, build_dir)

@@ -12,8 +12,13 @@ RUN yum clean metadata && \
     rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY* && \
     chown -R rpmuser.rpmuser /home/rpmuser
 
+RUN mkdir -p /home/rpmuser/local_rpms
+{{#rpm_dependencies}}
+COPY {{{local_rpm}}} /home/rpmuser/local_rpms/
+{{/rpm_dependencies}}
+
 RUN rpm --rebuilddb && \
-    yum install -y tar gzip bzip2 xz rpm-build redhat-rpm-config
+    yum install -y /home/rpmuser/local_rpms/*rpm tar gzip bzip2 xz rpm-build redhat-rpm-config
 
 {{#build_reqs}}
 RUN rpm --rebuilddb && \
