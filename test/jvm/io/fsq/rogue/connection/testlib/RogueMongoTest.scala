@@ -6,6 +6,10 @@ import com.mongodb.{ConnectionString, MongoClient => BlockingMongoClient, MongoC
 import com.mongodb.async.client.{MongoClient => AsyncMongoClient, MongoClientSettings,
     MongoClients => AsyncMongoClients}
 import com.mongodb.connection.ClusterSettings
+import com.mongodb.connection.netty.NettyStreamFactoryFactory
+import io.netty.channel.nio.NioEventLoopGroup
+import java.util.concurrent.ThreadFactory
+import java.util.concurrent.atomic.AtomicInteger
 
 
 object RogueMongoTest {
@@ -18,28 +22,37 @@ object RogueMongoTest {
    * TODO(jacob): Remove the custom settings here once MongoBuilder no longer uses
    *    DBObject.
    */
-  def buildMongoClients(mongoAddress: String): (AsyncMongoClient, BlockingMongoClient) = {
+  def buildAsyncMongoClientSettings(mongoAddress: String): MongoClientSettings = {
     val connectionString = new ConnectionString(mongoAddress)
-    val asyncMongoClientSettings = {
-      MongoClientSettings.builder
-        .codecRegistry(
-          BlockingMongoClient.getDefaultCodecRegistry
-        ).clusterSettings(
-          ClusterSettings.builder
-            .applyConnectionString(connectionString)
-            .build()
-        ).build()
+
+    val nettyThreadCount = System.getProperty("RogueMongoTest.mongodb.asyncThreads", "4").toInt
+    val nettyThreadFactory = new ThreadFactory {
+      val threadNumber = new AtomicInteger
+      override def newThread(runnable: Runnable): Thread = {
+        val thread = new Thread(runnable, s"RogueMongoTest-nettyThread-${threadNumber.incrementAndGet}")
+        thread.setDaemon(true)
+        thread
+      }
     }
+    val nettyEventLoop = new NioEventLoopGroup(nettyThreadCount, nettyThreadFactory)
 
-    val asyncClient = AsyncMongoClients.create(asyncMongoClientSettings)
-    val blockingClient = new BlockingMongoClient(new MongoClientURI(mongoAddress))
-
-    (asyncClient, blockingClient)
+    MongoClientSettings.builder
+      .codecRegistry(
+        BlockingMongoClient.getDefaultCodecRegistry
+      ).clusterSettings(
+        ClusterSettings.builder
+          .applyConnectionString(connectionString)
+          .build()
+      ).streamFactoryFactory(
+        NettyStreamFactoryFactory.builder
+          .eventLoopGroup(nettyEventLoop)
+          .build()
+      ).build()
   }
 
   val (asyncMongoClient, blockingMongoClient) = {
     val mongoAddress = {
-      val address = Option(System.getProperty("default.mongodb.server")).getOrElse("mongodb://localhost")
+      val address = System.getProperty("default.mongodb.server", "mongodb://localhost")
       if (!address.startsWith("mongodb://")) {
         s"mongodb://$address"
       } else {
@@ -47,7 +60,10 @@ object RogueMongoTest {
       }
     }
 
-    buildMongoClients(mongoAddress)
+    val asyncClient = AsyncMongoClients.create(buildAsyncMongoClientSettings(mongoAddress))
+    val blockingClient = new BlockingMongoClient(new MongoClientURI(mongoAddress))
+
+    (asyncClient, blockingClient)
   }
 }
 
