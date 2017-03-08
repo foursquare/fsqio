@@ -258,7 +258,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
     query: FindAndModifyQuery[M, R],
     returnNew: Boolean = false,
     writeConcern: WriteConcern = defaultWriteConcern
-  ): Option[R] = {
+  )(implicit ev: M !<:< MongoDisallowed): Option[R] = {
     if (optimizer.isEmptyQuery(query)) {
       None
     } else {
@@ -271,7 +271,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
     query: FindAndModifyQuery[M, R],
     returnNew: Boolean = false,
     writeConcern: WriteConcern = defaultWriteConcern
-  ): Option[R] = {
+  )(implicit ev: M !<:< MongoDisallowed): Option[R] = {
     if (optimizer.isEmptyQuery(query)) {
       None
     } else {
@@ -293,7 +293,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
   def findAndDeleteOne[M <: MB, R, State](
     query: Query[M, R, State],
     writeConcern: WriteConcern = defaultWriteConcern
-  )(implicit ev: RequireShardKey[M, State]): Option[R] = {
+  )(implicit ev: RequireShardKey[M, State], ev2: M !<:< MongoDisallowed): Option[R] = {
     if (optimizer.isEmptyQuery(query)) {
       None
     } else {
@@ -311,7 +311,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
                                     state: S,
                                     readPreference: Option[ReadPreference] = None)
                                    (handler: (S, Iter.Event[R]) => Iter.Command[S])
-                                   (implicit ev: ShardingOk[M, State]): S = {
+                                   (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): S = {
     if (optimizer.isEmptyQuery(query)) {
       handler(state, Iter.EOF).state
     } else {
@@ -325,7 +325,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
                                          state: S,
                                          readPreference: Option[ReadPreference] = None)
                                         (handler: (S, Iter.Event[Seq[R]]) => Iter.Command[S])
-                                        (implicit ev: ShardingOk[M, State]): S = {
+                                        (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): S = {
     if (optimizer.isEmptyQuery(query)) {
       handler(state, Iter.EOF).state
     } else {
