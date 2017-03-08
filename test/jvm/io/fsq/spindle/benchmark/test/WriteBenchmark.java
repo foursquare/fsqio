@@ -4,16 +4,17 @@ package io.fsq.spindle.benchmark.test;
 
 import io.fsq.spindle.benchmark.gen.BenchmarkExample;
 import io.fsq.spindle.benchmark.gen.BenchmarkExample$;
+import io.fsq.spindle.common.thrift.serde.ThriftReusingSerializer;
 import io.fsq.spindle.runtime.structs.gen.InnerStruct;
 import io.fsq.spindle.runtime.structs.gen.InnerStruct$;
 import org.apache.thrift.TException;
-import org.apache.thrift.TSerializer;
-import org.apache.thrift.protocol.TCompactProtocol;
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
+import java.util.Arrays;
+import scala.Tuple2;
 import scala.collection.immutable.Vector$;
 import scala.collection.mutable.WrappedArray;
 
@@ -39,17 +40,20 @@ public class WriteBenchmark {
             .id2(new ObjectId("57dc225abf1c2357438fc3fa"))
             .dt(new DateTime(1474044431704L))
             .result();
-    private final TSerializer ser = new TSerializer(new TCompactProtocol.Factory());
+    private final ThriftReusingSerializer ser = new ThriftReusingSerializer();
 
+    //Copy the resulting array to keep the benchmark similar to what TSerializer does.
     @Benchmark
     //@Fork(jvmArgsAppend={"-XX:+UnlockDiagnosticVMOptions","-XX:+PrintAssembly"})
     public byte[] writeSparse() throws TException {
-        return ser.serialize(sparse);
+        Tuple2 t = ser.serialize(sparse);
+        return Arrays.copyOf((byte[])t._1, (Integer)t._2);
     }
 
     @Benchmark
     //@Fork(jvmArgsAppend={"-XX:+UnlockDiagnosticVMOptions","-XX:+PrintAssembly"})
     public byte[] writeDense() throws TException {
-        return ser.serialize(dense);
+        Tuple2 t = ser.serialize(dense);
+        return Arrays.copyOf((byte[])t._1, (Integer)t._2);
     }
 }
