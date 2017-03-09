@@ -575,24 +575,10 @@ jar_library(
   ]
 )
 
-# NOTE(tomlai): the version of this dependency must be exactly in sync with the corresponding
-# jdk version indicated in the following link, any earlier / later versions will break
-# http://www.eclipse.org/jetty/documentation/9.4.x/alpn-chapter.html#alpn-versions
-jar_library(
-  name = 'alpn-boot',
-  jars = [
-    jar(org = 'org.mortbay.jetty.alpn', name = 'alpn-boot', rev = '8.1.8.v20160420'),
-  ],
-)
-
 jar_library(
   name = 'netty4',
   jars = [
     jar(org = 'io.netty', name = 'netty-all', rev = '4.1.6.Final'),
-  ],
-  dependencies=[
-    # this is a runtime dependency for netty4 to establish HTTP/2 connections with ALPN
-    ':alpn-boot',
   ],
 )
 
