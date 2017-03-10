@@ -2,9 +2,7 @@
 
 package io.fsq.fhttp
 
-import com.twitter.finagle.util.TimerFromNettyTimer
 import java.util.concurrent.{Executors, ThreadFactory, TimeUnit}
-import org.jboss.netty.util.HashedWheelTimer
 
 object FTimer {
   val threadFactory = new ThreadFactory {

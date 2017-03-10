@@ -1,4 +1,4 @@
-# Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+# Copyright 2016 Foursquare Labs Inc. All Rights Reserved.
 
 scala_library(
   name = 'fhttp',
@@ -10,5 +10,6 @@ scala_library(
     '3rdparty:netty',
     '3rdparty:scala-xml',
     '3rdparty:twitter-util',
+    'src/jvm/io/fsq/common/scala',
   ],
 )

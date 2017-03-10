@@ -5,30 +5,29 @@ package io.fsq.fhttp.test
 import com.twitter.conversions.time._
 import com.twitter.finagle.{Service, TimeoutException}
 import com.twitter.finagle.builder.{ClientBuilder, ServerBuilder}
-import com.twitter.finagle.http.Http
+import com.twitter.finagle.httpx.{Http, Message, Request, Response, Status}
+import com.twitter.io.Buf
 import com.twitter.util.{Await, Future}
+import io.fsq.common.scala.Identity._
 import io.fsq.fhttp.{FHttpClient, FHttpRequest, HttpStatusException, MultiPart, OAuth1Filter, Token}
 import java.net.InetSocketAddress
-import org.jboss.netty.channel.DefaultChannelConfig
-import org.jboss.netty.handler.codec.http.HttpResponseStatus._
-import org.jboss.netty.handler.codec.http._
 import org.junit.{After, Before, Ignore, Test}
 import org.junit.Assert._
-import scala.collection.JavaConverters._
 
 object FHttpRequestValidators {
   def matchesHeader(key: String, value: String): FHttpRequest.HttpOption = r => {
-    assertNotNull(r.headers.getAll(key))
-    assertEquals(r.headers.getAll(key).asScala.mkString("|"), value)
+    assertNotNull(r.headerMap.getAll(key))
+    val valuesAsOne = r.headerMap.getAll(key).mkString("|")
+    assertEquals(value, valuesAsOne)
   }
 
   def matchesContent(content: String, length: Int): FHttpRequest.HttpOption = r => {
-    matchesHeader(HttpHeaders.Names.CONTENT_LENGTH, length.toString)(r)
-    assertEquals(r.getContent.toString(FHttpRequest.UTF_8), content)
+    assertEquals(Some(length.toLong), r.contentLength)
+    assertEquals(content, r.contentString)
   }
 
   def containsContent(content: String): FHttpRequest.HttpOption = r => {
-    val actual = r.getContent.toString(FHttpRequest.UTF_8)
+    val actual = r.contentString
     assertTrue(actual.contains(content))
   }
 }
@@ -37,37 +36,34 @@ class FHttpTestHelper {
   var serverWaitMillis: Int = 0
   var responseTransforms: List[FHttpRequest.HttpOption] = Nil
   var requestValidators: List[FHttpRequest.HttpOption] = Nil
-  var responseStatus = OK
+  var responseStatus: Status = Status.Ok
 
   def reset(): Unit = {
     requestValidators = Nil
     responseTransforms = Nil
-    responseStatus = OK
+    responseStatus = Status.Ok
   }
 
-  def serverResponse: HttpResponse = {
-    val res = new DefaultHttpResponse(HttpVersion.HTTP_1_1, responseStatus)
-    responseTransforms.reverse.foreach(_(res))
+  def serverResponse: Response = {
+    val res = Response(responseStatus)
+    responseTransforms.reverse.foreach(transformer => transformer(res))
     res
   }
 
-  val service: Service[HttpRequest, HttpResponse] = new Service[HttpRequest, HttpResponse] {
-    def apply(request: HttpRequest) = {
+  val service: Service[Request, Response] = new Service[Request, Response] {
+    def apply(request: Request): Future[Response] = {
       try {
-        requestValidators.foreach(_(request))
+        requestValidators.foreach(validator => validator(request))
         responseTransforms ::= {
-          (r: HttpMessage) => {
-            HttpHeaders.setContentLength(r, 0)
-          }
+          (r: Message) => { r.contentLength = 0 }
         }
 
       } catch {
         case exc: AssertionError =>
           responseTransforms ::= {
-            (r: HttpMessage) => {
-              val data = exc.toString.getBytes(FHttpRequest.UTF_8)
-              r.setContent(new DefaultChannelConfig().getBufferFactory.getBuffer(data, 0, data.length))
-              HttpHeaders.setContentLength(r, data.length)
+            (r: Message) => {
+              r.content = Buf.ByteArray.Owned(exc.toString.getBytes(FHttpRequest.UTF_8))
+              r.contentLength = r.content.length
             }
           }
       }
@@ -87,14 +83,15 @@ class FHttpTestHelper {
 }
 
 class FHttpClientTest {
-  var helper: FHttpTestHelper = null
-  var client: FHttpClient = null
+  var helper: FHttpTestHelper = _
+  var client: FHttpClient = _
 
   def buildOAuth1Filter(
     client: FHttpClient,
     consumer: Token,
     token: Option[Token],
-    verifier: Option[String]): OAuth1Filter = {
+    verifier: Option[String]
+  ): OAuth1Filter = {
 
     val hostPort = client.firstHostPort.split(":", 2) match {
       case Array(k,v) => Some(k, v)
@@ -131,11 +128,11 @@ class FHttpClientTest {
     val req1 = client("/test")
     assertEquals(req1.uri, expected1)
 
-    val req2 = req1.params("this"->"is silly","no"->"you+are")
+    val req2 = req1.params("this" -> "is silly", "no" -> "you+are")
     assertEquals(req2.uri, expected2)
 
     // params get appended if called again
-    val req3 = req2.params("no"->"this_is")
+    val req3 = req2.params("no" -> "this_is")
     assertEquals(req3.uri, expected3)
 
     assertEquals(req3.params().uri, expected3)
@@ -158,7 +155,7 @@ class FHttpClientTest {
     // adding a header with the same key appends, not replaces
     helper.requestValidators = FHttpRequestValidators.matchesHeader("city", "ny|sf") ::
                               helper.requestValidators.tail
-    val req3 = req2.headers("city"->"sf")
+    val req3 = req2.headers("city" -> "sf")
     val res3 = req3.timeout(5000).get_!()
     assertEquals(res3, "")
 
@@ -208,7 +205,7 @@ class FHttpClientTest {
       FHttpRequestValidators.containsContent("you") ::
       FHttpRequestValidators.containsContent(xml) ::
       FHttpRequestValidators.containsContent(json) ::
-      FHttpRequestValidators.matchesHeader(HttpHeaders.Names.CONTENT_LENGTH, "908") :: Nil
+      FHttpRequestValidators.matchesHeader("Content-Length", "908") :: Nil
 
     val reqEmpty = FHttpRequest(client, "/test").params("hi"->"you")
       .timeout(5000)
@@ -218,12 +215,13 @@ class FHttpClientTest {
 
   @Test
   def testExceptionOnNonOKCode(): Unit = {
-    helper.responseStatus = NOT_FOUND
+    helper.responseStatus = Status.NotFound
     try {
       val reqNotFound = FHttpRequest(client, "/notfound").timeout(5000).get_!()
       throw new Exception("wrong code")
     } catch {
-      case HttpStatusException(code, reason, response) if (code == NOT_FOUND.getCode) => Unit
+      case HttpStatusException(code, reason, response) if code =? Status.NotFound.code =>
+        // do nothing
     }
 
   }
@@ -276,7 +274,7 @@ class FHttpClientTest {
     } onFailure {
       e => throw new Exception(e)
     }
-    while( r1 == "not set" || r2 < 0) {
+    while( r1 =? "not set" || r2 < 0) {
       Thread.sleep(10)
     }
 
@@ -328,9 +326,13 @@ class FHttpClientTest {
 
       // Try some queries
       val testParamsRes = {
-        val testReq = clientOA("/v1/echo").params("k1"->"v1", "k2"->"v2", "callback" -> "http://example.com/?p1=v1&p2=v2")
+        val testReq = clientOA("/v1/echo")
+          .params(
+            "k1" -> "v1",
+            "k2" -> "v2",
+            "callback" -> "http://example.com/?p1=v1&p2=v2")
           .oauth(consumer, accessToken)
-        if(usePost) testReq.post_!() else testReq.get_!()
+        if (usePost) testReq.post_!() else testReq.get_!()
       }
       assertEquals(testParamsRes, "k1=v1&k2=v2&callback=http%3A%2F%2Fexample.com%2F%3Fp1%3Dv1%26p2%3Dv2")
     }
@@ -344,13 +346,15 @@ class FHttpClientTest {
   def testOAuthSigning(): Unit = {
     val consumer = Token("key", "secret")
     val oauthFilter = buildOAuth1Filter(client, consumer, None, None)
-    val expected = """OAuth oauth_signature="lAkLnsPI449AfTp7yuKJTD7olW8%3D",oauth_timestamp="0",oauth_nonce="ceci%20n%27est%20pas%20une%20nonce",oauth_version="1.0",oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1""""
+    val expected = """OAuth oauth_signature="BLa8WVR4QhKOypidrjNptmwPKEU%3D",oauth_timestamp="0",oauth_nonce="ceci%20n%27est%20pas%20une%20nonce",oauth_version="1.0",oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1""""
     helper.requestValidators = List(FHttpRequestValidators.matchesHeader("Authorization", expected))
-    val res = FHttpRequest(client, "/request_token")
+    val request = FHttpRequest(client, "/request_token")
       .params("callback" -> "http://example.com/callback?some=param&someOther=param")
       .filter(oauthFilter)
-      .timeout(5000).get_!()
-    assertEquals(res, "")
+      .timeout(5000)
+
+    val res = request.get_!()
+    assertEquals("", res)
   }
 
   @Test
