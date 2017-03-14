@@ -176,6 +176,9 @@ jvm_third_party_map = {
     },
     'mysql': 'mysql',
     'opencsv': 'opencsv',
+    'relayrides': {
+      'pushy': 'pushy',
+    },
     'rockymadden': 'rockymadden',
     'thoughtworks': 'SKIP',
     'sun': {
