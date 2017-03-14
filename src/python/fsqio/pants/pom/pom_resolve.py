@@ -327,6 +327,12 @@ class PomResolve(Task):
       fingerprint=True,
       help='A list of maps {name: url} that point to maven-style repos, preference is left-to-right.',
     )
+    register(
+      '--single-process',
+      type=bool,
+      default=False,
+      help='Run resolution in a single process. Strongly advised when tracing execution or debugging.',
+    )
 
   @classmethod
   def prepare(cls, options, round_manager):
@@ -407,8 +413,11 @@ class PomResolve(Task):
 
     pool = Pool()
     # PROTIP: Use the in_process dep_graph_iterator to debug.
-    dep_graph_iterator = pool.imap(resolve_maven_deps, resolve_maven_deps_args)
-    #dep_graph_iterator = resolve_deps_in_process()
+    if self.get_options().single_process:
+      self.context.log.info('Resolving using only a single process.')
+      dep_graph_iterator = resolve_deps_in_process()
+    else:
+      dep_graph_iterator = pool.imap(resolve_maven_deps, resolve_maven_deps_args)
 
     global_dep_graph = MavenDependencyGraph()
     target_to_dep_graph = {}
