@@ -246,7 +246,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
   def updateMulti[M <: MB, State](
       query: ModifyQuery[M, State],
       writeConcern: WriteConcern = defaultWriteConcern
-  ): Unit = {
+  )(implicit ev: M !<:< MongoDisallowed): Unit = {
     if (optimizer.isEmptyQuery(query)) {
       ()
     } else {
