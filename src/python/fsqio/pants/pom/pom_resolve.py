@@ -23,7 +23,6 @@ import os
 import pickle
 import sys
 from uuid import uuid4
-from xml.etree import ElementTree
 
 from pants.backend.jvm.jar_dependency_utils import M2Coordinate, ResolvedJar
 from pants.backend.jvm.targets.jar_library import JarLibrary
@@ -40,15 +39,11 @@ from fsqio.pants.pom.coordinate import Coordinate
 from fsqio.pants.pom.dependency import Dependency
 from fsqio.pants.pom.fetcher import ChainedFetcher
 from fsqio.pants.pom.maven_dependency_graph import MavenDependencyGraph
-from fsqio.pants.pom.maven_version import MavenVersion, MavenVersionRangeRef
 from fsqio.pants.pom.pom import Pom
 from fsqio.pants.pom.sort_projects import CycleException
 
 
 logger = logging.getLogger(__name__)
-
-logging.getLogger('fsqio.pants.pom').setLevel(logging.WARN)
-
 
 def stderr(*args, **kwargs):
   print(*args, file=sys.stderr, **kwargs)
@@ -94,32 +89,21 @@ def traverse_project_graph(
   if maven_dep.unversioned_coordinate in unversioned_dep_chain:
     raise CycleException(unversioned_dep_chain + (maven_dep.unversioned_coordinate,))
 
-  fetcher, pom_str = fetchers.resolve_pom(maven_dep.groupId, maven_dep.artifactId,
-                                      maven_dep.version, jar_coordinate=maven_dep.coordinate)
-
-  # TODO(mateo): This code block was not executed in almost 3 months - it should be deleted and instead raise an
-  # exception requesting a pin.
-  if '(' in maven_dep.version or '[' in maven_dep.version:
-    # These range refs are fairly rare, and where they do happen we should probably just
-    # be conservative and have a global pin of that dep.  Here, we just choose the latest
-    # version available that matches the range spec.  We could also get fancier and have
-    # an option dictating a strategy for choosing.
-    content = fetcher.get_maven_metadata_xml(maven_dep.groupId, maven_dep.artifactId)
-    tree = ElementTree.fromstring(content)
-    all_versions = [v.text.strip() for v in tree.findall('versioning/versions/version')]
-    latest = tree.findtext('versioning/latest').strip()
-    release = tree.findtext('versioning/release').strip()
-    range_ref = MavenVersionRangeRef(maven_dep.version)
-    maven_versions = [MavenVersion(version_str) for version_str in all_versions]
-    matching_versions = [mv for mv in maven_versions if range_ref.matches(mv)]
-    not_qualified_versions = [mv for mv in matching_versions if mv.qualifier is None]
-    maven_dep = maven_dep._replace(version=not_qualified_versions[-1]._version_str)
-
+  fetcher, pom_str = fetchers.resolve_pom(
+    maven_dep.groupId, maven_dep.artifactId, maven_dep.version, jar_coordinate=maven_dep.coordinate
+  )
   dep_graph = MavenDependencyGraph()
   dep_graph.ensure_node(maven_dep.coordinate)
 
   if fetcher is None:
     raise MissingResourceException('Failed to fetch maven pom or resource: {}'.format(maven_dep.coordinate))
+
+  if '(' in maven_dep.version or '[' in maven_dep.version:
+    raise UnsupportedPomException(
+      "A range ref of :{} was detected for {}. Range refs are unsupported, you need to add a pin for this coordinate."
+      .format(maven_dep.version, maven_dep.unversioned_coordinate)
+    )
+
   if pom_str is None:
     logger.debug(
       'Pom did not exist for dependency: {}.\n'
@@ -254,7 +238,15 @@ def resolve_maven_deps(args):
   return dep_graph
 
 
-class MissingResourceException(Exception):
+class PomResolveError(Exception):
+  """Base pom-resolve exception."""
+
+
+class MissingResourceException(PomResolveError):
+  """Indicates that no resource matching that maven coordinate was found."""
+
+
+class UnsupportedPomException(PomResolveError):
   """Indicates that no resource matching that maven coordinate was found."""
 
 
@@ -530,6 +522,8 @@ class PomResolve(Task):
     # hashable structures here.
 
     # Pins converted to { (org, name): rev, ... }
+    if self.get_options().level == 'debug':
+      logging.getLogger('fsqio.pants.pom').setLevel(logging.DEBUG)
     global_pinned_tuples = {}
     for pin in self.get_options().global_pinned_versions:
       artifact_tuple = (pin['org'], pin['name'])

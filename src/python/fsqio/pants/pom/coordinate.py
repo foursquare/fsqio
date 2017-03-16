@@ -24,6 +24,7 @@ class Coordinate(namedtuple('Coordinate', coordinate_attrs)):
   @classmethod
   def from_string(cls, coord_str):
     parts = coord_str.split(':')
+    parts = parts[:-1]
     if len(parts) == 3:
       return cls(
         groupId=parts[0],

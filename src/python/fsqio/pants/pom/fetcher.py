@@ -18,8 +18,7 @@ import requests
 from fsqio.pants.pom.coordinate import Coordinate
 
 
-logging.getLogger('fsqio.pants.pom').setLevel(logging.WARN)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('fsqio.pants.pom')
 
 
 class ArtifactFetcher(object):
@@ -60,6 +59,7 @@ class ArtifactFetcher(object):
         ext='pom',
       )
       response = requests.get(pom_url)
+      logger.debug('Request for {} from {} returned: {}.'.format(coordinate, self.repo, response.status_code))
       self._cache[coordinate] = response
     response = self._cache[coordinate]
     return response
@@ -136,12 +136,16 @@ class ChainedFetcher(ArtifactFetcher):
       logger.debug('Attempting to get {} pom from fetcher: {}.\n'.format(coordinate, fetcher.name))
       response = fetcher.get_pom(groupId, artifactId, version)
       try:
+        logger.debug('{}: returned {} for {}.'.format(fetcher.name, response.status_code, coordinate))
         response.raise_for_status()
         return fetcher, response.content
       except requests.exceptions.HTTPError as e:
         if jar_coordinate:
-          # No pom, but there is a resource found. Signify an instransitive dependency.
           if fetcher.resource_exists(jar_coordinate):
+            logger.debug(
+              '{}: Found a {} but no pom - treating as intransitive dep: {}.\n'
+              .format(fetcher.name, jar_coordinate, coordinate)
+            )
             return fetcher, None
 
     return None, None

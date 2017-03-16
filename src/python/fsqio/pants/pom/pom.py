@@ -5,11 +5,15 @@ from __future__ import absolute_import, print_function
 
 from collections import defaultdict
 from copy import deepcopy
+import logging
 import re
 from xml.etree import ElementTree
 
 from fsqio.pants.pom.coordinate import Coordinate
 from fsqio.pants.pom.dependency import Dependency
+
+
+logger = logging.getLogger('fsqio.pants.pom')
 
 
 class Pom(object):
