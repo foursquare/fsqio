@@ -8,6 +8,7 @@ import io.fsq.rogue.adapter.MongoCollectionFactory
 import io.fsq.rogue.connection.MongoClientManager
 import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
 import org.bson.Document
+import org.bson.codecs.configuration.CodecRegistry
 
 
 class TrivialORMMongoCollectionFactory[MongoClient, MongoDatabase, MongoCollection[_]](
@@ -22,6 +23,12 @@ class TrivialORMMongoCollectionFactory[MongoClient, MongoDatabase, MongoCollecti
   override def documentClass: Class[Document] = classOf[Document]
 
   override def documentToString(document: Document): String = document.toJson
+
+  override def getCodecRegistryFromQuery[M <: TrivialORMMetaRecord[_]](
+    query: Query[M, _, _]
+  ): CodecRegistry = {
+    clientManager.getCodecRegistryOrThrow(query.meta.mongoIdentifier)
+  }
 
   override def getMongoCollectionFromQuery[M <: TrivialORMMetaRecord[_]](
     query: Query[M, _, _],

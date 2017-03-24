@@ -5,6 +5,7 @@ package io.fsq.rogue.connection
 import com.mongodb.{MongoClient, ReadPreference, WriteConcern}
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import io.fsq.common.scala.Identity._
+import org.bson.codecs.configuration.CodecRegistry
 
 
 /** MongoConnectionManager for the old blocking client. */
@@ -13,6 +14,10 @@ extends MongoClientManager[MongoClient, MongoDatabase, MongoCollection] {
 
   override protected def closeClient(client: MongoClient): Unit = {
     client.close()
+  }
+
+  override protected def getCodecRegistry(db: MongoDatabase): CodecRegistry = {
+    db.getCodecRegistry
   }
 
   override protected def getDatabase(client: MongoClient, name: String): MongoDatabase = {

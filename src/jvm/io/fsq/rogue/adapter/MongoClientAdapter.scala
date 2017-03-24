@@ -2,10 +2,12 @@
 
 package io.fsq.rogue.adapter
 
-import com.mongodb.{Block, ReadPreference, WriteConcern}
+import com.mongodb.{Block, DBObjectCodec, ReadPreference, WriteConcern}
 import com.mongodb.client.model.CountOptions
 import io.fsq.rogue.{Query, QueryHelpers, RogueException}
 import io.fsq.rogue.MongoHelpers.MongoBuilder
+import org.bson.{BsonDocument, BsonDocumentReader, BsonValue}
+import org.bson.codecs.DecoderContext
 import org.bson.conversions.Bson
 
 
@@ -62,7 +64,7 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
 
   protected def distinctImpl[T](
     resultAccessor: => T, // call by name
-    accumulator: Block[Document]
+    accumulator: Block[BsonValue]
   )(
     collection: MongoCollection[Document]
   )(
@@ -103,7 +105,7 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
 
   private def distinctRunner[M <: MetaRecord, T](
     resultAccessor: => T, // call by name
-    accumulator: Block[Document]
+    accumulator: Block[BsonValue]
   )(
     query: Query[M, _, _],
     fieldName: String,
@@ -122,14 +124,14 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
     }
   }
 
-  def countDistinct[M <: MetaRecord, FieldType](
+  def countDistinct[M <: MetaRecord](
     query: Query[M, _, _],
     fieldName: String,
     readPreferenceOpt: Option[ReadPreference]
   ): Result[Long] = {
     var count = 0L
-    val counter = new Block[Document] {
-      override def apply(value: Document): Unit = {
+    val counter = new Block[BsonValue] {
+      override def apply(value: BsonValue): Unit = {
         count += 1
       }
     }
@@ -137,17 +139,40 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
     distinctRunner(count, counter)(query, fieldName, readPreferenceOpt)
   }
 
-  // TODO(jacob): Investigate how hard it would be to remove the cast here and instead
-  //    pass down an instance of Class[FieldType] to hand to the driver.
+  /* TODO(jacob): Do some profiling of different strategies to remove the intermediate
+   *    serializations to BsonDocument/DBObject here. Some possible options:
+   *
+   *    1. We stick with the existing logic in DBCollection, as implemented here.
+   *
+   *    2. We define a custom CodecProvider mapping query types to a Codec class to use
+   *       for them. This feels hacky and could be pretty onerous to maintain: as far as I
+   *       can tell there is no way to "type erase" a Class object, so for example we
+   *       would have to maintain separate mappings for Array[Int] and Array[String].
+   *
+   *    3. We register custom Codecs for some scala types (such as primitives). We likely
+   *       wouldn't want to do this for everything, for the same reason as in 2.
+   *       Primitives in particular are promising if we can avoid having to autobox them
+   *       as objects, as would happen if we just mapped to mongo's ValueCodecs.
+   *
+   *    4. Some combination of 1, 2, and 3
+   */
   def distinct[M <: MetaRecord, FieldType](
     query: Query[M, _, _],
     fieldName: String,
     readPreferenceOpt: Option[ReadPreference]
   ): Result[Seq[FieldType]] = {
     val fieldsBuilder = Vector.newBuilder[FieldType]
-    val appender = new Block[Document] {
-      override def apply(value: Document): Unit = {
-        fieldsBuilder += value.asInstanceOf[FieldType]
+    val container = new BsonDocument
+    val dbObjectCodec = new DBObjectCodec(collectionFactory.getCodecRegistryFromQuery(query))
+
+    val appender = new Block[BsonValue] {
+      override def apply(value: BsonValue): Unit = {
+        container.put("value", value)
+        val dbObject = dbObjectCodec.decode(
+          new BsonDocumentReader(container),
+          DecoderContext.builder.build()
+        )
+        fieldsBuilder += dbObject.get("value").asInstanceOf[FieldType]
       }
     }
 

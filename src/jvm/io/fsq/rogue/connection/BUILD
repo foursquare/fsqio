@@ -4,6 +4,7 @@ scala_library(
   name = 'connection',
   sources = globs('*.scala'),
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:mongodb-drivers',
     'src/jvm/io/fsq/common/scala',
   ],

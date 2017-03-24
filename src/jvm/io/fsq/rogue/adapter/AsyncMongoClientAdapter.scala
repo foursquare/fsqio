@@ -7,6 +7,7 @@ import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoCollection
 import com.mongodb.client.model.CountOptions
 import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
+import org.bson.BsonValue
 import org.bson.conversions.Bson
 
 
@@ -47,7 +48,7 @@ class AsyncMongoClientAdapter[Document, MetaRecord, Record, Result[_]](
 
   override protected def distinctImpl[T](
     resultAccessor: => T, // call by name
-    accumulator: Block[Document]
+    accumulator: Block[BsonValue]
   )(
     collection: MongoCollection[Document]
   )(
@@ -60,7 +61,7 @@ class AsyncMongoClientAdapter[Document, MetaRecord, Record, Result[_]](
         resultCallback.onResult(resultAccessor, throwable)
       }
     }
-    collection.distinct(fieldName, filter, collectionFactory.documentClass).forEach(accumulator, queryCallback)
+    collection.distinct(fieldName, filter, classOf[BsonValue]).forEach(accumulator, queryCallback)
     resultCallback.result
   }
 

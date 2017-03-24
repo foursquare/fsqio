@@ -5,6 +5,7 @@ package io.fsq.rogue.adapter
 import com.mongodb.Block
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.CountOptions
+import org.bson.BsonValue
 import org.bson.conversions.Bson
 
 
@@ -56,14 +57,14 @@ class BlockingMongoClientAdapter[Document, MetaRecord, Record](
 
   override protected def distinctImpl[T](
     resultAccessor: => T, // call by name
-    accumulator: Block[Document]
+    accumulator: Block[BsonValue]
   )(
     collection: MongoCollection[Document]
   )(
     fieldName: String,
     filter: Bson
   ): BlockingResult[T] = {
-    collection.distinct(fieldName, filter, collectionFactory.documentClass).forEach(accumulator)
+    collection.distinct(fieldName, filter, classOf[BsonValue]).forEach(accumulator)
     resultAccessor
   }
 

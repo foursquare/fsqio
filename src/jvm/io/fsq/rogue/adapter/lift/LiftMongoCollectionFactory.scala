@@ -8,6 +8,7 @@ import io.fsq.rogue.adapter.MongoCollectionFactory
 import io.fsq.rogue.connection.{MongoClientManager, MongoIdentifier}
 import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
+import org.bson.codecs.configuration.CodecRegistry
 
 
 /** A collection factory for lift models.
@@ -35,6 +36,12 @@ class LiftMongoCollectionFactory[
   override def documentClass: Class[BasicDBObject] = classOf[BasicDBObject]
 
   override def documentToString(document: BasicDBObject): String = document.toString
+
+  override def getCodecRegistryFromQuery[M <: MongoRecord[_] with MongoMetaRecord[_]](
+    query: Query[M, _, _]
+  ): CodecRegistry = {
+    clientManager.getCodecRegistryOrThrow(MongoIdentifier(query.meta.connectionIdentifier.jndiName))
+  }
 
   override def getMongoCollectionFromQuery[M <: MongoRecord[_] with MongoMetaRecord[_]](
     query: Query[M, _, _],

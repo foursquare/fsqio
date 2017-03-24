@@ -4,14 +4,15 @@ package io.fsq.rogue.connection
 
 import com.mongodb.{MongoException, ReadPreference, WriteConcern}
 import java.util.concurrent.ConcurrentHashMap
+import org.bson.codecs.configuration.CodecRegistry
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.collection.concurrent.{Map => ConcurrentMap}
 
 
 /** Manages mongo connections and provides access to the client objects. This class is
   * modeled after lift's MongoDB singleton, but in a way that abstracts out the type of
-  * client used (async vs blocking). Users must implement closeClient, getDatabase, and
-  * getCollection.
+  * client used (async vs blocking). Users must implement closeClient, getCodecRegistry,
+  * getDatabase, and getCollection.
   */
 abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]] {
 
@@ -21,6 +22,9 @@ abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]
 
   /** Close a client connection, without removing it from the internal map. */
   protected def closeClient(client: MongoClient): Unit
+
+  /** Get a CodecRegistry from a MongoDatabase. */
+  protected def getCodecRegistry(db: MongoDatabase): CodecRegistry
 
   /** Get a MongoDatabase from a MongoClient. */
   protected def getDatabase(client: MongoClient, name: String): MongoDatabase
@@ -43,6 +47,10 @@ abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]
     dbName: String
   ): Option[(MongoClient, String)] = {
     dbs.put(name, (client, dbName))
+  }
+
+  def getCodecRegistryOrThrow(name: MongoIdentifier): CodecRegistry = {
+    getCodecRegistry(getDbOrThrow(name))
   }
 
   def getDb(name: MongoIdentifier): Option[MongoDatabase] = {

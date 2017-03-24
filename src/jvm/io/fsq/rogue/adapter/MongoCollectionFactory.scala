@@ -5,6 +5,7 @@ package io.fsq.rogue.adapter
 import com.mongodb.{ReadPreference, WriteConcern}
 import io.fsq.rogue.Query
 import io.fsq.rogue.index.UntypedMongoIndex
+import org.bson.codecs.configuration.CodecRegistry
 
 
 trait MongoCollectionFactory[MongoCollection[_], Document, MetaRecord, Record] {
@@ -12,6 +13,10 @@ trait MongoCollectionFactory[MongoCollection[_], Document, MetaRecord, Record] {
   def documentClass: Class[Document]
 
   def documentToString(document: Document): String
+
+  def getCodecRegistryFromQuery[M <: MetaRecord](
+    query: Query[M, _, _]
+  ): CodecRegistry
 
   // TODO(jacob): We should get rid of the option to send down a read preference here and
   //    just use the one on the query.
