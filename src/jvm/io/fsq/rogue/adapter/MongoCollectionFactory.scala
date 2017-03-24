@@ -15,9 +15,7 @@ trait MongoCollectionFactory[MongoCollection[_], Document, MetaRecord, Record] {
 
   // TODO(jacob): We should get rid of the option to send down a read preference here and
   //    just use the one on the query.
-  def getMongoCollectionFromQuery[
-    M <: MetaRecord
-  ](
+  def getMongoCollectionFromQuery[M <: MetaRecord](
     query: Query[M, _, _],
     readPreferenceOpt: Option[ReadPreference] = None,
     writeConcernOpt: Option[WriteConcern] = None

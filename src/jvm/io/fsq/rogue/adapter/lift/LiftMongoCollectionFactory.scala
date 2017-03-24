@@ -36,9 +36,7 @@ class LiftMongoCollectionFactory[
 
   override def documentToString(document: BasicDBObject): String = document.toString
 
-  override def getMongoCollectionFromQuery[
-    M <: MongoRecord[_] with MongoMetaRecord[_]
-  ](
+  override def getMongoCollectionFromQuery[M <: MongoRecord[_] with MongoMetaRecord[_]](
     query: Query[M, _, _],
     readPreferenceOpt: Option[ReadPreference] = None,
     writeConcernOpt: Option[WriteConcern] = None
