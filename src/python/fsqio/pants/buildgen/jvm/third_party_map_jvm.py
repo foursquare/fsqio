@@ -501,6 +501,9 @@ jvm_third_party_map = {
     },
     'opengis': 'gt-shapefile',
     'openimaj': 'openimaj',
+    'openstreetmap': {
+      'osmosis': 'osmosis',
+    },
     'pantsbuild': 'junit-runner',
     'parboiled': 'parboiled-scala',
     'postgresql': {
