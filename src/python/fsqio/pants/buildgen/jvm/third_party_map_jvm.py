@@ -86,6 +86,7 @@ jvm_third_party_map = {
           'state': 'state-shapefiles',
           'timezone': 'tz-shapefiles',
           'zcta': 'zcta-shapefiles',
+          'caprovince': 'ca-provinces-shapefiles',
         },
       },
       'jedis281': {
