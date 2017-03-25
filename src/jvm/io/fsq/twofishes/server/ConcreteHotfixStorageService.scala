@@ -42,7 +42,10 @@ class ConcreteHotfixStorageService(
 
   val wktReader = new WKTReader()
   val wkbWriter = new WKBWriter()
-  val geometryJSON = new GeometryJSON()
+  // NOTE(rahul): by default, GeometryJSON uses 4 decimal places, which is only
+  // accurate to about 11 meters, i.e. low enough to cause visible skews between
+  // input and output shapes, so using 10 decimal places
+  val geometryJSON = new GeometryJSON(10)
 
   def processLongListEdits(list: Seq[Long], edits: Seq[LongListEdit]): Seq[Long] = {
     var listCopy = list

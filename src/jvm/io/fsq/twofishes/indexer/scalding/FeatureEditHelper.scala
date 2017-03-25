@@ -33,7 +33,10 @@ object FeatureEditHelper {
 
   private val wktReader = new WKTReader()
   private val wkbWriter = new WKBWriter()
-  private val geometryJSON = new GeometryJSON()
+  // NOTE(rahul): by default, GeometryJSON uses 4 decimal places, which is only
+  // accurate to about 11 meters, i.e. low enough to cause visible skews between
+  // input and output shapes, so using 10 decimal places
+  private val geometryJSON = new GeometryJSON(10)
 
   private def processLongListEdits(list: Seq[Long], edits: Seq[LongListEdit]): Seq[Long] = {
     var listCopy = list
