@@ -2,7 +2,8 @@
 
 package io.fsq.rogue.connection.testlib
 
-import com.mongodb.{ConnectionString, MongoClient => BlockingMongoClient, MongoClientURI}
+import com.mongodb.{ConnectionString, MongoClient => BlockingMongoClient, MongoClientOptions, MongoClientURI,
+    ServerAddress}
 import com.mongodb.async.client.{MongoClient => AsyncMongoClient, MongoClientSettings,
     MongoClients => AsyncMongoClients}
 import com.mongodb.connection.ClusterSettings
@@ -10,19 +11,14 @@ import com.mongodb.connection.netty.NettyStreamFactoryFactory
 import io.netty.channel.nio.NioEventLoopGroup
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicInteger
+import scala.collection.JavaConversions.{asScalaBuffer, bufferAsJavaList}
 
 
 object RogueMongoTest {
 
-  /* NOTE(jacob): For whatever reason, the default CodecRegistry used by the async client
-   *    is exactly the same as the blocking client except for the fact that it omits the
-   *    DBObjectCodecProvider, which we need until MongoBuilder has been rewritten to use
-   *    something else.
-   *
-   * TODO(jacob): Remove the custom settings here once MongoBuilder no longer uses
-   *    DBObject.
-   */
-  def buildAsyncMongoClientSettings(mongoAddress: String): MongoClientSettings = {
+  val codecRegistry = BlockingMongoClient.getDefaultCodecRegistry
+
+  def buildAsyncMongoClient(mongoAddress: String): AsyncMongoClient = {
     val connectionString = new ConnectionString(mongoAddress)
 
     val nettyThreadCount = System.getProperty("RogueMongoTest.mongodb.asyncThreads", "4").toInt
@@ -36,18 +32,40 @@ object RogueMongoTest {
     }
     val nettyEventLoop = new NioEventLoopGroup(nettyThreadCount, nettyThreadFactory)
 
-    MongoClientSettings.builder
-      .codecRegistry(
-        BlockingMongoClient.getDefaultCodecRegistry
-      ).clusterSettings(
-        ClusterSettings.builder
-          .applyConnectionString(connectionString)
-          .build()
-      ).streamFactoryFactory(
-        NettyStreamFactoryFactory.builder
-          .eventLoopGroup(nettyEventLoop)
-          .build()
-      ).build()
+    val settings = {
+      MongoClientSettings.builder
+        .codecRegistry(
+          codecRegistry
+        ).clusterSettings(
+          ClusterSettings.builder
+            .applyConnectionString(connectionString)
+            .build()
+        ).streamFactoryFactory(
+          NettyStreamFactoryFactory.builder
+            .eventLoopGroup(nettyEventLoop)
+            .build()
+        ).build()
+    }
+
+    AsyncMongoClients.create(settings)
+  }
+
+  def buildBlockingMongoClient(mongoAddress: String): BlockingMongoClient = {
+    val mongoClientURI = new MongoClientURI(mongoAddress)
+
+    val hostServerAddresses = mongoClientURI.getHosts.map(hostString => hostString.split(':') match {
+      case Array(host, port) => new ServerAddress(host, port.toInt)
+      case Array(host) => new ServerAddress(host)
+      case _ => throw new IllegalArgumentException(s"Malformed host string: $hostString")
+    })
+
+    val clientOptions = {
+      new MongoClientOptions.Builder(mongoClientURI.getOptions)
+        .codecRegistry(codecRegistry)
+        .build()
+    }
+
+    new BlockingMongoClient(hostServerAddresses, clientOptions)
   }
 
   val (asyncMongoClient, blockingMongoClient) = {
@@ -60,10 +78,7 @@ object RogueMongoTest {
       }
     }
 
-    val asyncClient = AsyncMongoClients.create(buildAsyncMongoClientSettings(mongoAddress))
-    val blockingClient = new BlockingMongoClient(new MongoClientURI(mongoAddress))
-
-    (asyncClient, blockingClient)
+    (buildAsyncMongoClient(mongoAddress), buildBlockingMongoClient(mongoAddress))
   }
 }
 
