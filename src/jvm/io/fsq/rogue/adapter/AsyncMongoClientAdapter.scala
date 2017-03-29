@@ -12,18 +12,30 @@ import org.bson.conversions.Bson
 
 
 object AsyncMongoClientAdapter {
-  type CollectionFactory[Document, MetaRecord, Record] = MongoCollectionFactory[
+  type CollectionFactory[
+    DocumentValue,
+    Document <: java.util.Map[String, DocumentValue],
+    MetaRecord,
+    Record
+  ] = MongoCollectionFactory[
     MongoCollection,
+    DocumentValue,
     Document,
     MetaRecord,
     Record
   ]
 }
 
-class AsyncMongoClientAdapter[Document, MetaRecord, Record, Result[_]](
-  collectionFactory: AsyncMongoClientAdapter.CollectionFactory[Document, MetaRecord, Record],
+class AsyncMongoClientAdapter[
+  DocumentValue,
+  Document <: java.util.Map[String, DocumentValue],
+  MetaRecord,
+  Record,
+  Result[_]
+](
+  collectionFactory: AsyncMongoClientAdapter.CollectionFactory[DocumentValue, Document, MetaRecord, Record],
   callbackFactory: MongoCallbackFactory[Result]
-) extends MongoClientAdapter[MongoCollection, Document, MetaRecord, Record, Result](
+) extends MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, Result](
   collectionFactory
 ) with MongoCallback.Implicits {
 

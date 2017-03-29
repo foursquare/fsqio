@@ -15,6 +15,7 @@ class TrivialORMMongoCollectionFactory[MongoClient, MongoDatabase, MongoCollecti
   clientManager: MongoClientManager[MongoClient, MongoDatabase, MongoCollection]
 ) extends MongoCollectionFactory[
   MongoCollection,
+  Object,
   Document,
   TrivialORMMetaRecord[_],
   TrivialORMRecord

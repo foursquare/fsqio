@@ -12,8 +12,15 @@ import io.fsq.rogue.types.MongoDisallowed
 /** TODO(jacob): All of the collection methods implemented here should get rid of the
   *     option to send down a read preference, and just use the one on the query.
   */
-class QueryExecutor[MongoCollection[_], Document, MetaRecord, Record, Result[_]](
-  adapter: MongoClientAdapter[MongoCollection, Document, MetaRecord, Record, Result],
+class QueryExecutor[
+  MongoCollection[_],
+  DocumentValue,
+  Document <: java.util.Map[String, DocumentValue],
+  MetaRecord,
+  Record,
+  Result[_]
+](
+  adapter: MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, Result],
   optimizer: QueryOptimizer,
   serializer: RogueSerializer[MetaRecord, Record, Document]
 ) extends Rogue {
@@ -54,14 +61,15 @@ class QueryExecutor[MongoCollection[_], Document, MetaRecord, Record, Result[_]]
     query: Query[M, _, State],
     readPreferenceOpt: Option[ReadPreference] = None
   )(
-    field: M => Field[FieldType, M]
+    field: M => Field[FieldType, M],
+    resultTransformer: DocumentValue => FieldType = (_: DocumentValue).asInstanceOf[FieldType]
   )(
     implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed
   ): Result[Seq[FieldType]] = {
     if (optimizer.isEmptyQuery(query)) {
       adapter.wrapEmptyResult(Vector.empty[FieldType])
     } else {
-      adapter.distinct(query, field(query.meta).name, readPreferenceOpt)
+      adapter.distinct(query, field(query.meta).name, resultTransformer, readPreferenceOpt)
     }
   }
 

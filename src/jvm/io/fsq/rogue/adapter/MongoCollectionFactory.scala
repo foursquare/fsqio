@@ -8,7 +8,13 @@ import io.fsq.rogue.index.UntypedMongoIndex
 import org.bson.codecs.configuration.CodecRegistry
 
 
-trait MongoCollectionFactory[MongoCollection[_], Document, MetaRecord, Record] {
+trait MongoCollectionFactory[
+  MongoCollection[_],
+  DocumentValue,
+  Document <: java.util.Map[String, DocumentValue],
+  MetaRecord,
+  Record
+] {
 
   def documentClass: Class[Document]
 

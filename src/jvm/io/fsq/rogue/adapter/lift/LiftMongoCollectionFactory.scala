@@ -28,6 +28,7 @@ class LiftMongoCollectionFactory[
   clientManager: MongoClientManager[MongoClient, MongoDatabase, MongoCollection]
 ) extends MongoCollectionFactory[
   MongoCollection,
+  Object,
   BasicDBObject,
   MongoRecord[_] with MongoMetaRecord[_],
   MongoRecord[_]

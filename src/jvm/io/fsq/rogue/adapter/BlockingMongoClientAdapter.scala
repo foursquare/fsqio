@@ -26,17 +26,29 @@ class BlockingResult[T](val value: T) {
 
 
 object BlockingMongoClientAdapter {
-  type CollectionFactory[Document, MetaRecord, Record] = MongoCollectionFactory[
+  type CollectionFactory[
+    DocumentValue,
+    Document <: java.util.Map[String, DocumentValue],
+    MetaRecord,
+    Record
+  ] = MongoCollectionFactory[
     MongoCollection,
+    DocumentValue,
     Document,
     MetaRecord,
     Record
   ]
 }
 
-class BlockingMongoClientAdapter[Document, MetaRecord, Record](
-  collectionFactory: BlockingMongoClientAdapter.CollectionFactory[Document, MetaRecord, Record]
-) extends MongoClientAdapter[MongoCollection, Document, MetaRecord, Record, BlockingResult](
+class BlockingMongoClientAdapter[
+  DocumentValue,
+  Document <: java.util.Map[String, DocumentValue],
+  MetaRecord,
+  Record,
+  Result[_]
+](
+  collectionFactory: BlockingMongoClientAdapter.CollectionFactory[DocumentValue, Document, MetaRecord, Record]
+) extends MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, BlockingResult](
   collectionFactory
 ) with BlockingResult.Implicits {
 

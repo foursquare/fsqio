@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.adapter
 
-import com.mongodb.{Block, DBObjectCodec, ReadPreference, WriteConcern}
+import com.mongodb.{Block, ReadPreference, WriteConcern}
 import com.mongodb.client.model.CountOptions
 import io.fsq.rogue.{Query, QueryHelpers, RogueException}
 import io.fsq.rogue.MongoHelpers.MongoBuilder
@@ -14,8 +14,15 @@ import org.bson.conversions.Bson
 /** TODO(jacob): All of the collection methods implemented here should get rid of the
   *     option to send down a read preference, and just use the one on the query.
   */
-abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Record, Result[_]](
-  collectionFactory: MongoCollectionFactory[MongoCollection, Document, MetaRecord, Record]
+abstract class MongoClientAdapter[
+  MongoCollection[_],
+  DocumentValue,
+  Document <: java.util.Map[String, DocumentValue],
+  MetaRecord,
+  Record,
+  Result[_]
+](
+  collectionFactory: MongoCollectionFactory[MongoCollection, DocumentValue, Document, MetaRecord, Record]
 ) {
 
   /** Wrap an empty result for a no-op query. */
@@ -159,20 +166,21 @@ abstract class MongoClientAdapter[MongoCollection[_], Document, MetaRecord, Reco
   def distinct[M <: MetaRecord, FieldType](
     query: Query[M, _, _],
     fieldName: String,
+    resultTransformer: DocumentValue => FieldType,
     readPreferenceOpt: Option[ReadPreference]
   ): Result[Seq[FieldType]] = {
     val fieldsBuilder = Vector.newBuilder[FieldType]
     val container = new BsonDocument
-    val dbObjectCodec = new DBObjectCodec(collectionFactory.getCodecRegistryFromQuery(query))
+    val documentCodec = collectionFactory.getCodecRegistryFromQuery(query).get(collectionFactory.documentClass)
 
     val appender = new Block[BsonValue] {
       override def apply(value: BsonValue): Unit = {
         container.put("value", value)
-        val dbObject = dbObjectCodec.decode(
+        val document = documentCodec.decode(
           new BsonDocumentReader(container),
           DecoderContext.builder.build()
         )
-        fieldsBuilder += dbObject.get("value").asInstanceOf[FieldType]
+        fieldsBuilder += resultTransformer(document.get("value"))
       }
     }
 
