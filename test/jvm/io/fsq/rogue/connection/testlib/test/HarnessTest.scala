@@ -41,6 +41,37 @@ class HarnessTest extends RogueMongoTest with JUnitMustMatchers {
     asyncDbName must_== blockingDbName
   }
 
+  /* Ensure expected database name format, foo-<counter>, and that all databases for a
+   * given test method share the same counter suffix. */
+  @Test
+  def databaseNameFormatTest(): Unit = {
+    val firstDbName = "first"
+    val firstMongoIdentifier = MongoIdentifier(firstDbName)
+    val otherDbName = "other"
+    val otherMongoIdentifier = MongoIdentifier(otherDbName)
+
+    asyncClientManager.defineDb(
+      firstMongoIdentifier,
+      asyncMongoClient,
+      firstDbName
+    )
+    asyncClientManager.defineDb(
+      otherMongoIdentifier,
+      asyncMongoClient,
+      otherDbName
+    )
+
+    val mangledFirstDbName = asyncClientManager.use(firstMongoIdentifier)(_.getName)
+    val dbId = mangledFirstDbName.split('-') match {
+      case Array(`firstDbName`, dbIdString) => dbIdString.toInt
+      case _ => throw new IllegalStateException(
+        s"Actual database name does not match expected '$firstDbName-<counter>' format: $mangledFirstDbName"
+      )
+    }
+
+    asyncClientManager.use(otherMongoIdentifier)(_.getName) must_== s"$otherDbName-$dbId"
+  }
+
   /* The way this works is a bit subtle. Essentially, we run two test methods which each
    * race to read and update an atomic reference with the name of their test db and
    * compare it with the previous value. Regardless of the order in which this happens,

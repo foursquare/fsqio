@@ -22,13 +22,13 @@ trait MongoTest {
 
   val asyncClientManager = new AsyncMongoClientManager {
     override protected def getDatabase(client: AsyncMongoClient, name: String): AsyncMongoDatabase = {
-      client.getDatabase(s"name-$dbId")
+      client.getDatabase(s"$name-$dbId")
     }
   }
 
   val blockingClientManager = new BlockingMongoClientManager {
     override protected def getDatabase(client: BlockingMongoClient, name: String): BlockingMongoDatabase = {
-      client.getDatabase(s"name-$dbId")
+      client.getDatabase(s"$name-$dbId")
     }
   }
 
