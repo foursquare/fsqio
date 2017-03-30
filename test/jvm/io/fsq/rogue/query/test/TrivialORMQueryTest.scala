@@ -216,21 +216,22 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.count(idSelect.skip(8).limit(4)).unwrap must_== 2
   }
 
+  private def newDistinctTestRecord(recordIndex: Int): SimpleRecord = SimpleRecord(
+    new ObjectId,
+    Some(false),
+    Some(recordIndex % 3),
+    Some(6L),
+    Some(8.5),
+    Some("hello"),
+    Some(Array(recordIndex % 2, recordIndex % 4)),
+    Some(Map("modThree" -> recordIndex % 3))
+  )
+
   @Test
   def testAsyncDistinct: Unit = {
     val numInserts = 10
     val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
-      val testRecord = SimpleRecord(
-        new ObjectId,
-        Some(false),
-        Some(i % 3),
-        Some(6L),
-        Some(8.5),
-        Some("hello"),
-        Some(Array(i % 2, i % 4)),
-        Some(Map("modThree" -> i % 3))
-      )
-      asyncQueryExecutor.insert(testRecord)
+      asyncQueryExecutor.insert(newDistinctTestRecord(i))
     })
 
     val staticId = new ObjectId
@@ -268,17 +269,7 @@ class TrivialORMQueryTest extends RogueMongoTest
   def testBlockingDistinct: Unit = {
     val numInserts = 10
     for (i <- 1 to numInserts) {
-      val testRecord = SimpleRecord(
-        new ObjectId,
-        Some(false),
-        Some(i % 3),
-        Some(6L),
-        Some(8.5),
-        Some("hello"),
-        Some(Array(i % 2, i % 4)),
-        Some(Map("modThree" -> i % 3))
-      )
-      blockingQueryExecutor.insert(testRecord)
+      blockingQueryExecutor.insert(newDistinctTestRecord(i))
     }
 
     val staticId = new ObjectId
@@ -301,6 +292,59 @@ class TrivialORMQueryTest extends RogueMongoTest
       Map("modThree" -> 1),
       Map("modThree" -> 2)
     ))
+  }
+
+  @Test
+  def testAsyncCountDistinct: Unit = {
+    val numInserts = 10
+    val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
+      asyncQueryExecutor.insert(newDistinctTestRecord(i))
+    })
+
+    val staticId = new ObjectId
+    val staticIdTestFuture = asyncQueryExecutor.insert(SimpleRecord(staticId)).flatMap(_ => {
+      Future.join(
+        asyncQueryExecutor.countDistinct(SimpleRecord.where(_.id eqs staticId))(_.id).map(_ must_== 1),
+        asyncQueryExecutor.countDistinct(SimpleRecord.where(_.id eqs staticId))(_.boolean).map(_ must_== 0)
+      )
+    })
+
+    val allFieldTestFuture = insertFuture.flatMap(_ => {
+      Future.join(
+        asyncQueryExecutor.countDistinct(SimpleRecord.where(_.id neqs staticId))(_.id).map(_ must_== numInserts),
+        asyncQueryExecutor.countDistinct(SimpleRecord)(_.boolean).map(_ must_== 1),
+        asyncQueryExecutor.countDistinct(SimpleRecord)(_.int).map(_ must_== 3),
+        asyncQueryExecutor.countDistinct(SimpleRecord)(_.long).map(_ must_== 1),
+        asyncQueryExecutor.countDistinct(SimpleRecord)(_.double).map(_ must_== 1),
+        asyncQueryExecutor.countDistinct(SimpleRecord)(_.string).map(_ must_== 1),
+        asyncQueryExecutor.countDistinct(SimpleRecord)(_.array).map(_ must_== 4),
+        asyncQueryExecutor.countDistinct(SimpleRecord)(_.map).map(_ must_== 3)
+      )
+    })
+
+    Await.result(Future.join(staticIdTestFuture, allFieldTestFuture))
+  }
+
+  @Test
+  def testBlockingCountDistinct: Unit = {
+    val numInserts = 10
+    for (i <- 1 to numInserts) {
+      blockingQueryExecutor.insert(newDistinctTestRecord(i))
+    }
+
+    val staticId = new ObjectId
+    blockingQueryExecutor.insert(SimpleRecord(staticId))
+    blockingQueryExecutor.countDistinct(SimpleRecord.where(_.id eqs staticId))(_.id).unwrap must_== 1
+    blockingQueryExecutor.countDistinct(SimpleRecord.where(_.id eqs staticId))(_.boolean).unwrap must_== 0
+
+    blockingQueryExecutor.countDistinct(SimpleRecord.where(_.id neqs staticId))(_.id).unwrap must_== numInserts
+    blockingQueryExecutor.countDistinct(SimpleRecord)(_.boolean).unwrap must_== 1
+    blockingQueryExecutor.countDistinct(SimpleRecord)(_.int).unwrap must_== 3
+    blockingQueryExecutor.countDistinct(SimpleRecord)(_.long).unwrap must_== 1
+    blockingQueryExecutor.countDistinct(SimpleRecord)(_.double).unwrap must_== 1
+    blockingQueryExecutor.countDistinct(SimpleRecord)(_.string).unwrap must_== 1
+    blockingQueryExecutor.countDistinct(SimpleRecord)(_.array).unwrap must_== 4
+    blockingQueryExecutor.countDistinct(SimpleRecord)(_.map).unwrap must_== 3
   }
 
   // TODO(jacob): Uncomment and clean up these tests once their behavior is implemented.
