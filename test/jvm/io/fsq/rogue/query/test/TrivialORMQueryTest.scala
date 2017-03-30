@@ -18,29 +18,65 @@ import org.bson.Document
 import org.bson.types.ObjectId
 import org.junit.{Before, Test}
 import org.specs2.matcher.JUnitMustMatchers
+import scala.collection.JavaConverters.{asScalaBufferConverter, bufferAsJavaListConverter, mapAsJavaMapConverter,
+    mapAsScalaMapConverter}
 
 
-case class SimpleRecord(a: Int, b: String) extends TrivialORMRecord {
+case class SimpleRecord(
+  id: ObjectId = new ObjectId,
+  boolean: Option[Boolean] = None,
+  int: Option[Int] = None,
+  long: Option[Long] = None,
+  double: Option[Double] = None,
+  string: Option[String] = None,
+  array: Option[Array[Int]] = None,
+  map: Option[Map[String, Int]] = None
+) extends TrivialORMRecord {
   override type Self = SimpleRecord
   override def meta = SimpleRecord
 }
 
 object SimpleRecord extends TrivialORMMetaRecord[SimpleRecord] {
 
-  val _id = new RequiredField[ObjectId, SimpleRecord.type] {
+  val id = new RequiredField[ObjectId, SimpleRecord.type] {
     override val owner = SimpleRecord
     override val name = "_id"
     override def defaultValue: ObjectId = new ObjectId
   }
 
-  val a = new OptionalField[Int, SimpleRecord.type] {
+  val boolean = new OptionalField[Boolean, SimpleRecord.type] {
     override val owner = SimpleRecord
-    override val name = "a"
+    override val name = "boolean"
   }
 
-  val b = new OptionalField[String, SimpleRecord.type] {
+  val int = new OptionalField[Int, SimpleRecord.type] {
     override val owner = SimpleRecord
-    override val name = "b"
+    override val name = "int"
+  }
+
+  val long = new OptionalField[Long, SimpleRecord.type] {
+    override val owner = SimpleRecord
+    override val name = "long"
+  }
+
+  val double = new OptionalField[Double, SimpleRecord.type] {
+    override val owner = SimpleRecord
+    override val name = "double"
+  }
+
+  val string = new OptionalField[String, SimpleRecord.type] {
+    override val owner = SimpleRecord
+    override val name = "string"
+  }
+
+  val array = new OptionalField[Array[Int], SimpleRecord.type] {
+    override val owner = SimpleRecord
+    override val name = "array"
+  }
+
+  val map = new OptionalField[Map[String, Int], SimpleRecord.type] {
+    override val owner = SimpleRecord
+    override val name = "map"
   }
 
   override val collectionName = "test_records"
@@ -48,13 +84,33 @@ object SimpleRecord extends TrivialORMMetaRecord[SimpleRecord] {
   override val mongoIdentifier = MongoIdentifier("test")
 
   override def fromDocument(document: Document): SimpleRecord = {
-    SimpleRecord(document.getInteger(a.name), document.getString(b.name))
+    SimpleRecord(
+      document.getObjectId(id.name),
+      Option(document.getBoolean(boolean.name)),
+      Option(document.getInteger(int.name)),
+      Option(document.getLong(long.name)),
+      Option(document.getDouble(double.name)),
+      Option(document.getString(string.name)),
+      Option(document.get(array.name, classOf[java.util.List[Int]])).map(_.asScala.toArray),
+      Option(document.get(map.name, classOf[Document])).map(_.asScala.asInstanceOf[Map[String, Int]])
+    )
   }
 
   override def toDocument(record: SimpleRecord): Document = {
-    new Document()
-      .append(a.name, record.a)
-      .append(b.name, record.b)
+    val document = new Document
+
+    document.append(id.name, record.id)
+    record.boolean.foreach(document.append(boolean.name, _))
+    record.int.foreach(document.append(int.name, _))
+    record.long.foreach(document.append(long.name, _))
+    record.double.foreach(document.append(double.name, _))
+    record.string.foreach(document.append(string.name, _))
+    record.array.foreach(arrayVal => document.append(array.name, arrayVal.toBuffer.asJava))
+    record.map.foreach(mapVal => {
+      document.append(map.name, new Document(mapVal.asInstanceOf[Map[String, Object]].asJava))
+    })
+
+    document
   }
 }
 
@@ -117,18 +173,17 @@ class TrivialORMQueryTest extends RogueMongoTest
   @Test
   def canBuildQuery: Unit = {
     metaRecordToQuery(SimpleRecord).toString must_== """db.test_records.find({ })"""
-    SimpleRecord.where(_.a eqs 1).toString must_== """db.test_records.find({ "a" : 1})"""
+    SimpleRecord.where(_.int eqs 1).toString must_== """db.test_records.find({ "int" : 1})"""
   }
 
   @Test
   def testAsyncCount: Unit = {
-    val testRecord = SimpleRecord(5, "hi there!")
     val numInserts = 10
     val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(_ => {
-      asyncQueryExecutor.insert(testRecord)
+      asyncQueryExecutor.insert(SimpleRecord())
     })
 
-    val idSelect = SimpleRecord.select(_._id)
+    val idSelect = SimpleRecord.select(_.id)
     val testFuture = insertFuture.flatMap(_ => {
       Future.join(
         asyncQueryExecutor.count(idSelect).map(_ must_== 10),
@@ -145,13 +200,12 @@ class TrivialORMQueryTest extends RogueMongoTest
 
   @Test
   def testBlockingCount: Unit = {
-    val testRecord = SimpleRecord(5, "hi there!")
     val numInserts = 10
     for (_ <- 1 to numInserts) {
-      blockingQueryExecutor.insert(testRecord)
+      blockingQueryExecutor.insert(SimpleRecord())
     }
 
-    val idSelect = SimpleRecord.select(_._id)
+    val idSelect = SimpleRecord.select(_.id)
     blockingQueryExecutor.count(idSelect).unwrap must_== 10
     blockingQueryExecutor.count(idSelect.limit(3)).unwrap must_== 3
     blockingQueryExecutor.count(idSelect.limit(15)).unwrap must_== 10
