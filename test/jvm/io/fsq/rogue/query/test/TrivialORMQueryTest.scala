@@ -17,7 +17,7 @@ import io.fsq.rogue.query.testlib.{TrivialORMMetaRecord, TrivialORMMongoCollecti
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.junit.{Before, Test}
-import org.specs2.matcher.JUnitMustMatchers
+import org.specs2.matcher.{JUnitMustMatchers, MatchersImplicits}
 import scala.collection.JavaConverters.{asScalaBufferConverter, bufferAsJavaListConverter, mapAsJavaMapConverter,
     mapAsScalaMapConverter}
 
@@ -142,6 +142,7 @@ object TrivialORMQueryTest {
 // TODO(jacob): Move basically everything in the rogue tests into here.
 class TrivialORMQueryTest extends RogueMongoTest
   with JUnitMustMatchers
+  with MatchersImplicits
   with BlockingResult.Implicits
   with TrivialORMQueryTest.Implicits {
 
@@ -213,6 +214,93 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.count(idSelect.skip(12)).unwrap must_== 0
     blockingQueryExecutor.count(idSelect.skip(3).limit(5)).unwrap must_== 5
     blockingQueryExecutor.count(idSelect.skip(8).limit(4)).unwrap must_== 2
+  }
+
+  @Test
+  def testAsyncDistinct: Unit = {
+    val numInserts = 10
+    val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
+      val testRecord = SimpleRecord(
+        new ObjectId,
+        Some(false),
+        Some(i % 3),
+        Some(6L),
+        Some(8.5),
+        Some("hello"),
+        Some(Array(i % 2, i % 4)),
+        Some(Map("modThree" -> i % 3))
+      )
+      asyncQueryExecutor.insert(testRecord)
+    })
+
+    val staticId = new ObjectId
+    val staticIdTestFuture = asyncQueryExecutor.insert(SimpleRecord(staticId)).flatMap(_ => {
+      Future.join(
+        asyncQueryExecutor.distinct(SimpleRecord.where(_.id eqs staticId))(_.id).map(_ must_== Seq(staticId)),
+        asyncQueryExecutor.distinct(SimpleRecord.where(_.id eqs staticId))(_.boolean).map(_ must_== Seq.empty)
+      )
+    })
+
+    val allFieldTestFuture = insertFuture.flatMap(_ => {
+      Future.join(
+        asyncQueryExecutor.distinct(SimpleRecord.where(_.id neqs staticId))(_.id).map(_.size must_== numInserts),
+        asyncQueryExecutor.distinct(SimpleRecord)(_.boolean).map(_ must_== Seq(false)),
+        asyncQueryExecutor.distinct(SimpleRecord)(_.int).map(_ must containTheSameElementsAs(Seq(0, 1, 2))),
+        asyncQueryExecutor.distinct(SimpleRecord)(_.long).map(_ must_== Seq(6L)),
+        asyncQueryExecutor.distinct(SimpleRecord)(_.double).map(_ must_== Seq(8.5)),
+        asyncQueryExecutor.distinct(SimpleRecord)(_.string).map(_ must_== Seq("hello")),
+        asyncQueryExecutor.distinct(SimpleRecord)(_.array).map(_ must containTheSameElementsAs(Seq(0, 1, 2, 3))),
+        asyncQueryExecutor.distinct(SimpleRecord)(
+          _.map,
+          _.asInstanceOf[java.util.Map[String, Int]].asScala.toMap
+        ).map(_ must containTheSameElementsAs(Seq(
+          Map("modThree" -> 0),
+          Map("modThree" -> 1),
+          Map("modThree" -> 2)
+        )))
+      )
+    })
+
+    Await.result(Future.join(staticIdTestFuture, allFieldTestFuture))
+  }
+
+  @Test
+  def testBlockingDistinct: Unit = {
+    val numInserts = 10
+    for (i <- 1 to numInserts) {
+      val testRecord = SimpleRecord(
+        new ObjectId,
+        Some(false),
+        Some(i % 3),
+        Some(6L),
+        Some(8.5),
+        Some("hello"),
+        Some(Array(i % 2, i % 4)),
+        Some(Map("modThree" -> i % 3))
+      )
+      blockingQueryExecutor.insert(testRecord)
+    }
+
+    val staticId = new ObjectId
+    blockingQueryExecutor.insert(SimpleRecord(staticId))
+    blockingQueryExecutor.distinct(SimpleRecord.where(_.id eqs staticId))(_.id).unwrap must_== Seq(staticId)
+    blockingQueryExecutor.distinct(SimpleRecord.where(_.id eqs staticId))(_.boolean).unwrap must_== Seq.empty
+
+    blockingQueryExecutor.distinct(SimpleRecord.where(_.id neqs staticId))(_.id).unwrap.size must_== numInserts
+    blockingQueryExecutor.distinct(SimpleRecord)(_.boolean).unwrap must_== Seq(false)
+    blockingQueryExecutor.distinct(SimpleRecord)(_.int).unwrap must containTheSameElementsAs(Seq(0, 1, 2))
+    blockingQueryExecutor.distinct(SimpleRecord)(_.long).unwrap must_== Seq(6L)
+    blockingQueryExecutor.distinct(SimpleRecord)(_.double).unwrap must_== Seq(8.5)
+    blockingQueryExecutor.distinct(SimpleRecord)(_.string).unwrap must_== Seq("hello")
+    blockingQueryExecutor.distinct(SimpleRecord)(_.array).unwrap must containTheSameElementsAs(Seq(0, 1, 2, 3))
+    blockingQueryExecutor.distinct(SimpleRecord)(
+      _.map,
+      _.asInstanceOf[java.util.Map[String, Int]].asScala.toMap
+    ).unwrap must containTheSameElementsAs(Seq(
+      Map("modThree" -> 0),
+      Map("modThree" -> 1),
+      Map("modThree" -> 2)
+    ))
   }
 
   // TODO(jacob): Uncomment and clean up these tests once their behavior is implemented.
