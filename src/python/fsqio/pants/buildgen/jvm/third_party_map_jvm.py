@@ -504,7 +504,9 @@ jvm_third_party_map = {
     'openstreetmap': {
       'osmosis': 'osmosis',
     },
-    'pantsbuild': 'junit-runner',
+    'pantsbuild': {
+      'junit': 'junit-runner',
+    },
     'parboiled': 'parboiled-scala',
     'postgresql': {
       'core': 'postgresql',
