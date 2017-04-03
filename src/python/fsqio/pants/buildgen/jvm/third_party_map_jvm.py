@@ -417,28 +417,11 @@ jvm_third_party_map = {
     'codehaus': {
       'jackson': 'jackson',
     },
-    'datavec': {
-      'api': 'datavec310',
-    },
     'eclipse': {
       'jetty': {
         'server': 'jetty-server',
         'servlet': 'jetty-servlet',
       }
-    },
-    'deeplearning4j': {
-      'datasets': {
-        'datavec': 'deeplearning4j310',
-      },
-      'eval': 'deeplearning4j310',
-      'optimize': 'deeplearning4j310',
-      'nn': {
-        'api': 'deeplearning4j310',
-        'conf': 'deeplearning4j310',
-        'multilayer': 'deeplearning4j310',
-        'weights': 'deeplearning4j310',
-      },
-      'util': 'deeplearning4j310',
     },
     'elasticsearch': {
       'DEFAULT': 'elasticsearch',
@@ -483,9 +466,6 @@ jvm_third_party_map = {
     },
     'mozilla': {
       'javascript': 'rhino',
-    },
-    'nd4j': {
-      'linalg': 'nd4j310',
     },
     'objectweb': {
       'asm': 'asm'
