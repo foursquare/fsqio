@@ -12,13 +12,19 @@ trait UntypedMongoIndex {
     asListMap.map(fld => "%s:%s".format(fld._1, fld._2)).mkString(", ")
 }
 
-trait MongoIndex[R] extends UntypedMongoIndex
+trait MongoIndex[R] extends UntypedMongoIndex {
+  def asTypedListMap: ListMap[String, IndexModifier]
+
+  override def asListMap: ListMap[String, Any] = asTypedListMap.map({
+    case (key, modifier) => (key, modifier.value)
+  })
+}
 
 case class MongoIndex1[R](
     f1: Field[_, R],
     m1: IndexModifier
 ) extends MongoIndex[R] {
-  def asListMap = ListMap((f1.name, m1.value))
+  override def asTypedListMap: ListMap[String, IndexModifier] = ListMap((f1.name, m1))
 }
 
 case class MongoIndex2[R](
@@ -27,7 +33,9 @@ case class MongoIndex2[R](
     f2: Field[_, R],
     m2: IndexModifier
 ) extends MongoIndex[R] {
-  def asListMap = ListMap((f1.name, m1.value), (f2.name, m2.value))
+  override def asTypedListMap: ListMap[String, IndexModifier] = {
+    ListMap((f1.name, m1), (f2.name, m2))
+  }
 }
 
 case class MongoIndex3[R](
@@ -38,7 +46,9 @@ case class MongoIndex3[R](
     f3: Field[_, R],
     m3: IndexModifier
 ) extends MongoIndex[R] {
-  def asListMap = ListMap((f1.name, m1.value), (f2.name, m2.value), (f3.name, m3.value))
+  override def asTypedListMap: ListMap[String, IndexModifier] = {
+    ListMap((f1.name, m1), (f2.name, m2), (f3.name, m3))
+  }
 }
 
 case class MongoIndex4[R](
@@ -51,12 +61,13 @@ case class MongoIndex4[R](
     f4: Field[_, R],
     m4: IndexModifier
 ) extends MongoIndex[R] {
-  def asListMap =
+  override def asTypedListMap: ListMap[String, IndexModifier] = {
     ListMap(
-        (f1.name, m1.value),
-        (f2.name, m2.value),
-        (f3.name, m3.value),
-        (f4.name, m4.value))
+        (f1.name, m1),
+        (f2.name, m2),
+        (f3.name, m3),
+        (f4.name, m4))
+  }
 }
 
 case class MongoIndex5[R](
@@ -71,13 +82,14 @@ case class MongoIndex5[R](
     f5: Field[_, R],
     m5: IndexModifier
 ) extends MongoIndex[R] {
-  def asListMap =
+  override def asTypedListMap: ListMap[String, IndexModifier] = {
     ListMap(
-        (f1.name, m1.value),
-        (f2.name, m2.value),
-        (f3.name, m3.value),
-        (f4.name, m4.value),
-        (f5.name, m5.value))
+        (f1.name, m1),
+        (f2.name, m2),
+        (f3.name, m3),
+        (f4.name, m4),
+        (f5.name, m5))
+  }
 }
 
 case class MongoIndex6[R](
@@ -94,14 +106,15 @@ case class MongoIndex6[R](
     f6: Field[_, R],
     m6: IndexModifier
 ) extends MongoIndex[R] {
-  def asListMap =
+  override def asTypedListMap: ListMap[String, IndexModifier] = {
     ListMap(
-        (f1.name, m1.value),
-        (f2.name, m2.value),
-        (f3.name, m3.value),
-        (f4.name, m4.value),
-        (f5.name, m5.value),
-        (f6.name, m6.value))
+        (f1.name, m1),
+        (f2.name, m2),
+        (f3.name, m3),
+        (f4.name, m4),
+        (f5.name, m5),
+        (f6.name, m6))
+  }
 }
 
 case class IndexBuilder[M](rec: M) {

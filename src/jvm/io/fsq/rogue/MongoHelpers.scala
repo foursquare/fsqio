@@ -3,8 +3,8 @@
 package io.fsq.rogue
 
 import com.mongodb.{BasicDBObjectBuilder, DBObject}
+import io.fsq.rogue.index.MongoIndex
 import java.util.regex.Pattern
-import scala.collection.immutable.ListMap
 
 object MongoHelpers extends Rogue {
   case class AndCondition(clauses: List[QueryClause[_]], orCondition: Option[OrCondition]) {
@@ -102,9 +102,9 @@ object MongoHelpers extends Rogue {
       builder.get
     }
 
-    def buildHint(h: ListMap[String, Any]): DBObject = {
+    def buildHint(h: MongoIndex[_]): DBObject = {
       val builder = BasicDBObjectBuilder.start
-      h.foreach{ case (field, attr) => {
+      h.asListMap.foreach{ case (field, attr) => {
         builder.add(field, attr)
       }}
       builder.get

@@ -5,7 +5,6 @@ package io.fsq.rogue
 import com.mongodb.{BasicDBObjectBuilder, DBObject, ReadPreference}
 import io.fsq.rogue.MongoHelpers.{AndCondition, MongoBuilder, MongoModify, MongoOrder, MongoSelect}
 import io.fsq.rogue.index.MongoIndex
-import scala.collection.immutable.ListMap
 
 // ***************************************************************************
 // *** Builders
@@ -46,7 +45,7 @@ case class Query[M, R, +State](
     sk: Option[Int],
     maxScan: Option[Int],
     comment: Option[String],
-    hint: Option[ListMap[String, Any]],
+    hint: Option[MongoIndex[M]],
     condition: AndCondition,
     order: Option[MongoOrder],
     select: Option[MongoSelect[M, R]],
@@ -271,7 +270,7 @@ case class Query[M, R, +State](
   def setReadPreference(r: ReadPreference): Query[M, R, State] = this.copy(readPreference = Some(r))
 
   def hint[S2](index: MongoIndex[M])(implicit ev: AddHint[State, S2]): Query[M, R, S2] = {
-    this.copy(hint = Some(index.asListMap))
+    this.copy(hint = Some(index))
   }
 
   /**
