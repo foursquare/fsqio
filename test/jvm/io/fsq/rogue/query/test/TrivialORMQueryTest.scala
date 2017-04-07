@@ -18,8 +18,8 @@ import org.bson.Document
 import org.bson.types.ObjectId
 import org.junit.{Before, Test}
 import org.specs2.matcher.{JUnitMustMatchers, MatchersImplicits}
-import scala.collection.JavaConverters.{asScalaBufferConverter, bufferAsJavaListConverter, mapAsJavaMapConverter,
-    mapAsScalaMapConverter}
+import scala.collection.JavaConverters.{iterableAsScalaIterableConverter, mapAsJavaMapConverter,
+    mapAsScalaMapConverter, seqAsJavaListConverter}
 
 
 case class SimpleRecord(
@@ -29,7 +29,7 @@ case class SimpleRecord(
   long: Option[Long] = None,
   double: Option[Double] = None,
   string: Option[String] = None,
-  array: Option[Array[Int]] = None,
+  vector: Option[Vector[Int]] = None,
   map: Option[Map[String, Int]] = None
 ) extends TrivialORMRecord {
   override type Self = SimpleRecord
@@ -69,9 +69,9 @@ object SimpleRecord extends TrivialORMMetaRecord[SimpleRecord] {
     override val name = "string"
   }
 
-  val array = new OptionalField[Array[Int], SimpleRecord.type] {
+  val vector = new OptionalField[Vector[Int], SimpleRecord.type] {
     override val owner = SimpleRecord
-    override val name = "array"
+    override val name = "vector"
   }
 
   val map = new OptionalField[Map[String, Int], SimpleRecord.type] {
@@ -86,13 +86,13 @@ object SimpleRecord extends TrivialORMMetaRecord[SimpleRecord] {
   override def fromDocument(document: Document): SimpleRecord = {
     SimpleRecord(
       document.getObjectId(id.name),
-      Option(document.getBoolean(boolean.name)),
-      Option(document.getInteger(int.name)),
-      Option(document.getLong(long.name)),
-      Option(document.getDouble(double.name)),
+      Option(document.getBoolean(boolean.name).asInstanceOf[Boolean]),
+      Option(document.getInteger(int.name).asInstanceOf[Int]),
+      Option(document.getLong(long.name).asInstanceOf[Long]),
+      Option(document.getDouble(double.name).asInstanceOf[Double]),
       Option(document.getString(string.name)),
-      Option(document.get(array.name, classOf[java.util.List[Int]])).map(_.asScala.toArray),
-      Option(document.get(map.name, classOf[Document])).map(_.asScala.asInstanceOf[Map[String, Int]])
+      Option(document.get(vector.name, classOf[java.util.List[Int]])).map(_.asScala.toVector),
+      Option(document.get(map.name, classOf[Document])).map(_.asScala.toMap.asInstanceOf[Map[String, Int]])
     )
   }
 
@@ -105,7 +105,7 @@ object SimpleRecord extends TrivialORMMetaRecord[SimpleRecord] {
     record.long.foreach(document.append(long.name, _))
     record.double.foreach(document.append(double.name, _))
     record.string.foreach(document.append(string.name, _))
-    record.array.foreach(arrayVal => document.append(array.name, arrayVal.toBuffer.asJava))
+    record.vector.foreach(vectorVal => document.append(vector.name, vectorVal.asJava))
     record.map.foreach(mapVal => {
       document.append(map.name, new Document(mapVal.asInstanceOf[Map[String, Object]].asJava))
     })
@@ -223,7 +223,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     Some(6L),
     Some(8.5),
     Some("hello"),
-    Some(Array(recordIndex % 2, recordIndex % 4)),
+    Some(Vector(recordIndex % 2, recordIndex % 4)),
     Some(Map("modThree" -> recordIndex % 3))
   )
 
@@ -250,7 +250,7 @@ class TrivialORMQueryTest extends RogueMongoTest
         asyncQueryExecutor.distinct(SimpleRecord)(_.long).map(_ must_== Seq(6L)),
         asyncQueryExecutor.distinct(SimpleRecord)(_.double).map(_ must_== Seq(8.5)),
         asyncQueryExecutor.distinct(SimpleRecord)(_.string).map(_ must_== Seq("hello")),
-        asyncQueryExecutor.distinct(SimpleRecord)(_.array).map(_ must containTheSameElementsAs(Seq(0, 1, 2, 3))),
+        asyncQueryExecutor.distinct(SimpleRecord)(_.vector).map(_ must containTheSameElementsAs(Seq(0, 1, 2, 3))),
         asyncQueryExecutor.distinct(SimpleRecord)(
           _.map,
           _.asInstanceOf[java.util.Map[String, Int]].asScala.toMap
@@ -283,7 +283,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.distinct(SimpleRecord)(_.long).unwrap must_== Seq(6L)
     blockingQueryExecutor.distinct(SimpleRecord)(_.double).unwrap must_== Seq(8.5)
     blockingQueryExecutor.distinct(SimpleRecord)(_.string).unwrap must_== Seq("hello")
-    blockingQueryExecutor.distinct(SimpleRecord)(_.array).unwrap must containTheSameElementsAs(Seq(0, 1, 2, 3))
+    blockingQueryExecutor.distinct(SimpleRecord)(_.vector).unwrap must containTheSameElementsAs(Seq(0, 1, 2, 3))
     blockingQueryExecutor.distinct(SimpleRecord)(
       _.map,
       _.asInstanceOf[java.util.Map[String, Int]].asScala.toMap
@@ -317,7 +317,7 @@ class TrivialORMQueryTest extends RogueMongoTest
         asyncQueryExecutor.countDistinct(SimpleRecord)(_.long).map(_ must_== 1),
         asyncQueryExecutor.countDistinct(SimpleRecord)(_.double).map(_ must_== 1),
         asyncQueryExecutor.countDistinct(SimpleRecord)(_.string).map(_ must_== 1),
-        asyncQueryExecutor.countDistinct(SimpleRecord)(_.array).map(_ must_== 4),
+        asyncQueryExecutor.countDistinct(SimpleRecord)(_.vector).map(_ must_== 4),
         asyncQueryExecutor.countDistinct(SimpleRecord)(_.map).map(_ must_== 3)
       )
     })
@@ -343,7 +343,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.countDistinct(SimpleRecord)(_.long).unwrap must_== 1
     blockingQueryExecutor.countDistinct(SimpleRecord)(_.double).unwrap must_== 1
     blockingQueryExecutor.countDistinct(SimpleRecord)(_.string).unwrap must_== 1
-    blockingQueryExecutor.countDistinct(SimpleRecord)(_.array).unwrap must_== 4
+    blockingQueryExecutor.countDistinct(SimpleRecord)(_.vector).unwrap must_== 4
     blockingQueryExecutor.countDistinct(SimpleRecord)(_.map).unwrap must_== 3
   }
 
