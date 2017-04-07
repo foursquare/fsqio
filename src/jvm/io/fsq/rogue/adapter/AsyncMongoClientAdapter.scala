@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.adapter
 
-import com.mongodb.Block
+import com.mongodb.{Block, MongoNamespace}
 import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoCollection
 import com.mongodb.client.model.CountOptions
@@ -43,8 +43,8 @@ class AsyncMongoClientAdapter[
     callbackFactory.wrapEmptyResult(value)
   }
 
-  override protected def getCollectionName(collection: MongoCollection[Document]): String = {
-    collection.getNamespace.getCollectionName
+  override protected def getCollectionNamespace(collection: MongoCollection[Document]): MongoNamespace = {
+    collection.getNamespace
   }
 
   override protected def countImpl(

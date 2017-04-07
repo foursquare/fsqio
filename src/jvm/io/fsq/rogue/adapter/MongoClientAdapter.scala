@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.adapter
 
-import com.mongodb.{Block, ReadPreference, WriteConcern}
+import com.mongodb.{Block, MongoNamespace, ReadPreference, WriteConcern}
 import com.mongodb.client.model.CountOptions
 import io.fsq.rogue.{Query, QueryHelpers, RogueException}
 import io.fsq.rogue.MongoHelpers.MongoBuilder
@@ -60,7 +60,7 @@ abstract class MongoClientAdapter[
    *    MongoClientAdapter or MongoClientManager. Perhaps we want to abstract out some
    *    kind of utility helper?
    */
-  protected def getCollectionName(collection: MongoCollection[Document]): String
+  protected def getCollectionNamespace(collection: MongoCollection[Document]): MongoNamespace
 
   protected def countImpl(
     collection: MongoCollection[Document]
@@ -193,7 +193,7 @@ abstract class MongoClientAdapter[
     writeConcernOpt: Option[WriteConcern]
   ): Result[R] = {
     val collection = collectionFactory.getMongoCollectionFromRecord(record, writeConcernOpt = writeConcernOpt)
-    val collectionName = getCollectionName(collection)
+    val collectionName = getCollectionNamespace(collection).getCollectionName
     val instanceName = collectionFactory.getInstanceNameFromRecord(record)
     QueryHelpers.logger.onExecuteWriteCommand(
       "insert",

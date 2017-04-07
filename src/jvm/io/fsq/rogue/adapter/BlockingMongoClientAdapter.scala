@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.adapter
 
-import com.mongodb.Block
+import com.mongodb.{Block, MongoNamespace}
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.CountOptions
 import org.bson.BsonValue
@@ -54,8 +54,8 @@ class BlockingMongoClientAdapter[
 
   override def wrapEmptyResult[T](value: T): BlockingResult[T] = new BlockingResult[T](value)
 
-  override protected def getCollectionName(collection: MongoCollection[Document]): String = {
-    collection.getNamespace.getCollectionName
+  override protected def getCollectionNamespace(collection: MongoCollection[Document]): MongoNamespace = {
+    collection.getNamespace
   }
 
   override protected def countImpl(
