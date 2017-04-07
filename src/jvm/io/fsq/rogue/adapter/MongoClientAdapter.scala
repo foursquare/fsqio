@@ -5,7 +5,7 @@ package io.fsq.rogue.adapter
 import com.mongodb.{Block, MongoNamespace, ReadPreference, WriteConcern}
 import com.mongodb.client.model.CountOptions
 import io.fsq.rogue.{Query, QueryHelpers, RogueException}
-import io.fsq.rogue.MongoHelpers.MongoBuilder
+import io.fsq.rogue.MongoHelpers.{MongoBuilder => LegacyMongoBuilder}
 import org.bson.{BsonDocument, BsonDocumentReader, BsonValue}
 import org.bson.codecs.DecoderContext
 import org.bson.conversions.Bson
@@ -95,10 +95,10 @@ abstract class MongoClientAdapter[
     val queryClause = QueryHelpers.transformer.transformQuery(query)
     QueryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
     val collection = collectionFactory.getMongoCollectionFromQuery(query, readPreferenceOpt)
-    val descriptionFunc = () => MongoBuilder.buildConditionString("count", query.collectionName, queryClause)
+    val descriptionFunc = () => LegacyMongoBuilder.buildConditionString("count", query.collectionName, queryClause)
     // TODO(jacob): This cast will always succeed, but it should be removed once there is a
-    //    version of MongoBuilder that speaks the new CRUD api.
-    val condition = MongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+    //    version of LegacyMongoBuilder that speaks the new CRUD api.
+    val filter = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
     val options = {
       new CountOptions()
         .limit(queryClause.lim.getOrElse(0))
@@ -106,7 +106,7 @@ abstract class MongoClientAdapter[
     }
 
     runCommand(descriptionFunc, queryClause) {
-      countImpl(collection)(condition, options)
+      countImpl(collection)(filter, options)
     }
   }
 
@@ -121,10 +121,10 @@ abstract class MongoClientAdapter[
     val queryClause = QueryHelpers.transformer.transformQuery(query)
     QueryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
     val collection = collectionFactory.getMongoCollectionFromQuery(query, readPreferenceOpt)
-    val descriptionFunc = () => MongoBuilder.buildConditionString("distinct", query.collectionName, queryClause)
+    val descriptionFunc = () => LegacyMongoBuilder.buildConditionString("distinct", query.collectionName, queryClause)
     // TODO(jacob): This cast will always succeed, but it should be removed once there is a
-    //    version of MongoBuilder that speaks the new CRUD api.
-    val condition = MongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+    //    version of LegacyMongoBuilder that speaks the new CRUD api.
+    val condition = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
 
     runCommand(descriptionFunc, queryClause) {
       distinctImpl(resultAccessor, accumulator)(collection)(fieldName, condition)
