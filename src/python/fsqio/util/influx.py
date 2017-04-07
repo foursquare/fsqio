@@ -26,19 +26,30 @@ def datetime_to_nanos_since_epoch(dt):
 def truncate_date_to_midnight(date):
   return datetime.combine(date, datetime.min.time())
 
+def format_tags_or_fields(data):
+  result = ','.join(
+        '{key}={value}'.format(
+          key=_backslash_escape(key, [',', ' ', '=']),
+          value=_backslash_escape(value, [',', ' ', '=']),
+        )
+        for key, value in sorted(data.items())
+      )
+  return result
 
-def build_influx_line(measurement, tags, value, dt):
-  line_template = '{measurement},{tags} value={value}i {timestamp}'
+def build_influx_line(measurement, tags, fields, dt):
+  """ An influx line consists of [key] [fields] [timestamp] separated by spaces.
+  The key is the measurement name and any optional tags separated by commas.
+  Fields are key-value metrics associated with the measurement.
+  note, numbers not followed by 'i' will be stored as floats.
+  The Timestamp value is an integer representing nanoseconds since the epoch
+  eg:
+  measurement[,tag_key1=tag_value1...] field_key=field_value[,field_key2=field_value2] [timestamp]
+  """
+  line_template = '{measurement},{tags} {fields} {timestamp}'
   return line_template.format(
     measurement=_backslash_escape(measurement, [',', ' ']),
-    tags=','.join(
-      '{tag_key}={tag_value}'.format(
-        tag_key=_backslash_escape(tag_key, [',', ' ', '=']),
-        tag_value=_backslash_escape(tag_value, [',', ' ', '=']),
-      )
-      for tag_key, tag_value in sorted(tags.items())
-    ),
-    value=str(value),
+    tags=format_tags_or_fields(tags),
+    fields=format_tags_or_fields(fields),
     timestamp=datetime_to_nanos_since_epoch(dt),
   )
 
