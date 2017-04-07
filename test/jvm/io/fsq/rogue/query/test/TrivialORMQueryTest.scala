@@ -216,7 +216,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.count(idSelect.skip(8).limit(4)).unwrap must_== 2
   }
 
-  private def newDistinctTestRecord(recordIndex: Int): SimpleRecord = SimpleRecord(
+  private def newTestRecord(recordIndex: Int): SimpleRecord = SimpleRecord(
     new ObjectId,
     Some(false),
     Some(recordIndex % 3),
@@ -231,7 +231,7 @@ class TrivialORMQueryTest extends RogueMongoTest
   def testAsyncDistinct: Unit = {
     val numInserts = 10
     val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
-      asyncQueryExecutor.insert(newDistinctTestRecord(i))
+      asyncQueryExecutor.insert(newTestRecord(i))
     })
 
     val staticId = new ObjectId
@@ -269,7 +269,7 @@ class TrivialORMQueryTest extends RogueMongoTest
   def testBlockingDistinct: Unit = {
     val numInserts = 10
     for (i <- 1 to numInserts) {
-      blockingQueryExecutor.insert(newDistinctTestRecord(i))
+      blockingQueryExecutor.insert(newTestRecord(i))
     }
 
     val staticId = new ObjectId
@@ -298,7 +298,7 @@ class TrivialORMQueryTest extends RogueMongoTest
   def testAsyncCountDistinct: Unit = {
     val numInserts = 10
     val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
-      asyncQueryExecutor.insert(newDistinctTestRecord(i))
+      asyncQueryExecutor.insert(newTestRecord(i))
     })
 
     val staticId = new ObjectId
@@ -329,7 +329,7 @@ class TrivialORMQueryTest extends RogueMongoTest
   def testBlockingCountDistinct: Unit = {
     val numInserts = 10
     for (i <- 1 to numInserts) {
-      blockingQueryExecutor.insert(newDistinctTestRecord(i))
+      blockingQueryExecutor.insert(newTestRecord(i))
     }
 
     val staticId = new ObjectId
@@ -345,6 +345,61 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.countDistinct(SimpleRecord)(_.string).unwrap must_== 1
     blockingQueryExecutor.countDistinct(SimpleRecord)(_.vector).unwrap must_== 4
     blockingQueryExecutor.countDistinct(SimpleRecord)(_.map).unwrap must_== 3
+  }
+
+  @Test
+  def testAsyncFetch: Unit = {
+    val numInserts = 10
+    val insertedFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
+      asyncQueryExecutor.insert(newTestRecord(i))
+    })
+
+    val basicTestFuture = insertedFuture.flatMap(inserted => {
+      val filteredInts = Set(0, 1)
+      val filteredRecords = inserted.filter(_.int.map(filteredInts.contains(_)).getOrElse(false))
+
+      Future.join(
+        asyncQueryExecutor.fetch(SimpleRecord).map(_ must containTheSameElementsAs(inserted)),
+        asyncQueryExecutor.fetch(SimpleRecord.where(_.id eqs inserted.head.id)).map(_ must_== Seq(inserted.head)),
+        asyncQueryExecutor.fetch(SimpleRecord.where(_.id eqs new ObjectId)).map(_ must beEmpty),
+        asyncQueryExecutor.fetch(
+          SimpleRecord.where(_.int in filteredInts)
+        ).map(_ must containTheSameElementsAs(filteredRecords))
+      )
+    })
+
+    val emptyRecord = SimpleRecord()
+    val emptyTestFuture = for {
+      _ <- basicTestFuture
+      _ <- asyncQueryExecutor.insert(emptyRecord)
+      fetched <- asyncQueryExecutor.fetch(SimpleRecord.where(_.id eqs emptyRecord.id))
+    } yield {
+      fetched must_== Seq(emptyRecord)
+    }
+
+    Await.result(emptyTestFuture)
+  }
+
+  @Test
+  def testBlockingFetch: Unit = {
+    val numInserts = 10
+    val inserted = for (i <- 1 to numInserts) yield {
+      blockingQueryExecutor.insert(newTestRecord(i)).unwrap
+    }
+
+    blockingQueryExecutor.fetch(SimpleRecord).unwrap must containTheSameElementsAs(inserted)
+    blockingQueryExecutor.fetch(SimpleRecord.where(_.id eqs inserted.head.id)).unwrap must_== Seq(inserted.head)
+    blockingQueryExecutor.fetch(SimpleRecord.where(_.id eqs new ObjectId)).unwrap must beEmpty
+
+    val filteredInts = Set(0, 1)
+    val filteredRecords = inserted.filter(_.int.map(filteredInts.contains(_)).getOrElse(false))
+    blockingQueryExecutor.fetch(
+      SimpleRecord.where(_.int in filteredInts)
+    ).unwrap must containTheSameElementsAs(filteredRecords)
+
+    val emptyRecord = SimpleRecord()
+    blockingQueryExecutor.insert(emptyRecord)
+    blockingQueryExecutor.fetch(SimpleRecord.where(_.id eqs emptyRecord.id)).unwrap must_== Seq(emptyRecord)
   }
 
   // TODO(jacob): Uncomment and clean up these tests once their behavior is implemented.

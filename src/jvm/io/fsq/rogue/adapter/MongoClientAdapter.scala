@@ -79,6 +79,23 @@ abstract class MongoClientAdapter[
     filter: Bson
   ): Result[T]
 
+  protected def findImpl[T](
+    resultAccessor: => T, // call by name
+    accumulator: Block[Document]
+  )(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson
+  )(
+    modifiers: Bson,
+    batchSizeOpt: Option[Int] = None,
+    limitOpt: Option[Int] = None,
+    skipOpt: Option[Int] = None,
+    sortOpt: Option[Bson] = None,
+    projectionOpt: Option[Bson] = None,
+    maxTimeMSOpt: Option[Long] = None
+  ): Result[T]
+
   protected def insertImpl[R <: Record](
     collection: MongoCollection[Document]
   )(
@@ -202,5 +219,65 @@ abstract class MongoClientAdapter[
       collectionFactory.documentToString(document),
       insertImpl(collection)(record, document)
     )
+  }
+
+  // NOTE(jacob): For better or for worse, the globally configured batch size takes
+  //    precedence over whatever is passed down to this method: batchSizeOpt is only
+  //    applied if the global config is unset.
+  private def queryRunner[M <: MetaRecord, T](
+    resultAccessor: => T, // call by name
+    accumulator: Block[Document]
+  )(
+    operation: String,
+    query: Query[M, _, _],
+    batchSizeOpt: Option[Int],
+    readPreferenceOpt: Option[ReadPreference],
+    setMaxTimeMS: Boolean = false
+  ): Result[T] = {
+    val queryClause = QueryHelpers.transformer.transformQuery(query)
+    QueryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
+    // TODO(jacob): We should just use the read preference on the query itself.
+    val queryReadPreferenceOpt = readPreferenceOpt.orElse(queryClause.readPreference)
+    val collection = collectionFactory.getMongoCollectionFromQuery(query, queryReadPreferenceOpt)
+    val descriptionFunc = () => LegacyMongoBuilder.buildQueryString(operation, query.collectionName, queryClause)
+
+    // TODO(jacob): These casts will always succeed, but should be removed once there is a
+    //    version of LegacyMongoBuilder that speaks the new CRUD api.
+    val filter = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+
+    val maxTimeMSOpt = {
+      if (setMaxTimeMS) {
+        QueryHelpers.config.maxTimeMSOpt(collectionFactory.getInstanceNameFromQuery(queryClause))
+      } else {
+        None
+      }
+    }
+
+    runCommand(descriptionFunc, queryClause) {
+      findImpl(resultAccessor, accumulator)(collection)(filter)(
+        modifiers = MongoBuilder.buildQueryModifiers(queryClause),
+        batchSizeOpt = QueryHelpers.config.cursorBatchSize.getOrElse(batchSizeOpt),
+        limitOpt = queryClause.lim,
+        skipOpt = queryClause.sk,
+        sortOpt = queryClause.order.map(LegacyMongoBuilder.buildOrder(_).asInstanceOf[Bson]),
+        projectionOpt = queryClause.select.map(LegacyMongoBuilder.buildSelect(_).asInstanceOf[Bson]),
+        maxTimeMSOpt = maxTimeMSOpt
+      )
+    }
+  }
+
+  def query[M <: MetaRecord, T](
+    resultAccessor: => T, // call by name
+    singleResultProcessor: Document => Unit
+  )(
+    query: Query[M, _, _],
+    batchSizeOpt: Option[Int],
+    readPreferenceOpt: Option[ReadPreference]
+  ): Result[T] = {
+    val accumulator = new Block[Document] {
+      override def apply(value: Document): Unit = singleResultProcessor(value)
+    }
+
+    queryRunner(resultAccessor, accumulator)("find", query, batchSizeOpt, readPreferenceOpt, setMaxTimeMS = true)
   }
 }

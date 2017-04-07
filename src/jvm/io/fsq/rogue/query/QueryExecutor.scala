@@ -79,4 +79,22 @@ class QueryExecutor[
   ): Result[R] = {
     adapter.insert(record, serializer.writeToDocument(record), Some(writeConcern))
   }
+
+  def fetch[M <: MetaRecord, R <: Record, State](
+    query: Query[M, R, State],
+    readPreferenceOpt: Option[ReadPreference] = None
+  )(
+    implicit ev: ShardingOk[M, State],
+    ev2: M !<:< MongoDisallowed
+  ): Result[Seq[R]] = {
+    if (optimizer.isEmptyQuery(query)) {
+      adapter.wrapEmptyResult(Vector.empty[R])
+    } else {
+      val resultsBuilder = Vector.newBuilder[R]
+      def processor(document: Document): Unit = {
+        resultsBuilder += serializer.readFromDocument(query.meta, query.select)(document)
+      }
+      adapter.query(resultsBuilder.result(): Seq[R], processor)(query, None, readPreferenceOpt)
+    }
+  }
 }

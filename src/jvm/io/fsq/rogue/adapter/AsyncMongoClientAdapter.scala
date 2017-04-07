@@ -7,6 +7,7 @@ import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoCollection
 import com.mongodb.client.model.CountOptions
 import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
+import java.util.concurrent.TimeUnit
 import org.bson.BsonValue
 import org.bson.conversions.Bson
 
@@ -74,6 +75,43 @@ class AsyncMongoClientAdapter[
       }
     }
     collection.distinct(fieldName, filter, classOf[BsonValue]).forEach(accumulator, queryCallback)
+    resultCallback.result
+  }
+
+  override protected def findImpl[T](
+    resultAccessor: => T, // call by name
+    accumulator: Block[Document]
+  )(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson
+  )(
+    modifiers: Bson,
+    batchSizeOpt: Option[Int] = None,
+    limitOpt: Option[Int] = None,
+    skipOpt: Option[Int] = None,
+    sortOpt: Option[Bson] = None,
+    projectionOpt: Option[Bson] = None,
+    maxTimeMSOpt: Option[Long] = None
+  ): Result[T] = {
+    val cursor = collection.find(filter)
+
+    cursor.modifiers(modifiers)
+    batchSizeOpt.foreach(cursor.batchSize(_))
+    limitOpt.foreach(cursor.limit(_))
+    skipOpt.foreach(cursor.skip(_))
+    sortOpt.foreach(cursor.sort(_))
+    projectionOpt.foreach(cursor.projection(_))
+    maxTimeMSOpt.foreach(cursor.maxTime(_, TimeUnit.MILLISECONDS))
+
+    val resultCallback = callbackFactory.newCallback[T]
+    val queryCallback = new SingleResultCallback[Void] {
+      override def onResult(result: Void, throwable: Throwable): Unit = {
+        resultCallback.onResult(resultAccessor, throwable)
+      }
+    }
+
+    cursor.forEach(accumulator, queryCallback)
     resultCallback.result
   }
 
