@@ -2,6 +2,7 @@
 
 package io.fsq.rogue.query.test
 
+import com.mongodb.WriteConcern
 import com.twitter.util.{Await, Future}
 import io.fsq.common.concurrent.Futures
 import io.fsq.field.{OptionalField, RequiredField}
@@ -16,7 +17,7 @@ import io.fsq.rogue.query.testlib.{TrivialORMMetaRecord, TrivialORMMongoCollecti
     TrivialORMRogueSerializer}
 import org.bson.Document
 import org.bson.types.ObjectId
-import org.junit.{Before, Ignore}
+import org.junit.Before
 import org.specs2.matcher.{JUnitMustMatchers, MatchersImplicits}
 import scala.collection.JavaConverters.{iterableAsScalaIterableConverter, mapAsJavaMapConverter,
     mapAsScalaMapConverter, seqAsJavaListConverter}
@@ -151,11 +152,15 @@ class TrivialORMQueryTest extends RogueMongoTest
 
   val asyncCollectionFactory = new TrivialORMMongoCollectionFactory(asyncClientManager)
   val asyncClientAdapter = new AsyncMongoClientAdapter(asyncCollectionFactory, new TwitterFutureMongoCallbackFactory)
-  val asyncQueryExecutor = new QueryExecutor(asyncClientAdapter, queryOptimizer, serializer)
+  val asyncQueryExecutor = new QueryExecutor(asyncClientAdapter, queryOptimizer, serializer) {
+    override def defaultWriteConcern: WriteConcern = WriteConcern.W1
+  }
 
   val blockingCollectionFactory = new TrivialORMMongoCollectionFactory(blockingClientManager)
   val blockingClientAdapter = new BlockingMongoClientAdapter(blockingCollectionFactory)
-  val blockingQueryExecutor = new QueryExecutor(blockingClientAdapter, queryOptimizer, serializer)
+  val blockingQueryExecutor = new QueryExecutor(blockingClientAdapter, queryOptimizer, serializer) {
+    override def defaultWriteConcern: WriteConcern = WriteConcern.W1
+  }
 
   @Before
   override def initClientManagers(): Unit = {
@@ -171,13 +176,11 @@ class TrivialORMQueryTest extends RogueMongoTest
     )
   }
 
-  @Ignore
   def canBuildQuery: Unit = {
     metaRecordToQuery(SimpleRecord).toString must_== """db.test_records.find({ })"""
     SimpleRecord.where(_.int eqs 1).toString must_== """db.test_records.find({ "int" : 1})"""
   }
 
-  @Ignore
   def testAsyncCount: Unit = {
     val numInserts = 10
     val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(_ => {
@@ -199,7 +202,6 @@ class TrivialORMQueryTest extends RogueMongoTest
     Await.result(testFuture)
   }
 
-  @Ignore
   def testBlockingCount: Unit = {
     val numInserts = 10
     for (_ <- 1 to numInserts) {
@@ -227,7 +229,6 @@ class TrivialORMQueryTest extends RogueMongoTest
     Some(Map("modThree" -> recordIndex % 3))
   )
 
-  @Ignore
   def testAsyncDistinct: Unit = {
     val numInserts = 10
     val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
@@ -265,7 +266,6 @@ class TrivialORMQueryTest extends RogueMongoTest
     Await.result(Future.join(staticIdTestFuture, allFieldTestFuture))
   }
 
-  @Ignore
   def testBlockingDistinct: Unit = {
     val numInserts = 10
     for (i <- 1 to numInserts) {
@@ -294,7 +294,6 @@ class TrivialORMQueryTest extends RogueMongoTest
     ))
   }
 
-  @Ignore
   def testAsyncCountDistinct: Unit = {
     val numInserts = 10
     val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
@@ -325,7 +324,6 @@ class TrivialORMQueryTest extends RogueMongoTest
     Await.result(Future.join(staticIdTestFuture, allFieldTestFuture))
   }
 
-  @Ignore
   def testBlockingCountDistinct: Unit = {
     val numInserts = 10
     for (i <- 1 to numInserts) {
@@ -347,7 +345,6 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.countDistinct(SimpleRecord)(_.map).unwrap must_== 3
   }
 
-  @Ignore
   def testAsyncFetch: Unit = {
     val numInserts = 10
     val insertedFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
@@ -380,7 +377,6 @@ class TrivialORMQueryTest extends RogueMongoTest
     Await.result(emptyTestFuture)
   }
 
-  @Ignore
   def testBlockingFetch: Unit = {
     val numInserts = 10
     val inserted = for (i <- 1 to numInserts) yield {
