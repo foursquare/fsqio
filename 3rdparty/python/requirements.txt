@@ -1,4 +1,5 @@
 ansicolors==1.0.2
+pantsbuild.pants.contrib.go==1.2.1rc0
 pantsbuild.pants.contrib.node==1.2.1rc0
 pantsbuild.pants==1.2.1rc0
 pantsbuild.pants.testinfra==1.2.1rc0
