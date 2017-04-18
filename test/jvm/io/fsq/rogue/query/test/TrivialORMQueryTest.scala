@@ -17,7 +17,7 @@ import io.fsq.rogue.query.testlib.{TrivialORMMetaRecord, TrivialORMMongoCollecti
     TrivialORMRogueSerializer}
 import org.bson.Document
 import org.bson.types.ObjectId
-import org.junit.Before
+import org.junit.{Before, Test}
 import org.specs2.matcher.{JUnitMustMatchers, MatchersImplicits}
 import scala.collection.JavaConverters.{iterableAsScalaIterableConverter, mapAsJavaMapConverter,
     mapAsScalaMapConverter, seqAsJavaListConverter}
@@ -176,11 +176,13 @@ class TrivialORMQueryTest extends RogueMongoTest
     )
   }
 
+  @Test
   def canBuildQuery: Unit = {
     metaRecordToQuery(SimpleRecord).toString must_== """db.test_records.find({ })"""
     SimpleRecord.where(_.int eqs 1).toString must_== """db.test_records.find({ "int" : 1})"""
   }
 
+  @Test
   def testAsyncCount: Unit = {
     val numInserts = 10
     val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(_ => {
@@ -202,6 +204,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     Await.result(testFuture)
   }
 
+  @Test
   def testBlockingCount: Unit = {
     val numInserts = 10
     for (_ <- 1 to numInserts) {
@@ -229,6 +232,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     Some(Map("modThree" -> recordIndex % 3))
   )
 
+  @Test
   def testAsyncDistinct: Unit = {
     val numInserts = 10
     val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
@@ -266,6 +270,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     Await.result(Future.join(staticIdTestFuture, allFieldTestFuture))
   }
 
+  @Test
   def testBlockingDistinct: Unit = {
     val numInserts = 10
     for (i <- 1 to numInserts) {
@@ -294,6 +299,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     ))
   }
 
+  @Test
   def testAsyncCountDistinct: Unit = {
     val numInserts = 10
     val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
@@ -324,6 +330,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     Await.result(Future.join(staticIdTestFuture, allFieldTestFuture))
   }
 
+  @Test
   def testBlockingCountDistinct: Unit = {
     val numInserts = 10
     for (i <- 1 to numInserts) {
@@ -345,6 +352,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.countDistinct(SimpleRecord)(_.map).unwrap must_== 3
   }
 
+  @Test
   def testAsyncFetch: Unit = {
     val numInserts = 10
     val insertedFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
@@ -377,6 +385,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     Await.result(emptyTestFuture)
   }
 
+  @Test
   def testBlockingFetch: Unit = {
     val numInserts = 10
     val inserted = for (i <- 1 to numInserts) yield {
