@@ -16,9 +16,11 @@ import org.junit.{After, Assert, Test}
 import org.pantsbuild.junit.annotations.TestSerial
 import org.specs2.matcher.JUnitMustMatchers
 
+
 /**
  * Contains tests that test the interaction of Rogue with a real mongo.
  */
+@TestSerial
 class EndToEndTest extends JUnitMustMatchers {
   val db = new TestDatabaseService
   val Q = SpindleQuery
@@ -421,7 +423,7 @@ class EndToEndTest extends JUnitMustMatchers {
     ids.size must_== 15
   }
 
-  @TestSerial
+  @Test
   def testBulkInsertOne: Unit = {
     val venues = (1 to 5).map(_ => baseTestVenue())
     val venueIds = venues.map(_.id)
@@ -431,7 +433,7 @@ class EndToEndTest extends JUnitMustMatchers {
     db.count(Q(ThriftVenue).where(_.id in venueIds)) must_== venues.length
   }
 
-  @TestSerial
+  @Test
   def testBulkRemoveOne: Unit = {
     val venues = (1 to 5).map(i => baseTestVenue().toBuilder().userid(i).result())
     val venueIds = venues.map(_.id)
@@ -448,7 +450,7 @@ class EndToEndTest extends JUnitMustMatchers {
     db.count(Q(ThriftVenue).where(_.id in venuesToKeep.map(_.id))) must_== venuesToKeep.length
   }
 
-  @TestSerial
+  @Test
   def testBulkRemove: Unit = {
     val venues = (1 to 5).map(i => baseTestVenue().toBuilder().userid(i).result())
     val venueIds = venues.map(_.id)
@@ -465,7 +467,7 @@ class EndToEndTest extends JUnitMustMatchers {
     db.count(Q(ThriftVenue).where(_.id in venuesToKeep.map(_.id))) must_== venuesToKeep.length
   }
 
-  @TestSerial
+  @Test
   def testBulkReplaceOne: Unit = {
     val venues = (1 to 5).map(i => baseTestVenue().toBuilder().userid(i).result())
     val VenueUserIdToReplace = 31415
@@ -498,7 +500,7 @@ class EndToEndTest extends JUnitMustMatchers {
       1, db.count(Q(ThriftVenue).where(_.id eqs upsertVenue.id)))
   }
 
-  @TestSerial
+  @Test
   def testBulkUpdateOne: Unit = {
     val original1 = baseTestVenue().toBuilder().userid(1).result()
     val original2 = baseTestVenue().toBuilder().userid(1).result()
@@ -538,7 +540,7 @@ class EndToEndTest extends JUnitMustMatchers {
       1, db.count(Q(ThriftVenue).where(_.id eqs original2.id).and(_.userid eqs 3141591)))
   }
 
-  @TestSerial
+  @Test
   def testBulkUpdate: Unit = {
     val venuesToUpdate = (1 to 5).map(_ => baseTestVenue().toBuilder().userid(1).result())
     val venuesToNotUpdate = (1 to 3).map(_ => baseTestVenue().toBuilder().userid(1).result())

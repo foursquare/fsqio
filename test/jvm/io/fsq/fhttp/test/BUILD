@@ -6,10 +6,9 @@ junit_tests(
   dependencies = [
     '3rdparty:finagle',
     '3rdparty:junit',
+    '3rdparty:junit-runner',
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/fhttp',
   ],
-  # NOTE(mateo): These tests appear to not be threadsafe. They fail when ran with any type of concurrency.
-  concurrency="SERIAL",
 )

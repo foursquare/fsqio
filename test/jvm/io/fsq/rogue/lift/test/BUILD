@@ -7,6 +7,7 @@ junit_tests(
     '3rdparty:bson',
     '3rdparty:joda-time',
     '3rdparty:junit',
+    '3rdparty:junit-runner',
     '3rdparty:lift-mongo',
     '3rdparty:lift-record',
     '3rdparty:lift-util',
@@ -19,6 +20,4 @@ junit_tests(
     'test/jvm/io/fsq/rogue/test',
     'test/jvm/io/fsq/util/compiler/test',
   ],
-  # NOTE(mateo): These tests appear to not be threadsafe. They fail when ran with any type of concurrency.
-  concurrency="SERIAL",
 )

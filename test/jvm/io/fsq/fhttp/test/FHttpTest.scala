@@ -13,6 +13,7 @@ import io.fsq.fhttp.{FHttpClient, FHttpRequest, HttpStatusException, MultiPart, 
 import java.net.InetSocketAddress
 import org.junit.{After, Before, Ignore, Test}
 import org.junit.Assert._
+import org.pantsbuild.junit.annotations.TestSerial
 
 object FHttpRequestValidators {
   def matchesHeader(key: String, value: String): FHttpRequest.HttpOption = r => {
@@ -82,6 +83,7 @@ class FHttpTestHelper {
   def boundPort: Int = server.boundAddress.asInstanceOf[InetSocketAddress].getPort
 }
 
+@TestSerial
 class FHttpClientTest {
   var helper: FHttpTestHelper = _
   var client: FHttpClient = _
