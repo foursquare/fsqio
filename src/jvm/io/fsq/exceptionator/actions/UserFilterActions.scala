@@ -8,7 +8,7 @@ trait HasUserFilterActions {
   def userFilterActions: UserFilterActions
 }
 
-trait UserFilterActions {
+trait UserFilterActions extends IndexActions {
   def getAll(userId: Option[String] = None): List[UserFilterView]
   def get(id: String): Option[UserFilterView]
   def remove(id: String, userId: Option[String])
