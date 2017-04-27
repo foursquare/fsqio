@@ -2,10 +2,10 @@
 
 package io.fsq.common.concurrent.test
 
-import com.twitter.util.{Await, Duration, Future, FuturePool, Return, Throw}
+import com.twitter.util.{Await, Future, FuturePool, Return, Throw}
 import io.fsq.common.concurrent.Futures
 import io.fsq.common.scala.Identity._
-import java.util.concurrent.{CountDownLatch, CyclicBarrier, TimeUnit}
+import java.util.concurrent.{CountDownLatch, CyclicBarrier}
 import org.junit.{Assert => A, Test}
 
 class FuturesTest {
@@ -79,8 +79,8 @@ class FuturesTest {
 
     val completedF = Futures.groupedExecute(params, concurrency)(param => {
       FuturePool.interruptibleUnboundedPool({
-        concurrencyLatch.countDown()
         extraConcurrencyLatch.countDown()
+        concurrencyLatch.countDown()
         runLatch.await()
         if (param =? blockingParam) {
           blockingBarrier.await()
@@ -91,15 +91,15 @@ class FuturesTest {
     })
 
     // verify expected concurrency
-    A.assertTrue(concurrencyLatch.await(1, TimeUnit.SECONDS))
-    A.assertFalse(extraConcurrencyLatch.await(1, TimeUnit.SECONDS))
+    concurrencyLatch.await()
+    A.assertEquals(extraConcurrencyLatch.getCount, 1)
 
     // verify windowing behavior: one Future blocks but the others are all able to execute
     runLatch.countDown()
-    A.assertTrue(successLatch.await(1, TimeUnit.SECONDS))
+    successLatch.await()
     A.assertEquals(blockingBarrier.getNumberWaiting, 1)
 
-    blockingBarrier.await(1, TimeUnit.SECONDS)
-    Await.result(completedF, Duration.fromSeconds(1))
+    blockingBarrier.await()
+    Await.result(completedF)
   }
 }
