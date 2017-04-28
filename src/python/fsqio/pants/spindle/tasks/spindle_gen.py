@@ -43,6 +43,7 @@ class SpindleGen(NailgunTask, SpindleTask):
     register(
       '--thrift-include',
       advanced=True,
+      default=['src/thrift', 'test/thrift'],
       type=list,
       help='Use these thrift files as spindle bases for codegen.',
     )
@@ -65,21 +66,6 @@ class SpindleGen(NailgunTask, SpindleTask):
       advanced=True,
       type=target_option,
       help='Use this target as the java templates for spindle codegen (required to be 1 target).',
-    )
-    register(
-      '--stubs',
-      fingerprint=True,
-      advanced=True,
-      type=bool,
-      default=False,
-      help='Generates IDE stubs only',
-    )
-    register(
-      '--stub-output-path',
-      fingerprint=False,
-      advanced=True,
-      type=str,
-      help='Overrides the output path for spindle record generation.',
     )
 
   @memoized_property
@@ -106,25 +92,11 @@ class SpindleGen(NailgunTask, SpindleTask):
 
   @property
   def namespace_out(self):
-    stubs = self.get_options().stubs
-    if stubs:
-      outpath = self.get_options().stub_output_path
-      if not outpath:
-        raise TaskError("For stub generation, stub_output_path argument is required")
-      return os.path.join(outpath, 'scala_record')
-    else:
-      return os.path.join(self.workdir, 'scala_record')
+    return os.path.join(self.workdir, 'scala_record')
 
   @property
   def scalate_workdir(self):
-    stubs = self.get_options().stubs
-    if stubs:
-      outpath = self.get_options().stub_output_path
-      if not outpath:
-        raise TaskError("For stub generation, stub_output_path argument is required")
-      return os.path.join(outpath, 'scalate_workdir')
-    else:
-      return os.path.join(self.workdir, 'scalate_workdir')
+    return os.path.join(self.workdir, 'scalate_workdir')
 
   def build_spindle_product(self):
     spindle_products = self.context.products.get('spindle_binary')
@@ -167,16 +139,26 @@ class SpindleGen(NailgunTask, SpindleTask):
     if not thrift_include:
       raise self.BadDependency("You must pass the paths of your thrift roots as the '--thrift_include' option!")
 
-    scala_template_address = os.path.join(self.scala_template.address.spec_path,
-                                          self.scala_template.entry_point)
-
+    scala_template_address = os.path.join(
+      self.scala_template.address.spec_path,
+      self.scala_template.entry_point
+    )
     spindle_args = [
       '--template', scala_template_address,
+    ]
+    if self.java_template:
+      java_template_address = os.path.join(
+        self.java_template.address.spec_path,
+        self.java_template.entry_point
+      )
+      spindle_args += ['--java_template', java_template_address]
+
+    spindle_args += [
       '--thrift_include', ':'.join(thrift_include),
       '--namespace_out', self.namespace_out,
       '--working_dir', self.scalate_workdir,
     ]
-    if self.get_options().java_ssp_template:
+    if self.java_template:
       java_template_address = os.path.join(self.java_template.address.spec_path,
                                            self.java_template.entry_point)
       spindle_args.append('--java_template')
@@ -189,7 +171,6 @@ class SpindleGen(NailgunTask, SpindleTask):
 
   def execute(self):
     targets = self.codegen_targets()
-    build_graph = self.context.build_graph
 
     with self.invalidated(targets, invalidate_dependents=True) as invalidation_check:
       invalid_targets = list(chain.from_iterable(
@@ -198,62 +179,68 @@ class SpindleGen(NailgunTask, SpindleTask):
       if invalid_targets:
         self._execute_codegen(invalid_targets)
 
-      if not self.get_options().stubs:
-        invalid_vts_by_target = dict([(vt.target, vt) for vt in invalidation_check.invalid_vts])
-        vts_artifactfiles_pairs = defaultdict(list)
-
-        for target in targets:
-          synthetic_name = '{0}-{1}'.format(target.id, 'scala')
-          spec_path = os.path.relpath(self.namespace_out, get_buildroot())
-          synthetic_address = Address(spec_path, synthetic_name)
-          generated_scala_sources = [
-            '{0}.{1}'.format(source, 'scala')
-            for source in self.sources_generated_by_target(target)
-          ]
-          generated_java_sources = [
-            os.path.join(os.path.dirname(source), 'java_{0}.java'.format(os.path.basename(source)))
-            for source in self.sources_generated_by_target(target)
-          ]
-          relative_generated_sources = [
-            os.path.relpath(src, self.namespace_out)
-            for src in generated_scala_sources + generated_java_sources
-          ]
-          synthetic_target = self.context.add_new_target(
-            address=synthetic_address,
-            target_type=ScalaLibrary,
-            dependencies=self.synthetic_target_extra_dependencies,
-            sources=relative_generated_sources,
-            derived_from=target,
-          )
-
-          # NOTE: This bypasses the convenience function (Target.inject_dependency) in order
-          # to improve performance.  Note that we can walk the transitive dependee subgraph once
-          # for transitive invalidation rather than walking a smaller subgraph for every single
-          # dependency injected.  This walk also covers the invalidation for the java synthetic
-          # target above.
-          for dependent_address in build_graph.dependents_of(target.address):
-            build_graph.inject_dependency(dependent=dependent_address,
-                                          dependency=synthetic_target.address)
-          # NOTE: See the above comment.  The same note applies.
-          for concrete_dependency_address in build_graph.dependencies_of(target.address):
-            build_graph.inject_dependency(
-              dependent=synthetic_target.address,
-              dependency=concrete_dependency_address,
-            )
-          build_graph.walk_transitive_dependee_graph(
-            [target.address],
-            work=lambda t: t.mark_transitive_invalidation_hash_dirty(),
-          )
-
-          if target in self.context.target_roots:
-            self.context.target_roots.append(synthetic_target)
-          if target in invalid_vts_by_target:
+      invalid_vts_by_target = dict([(vt.target, vt) for vt in invalidation_check.invalid_vts])
+      vts_artifactfiles_pairs = defaultdict(list)
+      for target in targets:
+        generated_sources = self.calculate_generated_sources(target)
+        self.inject_synthetic_dependencies(target, generated_sources)
+        if target in invalid_vts_by_target:
             vts_artifactfiles_pairs[invalid_vts_by_target[target]].extend(
-              generated_scala_sources + generated_java_sources
+              generated_sources
             )
 
-        if self.artifact_cache_writes_enabled():
-          self.update_artifact_cache(vts_artifactfiles_pairs.items())
+      if self.artifact_cache_writes_enabled():
+        self.update_artifact_cache(vts_artifactfiles_pairs.items())
+
+  def calculate_generated_sources(self, target):
+    generated_scala_sources = [
+      '{0}.{1}'.format(source, 'scala')
+      for source in self.sources_generated_by_target(target)
+    ]
+    extra_sources = self._additional_generated_sources(target) or []
+    return generated_scala_sources + extra_sources
+
+  def _additional_generated_sources(self, target):
+    generated_java_sources = [
+      os.path.join(os.path.dirname(source), 'java_{0}.java'.format(os.path.basename(source)))
+      for source in self.sources_generated_by_target(target)
+    ]
+    return generated_java_sources
+
+  def inject_synthetic_dependencies(self, target, generated_sources):
+    build_graph = self.context.build_graph
+    synthetic_name = '{0}-{1}'.format(target.id, 'scala')
+    spec_path = os.path.relpath(self.namespace_out, get_buildroot())
+    synthetic_address = Address(spec_path, synthetic_name)
+
+    relative_generated_sources = [
+      os.path.relpath(src, self.namespace_out)
+      for src in generated_sources
+    ]
+    synthetic_target = self.context.add_new_target(
+      address=synthetic_address,
+      target_type=ScalaLibrary,
+      dependencies=self.synthetic_target_extra_dependencies,
+      sources=relative_generated_sources,
+      derived_from=target,
+    )
+
+    for dependent_address in build_graph.dependents_of(target.address):
+      build_graph.inject_dependency(dependent=dependent_address,
+                                    dependency=synthetic_target.address)
+
+    for concrete_dependency_address in build_graph.dependencies_of(target.address):
+      build_graph.inject_dependency(
+        dependent=synthetic_target.address,
+        dependency=concrete_dependency_address,
+      )
+    build_graph.walk_transitive_dependee_graph(
+      [target.address],
+      work=lambda t: t.mark_transitive_invalidation_hash_dirty(),
+    )
+
+    if target in self.context.target_roots:
+      self.context.target_roots.append(synthetic_target)
 
   def _calculate_sources(self, thrift_targets, target_filter):
     sources = set()
