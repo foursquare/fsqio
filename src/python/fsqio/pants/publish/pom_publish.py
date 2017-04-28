@@ -121,7 +121,7 @@ class PomPublish(JarPublish, JarBuilderTask):
     return self.coordinate(jar.org, jar.name, rev or jar.rev)
 
   def generate_pom(self, tgt, version, path):
-    closure = [t for t in tgt.closure() if t is not tgt]
+    closure = OrderedSet([t for t in tgt.closure() if t is not tgt])
 
     # Remove all transitive deps of Pom dependencies and then add back the pom_dep itself.
     pom_deps = [t for t in closure if isinstance(t, PomTarget)]
@@ -360,4 +360,3 @@ class PomPublish(JarPublish, JarBuilderTask):
         raise TaskError('Failed to push {0}! {1}'.format(jar, e))
     else:
       print("\nDRYRUN- would have pushed:{} using {} resolver.".format(self.jar_coordinate(jar, version), resolver))
-
