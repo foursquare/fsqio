@@ -1,0 +1,5 @@
+<%
+  // Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
+%>
+<%@ val cls: _root_.io.fsq.spindle.codegen.runtime.StructLike  %>
+  def write(oprot: org.apache.thrift.protocol.TProtocol): Unit

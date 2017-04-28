@@ -1,0 +1,36 @@
+<%
+  // Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
+  import _root_.io.fsq.spindle.codegen.runtime.{PrimitiveRenderType, StructLike}
+%>
+<%@ val cls: StructLike %>
+<%@ val clsContainer: String %>
+<%
+def escapeQuotes(str: String): String = str.replace("\"", "\\\"")
+%>\
+
+object ${cls.name} extends ${cls.name}Meta {
+<% render("class_companion_builder.ssp", Map("cls" -> cls)) %>
+  implicit val companionProvider: ${cls.name}CompanionProvider
+  implicit val __$ordering: _root_.scala.math.Ordering[${cls.name}]
+  implicit val __$comparator: _root_.java.util.Comparator[${cls.name}]
+}
+
+class ${cls.name}Meta extends Object
+#for (pkField <- cls.primaryKeyField)
+    with _root_.io.fsq.spindle.runtime.HasMetaPrimaryKey[${pkField.renderType.text}, ${cls.name}]
+#end
+    with _root_.io.fsq.spindle.runtime.RecordProvider[${cls.name}] \
+#if (cls.annotations.contains("meta_extends"))
+    with ${cls.annotations.getAll("meta_extends").mkString("\n    with ")} \
+#end
+{
+<% render("class_companion_tfields.ssp", Map("cls" -> cls)) %>
+<% render("class_companion_rfields.ssp", Map("cls" -> cls)) %>
+  def apply(
+      ${cls.fields.map(field => "%s: %s".format(field.escapedName, field.renderType.text)).mkString(",\n      ")}
+  ): ${cls.name}
+}
+
+class ${cls.name}CompanionProvider extends _root_.io.fsq.spindle.runtime.CompanionProvider[${cls.name}] {
+  type CompanionT = ${cls.name}Meta
+}

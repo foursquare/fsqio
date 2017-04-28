@@ -1,0 +1,10 @@
+<%
+  // Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+<%@ val clsContainer: String %>
+final class Raw${cls.name}
+    extends Mutable${cls.name} {
+<% render("class_impls_getsetfields.ssp", Map("cls" -> cls)) %>
+}

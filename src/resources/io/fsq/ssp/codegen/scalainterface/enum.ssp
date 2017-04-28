@@ -1,0 +1,42 @@
+<%
+  // Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.ScalaEnum
+%>
+<%@ val enum: ScalaEnum %>
+<%
+def escapeQuotes(str: String): String = str.replace("\"", "\\\"")
+%>\
+<%--
+// Scala Enumeration is awful, so we just generate our own enum-like thing
+// here. Enumeration (and Java's type-safe enums) are just boilerplate-reducing
+// conveniences, and since we're generating code, we don't need that
+// convenience anyway.
+
+// Making enumeration classes 'sealed' and 'abstract' will prevent new
+// instances being defined outside of this file, and will also provide
+// exhaustiveness checking when pattern matching on the enumeration.
+--%>
+sealed abstract class ${enum.name} private (
+    override val id: Int,
+    override val name: String,
+    override val stringValue: String
+) extends _root_.io.fsq.spindle.runtime.Enum[${enum.name}]
+  with org.apache.thrift.TEnum {
+  override def meta = ${enum.name}
+}
+
+object ${enum.name} extends _root_.io.fsq.spindle.runtime.EnumMeta[${enum.name}] {
+<%--
+// Making enumeration instances case objects provides exhaustiveness checking
+// when pattern matching on the enumeration.
+--%>
+#for (elem <- enum.elements)
+  <% val alt = elem.alternateValue.getOrElse(elem.name) %>
+  object ${elem.name} extends ${enum.name}(${elem.value.toString}, "${elem.name}", "${alt}")
+#end
+  final case class UnknownWireValue(val v: Any) extends ${enum.name}(-1, "?", "?")
+
+  implicit val __$ordering: _root_.scala.math.Ordering[${enum.name}]
+  implicit val __$comparator: _root_.java.util.Comparator[${enum.name}]
+}

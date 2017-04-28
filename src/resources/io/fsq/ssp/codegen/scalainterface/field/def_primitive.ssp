@@ -1,0 +1,15 @@
+<%
+  // Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+def ${field.escapedName}: ${field.renderType.text}
+def ${field.name}Option: Option[${field.renderType.text}]
+def ${field.name}OrDefault: ${field.renderType.text}
+def ${field.name}OrNull: ${field.renderType.text}
+def ${field.name}OrThrow: ${field.renderType.text}
+def ${field.isSetName}: Boolean
+#if (field.isForeignKey)
+<% render("def_fk.ssp", Map("field" -> field)) %>
+#end

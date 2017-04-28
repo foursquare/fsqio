@@ -1,0 +1,8 @@
+<%
+  // Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.ScalaField
+%>
+<%@ val field: ScalaField %>
+<% render("def_ref.ssp", Map("field" -> field)) %>
+  def ${field.name}ByteArrayOption: Option[Array[Byte]]

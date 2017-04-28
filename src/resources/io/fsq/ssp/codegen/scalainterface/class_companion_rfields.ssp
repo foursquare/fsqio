@@ -1,0 +1,26 @@
+<%
+    // Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+#for (field <- cls.fields)
+val ${field.escapedName}: \
+#if (field.isForeignKey && field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.Container1RenderType]) \
+<% val elem = field.renderType.asInstanceOf[_root_.io.fsq.spindle.codegen.runtime.Container1RenderType].elem %> \
+_FKSeqFieldDesc[${elem.text}, ${cls.name}, ${cls.name}Meta]
+#elseif (field.isForeignKey && !field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.ContainerRenderType]) \
+_FKFieldDesc[${field.renderType.text}, ${cls.name}, ${cls.name}Meta]
+#elseif (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType]) \
+<% val structName = field.renderType.asInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType].className %> \
+_BitFieldDesc[${field.renderType.text}, ${cls.name}, ${cls.name}Meta, ${structName}, ${structName}Meta]
+#elseif (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.ExceptionRenderType]) \
+_ExceptionFieldDesc[${cls.name}, ${cls.name}Meta, ${field.renderType.text}.Struct, ${field.renderType.text}.StructMeta, ${field.renderType.text}]
+#elseif (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.StructRenderType]) \
+_StructFieldDesc[${cls.name}, ${cls.name}Meta, ${field.renderType.text}, ${field.renderType.text}Meta]
+#elseif (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.EnumRenderType]) \
+_OptFieldDesc[${field.renderType.text}, ${cls.name}, ${cls.name}Meta]
+#else \
+_OptFieldDesc[${field.renderType.text}, ${cls.name}, ${cls.name}Meta]
+#end
+
+#end

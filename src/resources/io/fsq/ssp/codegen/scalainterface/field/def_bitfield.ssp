@@ -1,0 +1,18 @@
+<%
+  // Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
+
+  import _root_.io.fsq.spindle.codegen.runtime.{BitfieldStructRenderType, ScalaField}
+%>
+<%@ val field: ScalaField %>
+<%
+  val renderType = field.renderType.asInstanceOf[BitfieldStructRenderType]
+  render("../" + renderType.ref.fieldDefTemplate, Map("field" -> field))
+%>
+
+def ${field.escapedName}: Int
+def ${field.name}Option: Option[Int]
+def ${field.name}OrDefault: Int
+def ${field.name}OrNull: Int
+def ${field.name}OrThrow: Int
+def ${field.isSetName}: Boolean
+def ${field.name}Struct: ${renderType.className}

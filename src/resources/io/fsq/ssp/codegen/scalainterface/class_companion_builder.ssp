@@ -1,0 +1,60 @@
+<%
+  // Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
+%>
+<%
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+<%
+val (requiredFields, optionalFields) = cls.fields.partition(_.builderRequired)
+val hasRequiredFields = requiredFields.nonEmpty
+val requiredTraits = requiredFields.map(field => "Has" + field.name.capitalize)
+%>
+  object Builder {
+#for (trayt <- requiredTraits)
+    sealed trait ${trayt}
+#end
+#if (hasRequiredFields)
+    sealed trait MaybeSpecified
+    sealed class Specified extends MaybeSpecified
+    sealed class Unspecified extends MaybeSpecified
+#end
+
+    type HasAll = ${if (hasRequiredFields) requiredTraits.mkString(" with ") else "Any"}
+    type AllSpecified = Builder[HasAll]
+    type AllUnspecified = Builder[Any]
+  }
+
+  class Builder[+State] private[${cls.name}] (private var obj: Raw${cls.name}) {
+#for ((field, trayt) <- requiredFields zip requiredTraits)
+    def ${field.escapedName}(v: ${field.renderType.text}): ${cls.name}.Builder[State with Builder.${trayt}]
+
+#if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType])
+<% val renderType = field.renderType.asInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType] %>
+    def ${field.escapedName}Struct(v: ${renderType.className}): ${cls.name}.Builder[State with Builder.${trayt}]
+#end
+#end
+#for (field <- optionalFields)
+    def ${field.escapedName}(v: ${field.renderType.text}): ${cls.name}.Builder[State]
+    def ${field.escapedName}(vOpt: Option[${field.renderType.text}]): ${cls.name}.Builder[State]
+#if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType])
+<% val renderType = field.renderType.asInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType] %>
+    def ${field.escapedName}Struct(v: ${renderType.className}): ${cls.name}.Builder[State]
+    def ${field.escapedName}Struct(vOpt: Option[${renderType.className}]): ${cls.name}.Builder[State]
+#end
+#end
+
+<%
+  val paramNames = requiredTraits.indices.map(n => "ev%d".format(n))
+  val paramDecls =
+    for ((trayt, paramName) <- requiredTraits.zip(paramNames)) yield {
+      "%s: State <:< Builder.%s".format(paramName, trayt)
+    }
+  val resultImplicitParams = if (hasRequiredFields) "(implicit %s)".format(paramDecls.mkString(", ")) else ""
+  val resultParams = if (hasRequiredFields) "(%s)".format(paramNames.mkString(", ")) else ""
+%>
+    def resultMutable()${resultImplicitParams}: Mutable${cls.name}
+    def result()${resultImplicitParams}: ${cls.name}
+  }
+
+  def newBuilder: ${cls.name}.Builder.AllUnspecified

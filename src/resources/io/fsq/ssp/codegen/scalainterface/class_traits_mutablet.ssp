@@ -1,0 +1,12 @@
+<%
+  // Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
+  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+%>
+<%@ val cls: StructLike %>
+<%@ val clsContainer: String %>
+trait Mutable${cls.name} extends ${cls.name} {
+#for (field <- cls.fields)
+<% render(field.renderType.fieldMutableTemplate, Map("field" -> field)) %>
+#end
+  def deepMerge(that: ${cls.name}): Unit
+}
