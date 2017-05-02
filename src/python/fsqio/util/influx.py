@@ -62,4 +62,6 @@ def write_lines_to_influx(influxdb_url, db, lines):
     params={'db': db},
     data=influx_data,
   )
-  response.raise_for_status()
+  if response.status_code != 200:
+    print(response.content)
+    response.raise_for_status()
