@@ -81,10 +81,10 @@ class FuturesTest {
       FuturePool.interruptibleUnboundedPool({
         extraConcurrencyLatch.countDown()
         concurrencyLatch.countDown()
-        runLatch.await()
         if (param =? blockingParam) {
           blockingBarrier.await()
         }
+        runLatch.await()
       }).onSuccess(_ => {
         successLatch.countDown()
       }).unit
