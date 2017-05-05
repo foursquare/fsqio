@@ -11,6 +11,7 @@ from fsqio.pants.buildgen.core.buildgen import Buildgen
 from fsqio.pants.buildgen.core.buildgen_aggregate_targets import BuildgenAggregateTargets
 from fsqio.pants.buildgen.core.buildgen_target_bag import BuildgenTargetBag
 from fsqio.pants.buildgen.core.buildgen_timestamp import BuildgenTimestamp
+from fsqio.pants.buildgen.core.inject_target_bags import BuildgenInjectTargetBags
 from fsqio.pants.buildgen.core.map_derived_targets import MapDerivedTargets
 from fsqio.pants.buildgen.core.map_sources_to_addresses import MapSourcesToAddresses
 from fsqio.pants.buildgen.jvm.map_java_exported_symbols import MapJavaExportedSymbols
@@ -99,6 +100,11 @@ def register_goals():
     name='python',
     action=BuildgenPython,
   ).install('buildgen')
+
+  task(
+    name='add-target-bags',
+    action=BuildgenInjectTargetBags,
+  ).install('test')
 
   task(
     name='aggregate-targets',
