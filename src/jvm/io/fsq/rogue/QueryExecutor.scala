@@ -334,7 +334,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
     }
   }
 
-  def save[RecordType <: RB](record: RecordType, writeConcern: WriteConcern = defaultWriteConcern): RecordType = {
+  def save[RecordType <: RB](record: RecordType, writeConcern: WriteConcern = defaultWriteConcern)(implicit ev: RecordType !<:< MongoDisallowed): RecordType = {
     val s = writeSerializer(record)
     val dbo = s.toDBObject(record)
     adapter.save(record, dbo, writeConcern)

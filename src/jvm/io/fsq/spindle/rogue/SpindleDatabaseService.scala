@@ -3,8 +3,9 @@
 package io.fsq.spindle.rogue
 
 import com.mongodb.{BulkWriteResult, DBObject, DefaultDBDecoder, WriteConcern}
-import io.fsq.rogue.{MongoHelpers, MongoJavaDriverAdapter, Query, QueryExecutor, QueryHelpers, QueryOptimizer}
+import io.fsq.rogue.{!<:<, MongoHelpers, MongoJavaDriverAdapter, Query, QueryExecutor, QueryHelpers, QueryOptimizer}
 import io.fsq.rogue.MongoHelpers.{AndCondition, MongoBuilder, MongoSelect}
+import io.fsq.rogue.types.MongoDisallowed
 import io.fsq.spindle.common.thrift.bson.TBSONObjectProtocol
 import io.fsq.spindle.runtime.{UntypedMetaRecord, UntypedRecord}
 import java.io.InputStream
@@ -49,7 +50,7 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
   )
   override val optimizer = new QueryOptimizer
 
-  override def save[R <: UntypedRecord](record: R, writeConcern: WriteConcern = defaultWriteConcern): R = {
+  override def save[R <: UntypedRecord](record: R, writeConcern: WriteConcern = defaultWriteConcern)(implicit ev: R !<:< MongoDisallowed): R = {
     if (record.meta.annotations.contains("nosave"))
       throw new IllegalArgumentException("Cannot save a %s record".format(record.meta.recordName))
     super.save(record, writeConcern)
