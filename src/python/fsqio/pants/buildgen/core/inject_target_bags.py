@@ -34,6 +34,10 @@ class BuildgenInjectTargetBags(BuildgenBase):
   # existing bags.
 
   @classmethod
+  def implementation_version(cls):
+    return super(BuildgenInjectTargetBags, cls).implementation_version() + [('BuildgenInjectTargetBags', 1)]
+
+  @classmethod
   def alternate_target_roots(cls, options, address_mapper, build_graph):
     subsystem = BuildgenSubsystem.Factory.global_instance().create()
     bag_specs = subsystem.buildgen_target_bags
@@ -54,6 +58,7 @@ class BuildgenInjectTargetBags(BuildgenBase):
         target_type=Target,
         dependencies=build_graph.dependencies_of(bag_target.address),
         derived_from=bag_target,
+        tags=bag_target.tags,
       )
 
       for dependent in bag_target.dependents:
@@ -63,7 +68,7 @@ class BuildgenInjectTargetBags(BuildgenBase):
         )
       build_graph.maybe_inject_address_closure(bag_target.address)
 
-    # Return None is only done explicitly for readabiliy's sake. It means that we are not changing the target_roots
+    # Explicitly returning None only for readabiliy's sake. It means that we are not changing the target_roots
     # themselves. We do inject a synthetic dependency, but not as a full target_roots.
     return None
 
