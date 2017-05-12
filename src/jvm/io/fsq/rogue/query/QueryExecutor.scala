@@ -7,6 +7,7 @@ import io.fsq.field.Field
 import io.fsq.rogue.{Query, QueryHelpers, QueryOptimizer, Rogue, ShardingOk, !<:<}
 import io.fsq.rogue.adapter.MongoClientAdapter
 import io.fsq.rogue.types.MongoDisallowed
+import scala.collection.generic.CanBuildFrom
 
 
 /** TODO(jacob): All of the collection methods implemented here should get rid of the
@@ -80,21 +81,23 @@ class QueryExecutor[
     adapter.insert(record, serializer.writeToDocument(record), Some(writeConcern))
   }
 
-  def fetch[M <: MetaRecord, R <: Record, State](
+  def fetch[M <: MetaRecord, R <: Record, State, Collection[_]](
     query: Query[M, R, State],
     readPreferenceOpt: Option[ReadPreference] = None
   )(
     implicit ev: ShardingOk[M, State],
-    ev2: M !<:< MongoDisallowed
-  ): Result[Seq[R]] = {
+    ev2: M !<:< MongoDisallowed,
+    canBuildFrom: CanBuildFrom[_, R, Collection[R]]
+  ): Result[Collection[R]] = {
+    val resultsBuilder = canBuildFrom()
+
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapEmptyResult(Vector.empty[R])
+      adapter.wrapEmptyResult(resultsBuilder.result())
     } else {
-      val resultsBuilder = Vector.newBuilder[R]
       def processor(document: Document): Unit = {
         resultsBuilder += serializer.readFromDocument(query.meta, query.select)(document)
       }
-      adapter.query(resultsBuilder.result(): Seq[R], processor)(query, None, readPreferenceOpt)
+      adapter.query(resultsBuilder.result(), processor)(query, None, readPreferenceOpt)
     }
   }
 }
