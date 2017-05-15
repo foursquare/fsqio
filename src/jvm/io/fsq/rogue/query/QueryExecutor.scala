@@ -4,7 +4,7 @@ package io.fsq.rogue.query
 
 import com.mongodb.{ReadPreference, WriteConcern}
 import io.fsq.field.Field
-import io.fsq.rogue.{Query, QueryHelpers, QueryOptimizer, Rogue, ShardingOk, !<:<}
+import io.fsq.rogue.{AddLimit, Query, QueryHelpers, QueryOptimizer, Rogue, ShardingOk, !<:<}
 import io.fsq.rogue.adapter.MongoClientAdapter
 import io.fsq.rogue.types.MongoDisallowed
 import scala.collection.generic.CanBuildFrom
@@ -108,5 +108,26 @@ class QueryExecutor[
   )(
     implicit ev: ShardingOk[M, State],
     ev2: M !<:< MongoDisallowed
-  ): Result[List[R]] = fetch(query, readPreferenceOpt)
+  ): Result[List[R]] = {
+    fetch(query, readPreferenceOpt)
+  }
+
+  def fetchOne[M <: MetaRecord, R <: Record, State, LimitState](
+    query: Query[M, R, State],
+    readPreferenceOpt: Option[ReadPreference] = None
+  )(
+    implicit ev: AddLimit[State, LimitState],
+    ev2: ShardingOk[M, LimitState],
+    ev3: M !<:< MongoDisallowed
+  ): Result[Option[R]] = {
+    if (optimizer.isEmptyQuery(query)) {
+      adapter.wrapEmptyResult(None)
+    } else {
+      var result: Option[R] = None
+      def processor(document: Document): Unit = {
+        result = Some(serializer.readFromDocument(query.meta, query.select)(document))
+      }
+      adapter.query(result, processor)(query.limit(1), None, readPreferenceOpt)
+    }
+  }
 }

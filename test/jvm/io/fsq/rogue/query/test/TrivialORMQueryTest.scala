@@ -462,6 +462,54 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.fetchList(SimpleRecord.where(_.id eqs emptyRecord.id)).unwrap must_== Seq(emptyRecord)
   }
 
+  @Test
+  def testAsyncFetchOne: Unit = {
+    val numInserts = 10
+    val insertedFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
+      asyncQueryExecutor.insert(newTestRecord(i))
+    })
+
+    val basicTestFuture = insertedFuture.flatMap(inserted => {
+      val filteredInts = Set(0, 1)
+      val filteredRecords = inserted.filter(_.int.map(filteredInts.contains(_)).getOrElse(false))
+
+      Future.join(
+        asyncQueryExecutor.fetchOne(SimpleRecord).map(_.get must beOneOf(inserted: _*)),
+        asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs inserted.head.id)).map(_ must_== Some(inserted.head)),
+        asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs inserted.last.id)).map(_ must_== Some(inserted.last)),
+        asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs new ObjectId)).map(_ must_== None)
+      )
+    })
+
+    val emptyRecord = SimpleRecord()
+    val emptyTestFuture = for {
+      _ <- basicTestFuture
+      _ <- asyncQueryExecutor.insert(emptyRecord)
+      fetched <- asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs emptyRecord.id))
+    } yield {
+      fetched must_== Some(emptyRecord)
+    }
+
+    Await.result(emptyTestFuture)
+  }
+
+  @Test
+  def testBlockingFetchOne: Unit = {
+    val numInserts = 10
+    val inserted = for (i <- 1 to numInserts) yield {
+      blockingQueryExecutor.insert(newTestRecord(i)).unwrap
+    }
+
+    blockingQueryExecutor.fetchOne(SimpleRecord).unwrap.get must beOneOf(inserted: _*)
+    blockingQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs inserted.head.id)).unwrap must_== Some(inserted.head)
+    blockingQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs inserted.last.id)).unwrap must_== Some(inserted.last)
+    blockingQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs new ObjectId)).unwrap must_== None
+
+    val emptyRecord = SimpleRecord()
+    blockingQueryExecutor.insert(emptyRecord)
+    blockingQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs emptyRecord.id)).unwrap must_== Some(emptyRecord)
+  }
+
   // TODO(jacob): Uncomment and clean up these tests once their behavior is implemented.
   //
   // @Test
