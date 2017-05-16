@@ -803,7 +803,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.github.scopt', name = 'scopt', rev = '3.2.0', intransitive = True)
+    sjar(org = 'com.github.scopt', name = 'scopt', rev = '3.5.0', intransitive = True)
   ]
 )
 

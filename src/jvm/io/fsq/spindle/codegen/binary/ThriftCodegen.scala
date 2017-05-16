@@ -74,7 +74,7 @@ object ThriftCodegenConfig {
 
       arg[File]("thrift_file(s)")
         .optional()
-        .maxOccurs(Int.MaxValue)
+        .unbounded()
         .validate(f => if (f.exists) success else failure(s"Input file ${f.getName} does not exist."))
         .action((v, c) => c.copy(input = c.input :+ v))
     }
