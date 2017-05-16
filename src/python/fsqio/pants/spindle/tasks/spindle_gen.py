@@ -158,13 +158,9 @@ class SpindleGen(NailgunTask, SpindleTask):
       '--namespace_out', self.namespace_out,
       '--working_dir', self.scalate_workdir,
     ]
-    if self.java_template:
-      java_template_address = os.path.join(self.java_template.address.spec_path,
-                                           self.java_template.entry_point)
-      spindle_args.append('--java_template')
-      spindle_args.append(java_template_address)
 
     spindle_args.extend(sources)
+
     result = self._run_spindle(spindle_args)
     if result != 0:
       raise TaskError('Spindle codegen exited non-zero ({0})'.format(result))
