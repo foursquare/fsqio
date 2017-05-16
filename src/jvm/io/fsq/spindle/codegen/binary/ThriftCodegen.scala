@@ -7,10 +7,9 @@ import io.fsq.spindle.codegen.parser.{ParserException, ThriftParser}
 import io.fsq.spindle.codegen.runtime.{BitfieldRef, CodegenException, EnhancedTypeRef, EnhancedTypes, ProgramSource,
     ScalaProgram, Scope, TypeDeclaration, TypeDeclarationResolver, TypeReference}
 import java.io.{File, PrintWriter}
-import org.clapper.argot.ArgotConverters._
-import org.clapper.argot.ArgotParser
 import org.fusesource.scalate.{RenderContext, TemplateEngine}
 import scala.annotation.tailrec
+import scopt.OptionParser
 
 // TODO: This used to be from a magical sbt plugin. Figure out something
 // clever for pants?
@@ -18,32 +17,101 @@ object Info {
   val version: String = "3.0.1"
 }
 
+case class ThriftCodegenConfig(
+  input: Seq[File] = Nil,
+  template: String = "",  // will be filled in since this is a required option
+  javaTemplate: Option[String] = None,
+  includes: Option[Seq[File]] = None,
+  namespaceOut: Option[File] = None,
+  workingDir: Option[File] = None,
+  extension: Option[String] = None,
+  allowReload: Boolean = false
+)
+
+object ThriftCodegenConfig {
+  def parse(args: Array[String]): Option[ThriftCodegenConfig] = {
+    val parser = new OptionParser[ThriftCodegenConfig]("scala-thrift-codegen") {
+      opt[String]("template")
+        .required()
+        .text("path to scala template to generate from")
+        .action((v, c) => c.copy(template = v))
+
+      opt[String]("java_template")
+        .text("path to java template to generate from")
+        .action((v, c) => c.copy(javaTemplate = Some(v)))
+
+      opt[String]("thrift_include")
+        .text("thrift include directives are resolved relative to these paths (and the including file's directory)")
+        .validate(v => {
+          val files = v.split(":").map(name => new File(name).getAbsoluteFile)
+          val nonexisting = files.filter(!_.exists)
+          if (nonexisting.nonEmpty) {
+            failure("Thrift included file(s) " + nonexisting.mkString(":") + "do(es) not exists.")
+          } else
+            success
+        })
+        .action((v, c) => {
+          val files = v.split(":").map(name => new File(name).getAbsoluteFile)
+          c.copy(includes = Some(files))
+        })
+
+      opt[File]("namespace_out")
+        .text("Root of the output namespace hierarchy. We add the intermediate directory structure there as needed. "
+          + "Required when compiling multiple files.")
+        .action((v, c) => c.copy(namespaceOut = Some(v)))
+
+      opt[File]("working_dir")
+        .text("Root of the working directory used to store intermediate Scalate files.")
+        .action((v, c) => c.copy(workingDir = Some(v)))
+
+      opt[String]("extension")
+        .text("the extension the files should have")
+        .action((v, c) => c.copy(extension = Some(v)))
+
+      opt[Boolean]("allow_reload")
+        .text("allow reloading of codegen templates")
+        .action((_, c) => c.copy(allowReload = true))
+
+      arg[File]("thrift_file(s)")
+        .optional()
+        .maxOccurs(Int.MaxValue)
+        .validate(f => if (f.exists) success else failure(s"Input file ${f.getName} does not exist."))
+        .action((v, c) => c.copy(input = c.input :+ v))
+    }
+
+    parser.parse(args, ThriftCodegenConfig())
+  }
+}
+
 object ThriftCodegen {
   def main(_args: Array[String]): Unit = {
-    val args = new CodegenArgs(_args)
+    val args = ThriftCodegenConfig.parse(_args).getOrElse({
+      sys.exit(1)
+    })
+
     try {
-      args.javaTemplate.value.foreach(javaTemplate => {
+      args.javaTemplate.foreach(javaTemplate => {
         compile(
           javaTemplate,
-          args.input.value,
-          args.includes.value.getOrElse(Nil),
-          args.namespaceOut.value,
-          args.workingDir.value,
+          args.input,
+          args.includes.getOrElse(Nil),
+          args.namespaceOut,
+          args.workingDir,
           "java",
-          args.allowReload.value.getOrElse(false))
+          args.allowReload)
       })
       compile(
-        args.template.value.get,
-        args.input.value,
-        args.includes.value.getOrElse(Nil),
-        args.namespaceOut.value,
-        args.workingDir.value,
-        args.extension.value.getOrElse("scala"),
-        args.allowReload.value.getOrElse(false))
+        args.template,
+        args.input,
+        args.includes.getOrElse(Nil),
+        args.namespaceOut,
+        args.workingDir,
+        args.extension.getOrElse("scala"),
+        args.allowReload)
     } catch {
       case e: CodegenException =>
         println("Codegen error:\n%s".format(e.getMessage))
-        System.exit(1)
+        sys.exit(1)
     }
   }
 
@@ -208,47 +276,5 @@ object ThriftCodegen {
     absolutePaths.find(_.exists).getOrElse {
       throw new CodegenException("Unresolvable include \"" + relativePath + "\" in file \"" + file + "\"")
     }
-  }
-
-  class CodegenArgs(args: Array[String]) {
-    val parser = new ArgotParser("scala-thrift-codegen", preUsage=Some("scala-thrift-codegen: Version 0.1"))
-
-    val template = parser.option[String](List("template"), "/path/to/template", "path to scala template to generate from")
-
-    val javaTemplate = parser.option[String](List("java_template"), "/path/to/template", "path to java template to generate from")
-
-    val includes = parser.option[Seq[File]](List("thrift_include"), "dir1:dir2:...",
-        "thrift include directives are resolved relative to these paths (and the including file's directory)") { (s, _) =>
-      val files = s.split(':').map(parseFile)
-      val nonexisting = files.filter(!_.exists)
-      if (nonexisting.nonEmpty)
-        parser.usage("Thrift included file(s) " + nonexisting.mkString(":") + "do(es) not exists.")
-      files
-    }
-
-    val namespaceOut = parser.option[File](List("namespace_out"), "/path/to/output/dir",
-        "Root of the output namespace hierarchy. We add the intermediate directory structure there as needed. " +
-        "Required when compiling multiple files.") { (s, _) => parseFile(s) }
-
-    val workingDir = parser.option[File](List("working_dir"), "/path/to/working/dir",
-        "Root of the working directory used to store intermediate Scalate files.") { (s, _) => parseFile(s) }
-
-    val input = parser.multiParameter[File]("thrift_file(s)", "Thrift files to codegen from.", optional=true) { (s, _) =>
-      val file = parseFile(s)
-      if (!file.exists)
-        parser.usage("Input file \""+file+"\" does not exist.")
-      file
-    }
-
-    val extension = parser.option[String](List("extension"), "js|scala", "the extension the files should have")
-
-    val allowReload = parser.flag[Boolean](List("allow_reload"), "allow reloading of codegen templates")
-
-    parser.parse(args)
-    if (template.value.isEmpty) {
-      parser.usage("Missing '--template' parameter.")
-    }
-
-    def parseFile(s: String): File = new File(s).getAbsoluteFile
   }
 }
