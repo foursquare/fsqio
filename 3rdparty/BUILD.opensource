@@ -40,17 +40,6 @@ jar_library(
 )
 
 jar_library(
-  name = 'argot',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    sjar(org = 'org.clapper', name = 'argot', rev = '1.0.4')
-  ]
-)
-
-jar_library(
   name = 'caliper',
   tags = [
     'opensource',
