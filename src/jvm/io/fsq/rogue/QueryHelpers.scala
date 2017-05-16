@@ -12,6 +12,7 @@ case class LatLong(lat: Double, long: Double)
 object QueryHelpers {
 
   trait QueryLogger {
+    def logCounter(nameParts: String*)(count: Int): Unit
     def log(query: Query[_, _, _], instanceName: String, msg: => String, timeMillis: Long): Unit
     def onExecuteQuery[T](query: Query[_, _, _], instanceName: String, msg: => String, func: => T): T
     def onExecuteWriteCommand[T](operationName: String, collectionName: String, instanceName: String, msg: => String, func: => T): T
@@ -21,6 +22,7 @@ object QueryHelpers {
   }
 
   class DefaultQueryLogger extends QueryLogger {
+    override def logCounter(nameParts: String*)(count: Int): Unit = ()
     override def log(query: Query[_, _, _], instanceName: String, msg: => String, timeMillis: Long) {}
     override def onExecuteQuery[T](query: Query[_, _, _], instanceName: String, msg: => String, func: => T): T = func
     override def onExecuteWriteCommand[T](operationName: String, collectionName: String, instanceName: String, msg: => String, func: => T): T = func
