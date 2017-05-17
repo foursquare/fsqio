@@ -5,6 +5,7 @@ from __future__ import absolute_import
 
 
 jvm_third_party_map = {
+  'airlift': 'slice',
   'akka': 'akka',
   'backtype': {
     'storm': 'storm-core',
