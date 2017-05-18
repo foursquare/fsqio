@@ -130,4 +130,23 @@ class QueryExecutor[
       adapter.query(result, processor)(query.limit(1), None, readPreferenceOpt)
     }
   }
+
+  def foreach[M <: MetaRecord, R <: Record, State](
+    query: Query[M, R, State],
+    readPreferenceOpt: Option[ReadPreference] = None
+  )(
+    f: R => Unit
+  )(
+    implicit ev: ShardingOk[M, State],
+    ev2: M !<:< MongoDisallowed
+  ): Result[Unit] = {
+    if (optimizer.isEmptyQuery(query)) {
+      adapter.wrapEmptyResult(())
+    } else {
+      def processor(document: Document): Unit = {
+        f(serializer.readFromDocument(query.meta, query.select)(document))
+      }
+      adapter.query((), processor)(query, None, readPreferenceOpt)
+    }
+  }
 }

@@ -352,6 +352,8 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.countDistinct(SimpleRecord)(_.map).unwrap must_== 3
   }
 
+  // TODO(jacob): These fetch/fetchList/fetchOne/foreach tests are basically all doing the
+  //    same thing, cut down on the logic duplication here.
   @Test
   def testAsyncFetch: Unit = {
     val numInserts = 10
@@ -508,6 +510,74 @@ class TrivialORMQueryTest extends RogueMongoTest
     val emptyRecord = SimpleRecord()
     blockingQueryExecutor.insert(emptyRecord)
     blockingQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs emptyRecord.id)).unwrap must_== Some(emptyRecord)
+  }
+
+  def testSingleAsyncForeachQuery(
+    query: Query[SimpleRecord.type, SimpleRecord, _],
+    expected: Seq[SimpleRecord]
+  ): Future[Unit] = {
+    val accumulator = Vector.newBuilder[SimpleRecord]
+    asyncQueryExecutor.foreach(query)(accumulator += _).map(_ => {
+      accumulator.result() must containTheSameElementsAs(expected)
+    })
+  }
+
+  @Test
+  def testAsyncForeach: Unit = {
+    val numInserts = 10
+    val insertedFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
+      asyncQueryExecutor.insert(newTestRecord(i))
+    })
+
+    val basicTestFuture = insertedFuture.flatMap(inserted => {
+      val filteredInts = Set(0, 1)
+      val filteredRecords = inserted.filter(_.int.map(filteredInts.contains(_)).getOrElse(false))
+
+      Future.join(
+        testSingleAsyncForeachQuery(SimpleRecord, inserted),
+        testSingleAsyncForeachQuery(SimpleRecord.where(_.id eqs inserted.head.id), Seq(inserted.head)),
+        testSingleAsyncForeachQuery(SimpleRecord.where(_.id eqs new ObjectId), Seq.empty),
+        testSingleAsyncForeachQuery(SimpleRecord.where(_.int in filteredInts), filteredRecords)
+      )
+    })
+
+    val emptyRecord = SimpleRecord()
+    val emptyTestFuture = for {
+      _ <- basicTestFuture
+      _ <- asyncQueryExecutor.insert(emptyRecord)
+      _ <- testSingleAsyncForeachQuery(SimpleRecord.where(_.id eqs emptyRecord.id), Seq(emptyRecord))
+    } yield ()
+
+    Await.result(emptyTestFuture)
+  }
+
+  def testSingleBlockingForeachQuery(
+    query: Query[SimpleRecord.type, SimpleRecord, _],
+    expected: Seq[SimpleRecord]
+  ): Unit = {
+    val accumulator = Vector.newBuilder[SimpleRecord]
+    blockingQueryExecutor.foreach(query)(accumulator += _)
+    accumulator.result() must containTheSameElementsAs(expected)
+  }
+
+  @Test
+  def testBlockingForeach: Unit = {
+    val numInserts = 10
+    val inserted = for (i <- 1 to numInserts) yield {
+      blockingQueryExecutor.insert(newTestRecord(i)).unwrap
+    }
+
+    testSingleBlockingForeachQuery(SimpleRecord, inserted)
+    testSingleBlockingForeachQuery(SimpleRecord.where(_.id eqs inserted.head.id), Seq(inserted.head))
+    testSingleBlockingForeachQuery(SimpleRecord.where(_.id eqs new ObjectId), Seq.empty)
+
+    val filteredInts = Set(0, 1)
+    val filteredRecords = inserted.filter(_.int.map(filteredInts.contains(_)).getOrElse(false))
+    testSingleBlockingForeachQuery(SimpleRecord.where(_.int in filteredInts), filteredRecords)
+
+    val emptyRecord = SimpleRecord()
+    blockingQueryExecutor.insert(emptyRecord)
+    testSingleBlockingForeachQuery(SimpleRecord.where(_.id eqs emptyRecord.id), Seq(emptyRecord))
   }
 
   // TODO(jacob): Uncomment and clean up these tests once their behavior is implemented.
