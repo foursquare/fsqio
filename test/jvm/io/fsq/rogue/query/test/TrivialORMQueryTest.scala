@@ -580,6 +580,88 @@ class TrivialORMQueryTest extends RogueMongoTest
     testSingleBlockingForeachQuery(SimpleRecord.where(_.id eqs emptyRecord.id), Seq(emptyRecord))
   }
 
+  @Test
+  def testAsyncFetchBatch: Unit = {
+    val numInserts = 20
+    val evenBatchSize = 5
+    val oddBatchSize = 7
+    val insertedFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
+      asyncQueryExecutor.insert(newTestRecord(i))
+    })
+
+    val testFuture = insertedFuture.flatMap(inserted => {
+      Future.join(
+        asyncQueryExecutor.fetchBatch(
+          SimpleRecord,
+          evenBatchSize
+        )(
+          _.map(_.id)
+        ).map(_ must containTheSameElementsAs(inserted.map(_.id))),
+
+        asyncQueryExecutor.fetchBatch(
+          SimpleRecord,
+          oddBatchSize
+        )(
+          _.map(_.id)
+        ).map(_ must containTheSameElementsAs(inserted.map(_.id))),
+
+        asyncQueryExecutor.fetchBatch(
+          SimpleRecord.where(_.id eqs inserted.head.id),
+          evenBatchSize
+        )(
+          _.map(_.id)
+        ).map(_ must_== Seq(inserted.head.id)),
+
+        asyncQueryExecutor.fetchBatch(
+          SimpleRecord.where(_.id eqs new ObjectId),
+          evenBatchSize
+        )(
+          _.map(_.id)
+        ).map(_ must beEmpty)
+      )
+    })
+
+    Await.result(testFuture)
+  }
+
+  @Test
+  def testBlockingFetchBatch: Unit = {
+    val numInserts = 20
+    val evenBatchSize = 5
+    val oddBatchSize = 7
+    val inserted = for (i <- 1 to numInserts) yield {
+      blockingQueryExecutor.insert(newTestRecord(i)).unwrap
+    }
+
+    blockingQueryExecutor.fetchBatch(
+      SimpleRecord,
+      evenBatchSize
+    )(
+      _.map(_.id)
+    ).unwrap must containTheSameElementsAs(inserted.map(_.id))
+
+    blockingQueryExecutor.fetchBatch(
+      SimpleRecord,
+      oddBatchSize
+    )(
+      _.map(_.id)
+    ).unwrap must containTheSameElementsAs(inserted.map(_.id))
+
+    blockingQueryExecutor.fetchBatch(
+      SimpleRecord.where(_.id eqs inserted.head.id),
+      evenBatchSize
+    )(
+      _.map(_.id)
+    ).unwrap must_== Seq(inserted.head.id)
+
+    blockingQueryExecutor.fetchBatch(
+      SimpleRecord.where(_.id eqs new ObjectId),
+      evenBatchSize
+    )(
+      _.map(_.id)
+    ).unwrap must beEmpty
+  }
+
   // TODO(jacob): Uncomment and clean up these tests once their behavior is implemented.
   //
   // @Test

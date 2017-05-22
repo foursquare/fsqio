@@ -8,6 +8,7 @@ import io.fsq.rogue.{AddLimit, Query, QueryHelpers, QueryOptimizer, Rogue, Shard
 import io.fsq.rogue.adapter.MongoClientAdapter
 import io.fsq.rogue.types.MongoDisallowed
 import scala.collection.generic.CanBuildFrom
+import scala.collection.mutable.ArrayBuffer
 
 
 /** TODO(jacob): All of the collection methods implemented here should get rid of the
@@ -147,6 +148,42 @@ class QueryExecutor[
         f(serializer.readFromDocument(query.meta, query.select)(document))
       }
       adapter.query((), processor)(query, None, readPreferenceOpt)
+    }
+  }
+
+  def fetchBatch[M <: MetaRecord, R <: Record, State, Collection[_], T](
+    query: Query[M, R, State],
+    batchSize: Int,
+    readPreferenceOpt: Option[ReadPreference] = None
+  )(
+    f: Seq[R] => Seq[T]
+  )(
+    implicit ev: ShardingOk[M, State],
+    ev2: M !<:< MongoDisallowed,
+    canBuildFrom: CanBuildFrom[_, T, Collection[T]]
+  ): Result[Collection[T]] = {
+    val resultsBuilder = canBuildFrom()
+
+    if (optimizer.isEmptyQuery(query)) {
+      adapter.wrapEmptyResult(resultsBuilder.result())
+    } else {
+      val batchBuffer = new ArrayBuffer[R]
+
+      def processor(document: Document): Unit = {
+        batchBuffer += serializer.readFromDocument(query.meta, query.select)(document)
+        if (batchBuffer.length >= batchSize) {
+          resultsBuilder ++= f(batchBuffer)
+          batchBuffer.clear()
+        }
+      }
+
+      // Process potentially incomplete last batch before collecting the final result.
+      def resultAccessor: Collection[T] = {
+        resultsBuilder ++= f(batchBuffer)
+        resultsBuilder.result()
+      }
+
+      adapter.query(resultAccessor, processor)(query, Some(batchSize), readPreferenceOpt)
     }
   }
 }
