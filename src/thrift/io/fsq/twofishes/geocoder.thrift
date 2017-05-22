@@ -455,6 +455,7 @@ struct S2CellIdInfo {
   1: optional i64 id
   2: optional i32 level
   3: optional string wktGeometry
+  4: optional string idString
 }
 
 struct S2CellInfoResponse {

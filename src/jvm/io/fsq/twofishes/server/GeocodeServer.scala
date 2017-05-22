@@ -251,7 +251,7 @@ class GeocodeServerImpl(
         s2CellId = new S2CellId(id)
       } yield {
         val wkt = wktWriter.write(ShapefileS2Util.fullGeometryForCell(s2CellId))
-        S2CellIdInfo(id, s2CellId.level(), wkt)
+        S2CellIdInfo(id, s2CellId.level(), wkt, id.toString)
       }).toList
       Future.value(S2CellInfoResponse(cellInfos))
     } else {

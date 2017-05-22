@@ -376,7 +376,7 @@ function successS2Info(data, map, color) {
     _(data.cellInfos).each(function(cellInfo) {
       var wkt = new Wkt.Wkt();
       wkt.read(cellInfo.wktGeometry)
-      map.addLayer(wkt.toObject({color: color, weight: 1}).bindPopup('id: ' + cellInfo.id + '<br>level: ' + cellInfo.level));
+      map.addLayer(wkt.toObject({color: color, weight: 1}).bindPopup('id: ' + cellInfo.idString + '<br>level: ' + cellInfo.level));
     });
   }
 }
