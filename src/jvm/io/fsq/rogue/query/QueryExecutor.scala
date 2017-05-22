@@ -102,17 +102,6 @@ class QueryExecutor[
     }
   }
 
-  // TODO(jacob): Deprecate in favor of fetch, which can return arbitrary collection types.
-  def fetchList[M <: MetaRecord, R <: Record, State](
-    query: Query[M, R, State],
-    readPreferenceOpt: Option[ReadPreference] = None
-  )(
-    implicit ev: ShardingOk[M, State],
-    ev2: M !<:< MongoDisallowed
-  ): Result[List[R]] = {
-    fetch(query, readPreferenceOpt)
-  }
-
   def fetchOne[M <: MetaRecord, R <: Record, State, LimitState](
     query: Query[M, R, State],
     readPreferenceOpt: Option[ReadPreference] = None
