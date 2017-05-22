@@ -661,30 +661,4 @@ class TrivialORMQueryTest extends RogueMongoTest
       _.map(_.id)
     ).unwrap must beEmpty
   }
-
-  // TODO(jacob): Uncomment and clean up these tests once their behavior is implemented.
-  //
-  // @Test
-  // def canExecuteQuery: Unit = {
-  //   executor.fetch(SimpleRecord.where(_.a eqs 1)) must_== Nil
-  //   executor.count(SimpleRecord) must_== 0
-  // }
-
-  // @Test
-  // def canUpsertAndGetResults: Unit = {
-  //   executor.count(SimpleRecord) must_== 0
-
-  //   executor.upsertOne(SimpleRecord.modify(_.a setTo 1).and(_.b setTo "foo"))
-
-  //   executor.count(SimpleRecord) must_== 1
-
-  //   val results = executor.fetch(SimpleRecord.where(_.a eqs 1))
-  //   results.size must_== 1
-  //   results(0).a must_== 1
-  //   results(0).b must_== "foo"
-
-  //   executor.fetch(SimpleRecord.where(_.a eqs 1).select(_.a)) must_== List(Some(1))
-  //   executor.fetch(SimpleRecord.where(_.a eqs 1).select(_.b)) must_== List(Some("foo"))
-  //   executor.fetch(SimpleRecord.where(_.a eqs 1).select(_.a, _.b)) must_== List((Some(1), Some("foo")))
-  // }
 }
