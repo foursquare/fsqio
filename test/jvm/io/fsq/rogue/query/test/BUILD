@@ -10,6 +10,7 @@ junit_tests(
     '3rdparty:specs2',
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/common/concurrent',
+    'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/field',
     'src/jvm/io/fsq/rogue',
     'src/jvm/io/fsq/rogue/adapter',

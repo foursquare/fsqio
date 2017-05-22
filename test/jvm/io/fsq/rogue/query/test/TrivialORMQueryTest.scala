@@ -2,9 +2,10 @@
 
 package io.fsq.rogue.query.test
 
-import com.mongodb.WriteConcern
+import com.mongodb.{MongoWriteException, WriteConcern}
 import com.twitter.util.{Await, Future}
 import io.fsq.common.concurrent.Futures
+import io.fsq.common.scala.Identity._
 import io.fsq.field.{OptionalField, RequiredField}
 import io.fsq.rogue.{InitialState, Query, QueryOptimizer, Rogue}
 import io.fsq.rogue.MongoHelpers.AndCondition
@@ -162,6 +163,17 @@ class TrivialORMQueryTest extends RogueMongoTest
     override def defaultWriteConcern: WriteConcern = WriteConcern.W1
   }
 
+  private def newTestRecord(recordIndex: Int): SimpleRecord = SimpleRecord(
+    new ObjectId,
+    Some(false),
+    Some(recordIndex % 3),
+    Some(6L),
+    Some(8.5),
+    Some("hello"),
+    Some(Vector(recordIndex % 2, recordIndex % 4)),
+    Some(Map("modThree" -> recordIndex % 3))
+  )
+
   @Before
   override def initClientManagers(): Unit = {
     asyncClientManager.defineDb(
@@ -180,6 +192,70 @@ class TrivialORMQueryTest extends RogueMongoTest
   def canBuildQuery: Unit = {
     metaRecordToQuery(SimpleRecord).toString must_== """db.test_records.find({ })"""
     SimpleRecord.where(_.int eqs 1).toString must_== """db.test_records.find({ "int" : 1})"""
+  }
+
+  def testSingleAsyncInsert(record: SimpleRecord): Future[Unit] = {
+    for {
+      _ <- asyncQueryExecutor.insert(record)
+      foundOpt <- asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs record.id))
+    } yield {
+      foundOpt must_== Some(record)
+    }
+  }
+
+  @Test
+  def testAsyncInsert: Unit = {
+    val duplicateId = new ObjectId
+
+    val testFutures = Future.join(
+      testSingleAsyncInsert(SimpleRecord()),
+      testSingleAsyncInsert(SimpleRecord(duplicateId)),
+      testSingleAsyncInsert(newTestRecord(1))
+    )
+
+    val duplicateTestFuture = testFutures.flatMap(_ => {
+      asyncQueryExecutor.insert(SimpleRecord(duplicateId))
+        .map(_ => {
+          throw new Exception("Expected insertion failure on duplicate id")
+        }).handle({
+          case mwe: MongoWriteException => {
+            // Only catch write exceptions due to duplicate key errors.
+            if (mwe.getCode !=? 11000) {
+              throw mwe
+            }
+          }
+        })
+    })
+
+    Await.result(duplicateTestFuture)
+  }
+
+  def testSingleBlockingInsert(record: SimpleRecord): Unit = {
+    blockingQueryExecutor.insert(record)
+    blockingQueryExecutor.fetchOne(
+      SimpleRecord.where(_.id eqs record.id)
+    ).unwrap must_== Some(record)
+  }
+
+  @Test
+  def testBlockingInsert: Unit = {
+    val duplicateId = new ObjectId
+
+    testSingleBlockingInsert(SimpleRecord())
+    testSingleBlockingInsert(SimpleRecord(duplicateId))
+    testSingleBlockingInsert(newTestRecord(1))
+
+    try {
+      blockingQueryExecutor.insert(SimpleRecord(duplicateId))
+      throw new Exception("Expected insertion failure on duplicate id")
+    } catch {
+      case mwe: MongoWriteException => {
+        // Only catch write exceptions due to duplicate key errors.
+        if (mwe.getCode !=? 11000) {
+          throw mwe
+        }
+      }
+    }
   }
 
   @Test
@@ -201,6 +277,7 @@ class TrivialORMQueryTest extends RogueMongoTest
         asyncQueryExecutor.count(idSelect.skip(8).limit(4)).map(_ must_== 2)
       )
     })
+
     Await.result(testFuture)
   }
 
@@ -220,17 +297,6 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.count(idSelect.skip(3).limit(5)).unwrap must_== 5
     blockingQueryExecutor.count(idSelect.skip(8).limit(4)).unwrap must_== 2
   }
-
-  private def newTestRecord(recordIndex: Int): SimpleRecord = SimpleRecord(
-    new ObjectId,
-    Some(false),
-    Some(recordIndex % 3),
-    Some(6L),
-    Some(8.5),
-    Some("hello"),
-    Some(Vector(recordIndex % 2, recordIndex % 4)),
-    Some(Map("modThree" -> recordIndex % 3))
-  )
 
   @Test
   def testAsyncDistinct: Unit = {
