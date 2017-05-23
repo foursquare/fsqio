@@ -215,14 +215,11 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val duplicateTestFuture = testFutures.flatMap(_ => {
       asyncQueryExecutor.insert(SimpleRecord(duplicateId))
-        .map(_ => {
-          throw new Exception("Expected insertion failure on duplicate id")
-        }).handle({
-          case mwe: MongoWriteException => {
-            // Only catch write exceptions due to duplicate key errors.
-            if (mwe.getCode !=? 11000) {
-              throw mwe
-            }
+        .map(_ => throw new Exception("Expected insertion failure on duplicate id"))
+        .handle({
+          case mwe: MongoWriteException => mwe.getError.getCategory match {
+            case ErrorCategory.DUPLICATE_KEY => ()
+            case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw mwe
           }
         })
     })
@@ -249,10 +246,9 @@ class TrivialORMQueryTest extends RogueMongoTest
       blockingQueryExecutor.insert(SimpleRecord(duplicateId))
       throw new Exception("Expected insertion failure on duplicate id")
     } catch {
-      case mwe: MongoWriteException => {
-        // Only catch write exceptions due to duplicate key errors.
-        if (mwe.getCode !=? 11000) {
-          throw mwe
+      case mwe: MongoWriteException => mwe.getError.getCategory match {
+        case ErrorCategory.DUPLICATE_KEY => ()
+        case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw mwe
       }
     }
   }
