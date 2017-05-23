@@ -10,6 +10,7 @@ import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
 import java.util.concurrent.TimeUnit
 import org.bson.BsonValue
 import org.bson.conversions.Bson
+import scala.collection.JavaConverters.seqAsJavaListConverter
 
 
 object AsyncMongoClientAdapter {
@@ -128,6 +129,22 @@ class AsyncMongoClientAdapter[
       }
     }
     collection.insertOne(document, queryCallback)
+    resultCallback.result
+  }
+
+  override protected def insertAllImpl[R <: Record](
+    collection: MongoCollection[Document]
+  )(
+    records: Seq[R],
+    documents: Seq[Document]
+  ): Result[Seq[R]] = {
+    val resultCallback = callbackFactory.newCallback[Seq[R]]
+    val queryCallback = new SingleResultCallback[Void] {
+      override def onResult(result: Void, throwable: Throwable): Unit = {
+        resultCallback.onResult(records, throwable)
+      }
+    }
+    collection.insertMany(documents.asJava, queryCallback)
     resultCallback.result
   }
 }

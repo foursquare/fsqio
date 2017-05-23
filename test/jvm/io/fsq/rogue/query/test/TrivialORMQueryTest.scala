@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.query.test
 
-import com.mongodb.{MongoWriteException, WriteConcern}
+import com.mongodb.{ErrorCategory, MongoBulkWriteException, MongoWriteException, WriteConcern}
 import com.twitter.util.{Await, Future}
 import io.fsq.common.concurrent.Futures
 import io.fsq.common.scala.Identity._
@@ -253,9 +253,147 @@ class TrivialORMQueryTest extends RogueMongoTest
         // Only catch write exceptions due to duplicate key errors.
         if (mwe.getCode !=? 11000) {
           throw mwe
+      }
+    }
+  }
+
+  def testSingleAsyncInsertAll(records: Seq[SimpleRecord]): Future[Unit] = {
+    for {
+      _ <- asyncQueryExecutor.insertAll(records)
+      found <- asyncQueryExecutor.fetch(SimpleRecord.where(_.id in records.map(_.id)))
+    } yield {
+      found must_== records
+    }
+  }
+
+  def testSingleAsyncDuplicateInsertAll(
+    records: Seq[SimpleRecord],
+    testFuture: () => Future[Unit] = () => Future.Unit
+  ): Future[Unit] = {
+    asyncQueryExecutor.insertAll(records)
+      .map(_ => throw new Exception("Expected insertion failure on duplicate id"))
+      .handle({
+        case mbwe: MongoBulkWriteException => {
+          mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+            case Seq(ErrorCategory.DUPLICATE_KEY) => ()
+            case _ => throw mbwe
+          }
+        }
+      }).flatMap(_ => testFuture())
+  }
+
+  /** NOTE(jacob): The following includes tests which specify behavior around how bulk
+    *     writes handle duplicate keys. They can then serve as a canary during an upgrade
+    *     should the underlying driver behavior change.
+    */
+  @Test
+  def testAsyncInsertAll: Unit = {
+    val emptyInsertFuture = for {
+      _ <- asyncQueryExecutor.insertAll(Seq.empty[SimpleRecord])
+      count <- asyncQueryExecutor.count(SimpleRecord)
+    } yield {
+      count must_== 0
+    }
+
+    val records = Seq(
+      newTestRecord(0),
+      newTestRecord(1),
+      newTestRecord(2)
+    )
+    val testFutures = emptyInsertFuture.flatMap(_ => Future.join(
+      testSingleAsyncInsertAll(Seq(newTestRecord(0))),
+      testSingleAsyncInsertAll(records)
+    ))
+
+    val duplicate = SimpleRecord(new ObjectId)
+    val duplicateTestFutures = testFutures.flatMap(_ => Future.join(
+      testSingleAsyncDuplicateInsertAll(Seq(SimpleRecord(records(0).id))),
+      testSingleAsyncDuplicateInsertAll(
+        Seq(duplicate, duplicate),
+        () => asyncQueryExecutor.count(SimpleRecord.where(_.id eqs duplicate.id)).map(_ must_== 1)
+      )
+    ))
+
+    val others = Seq.tabulate(3)(_ => SimpleRecord())
+    val duplicateBehavioralTestFutures = duplicateTestFutures.flatMap(_ => Future.join(
+      testSingleAsyncDuplicateInsertAll(
+        Seq(others(0), duplicate, duplicate),
+        () => asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs others(0).id)).map(_ must_== Some(others(0)))
+      ),
+      testSingleAsyncDuplicateInsertAll(
+        Seq(duplicate, others(1), duplicate),
+        () => asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs others(1).id)).map(_ must_== None)
+      ),
+      testSingleAsyncDuplicateInsertAll(
+        Seq(duplicate, duplicate, others(2)),
+        () => asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs others(2).id)).map(_ must_== None)
+      )
+    ))
+
+    Await.result(duplicateBehavioralTestFutures)
+  }
+
+  def testSingleBlockingInsertAll(records: Seq[SimpleRecord]): Unit = {
+    blockingQueryExecutor.insertAll(records)
+    blockingQueryExecutor.fetch(
+      SimpleRecord.where(_.id in records.map(_.id))
+    ).unwrap must_== records
+  }
+
+  def testSingleBlockingDuplicateInsertAll(
+    records: Seq[SimpleRecord],
+    test: () => Unit = () => ()
+  ): Unit = {
+    try {
+      blockingQueryExecutor.insertAll(records)
+    } catch {
+      case mbwe: MongoBulkWriteException => {
+        mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+          case Seq(ErrorCategory.DUPLICATE_KEY) => ()
+          case _ => throw mbwe
         }
       }
     }
+    test()
+  }
+
+  /** NOTE(jacob): The following includes tests which specify behavior around how bulk
+    *     writes handle duplicate keys. They can then serve as a canary during an upgrade
+    *     should the underlying driver behavior change.
+    */
+  @Test
+  def testBlockingInsertAll: Unit = {
+    blockingQueryExecutor.insertAll(Seq.empty[SimpleRecord])
+    blockingQueryExecutor.count(SimpleRecord).unwrap must_== 0
+
+    val records = Seq(
+      newTestRecord(0),
+      newTestRecord(1),
+      newTestRecord(2)
+    )
+    testSingleBlockingInsertAll(Seq(newTestRecord(0)))
+    testSingleBlockingInsertAll(records)
+
+    val duplicate = SimpleRecord(new ObjectId)
+    testSingleBlockingDuplicateInsertAll(Seq(SimpleRecord(records(0).id)))
+    testSingleBlockingDuplicateInsertAll(
+      Seq(duplicate, duplicate),
+      () => blockingQueryExecutor.count(SimpleRecord.where(_.id eqs duplicate.id)).unwrap must_== 1
+    )
+
+    val others = Seq.tabulate(3)(_ => SimpleRecord())
+    testSingleBlockingDuplicateInsertAll(
+      Seq(others(0), duplicate, duplicate),
+      () => blockingQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs others(0).id)).unwrap must_== Some(others(0))
+    )
+    testSingleBlockingDuplicateInsertAll(
+      Seq(duplicate, others(1), duplicate),
+      () => blockingQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs others(1).id)).unwrap must_== None
+    )
+    testSingleBlockingDuplicateInsertAll(
+      Seq(duplicate, duplicate, others(2)),
+      () => blockingQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs others(2).id)).unwrap must_== None
+    )
   }
 
   @Test

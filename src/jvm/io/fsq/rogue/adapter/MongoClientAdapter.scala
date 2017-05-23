@@ -103,6 +103,13 @@ abstract class MongoClientAdapter[
     document: Document
   ): Result[R]
 
+  protected def insertAllImpl[R <: Record](
+    collection: MongoCollection[Document]
+  )(
+    records: Seq[R],
+    documents: Seq[Document]
+  ): Result[Seq[R]]
+
   def count[
     M <: MetaRecord
   ](
@@ -219,6 +226,25 @@ abstract class MongoClientAdapter[
       collectionFactory.documentToString(document),
       insertImpl(collection)(record, document)
     )
+  }
+
+  def insertAll[R <: Record](
+    records: Seq[R],
+    documents: Seq[Document],
+    writeConcernOpt: Option[WriteConcern]
+  ): Result[Seq[R]] = {
+    records.headOption.map(record => {
+      val collection = collectionFactory.getMongoCollectionFromRecord(record, writeConcernOpt = writeConcernOpt)
+      val collectionName = getCollectionNamespace(collection).getCollectionName
+      val instanceName = collectionFactory.getInstanceNameFromRecord(record)
+      QueryHelpers.logger.onExecuteWriteCommand(
+        "insert",
+        collectionName,
+        instanceName,
+        documents.toIterator.map(collectionFactory.documentToString(_)).mkString("[", ",", "]"),
+        insertAllImpl(collection)(records, documents)
+      )
+    }).getOrElse(wrapEmptyResult(records))
   }
 
   // NOTE(jacob): For better or for worse, the globally configured batch size takes

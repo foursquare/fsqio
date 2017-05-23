@@ -82,6 +82,17 @@ class QueryExecutor[
     adapter.insert(record, serializer.writeToDocument(record), Some(writeConcern))
   }
 
+  def insertAll[R <: Record](
+    records: Seq[R],
+    writeConcern: WriteConcern = defaultWriteConcern
+  ): Result[Seq[R]] = {
+    adapter.insertAll(
+      records,
+      records.map(serializer.writeToDocument(_)),
+      Some(writeConcern)
+    )
+  }
+
   def fetch[M <: MetaRecord, R <: Record, State, Collection[_]](
     query: Query[M, R, State],
     readPreferenceOpt: Option[ReadPreference] = None

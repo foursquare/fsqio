@@ -8,6 +8,7 @@ import com.mongodb.client.model.CountOptions
 import java.util.concurrent.TimeUnit
 import org.bson.BsonValue
 import org.bson.conversions.Bson
+import scala.collection.JavaConverters.seqAsJavaListConverter
 
 
 object BlockingResult {
@@ -119,5 +120,15 @@ class BlockingMongoClientAdapter[
   ): BlockingResult[R] = {
     collection.insertOne(document)
     record
+  }
+
+  override protected def insertAllImpl[R <: Record](
+    collection: MongoCollection[Document]
+  )(
+    records: Seq[R],
+    documents: Seq[Document]
+  ): BlockingResult[Seq[R]] = {
+    collection.insertMany(documents.asJava)
+    records
   }
 }
