@@ -63,11 +63,11 @@ class WebPackResolve(NodeResolve):
 
   @classmethod
   def implementation_version(cls):
-    return super(WebPackResolve, cls).implementation_version() + [('WebPackResolve', 3)]
+    return super(WebPackResolve, cls).implementation_version() + [('WebPackResolve', 4)]
 
   @classmethod
-  def global_subsystems(cls):
-    return super(WebPackResolve, cls).global_subsystems() + (WebPackResolver,)
+  def subsystem_dependencies(cls):
+    return super(WebPackResolve, cls).subsystem_dependencies() + (WebPackResolver,)
 
   @classmethod
   def prepare(cls, options, round_manager):
@@ -89,7 +89,6 @@ class WebPackResolve(NodeResolve):
       return
 
     node_paths = self.context.products.get_data(NodePaths, init_func=NodePaths)
-
     invalidation_context = self.invalidated(
       targets,
       fingerprint_strategy=WebPackResolveFingerprintStrategy(self),
