@@ -129,7 +129,7 @@ class RpmbuildTask(Task):
   def docker_workunit(self, name, cmd):
     return self.context.new_workunit(
       name=name,
-      labels=[WorkUnitLabel.RUN],
+      labels=[WorkUnitLabel.TOOL, WorkUnitLabel.RUN],
       log_config=WorkUnit.LogConfig(level=self.get_options().level, colors=self.get_options().colors),
       cmd=' '.join(cmd)
     )
@@ -177,7 +177,7 @@ class RpmbuildTask(Task):
     # Put together rpmbuild options for defines.
     rpmbuild_options = ''
     for key in sorted(target.defines.keys()):
-      quoted_value = target.defines[key].replace("\\", "\\\\").replace("\"", "\\\"")
+      quoted_value = str(target.defines[key]).replace("\\", "\\\\").replace("\"", "\\\"")
       rpmbuild_options += ' --define="%{} {}"'.format(key, quoted_value)
 
     # Write the entry point script.
@@ -252,19 +252,19 @@ class RpmbuildTask(Task):
         build_dir,
       ])
       with self.docker_workunit(name='build-image', cmd=build_image_cmd) as workunit:
-        try:
-          self.context.log.debug('Executing: {}'.format(' '.join(build_image_cmd)))
-          subprocess.check_call(build_image_cmd, stdout=workunit.output('stdout'), stderr=workunit.output('stderr'))
-        except subprocess.CalledProcessError as e:
-          raise TaskError('Failed to build image: {0}'.format(e))
+        self.context.log.debug('Executing: {}'.format(' '.join(build_image_cmd)))
+        proc = subprocess.Popen(build_image_cmd, stdout=workunit.output('stdout'), stderr=subprocess.STDOUT)
+        returncode = proc.wait()
+        if returncode != 0:
+          raise TaskError('Failed to build image, returncode={0}'.format(returncode))
 
       # Run the image in a container to actually build the RPMs.
       container_name = 'rpm-container-{}'.format(uuid_identifier)
       run_container_cmd = [
         self.get_options().docker,
         'run',
-        '--attach=stdout',
         '--attach=stderr',
+        '--attach=stdout',
         '--name={}'.format(container_name),
       ]
       if self.get_options().shell_before or self.get_options().shell_after:
@@ -273,13 +273,10 @@ class RpmbuildTask(Task):
         image_name,
       ])
       with self.docker_workunit(name='run-container', cmd=run_container_cmd) as workunit:
-        try:
-          self.context.log.debug('Executing: {}'.format(' '.join(run_container_cmd)))
-          subprocess.check_call(run_container_cmd,
-                                stdout=workunit.output('stdout'),
-                                stderr=workunit.output('stderr'))
-        except subprocess.CalledProcessError as e:
-          raise TaskError('Failed to run build container: {0}'.format(e))
+        proc = subprocess.Popen(run_container_cmd, stdout=workunit.output('stdout'), stderr=subprocess.STDOUT)
+        returncode = proc.wait()
+        if returncode != 0:
+          raise TaskError('Failed to build RPM, returncode={0}'.format(returncode))
 
       # TODO(mateo): Convert this to output to a per-platform namespace to make it easy to upload all RPMs to the
       # correct platform (something like: `dist/rpmbuilder/centos7/x86_64/foo.rpm`).
@@ -326,7 +323,7 @@ class RpmbuildTask(Task):
             self.context.log.info('Saving container state as image...')
             docker_commit_cmd = [self.get_options().docker, 'commit', container_name]
             with self.docker_workunit(name='commit-to-image', cmd=docker_commit_cmd) as workunit:
-              subprocess.call(docker_commit_cmd, stdout=workunit.output('stdout'), stderr=workunit.output('stderr'))
+              subprocess.call(docker_commit_cmd, stdout=workunit.output('stdout'), stderr=subprocess.STDOUT)
               self.context.log.info('Saved container as image: {}\n'.format(commited_name))
 
     finally:
@@ -334,13 +331,13 @@ class RpmbuildTask(Task):
       if container_name and not self.get_options().keep_build_products:
           remove_container_cmd = [self.get_options().docker, 'rm', container_name]
           with self.docker_workunit(name='remove-build-container', cmd=remove_container_cmd) as workunit:
-            subprocess.call(remove_container_cmd, stdout=workunit.output('stdout'), stderr=workunit.output('stderr'))
+            subprocess.call(remove_container_cmd, stdout=workunit.output('stdout'), stderr=subprocess.STDOUT)
 
       # Remove the build image.
       if not self.get_options().keep_build_products:
         remove_image_cmd = [self.get_options().docker, 'rmi', image_name]
         with self.docker_workunit(name='remove-build-image', cmd=remove_image_cmd) as workunit:
-          subprocess.call(remove_image_cmd, stdout=workunit.output('stdout'), stderr=workunit.output('stderr'))
+          subprocess.call(remove_image_cmd, stdout=workunit.output('stdout'), stderr=subprocess.STDOUT)
 
   def execute(self):
     platform_key = self.get_options().platform
