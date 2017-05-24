@@ -66,7 +66,8 @@ class QueryExecutor[
     field: M => Field[FieldType, M],
     resultTransformer: DocumentValue => FieldType = (_: DocumentValue).asInstanceOf[FieldType]
   )(
-    implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed
+    implicit ev: ShardingOk[M, State],
+    ev2: M !<:< MongoDisallowed
   ): Result[Seq[FieldType]] = {
     if (optimizer.isEmptyQuery(query)) {
       adapter.wrapEmptyResult(Vector.empty[FieldType])
@@ -78,6 +79,8 @@ class QueryExecutor[
   def insert[R <: Record](
     record: R,
     writeConcern: WriteConcern = defaultWriteConcern
+  )(
+    implicit ev: R !<:< MongoDisallowed
   ): Result[R] = {
     adapter.insert(record, serializer.writeToDocument(record), Some(writeConcern))
   }
@@ -85,6 +88,8 @@ class QueryExecutor[
   def insertAll[R <: Record](
     records: Seq[R],
     writeConcern: WriteConcern = defaultWriteConcern
+  )(
+    implicit ev: R !<:< MongoDisallowed
   ): Result[Seq[R]] = {
     adapter.insertAll(
       records,
