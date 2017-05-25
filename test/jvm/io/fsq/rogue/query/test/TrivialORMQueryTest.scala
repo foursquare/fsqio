@@ -806,4 +806,70 @@ class TrivialORMQueryTest extends RogueMongoTest
       _.map(_.id)
     ).unwrap must beEmpty
   }
+
+  @Test
+  def testAsyncRemove: Unit = {
+    val emptyRecord = SimpleRecord()
+    val fullRecord1 = newTestRecord(1)
+    val modifiedFullRecord1 = fullRecord1.copy(int = Some(5))
+    val fullRecord2 = newTestRecord(2)
+    val modifiedFullRecord2 = fullRecord2.copy(int = None)
+
+    val testFutures = Future.join(
+      asyncQueryExecutor.remove(SimpleRecord()).map(_ must_== 0),
+
+      for {
+        _ <- asyncQueryExecutor.insert(emptyRecord)
+        _ <- asyncQueryExecutor.remove(emptyRecord).map(_ must_== 1)
+        _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs emptyRecord.id)).map(_ must_== 0)
+      } yield (),
+
+      // We just pass the serialized record as the query filter to the driver, thus removes
+      // with modified fields do nothing, unless the field is deleted entirely as in the
+      // case of modifiedFullRecord2 below.
+      for {
+        _ <- asyncQueryExecutor.insert(fullRecord1)
+        _ <- asyncQueryExecutor.remove(modifiedFullRecord1).map(_ must_== 0)
+        _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs fullRecord1.id)).map(_ must_== 1)
+        _ <- asyncQueryExecutor.remove(fullRecord1).map(_ must_== 1)
+        _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs fullRecord1.id)).map(_ must_== 0)
+      } yield (),
+
+      for {
+        _ <- asyncQueryExecutor.insert(fullRecord2)
+        _ <- asyncQueryExecutor.remove(modifiedFullRecord2).map(_ must_== 1)
+        _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs fullRecord2.id)).map(_ must_== 0)
+      } yield ()
+    )
+
+    Await.result(testFutures)
+  }
+
+  @Test
+  def testBlockingRemove: Unit = {
+    val emptyRecord = SimpleRecord()
+    val fullRecord1 = newTestRecord(1)
+    val modifiedFullRecord1 = fullRecord1.copy(int = Some(5))
+    val fullRecord2 = newTestRecord(2)
+    val modifiedFullRecord2 = fullRecord2.copy(int = None)
+
+    blockingQueryExecutor.remove(SimpleRecord()).unwrap must_== 0
+
+    blockingQueryExecutor.insert(emptyRecord)
+    blockingQueryExecutor.remove(emptyRecord).unwrap must_== 1
+    blockingQueryExecutor.count(SimpleRecord.where(_.id eqs emptyRecord.id)).unwrap must_== 0
+
+    // We just pass the serialized record as the query filter to the driver, thus removes
+    // with modified fields do nothing, unless the field is deleted entirely as in the
+    // case of modifiedFullRecord2 below.
+    blockingQueryExecutor.insert(fullRecord1)
+    blockingQueryExecutor.remove(modifiedFullRecord1).unwrap must_== 0
+    blockingQueryExecutor.count(SimpleRecord.where(_.id eqs fullRecord1.id)).unwrap must_== 1
+    blockingQueryExecutor.remove(fullRecord1).unwrap must_== 1
+    blockingQueryExecutor.count(SimpleRecord.where(_.id eqs fullRecord1.id)).unwrap must_== 0
+
+    blockingQueryExecutor.insert(fullRecord2)
+    blockingQueryExecutor.remove(modifiedFullRecord2).unwrap must_== 1
+    blockingQueryExecutor.count(SimpleRecord.where(_.id eqs fullRecord2.id)).unwrap must_== 0
+  }
 }

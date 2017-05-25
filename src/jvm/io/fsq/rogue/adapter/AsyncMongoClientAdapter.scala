@@ -6,6 +6,7 @@ import com.mongodb.{Block, MongoNamespace}
 import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoCollection
 import com.mongodb.client.model.CountOptions
+import com.mongodb.client.result.DeleteResult
 import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
 import java.util.concurrent.TimeUnit
 import org.bson.BsonValue
@@ -16,7 +17,7 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 object AsyncMongoClientAdapter {
   type CollectionFactory[
     DocumentValue,
-    Document <: java.util.Map[String, DocumentValue],
+    Document <: Bson with java.util.Map[String, DocumentValue],
     MetaRecord,
     Record
   ] = MongoCollectionFactory[
@@ -30,7 +31,7 @@ object AsyncMongoClientAdapter {
 
 class AsyncMongoClientAdapter[
   DocumentValue,
-  Document <: java.util.Map[String, DocumentValue],
+  Document <: Bson with java.util.Map[String, DocumentValue],
   MetaRecord,
   Record,
   Result[_]
@@ -145,6 +146,22 @@ class AsyncMongoClientAdapter[
       }
     }
     collection.insertMany(documents.asJava, queryCallback)
+    resultCallback.result
+  }
+
+  override protected def removeImpl[R <: Record](
+    collection: MongoCollection[Document]
+  )(
+    record: R,
+    document: Document
+  ): Result[Long] = {
+    val resultCallback = callbackFactory.newCallback[Long]
+    val queryCallback = new SingleResultCallback[DeleteResult] {
+      override def onResult(deleteResult: DeleteResult, throwable: Throwable): Unit = {
+        resultCallback.onResult(deleteResult.getDeletedCount, throwable)
+      }
+    }
+    collection.deleteOne(document, queryCallback)
     resultCallback.result
   }
 }

@@ -17,7 +17,7 @@ import org.bson.conversions.Bson
 abstract class MongoClientAdapter[
   MongoCollection[_],
   DocumentValue,
-  Document <: java.util.Map[String, DocumentValue],
+  Document <: Bson with java.util.Map[String, DocumentValue],
   MetaRecord,
   Record,
   Result[_]
@@ -109,6 +109,13 @@ abstract class MongoClientAdapter[
     records: Seq[R],
     documents: Seq[Document]
   ): Result[Seq[R]]
+
+  protected def removeImpl[R <: Record](
+    collection: MongoCollection[Document]
+  )(
+    record: R,
+    document: Document
+  ): Result[Long]
 
   def count[
     M <: MetaRecord
@@ -305,5 +312,22 @@ abstract class MongoClientAdapter[
     }
 
     queryRunner(resultAccessor, accumulator)("find", query, batchSizeOpt, readPreferenceOpt, setMaxTimeMS = true)
+  }
+
+  def remove[R <: Record](
+    record: R,
+    document: Document,
+    writeConcernOpt: Option[WriteConcern]
+  ): Result[Long] = {
+    val collection = collectionFactory.getMongoCollectionFromRecord(record, writeConcernOpt = writeConcernOpt)
+    val collectionName = getCollectionNamespace(collection).getCollectionName
+    val instanceName = collectionFactory.getInstanceNameFromRecord(record)
+    QueryHelpers.logger.onExecuteWriteCommand(
+      "remove",
+      collectionName,
+      instanceName,
+      collectionFactory.documentToString(document),
+      removeImpl(collection)(record, document)
+    )
   }
 }

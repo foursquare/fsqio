@@ -4,6 +4,7 @@ package io.fsq.rogue.query
 
 import com.mongodb.{ReadPreference, WriteConcern}
 import io.fsq.field.Field
+import org.bson.conversions.Bson
 import io.fsq.rogue.{AddLimit, Query, QueryHelpers, QueryOptimizer, Rogue, ShardingOk, !<:<}
 import io.fsq.rogue.adapter.MongoClientAdapter
 import io.fsq.rogue.types.MongoDisallowed
@@ -17,7 +18,7 @@ import scala.collection.mutable.ArrayBuffer
 class QueryExecutor[
   MongoCollection[_],
   DocumentValue,
-  Document <: java.util.Map[String, DocumentValue],
+  Document <: Bson with java.util.Map[String, DocumentValue],
   MetaRecord,
   Record,
   Result[_]
@@ -190,5 +191,12 @@ class QueryExecutor[
 
       adapter.query(resultAccessor, processor)(query, Some(batchSize), readPreferenceOpt)
     }
+  }
+
+  def remove[R <: Record](
+    record: R,
+    writeConcern: WriteConcern = defaultWriteConcern
+  ): Result[Long] = {
+    adapter.remove(record, serializer.writeToDocument(record), Some(writeConcern))
   }
 }

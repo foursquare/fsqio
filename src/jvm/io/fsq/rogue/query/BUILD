@@ -4,6 +4,7 @@ scala_library(
   name = 'query',
   sources = globs('*.scala'),
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:mongodb-drivers',
     'src/jvm/io/fsq/field',
     'src/jvm/io/fsq/rogue',

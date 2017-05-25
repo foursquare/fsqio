@@ -30,7 +30,7 @@ class BlockingResult[T](val value: T) {
 object BlockingMongoClientAdapter {
   type CollectionFactory[
     DocumentValue,
-    Document <: java.util.Map[String, DocumentValue],
+    Document <: Bson with java.util.Map[String, DocumentValue],
     MetaRecord,
     Record
   ] = MongoCollectionFactory[
@@ -44,7 +44,7 @@ object BlockingMongoClientAdapter {
 
 class BlockingMongoClientAdapter[
   DocumentValue,
-  Document <: java.util.Map[String, DocumentValue],
+  Document <: Bson with java.util.Map[String, DocumentValue],
   MetaRecord,
   Record,
   Result[_]
@@ -130,5 +130,15 @@ class BlockingMongoClientAdapter[
   ): BlockingResult[Seq[R]] = {
     collection.insertMany(documents.asJava)
     records
+  }
+
+  override protected def removeImpl[R <: Record](
+    collection: MongoCollection[Document]
+  )(
+    record: R,
+    document: Document
+  ): BlockingResult[Long] = {
+    val deleteResult = collection.deleteOne(document)
+    deleteResult.getDeletedCount
   }
 }
