@@ -164,4 +164,19 @@ class AsyncMongoClientAdapter[
     collection.deleteOne(document, queryCallback)
     resultCallback.result
   }
+
+  override protected def deleteImpl(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson
+  ): Result[Long] = {
+    val resultCallback = callbackFactory.newCallback[Long]
+    val queryCallback = new SingleResultCallback[DeleteResult] {
+      override def onResult(deleteResult: DeleteResult, throwable: Throwable): Unit = {
+        resultCallback.onResult(deleteResult.getDeletedCount, throwable)
+      }
+    }
+    collection.deleteMany(filter, queryCallback)
+    resultCallback.result
+  }
 }

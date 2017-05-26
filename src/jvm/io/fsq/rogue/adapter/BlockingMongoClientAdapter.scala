@@ -141,4 +141,13 @@ class BlockingMongoClientAdapter[
     val deleteResult = collection.deleteOne(document)
     deleteResult.getDeletedCount
   }
+
+  override protected def deleteImpl(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson
+  ): BlockingResult[Long] = {
+    val deleteResult = collection.deleteMany(filter)
+    deleteResult.getDeletedCount
+  }
 }

@@ -872,4 +872,62 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.remove(modifiedFullRecord2).unwrap must_== 1
     blockingQueryExecutor.count(SimpleRecord.where(_.id eqs fullRecord2.id)).unwrap must_== 0
   }
+
+  @Test
+  def testAsyncBulkDelete: Unit = {
+    val emptyRecord = SimpleRecord()
+    val testRecords = Seq.tabulate(5)(newTestRecord)
+    val testRecordIds = testRecords.map(_.id)
+
+    val testFutures = for {
+      _ <- asyncQueryExecutor.bulkDelete_!!(SimpleRecord).map(_ must_== 0)
+      _ <- Future.join(
+        for {
+          _ <- asyncQueryExecutor.insert(emptyRecord)
+          _ <- asyncQueryExecutor.bulkDelete_!!(SimpleRecord.where(_.id eqs emptyRecord.id)).map(_ must_== 1)
+          _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs emptyRecord.id)).map(_ must_== 0)
+        } yield (),
+
+        for {
+          _ <- asyncQueryExecutor.insertAll(testRecords)
+          _ <- asyncQueryExecutor.bulkDelete_!!(SimpleRecord.where(_.id eqs testRecords(0).id)).map(_ must_== 1)
+          _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).map(_ must_== 4)
+          _ <- asyncQueryExecutor.bulkDelete_!!(SimpleRecord.where(_.int eqs 1)).map(_ must_== 2)
+          _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).map(_ must_== 2)
+          _ <- asyncQueryExecutor.bulkDelete_!!(SimpleRecord.where(_.int eqs 1)).map(_ must_== 0)
+          _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).map(_ must_== 2)
+        } yield ()
+      )
+      _ <- for {
+          _ <- asyncQueryExecutor.bulkDelete_!!(SimpleRecord).map(_ must_== 2)
+          _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 0)
+        } yield ()
+    } yield ()
+
+    Await.result(testFutures)
+  }
+
+  @Test
+  def testBlockingBulkDelete: Unit = {
+    val emptyRecord = SimpleRecord()
+    val testRecords = Seq.tabulate(5)(newTestRecord)
+    val testRecordIds = testRecords.map(_.id)
+
+    blockingQueryExecutor.bulkDelete_!!(SimpleRecord).unwrap must_== 0
+
+    blockingQueryExecutor.insert(emptyRecord)
+    blockingQueryExecutor.bulkDelete_!!(SimpleRecord.where(_.id eqs emptyRecord.id)).unwrap must_== 1
+    blockingQueryExecutor.count(SimpleRecord.where(_.id eqs emptyRecord.id)).unwrap must_== 0
+
+    blockingQueryExecutor.insertAll(testRecords)
+    blockingQueryExecutor.bulkDelete_!!(SimpleRecord.where(_.id eqs testRecords(0).id)).unwrap must_== 1
+    blockingQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).unwrap must_== 4
+    blockingQueryExecutor.bulkDelete_!!(SimpleRecord.where(_.int eqs 1)).unwrap must_== 2
+    blockingQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).unwrap must_== 2
+    blockingQueryExecutor.bulkDelete_!!(SimpleRecord.where(_.int eqs 1)).unwrap must_== 0
+    blockingQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).unwrap must_== 2
+
+    blockingQueryExecutor.bulkDelete_!!(SimpleRecord).unwrap must_== 2
+    blockingQueryExecutor.count(SimpleRecord).unwrap must_== 0
+  }
 }

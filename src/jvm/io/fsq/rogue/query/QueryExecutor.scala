@@ -4,10 +4,11 @@ package io.fsq.rogue.query
 
 import com.mongodb.{ReadPreference, WriteConcern}
 import io.fsq.field.Field
-import org.bson.conversions.Bson
-import io.fsq.rogue.{AddLimit, Query, QueryHelpers, QueryOptimizer, Rogue, ShardingOk, !<:<}
+import io.fsq.rogue.{!<:<, AddLimit, Query, QueryHelpers, QueryOptimizer, Required, Rogue, ShardingOk, Unlimited,
+    Unselected, Unskipped}
 import io.fsq.rogue.adapter.MongoClientAdapter
 import io.fsq.rogue.types.MongoDisallowed
+import org.bson.conversions.Bson
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.ArrayBuffer
 
@@ -198,5 +199,21 @@ class QueryExecutor[
     writeConcern: WriteConcern = defaultWriteConcern
   ): Result[Long] = {
     adapter.remove(record, serializer.writeToDocument(record), Some(writeConcern))
+  }
+
+  // TODO(jacob): The exclamation marks here are dumb, remove them.
+  def bulkDelete_!![M <: MetaRecord, State](
+    query: Query[M, _, State],
+    writeConcern: WriteConcern = defaultWriteConcern
+  )(
+    implicit ev: Required[State, Unselected with Unlimited with Unskipped],
+    ev2: ShardingOk[M, State],
+    ev3: M !<:< MongoDisallowed
+  ): Result[Long] = {
+    if (optimizer.isEmptyQuery(query)) {
+      adapter.wrapEmptyResult(0L)
+    } else {
+      adapter.delete(query, Some(writeConcern))
+    }
   }
 }

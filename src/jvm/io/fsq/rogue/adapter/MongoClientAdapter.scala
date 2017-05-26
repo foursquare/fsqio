@@ -117,6 +117,12 @@ abstract class MongoClientAdapter[
     document: Document
   ): Result[Long]
 
+  protected def deleteImpl(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson
+  ): Result[Long]
+
   def count[
     M <: MetaRecord
   ](
@@ -329,5 +335,22 @@ abstract class MongoClientAdapter[
       collectionFactory.documentToString(document),
       removeImpl(collection)(record, document)
     )
+  }
+
+  def delete[M <: MetaRecord](
+    query: Query[M, _, _],
+    writeConcernOpt: Option[WriteConcern]
+  ): Result[Long] = {
+    val queryClause = QueryHelpers.transformer.transformQuery(query)
+    QueryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
+    val collection = collectionFactory.getMongoCollectionFromQuery(query, writeConcernOpt = writeConcernOpt)
+    val descriptionFunc = () => LegacyMongoBuilder.buildConditionString("remove", query.collectionName, queryClause)
+    // TODO(jacob): This cast will always succeed, but it should be removed once there is a
+    //    version of LegacyMongoBuilder that speaks the new CRUD api.
+    val condition = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+
+    runCommand(descriptionFunc, queryClause) {
+      deleteImpl(collection)(condition)
+    }
   }
 }
