@@ -3,8 +3,8 @@
 package io.fsq.rogue.adapter
 
 import com.mongodb.{Block, MongoNamespace, ReadPreference, WriteConcern}
-import com.mongodb.client.model.CountOptions
-import io.fsq.rogue.{Query, QueryHelpers, RogueException}
+import com.mongodb.client.model.{CountOptions, UpdateOptions}
+import io.fsq.rogue.{ModifyQuery, Query, QueryHelpers, RogueException}
 import io.fsq.rogue.MongoHelpers.{MongoBuilder => LegacyMongoBuilder}
 import org.bson.{BsonDocument, BsonDocumentReader, BsonValue}
 import org.bson.codecs.DecoderContext
@@ -130,6 +130,14 @@ abstract class MongoClientAdapter[
     collection: MongoCollection[Document]
   )(
     filter: Bson
+  ): Result[Long]
+
+  protected def updateOneImpl(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson,
+    update: Bson,
+    options: UpdateOptions
   ): Result[Long]
 
   def count[
@@ -360,6 +368,43 @@ abstract class MongoClientAdapter[
 
     runCommand(descriptionFunc, queryClause) {
       deleteImpl(collection)(filter)
+    }
+  }
+
+  def modifyOne[M <: MetaRecord](
+    modifyQuery: ModifyQuery[M, _],
+    upsert: Boolean,
+    writeConcernOpt: Option[WriteConcern]
+  ): Result[Long] = {
+    val modifyClause = QueryHelpers.transformer.transformModify(modifyQuery)
+
+    if (modifyClause.mod.clauses.isEmpty) {
+      wrapEmptyResult(0L)
+
+    } else {
+      QueryHelpers.validator.validateModify(modifyClause, collectionFactory.getIndexes(modifyClause.query))
+      val collection = collectionFactory.getMongoCollectionFromQuery(
+        modifyQuery.query,
+        writeConcernOpt = writeConcernOpt
+      )
+      val descriptionFunc = () => LegacyMongoBuilder.buildModifyString(
+        modifyQuery.query.collectionName,
+        modifyClause,
+        upsert = upsert,
+        multi = false
+      )
+      // TODO(jacob): These casts will always succeed, but should be removed once there is a
+      //    version of LegacyMongoBuilder that speaks the new CRUD api.
+      val filter = LegacyMongoBuilder.buildCondition(modifyClause.query.condition).asInstanceOf[Bson]
+      val update = LegacyMongoBuilder.buildModify(modifyClause.mod).asInstanceOf[Bson]
+      val options = {
+        new UpdateOptions()
+          .upsert(upsert)
+      }
+
+      runCommand(descriptionFunc, modifyClause.query) {
+        updateOneImpl(collection)(filter, update, options)
+      }
     }
   }
 }

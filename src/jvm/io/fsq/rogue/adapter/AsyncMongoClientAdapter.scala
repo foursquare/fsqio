@@ -5,8 +5,8 @@ package io.fsq.rogue.adapter
 import com.mongodb.{Block, MongoNamespace}
 import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoCollection
-import com.mongodb.client.model.CountOptions
-import com.mongodb.client.result.DeleteResult
+import com.mongodb.client.model.{CountOptions, UpdateOptions}
+import com.mongodb.client.result.{DeleteResult, UpdateResult}
 import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
 import java.util.concurrent.TimeUnit
 import org.bson.BsonValue
@@ -177,6 +177,23 @@ class AsyncMongoClientAdapter[
       }
     }
     collection.deleteMany(filter, queryCallback)
+    resultCallback.result
+  }
+
+  override protected def updateOneImpl(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson,
+    update: Bson,
+    options: UpdateOptions
+  ): Result[Long] = {
+    val resultCallback = callbackFactory.newCallback[Long]
+    val queryCallback = new SingleResultCallback[UpdateResult] {
+      override def onResult(updateResult: UpdateResult, throwable: Throwable): Unit = {
+        resultCallback.onResult(updateResult.getModifiedCount, throwable)
+      }
+    }
+    collection.updateOne(filter, update, options, queryCallback)
     resultCallback.result
   }
 }

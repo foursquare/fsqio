@@ -4,7 +4,7 @@ package io.fsq.rogue.adapter
 
 import com.mongodb.{Block, MongoNamespace}
 import com.mongodb.client.MongoCollection
-import com.mongodb.client.model.CountOptions
+import com.mongodb.client.model.{CountOptions, UpdateOptions}
 import java.util.concurrent.TimeUnit
 import org.bson.BsonValue
 import org.bson.conversions.Bson
@@ -149,5 +149,16 @@ class BlockingMongoClientAdapter[
   ): BlockingResult[Long] = {
     val deleteResult = collection.deleteMany(filter)
     deleteResult.getDeletedCount
+  }
+
+  override protected def updateOneImpl(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson,
+    update: Bson,
+    options: UpdateOptions
+  ): BlockingResult[Long] = {
+    val updateResult = collection.updateOne(filter, update, options)
+    updateResult.getModifiedCount
   }
 }
