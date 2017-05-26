@@ -170,10 +170,10 @@ abstract class MongoClientAdapter[
     val descriptionFunc = () => LegacyMongoBuilder.buildConditionString("distinct", query.collectionName, queryClause)
     // TODO(jacob): This cast will always succeed, but it should be removed once there is a
     //    version of LegacyMongoBuilder that speaks the new CRUD api.
-    val condition = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+    val filter = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
 
     runCommand(descriptionFunc, queryClause) {
-      distinctImpl(resultAccessor, accumulator)(collection)(fieldName, condition)
+      distinctImpl(resultAccessor, accumulator)(collection)(fieldName, filter)
     }
   }
 
@@ -356,10 +356,10 @@ abstract class MongoClientAdapter[
     val descriptionFunc = () => LegacyMongoBuilder.buildConditionString("remove", query.collectionName, queryClause)
     // TODO(jacob): This cast will always succeed, but it should be removed once there is a
     //    version of LegacyMongoBuilder that speaks the new CRUD api.
-    val condition = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+    val filter = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
 
     runCommand(descriptionFunc, queryClause) {
-      deleteImpl(collection)(condition)
+      deleteImpl(collection)(filter)
     }
   }
 }
