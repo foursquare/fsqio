@@ -12,7 +12,11 @@ import org.bson.conversions.Bson
 
 
 object MongoClientAdapter {
-  // NOTE(jacob): This restriction is technically unnecessary, we could also
+  // NOTE(jacob): This restriction is technically unnecessary, we could also define some
+  //    additional helpers and converters on MongoCollectionFactory to handle the
+  //    operations these allow (ex.- get a field for a record or view a record as Bson).
+  //    For now though, all built-in document types in the mongo driver fit this typedef
+  //    and I see no good reason to add complexity where none is needed.
   type BaseDocument[BaseValue] = Bson with java.util.Map[String, BaseValue]
 }
 
