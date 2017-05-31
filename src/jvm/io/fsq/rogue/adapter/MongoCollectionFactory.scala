@@ -11,7 +11,7 @@ import org.bson.codecs.configuration.CodecRegistry
 trait MongoCollectionFactory[
   MongoCollection[_],
   DocumentValue,
-  Document <: java.util.Map[String, DocumentValue],
+  Document <: MongoClientAdapter.BaseDocument[DocumentValue],
   MetaRecord,
   Record
 ] {

@@ -17,7 +17,7 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 object AsyncMongoClientAdapter {
   type CollectionFactory[
     DocumentValue,
-    Document <: Bson with java.util.Map[String, DocumentValue],
+    Document <: MongoClientAdapter.BaseDocument[DocumentValue],
     MetaRecord,
     Record
   ] = MongoCollectionFactory[
@@ -31,7 +31,7 @@ object AsyncMongoClientAdapter {
 
 class AsyncMongoClientAdapter[
   DocumentValue,
-  Document <: Bson with java.util.Map[String, DocumentValue],
+  Document <: MongoClientAdapter.BaseDocument[DocumentValue],
   MetaRecord,
   Record,
   Result[_]

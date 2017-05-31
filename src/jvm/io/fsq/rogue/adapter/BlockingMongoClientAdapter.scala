@@ -30,7 +30,7 @@ class BlockingResult[T](val value: T) {
 object BlockingMongoClientAdapter {
   type CollectionFactory[
     DocumentValue,
-    Document <: Bson with java.util.Map[String, DocumentValue],
+    Document <: MongoClientAdapter.BaseDocument[DocumentValue],
     MetaRecord,
     Record
   ] = MongoCollectionFactory[
@@ -44,7 +44,7 @@ object BlockingMongoClientAdapter {
 
 class BlockingMongoClientAdapter[
   DocumentValue,
-  Document <: Bson with java.util.Map[String, DocumentValue],
+  Document <: MongoClientAdapter.BaseDocument[DocumentValue],
   MetaRecord,
   Record,
   Result[_]

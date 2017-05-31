@@ -11,13 +11,18 @@ import org.bson.codecs.DecoderContext
 import org.bson.conversions.Bson
 
 
+object MongoClientAdapter {
+  // NOTE(jacob): This restriction is technically unnecessary, we could also
+  type BaseDocument[BaseValue] = Bson with java.util.Map[String, BaseValue]
+}
+
 /** TODO(jacob): All of the collection methods implemented here should get rid of the
   *     option to send down a read preference, and just use the one on the query.
   */
 abstract class MongoClientAdapter[
   MongoCollection[_],
   DocumentValue,
-  Document <: Bson with java.util.Map[String, DocumentValue],
+  Document <: MongoClientAdapter.BaseDocument[DocumentValue],
   MetaRecord,
   Record,
   Result[_]

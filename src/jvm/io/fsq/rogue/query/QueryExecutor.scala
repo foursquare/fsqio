@@ -8,7 +8,6 @@ import io.fsq.rogue.{!<:<, AddLimit, Query, QueryHelpers, QueryOptimizer, Requir
     Unselected, Unskipped}
 import io.fsq.rogue.adapter.MongoClientAdapter
 import io.fsq.rogue.types.MongoDisallowed
-import org.bson.conversions.Bson
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.ArrayBuffer
 
@@ -19,7 +18,7 @@ import scala.collection.mutable.ArrayBuffer
 class QueryExecutor[
   MongoCollection[_],
   DocumentValue,
-  Document <: Bson with java.util.Map[String, DocumentValue],
+  Document <: MongoClientAdapter.BaseDocument[DocumentValue],
   MetaRecord,
   Record,
   Result[_]
