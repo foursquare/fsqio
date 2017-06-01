@@ -32,6 +32,8 @@ trait IndexChecker {
  * A utility object which provides the capability to verify if the set of indexes that
  * actually exist for a MongoDB collection match the indexes that are expected by
  * a query.
+ *
+ * TODO(jacob): Make the QueryLogger used here configurable.
  */
 object MongoIndexChecker extends IndexChecker {
 
