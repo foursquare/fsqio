@@ -8,6 +8,7 @@ import com.mongodb.async.client.MongoCollection
 import com.mongodb.client.model.{CountOptions, UpdateOptions}
 import com.mongodb.client.result.{DeleteResult, UpdateResult}
 import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
+import io.fsq.rogue.util.QueryUtilities
 import java.util.concurrent.TimeUnit
 import org.bson.BsonValue
 import org.bson.conversions.Bson
@@ -37,9 +38,11 @@ class AsyncMongoClientAdapter[
   Result[_]
 ](
   collectionFactory: AsyncMongoClientAdapter.CollectionFactory[DocumentValue, Document, MetaRecord, Record],
-  callbackFactory: MongoCallbackFactory[Result]
+  callbackFactory: MongoCallbackFactory[Result],
+  queryHelpers: QueryUtilities
 ) extends MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, Result](
-  collectionFactory
+  collectionFactory,
+  queryHelpers
 ) with MongoCallback.Implicits {
 
   override def wrapEmptyResult[T](value: T): Result[T] = {

@@ -9,5 +9,6 @@ scala_library(
     'src/jvm/io/fsq/rogue',
     'src/jvm/io/fsq/rogue/adapter/callback',
     'src/jvm/io/fsq/rogue/index',
+    'src/jvm/io/fsq/rogue/util',
   ],
 )

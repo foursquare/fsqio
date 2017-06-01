@@ -16,6 +16,7 @@ import io.fsq.rogue.connection.testlib.RogueMongoTest
 import io.fsq.rogue.query.QueryExecutor
 import io.fsq.rogue.query.testlib.{TrivialORMMetaRecord, TrivialORMMongoCollectionFactory, TrivialORMRecord,
     TrivialORMRogueSerializer}
+import io.fsq.rogue.util.DefaultQueryUtilities
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.junit.{Before, Test}
@@ -150,15 +151,20 @@ class TrivialORMQueryTest extends RogueMongoTest
 
   val queryOptimizer = new QueryOptimizer
   val serializer = new TrivialORMRogueSerializer
+  val queryHelpers = new DefaultQueryUtilities
 
   val asyncCollectionFactory = new TrivialORMMongoCollectionFactory(asyncClientManager)
-  val asyncClientAdapter = new AsyncMongoClientAdapter(asyncCollectionFactory, new TwitterFutureMongoCallbackFactory)
+  val asyncClientAdapter = new AsyncMongoClientAdapter(
+    asyncCollectionFactory,
+    new TwitterFutureMongoCallbackFactory,
+    queryHelpers
+  )
   val asyncQueryExecutor = new QueryExecutor(asyncClientAdapter, queryOptimizer, serializer) {
     override def defaultWriteConcern: WriteConcern = WriteConcern.W1
   }
 
   val blockingCollectionFactory = new TrivialORMMongoCollectionFactory(blockingClientManager)
-  val blockingClientAdapter = new BlockingMongoClientAdapter(blockingCollectionFactory)
+  val blockingClientAdapter = new BlockingMongoClientAdapter(blockingCollectionFactory, queryHelpers)
   val blockingQueryExecutor = new QueryExecutor(blockingClientAdapter, queryOptimizer, serializer) {
     override def defaultWriteConcern: WriteConcern = WriteConcern.W1
   }

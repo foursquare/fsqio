@@ -5,6 +5,7 @@ package io.fsq.rogue.adapter
 import com.mongodb.{Block, MongoNamespace}
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.{CountOptions, UpdateOptions}
+import io.fsq.rogue.util.QueryUtilities
 import java.util.concurrent.TimeUnit
 import org.bson.BsonValue
 import org.bson.conversions.Bson
@@ -49,9 +50,11 @@ class BlockingMongoClientAdapter[
   Record,
   Result[_]
 ](
-  collectionFactory: BlockingMongoClientAdapter.CollectionFactory[DocumentValue, Document, MetaRecord, Record]
+  collectionFactory: BlockingMongoClientAdapter.CollectionFactory[DocumentValue, Document, MetaRecord, Record],
+  queryHelpers: QueryUtilities
 ) extends MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, BlockingResult](
-  collectionFactory
+  collectionFactory,
+  queryHelpers
 ) with BlockingResult.Implicits {
 
   override def wrapEmptyResult[T](value: T): BlockingResult[T] = new BlockingResult[T](value)

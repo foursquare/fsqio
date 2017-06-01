@@ -4,7 +4,7 @@ package io.fsq.rogue.query
 
 import com.mongodb.{ReadPreference, WriteConcern}
 import io.fsq.field.Field
-import io.fsq.rogue.{!<:<, AddLimit, ModifyQuery, Query, QueryHelpers, QueryOptimizer, Required, RequireShardKey, Rogue,
+import io.fsq.rogue.{!<:<, AddLimit, ModifyQuery, Query, QueryOptimizer, Required, RequireShardKey, Rogue,
     ShardingOk, Unlimited, Unselected, Unskipped}
 import io.fsq.rogue.adapter.MongoClientAdapter
 import io.fsq.rogue.types.MongoDisallowed
@@ -28,7 +28,7 @@ class QueryExecutor[
   serializer: RogueSerializer[MetaRecord, Record, Document]
 ) extends Rogue {
 
-  def defaultWriteConcern: WriteConcern = QueryHelpers.config.defaultWriteConcern
+  def defaultWriteConcern: WriteConcern = adapter.queryHelpers.config.defaultWriteConcern
 
   def count[M <: MetaRecord, State](
     query: Query[M, _, State],
