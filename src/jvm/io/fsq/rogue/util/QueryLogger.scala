@@ -6,7 +6,7 @@ import io.fsq.rogue.Query
 import io.fsq.rogue.index.UntypedMongoIndex
 
 
-trait QueryLogger {
+trait QueryLogger[Result[_]] {
   def logCounter(nameParts: String*)(count: Int): Unit
 
   def log(
@@ -20,16 +20,16 @@ trait QueryLogger {
     query: Query[_, _, _],
     instanceName: String,
     msg: => String,
-    func: => T
-  ): T
+    f: => Result[T]
+  ): Result[T]
 
   def onExecuteWriteCommand[T](
     operationName: String,
     collectionName: String,
     instanceName: String,
     msg: => String,
-    func: => T
-  ): T
+    f: => Result[T]
+  ): Result[T]
 
   def logIndexMismatch(query: Query[_, _, _], msg: => String)
 
@@ -38,7 +38,7 @@ trait QueryLogger {
   def warn(query: Query[_, _, _], msg: => String): Unit
 }
 
-class DefaultQueryLogger extends QueryLogger {
+class DefaultQueryLogger[Result[_]] extends QueryLogger[Result] {
   override def logCounter(nameParts: String*)(count: Int): Unit = ()
 
   override def log(
@@ -52,16 +52,16 @@ class DefaultQueryLogger extends QueryLogger {
     query: Query[_, _, _],
     instanceName: String,
     msg: => String,
-    f: => T
-  ): T = f
+    f: => Result[T]
+  ): Result[T] = f
 
   override def onExecuteWriteCommand[T](
     operationName: String,
     collectionName: String,
     instanceName: String,
     msg: => String,
-    f: => T
-  ): T = f
+    f: => Result[T]
+  ): Result[T] = f
 
   override def logIndexMismatch(query: Query[_, _, _], msg: => String): Unit = ()
 

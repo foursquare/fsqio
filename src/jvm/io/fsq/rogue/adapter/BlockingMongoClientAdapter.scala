@@ -47,11 +47,10 @@ class BlockingMongoClientAdapter[
   DocumentValue,
   Document <: MongoClientAdapter.BaseDocument[DocumentValue],
   MetaRecord,
-  Record,
-  Result[_]
+  Record
 ](
   collectionFactory: BlockingMongoClientAdapter.CollectionFactory[DocumentValue, Document, MetaRecord, Record],
-  queryHelpers: QueryUtilities
+  queryHelpers: QueryUtilities[BlockingResult]
 ) extends MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, BlockingResult](
   collectionFactory,
   queryHelpers

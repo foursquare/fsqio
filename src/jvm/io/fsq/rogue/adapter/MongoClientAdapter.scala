@@ -33,7 +33,7 @@ abstract class MongoClientAdapter[
   Result[_]
 ](
   collectionFactory: MongoCollectionFactory[MongoCollection, DocumentValue, Document, MetaRecord, Record],
-  val queryHelpers: QueryUtilities
+  val queryHelpers: QueryUtilities[Result]
 ) {
 
   /** Wrap an empty result for a no-op query. */
@@ -43,8 +43,8 @@ abstract class MongoClientAdapter[
     descriptionFunc: () => String,
     query: Query[M, _, _]
   )(
-    f: => T
-  ): T = {
+    f: => Result[T]
+  ): Result[T] = {
     // Use nanoTime instead of currentTimeMillis to time the query since
     // currentTimeMillis only has 10ms granularity on many systems.
     val start = System.nanoTime

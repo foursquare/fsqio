@@ -151,20 +151,22 @@ class TrivialORMQueryTest extends RogueMongoTest
 
   val queryOptimizer = new QueryOptimizer
   val serializer = new TrivialORMRogueSerializer
-  val queryHelpers = new DefaultQueryUtilities
 
   val asyncCollectionFactory = new TrivialORMMongoCollectionFactory(asyncClientManager)
   val asyncClientAdapter = new AsyncMongoClientAdapter(
     asyncCollectionFactory,
     new TwitterFutureMongoCallbackFactory,
-    queryHelpers
+    new DefaultQueryUtilities[Future]
   )
   val asyncQueryExecutor = new QueryExecutor(asyncClientAdapter, queryOptimizer, serializer) {
     override def defaultWriteConcern: WriteConcern = WriteConcern.W1
   }
 
   val blockingCollectionFactory = new TrivialORMMongoCollectionFactory(blockingClientManager)
-  val blockingClientAdapter = new BlockingMongoClientAdapter(blockingCollectionFactory, queryHelpers)
+  val blockingClientAdapter = new BlockingMongoClientAdapter(
+    blockingCollectionFactory,
+    new DefaultQueryUtilities[BlockingResult]
+  )
   val blockingQueryExecutor = new QueryExecutor(blockingClientAdapter, queryOptimizer, serializer) {
     override def defaultWriteConcern: WriteConcern = WriteConcern.W1
   }

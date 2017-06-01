@@ -3,16 +3,16 @@
 package io.fsq.rogue.util
 
 
-trait QueryUtilities {
+trait QueryUtilities[Result[_]] {
   def config: QueryConfig
-  def logger: QueryLogger
+  def logger: QueryLogger[Result]
   def transformer: QueryTransformer
   def validator: QueryValidator
 }
 
-class DefaultQueryUtilities extends QueryUtilities {
+class DefaultQueryUtilities[Result[_]] extends QueryUtilities[Result] {
   override val config: QueryConfig = new DefaultQueryConfig
-  override val logger: QueryLogger = new DefaultQueryLogger
+  override val logger: QueryLogger[Result] = new DefaultQueryLogger[Result]
   override val transformer: QueryTransformer = new DefaultQueryTransformer
   override val validator: QueryValidator = new DefaultQueryValidator
 }

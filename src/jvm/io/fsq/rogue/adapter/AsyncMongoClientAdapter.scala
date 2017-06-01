@@ -39,7 +39,7 @@ class AsyncMongoClientAdapter[
 ](
   collectionFactory: AsyncMongoClientAdapter.CollectionFactory[DocumentValue, Document, MetaRecord, Record],
   callbackFactory: MongoCallbackFactory[Result],
-  queryHelpers: QueryUtilities
+  queryHelpers: QueryUtilities[Result]
 ) extends MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, Result](
   collectionFactory,
   queryHelpers
