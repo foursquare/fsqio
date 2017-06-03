@@ -38,7 +38,7 @@ class QueryExecutor[
     ev2: M !<:< MongoDisallowed
   ): Result[Long] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapEmptyResult(0L)
+      adapter.wrapResult(0L)
     } else {
       adapter.count(query, readPreferenceOpt)
     }
@@ -54,7 +54,7 @@ class QueryExecutor[
     ev2: M !<:< MongoDisallowed
   ): Result[Long] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapEmptyResult(0L)
+      adapter.wrapResult(0L)
     } else {
       adapter.countDistinct(query, field(query.meta).name, readPreferenceOpt)
     }
@@ -71,7 +71,7 @@ class QueryExecutor[
     ev2: M !<:< MongoDisallowed
   ): Result[Seq[FieldType]] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapEmptyResult(Vector.empty[FieldType])
+      adapter.wrapResult(Vector.empty[FieldType])
     } else {
       adapter.distinct(query, field(query.meta).name, resultTransformer, readPreferenceOpt)
     }
@@ -110,7 +110,7 @@ class QueryExecutor[
     val resultsBuilder = canBuildFrom()
 
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapEmptyResult(resultsBuilder.result())
+      adapter.wrapResult(resultsBuilder.result())
     } else {
       def processor(document: Document): Unit = {
         resultsBuilder += serializer.readFromDocument(query.meta, query.select)(document)
@@ -128,7 +128,7 @@ class QueryExecutor[
     ev3: M !<:< MongoDisallowed
   ): Result[Option[R]] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapEmptyResult(None)
+      adapter.wrapResult(None)
     } else {
       var result: Option[R] = None
       def processor(document: Document): Unit = {
@@ -148,7 +148,7 @@ class QueryExecutor[
     ev2: M !<:< MongoDisallowed
   ): Result[Unit] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapEmptyResult(())
+      adapter.wrapResult(())
     } else {
       def processor(document: Document): Unit = {
         f(serializer.readFromDocument(query.meta, query.select)(document))
@@ -171,7 +171,7 @@ class QueryExecutor[
     val resultsBuilder = canBuildFrom()
 
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapEmptyResult(resultsBuilder.result())
+      adapter.wrapResult(resultsBuilder.result())
     } else {
       val batchBuffer = new ArrayBuffer[R]
 
@@ -210,7 +210,7 @@ class QueryExecutor[
     ev3: M !<:< MongoDisallowed
   ): Result[Long] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapEmptyResult(0L)
+      adapter.wrapResult(0L)
     } else {
       adapter.delete(query, Some(writeConcern))
     }
@@ -224,7 +224,7 @@ class QueryExecutor[
     ev2: M !<:< MongoDisallowed
   ): Result[Long] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapEmptyResult(0L)
+      adapter.wrapResult(0L)
     } else {
       adapter.modifyOne(query, upsert = false, Some(writeConcern))
     }

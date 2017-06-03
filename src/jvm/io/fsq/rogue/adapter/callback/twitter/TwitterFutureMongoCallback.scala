@@ -2,8 +2,9 @@
 
 package io.fsq.rogue.adapter.callback.twitter
 
-import com.twitter.util.{Future, Promise}
+import com.twitter.util.{Future, Promise, Return, Throw}
 import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
+import scala.util.{Failure, Success, Try}
 
 
 class TwitterFutureMongoCallback[T] extends MongoCallback[Future, T] {
@@ -27,5 +28,12 @@ class TwitterFutureMongoCallbackFactory extends MongoCallbackFactory[Future] {
     new TwitterFutureMongoCallback[T]
   }
 
-  override def wrapEmptyResult[T](value: T): Future[T] = Future.value(value)
+  override def transformResult[T, U](result: Future[T], f: Try[T] => Future[U]): Future[U] = {
+    result.transform(_ match {
+      case Return(value) => f(Success(value))
+      case Throw(throwable) => f(Failure(throwable))
+    })
+  }
+
+  override def wrapResult[T](value: => T): Future[T] = Future(value)
 }

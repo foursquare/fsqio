@@ -4,6 +4,7 @@ package io.fsq.rogue.adapter.callback
 
 import com.mongodb.async.SingleResultCallback
 import io.fsq.common.scala.Identity._
+import scala.util.Try
 
 
 object MongoCallback {
@@ -35,8 +36,10 @@ trait MongoCallback[Result[_], T] extends SingleResultCallback[T] {
 trait MongoCallbackFactory[Result[_]] {
   def newCallback[T]: MongoCallback[Result, T]
 
+  def transformResult[T, U](result: Result[T], f: Try[T] => Result[U]): Result[U]
+
   /** Wrap an empty result for a no-op query. This is included here to eliminate the need
     * to subclass AsyncMongoClientAdapter for new Result types.
     */
-  def wrapEmptyResult[T](value: T): Result[T]
+  def wrapResult[T](value: => T): Result[T]
 }

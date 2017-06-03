@@ -36,9 +36,6 @@ abstract class MongoClientAdapter[
   val queryHelpers: QueryUtilities[Result]
 ) {
 
-  /** Wrap an empty result for a no-op query. */
-  def wrapEmptyResult[T](value: T): Result[T]
-
   private def runCommand[M <: MetaRecord, T](
     descriptionFunc: () => String,
     query: Query[M, _, _]
@@ -65,6 +62,9 @@ abstract class MongoClientAdapter[
       queryHelpers.logger.log(query, instanceName, descriptionFunc(), (System.nanoTime - start) / 1000000)
     }
   }
+
+  /** Wrap a result for a no-op query. */
+  def wrapResult[T](value: => T): Result[T]
 
   /* TODO(jacob): Can we move this to a better place? It needs access to the
    *    implementation of MongoCollection used, so currently our options are either
@@ -276,7 +276,7 @@ abstract class MongoClientAdapter[
         documents.toIterator.map(collectionFactory.documentToString(_)).mkString("[", ",", "]"),
         insertAllImpl(collection)(records, documents)
       )
-    }).getOrElse(wrapEmptyResult(records))
+    }).getOrElse(wrapResult(records))
   }
 
   // NOTE(jacob): For better or for worse, the globally configured batch size takes
@@ -381,7 +381,7 @@ abstract class MongoClientAdapter[
     val modifyClause = queryHelpers.transformer.transformModify(modifyQuery)
 
     if (modifyClause.mod.clauses.isEmpty) {
-      wrapEmptyResult(0L)
+      wrapResult(0L)
 
     } else {
       queryHelpers.validator.validateModify(modifyClause, collectionFactory.getIndexes(modifyClause.query))

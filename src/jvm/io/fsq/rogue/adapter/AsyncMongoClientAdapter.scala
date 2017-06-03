@@ -45,8 +45,8 @@ class AsyncMongoClientAdapter[
   queryHelpers
 ) with MongoCallback.Implicits {
 
-  override def wrapEmptyResult[T](value: T): Result[T] = {
-    callbackFactory.wrapEmptyResult(value)
+  override def wrapResult[T](value: => T): Result[T] = {
+    callbackFactory.wrapResult(value)
   }
 
   override protected def getCollectionNamespace(collection: MongoCollection[Document]): MongoNamespace = {

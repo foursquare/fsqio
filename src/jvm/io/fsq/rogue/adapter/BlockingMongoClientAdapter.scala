@@ -56,7 +56,7 @@ class BlockingMongoClientAdapter[
   queryHelpers
 ) with BlockingResult.Implicits {
 
-  override def wrapEmptyResult[T](value: T): BlockingResult[T] = new BlockingResult[T](value)
+  override def wrapResult[T](value: => T): BlockingResult[T] = new BlockingResult[T](value)
 
   override protected def getCollectionNamespace(collection: MongoCollection[Document]): MongoNamespace = {
     collection.getNamespace
