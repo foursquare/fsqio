@@ -4,7 +4,7 @@ package io.fsq.rogue.adapter
 
 import com.mongodb.{Block, MongoNamespace, ReadPreference, WriteConcern}
 import com.mongodb.client.model.{CountOptions, UpdateOptions}
-import io.fsq.rogue.{ModifyQuery, Query, RogueException}
+import io.fsq.rogue.{ModifyQuery, Query}
 import io.fsq.rogue.MongoHelpers.{MongoBuilder => LegacyMongoBuilder}
 import io.fsq.rogue.util.QueryUtilities
 import org.bson.{BsonDocument, BsonDocumentReader, BsonValue}
@@ -36,33 +36,6 @@ abstract class MongoClientAdapter[
   val queryHelpers: QueryUtilities[Result]
 ) {
 
-  private def runCommand[M <: MetaRecord, T](
-    descriptionFunc: () => String,
-    query: Query[M, _, _]
-  )(
-    f: => Result[T]
-  ): Result[T] = {
-    // Use nanoTime instead of currentTimeMillis to time the query since
-    // currentTimeMillis only has 10ms granularity on many systems.
-    val start = System.nanoTime
-    val instanceName: String = collectionFactory.getInstanceNameFromQuery(query)
-    // Note that it's expensive to call descriptionFunc, it does toString on the Query
-    // the logger methods are call by name
-    try {
-      queryHelpers.logger.onExecuteQuery(query, instanceName, descriptionFunc(), f)
-    } catch {
-      case e: Exception => {
-        val timeMs = (System.nanoTime - start) / 1000000
-        throw new RogueException(
-          s"Mongo query on $instanceName [${descriptionFunc()}] failed after $timeMs ms",
-          e
-        )
-      }
-    } finally {
-      queryHelpers.logger.log(query, instanceName, descriptionFunc(), (System.nanoTime - start) / 1000000)
-    }
-  }
-
   /** Wrap a result for a no-op query. */
   def wrapResult[T](value: => T): Result[T]
 
@@ -72,6 +45,13 @@ abstract class MongoClientAdapter[
    *    kind of utility helper?
    */
   protected def getCollectionNamespace(collection: MongoCollection[Document]): MongoNamespace
+
+  protected def runCommand[M <: MetaRecord, T](
+    descriptionFunc: () => String,
+    query: Query[M, _, _]
+  )(
+    f: => Result[T]
+  ): Result[T]
 
   protected def countImpl(
     collection: MongoCollection[Document]

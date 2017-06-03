@@ -7,12 +7,14 @@ import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoCollection
 import com.mongodb.client.model.{CountOptions, UpdateOptions}
 import com.mongodb.client.result.{DeleteResult, UpdateResult}
+import io.fsq.rogue.{Query, RogueException}
 import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
 import io.fsq.rogue.util.QueryUtilities
 import java.util.concurrent.TimeUnit
 import org.bson.BsonValue
 import org.bson.conversions.Bson
 import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.util.{Failure, Success}
 
 
 object AsyncMongoClientAdapter {
@@ -51,6 +53,39 @@ class AsyncMongoClientAdapter[
 
   override protected def getCollectionNamespace(collection: MongoCollection[Document]): MongoNamespace = {
     collection.getNamespace
+  }
+
+  override protected def runCommand[M <: MetaRecord, T](
+    descriptionFunc: () => String,
+    query: Query[M, _, _]
+  )(
+    f: => Result[T]
+  ): Result[T] = {
+    // Use nanoTime instead of currentTimeMillis to time the query since
+    // currentTimeMillis only has 10ms granularity on many systems.
+    val start = System.nanoTime
+    val instanceName: String = collectionFactory.getInstanceNameFromQuery(query)
+
+    // Note that it's expensive to call descriptionFunc, it does toString on the Query
+    // the logger methods are call by name
+    callbackFactory.transformResult[T, T](
+      queryHelpers.logger.onExecuteQuery(query, instanceName, descriptionFunc(), f),
+      resultTry => {
+        val timeMs = (System.nanoTime - start) / 1000000
+        queryHelpers.logger.log(query, instanceName, descriptionFunc(), timeMs)
+
+        resultTry match {
+          case Success(value) => wrapResult(value)
+          case Failure(exception: Exception) => wrapResult(
+            throw new RogueException(
+              s"Mongo query on $instanceName [${descriptionFunc()}] failed after $timeMs ms",
+              exception
+            )
+          )
+          case Failure(other) => wrapResult(throw other)  // we only encode Exceptions
+        }
+      }
+    )
   }
 
   override protected def countImpl(
