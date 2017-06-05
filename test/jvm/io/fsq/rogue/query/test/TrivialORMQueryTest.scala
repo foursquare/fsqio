@@ -3,6 +3,9 @@
 package io.fsq.rogue.query.test
 
 import com.mongodb.{ErrorCategory, MongoBulkWriteException, MongoWriteException, WriteConcern}
+import com.mongodb.async.SingleResultCallback
+import com.mongodb.async.client.MongoCollection
+import com.mongodb.client.model.CountOptions
 import com.twitter.util.{Await, Future}
 import io.fsq.common.concurrent.Futures
 import io.fsq.common.scala.Identity._
@@ -16,8 +19,10 @@ import io.fsq.rogue.connection.testlib.RogueMongoTest
 import io.fsq.rogue.query.QueryExecutor
 import io.fsq.rogue.query.testlib.{TrivialORMMetaRecord, TrivialORMMongoCollectionFactory, TrivialORMRecord,
     TrivialORMRogueSerializer}
-import io.fsq.rogue.util.DefaultQueryUtilities
+import io.fsq.rogue.util.{DefaultQueryLogger, DefaultQueryUtilities, QueryLogger}
+import java.util.concurrent.CyclicBarrier
 import org.bson.Document
+import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.junit.{Before, Test}
 import org.specs2.matcher.{JUnitMustMatchers, MatchersImplicits}
@@ -200,6 +205,64 @@ class TrivialORMQueryTest extends RogueMongoTest
   def canBuildQuery: Unit = {
     metaRecordToQuery(SimpleRecord).toString must_== """db.test_records.find({ })"""
     SimpleRecord.where(_.int eqs 1).toString must_== """db.test_records.find({ "int" : 1})"""
+  }
+
+  /** Ensure correct logging of asynchronous queries -- this test will fail if logging is
+    * run immediately upon invocation, as opposed to being asynchronously triggered upon
+    * completion.
+    */
+  @Test
+  def testAsyncLogging: Unit = {
+    val barrier = new CyclicBarrier(2)
+    var countRun = false
+
+    val testQueryLogger = new DefaultQueryLogger[Future] {
+      override def log(
+        query: Query[_, _, _],
+        instanceName: String,
+        msg: => String,
+        timeMillis: Long
+      ): Unit = {
+        countRun must_== true
+      }
+    }
+    val testQueryUtilities = new DefaultQueryUtilities[Future] {
+      override val logger: QueryLogger[Future] = testQueryLogger
+    }
+
+    val callbackFactory = new TwitterFutureMongoCallbackFactory
+    val testClientAdapter = new AsyncMongoClientAdapter(
+      asyncCollectionFactory,
+      callbackFactory,
+      testQueryUtilities
+    ) {
+      override protected def countImpl(
+        collection: MongoCollection[Document]
+      )(
+        filter: Bson,
+        options: CountOptions
+      ): Future[Long] = {
+        val resultCallback = callbackFactory.newCallback[Long]
+        val queryCallback = new SingleResultCallback[java.lang.Long] {
+          override def onResult(result: java.lang.Long, throwable: Throwable): Unit = {
+            barrier.await()
+            countRun = true
+            resultCallback.onResult(result, throwable)
+          }
+        }
+        collection.count(filter, options, queryCallback)
+        resultCallback.result
+      }
+    }
+
+    val testQueryExecutor = new QueryExecutor(testClientAdapter, queryOptimizer, serializer)
+
+    val countFuture = try {
+      testQueryExecutor.count(SimpleRecord)
+    } finally {
+      barrier.await()
+    }
+    Await.result(countFuture)
   }
 
   def testSingleAsyncInsert(record: SimpleRecord): Future[Unit] = {
