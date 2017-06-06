@@ -4,13 +4,14 @@ package io.fsq.rogue.query.test
 
 import com.mongodb.{ErrorCategory, MongoBulkWriteException, MongoWriteException, WriteConcern}
 import com.mongodb.async.SingleResultCallback
-import com.mongodb.async.client.MongoCollection
+import com.mongodb.async.client.{MongoCollection => AsyncMongoCollection}
+import com.mongodb.client.{MongoCollection => BlockingMongoCollection}
 import com.mongodb.client.model.CountOptions
 import com.twitter.util.{Await, Future}
 import io.fsq.common.concurrent.Futures
 import io.fsq.common.scala.Identity._
 import io.fsq.field.{OptionalField, RequiredField}
-import io.fsq.rogue.{InitialState, Query, QueryOptimizer, Rogue}
+import io.fsq.rogue.{InitialState, Query, QueryOptimizer, Rogue, RogueException}
 import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.adapter.{AsyncMongoClientAdapter, BlockingMongoClientAdapter, BlockingResult}
 import io.fsq.rogue.adapter.callback.twitter.TwitterFutureMongoCallbackFactory
@@ -207,6 +208,71 @@ class TrivialORMQueryTest extends RogueMongoTest
     SimpleRecord.where(_.int eqs 1).toString must_== """db.test_records.find({ "int" : 1})"""
   }
 
+  /** Ensure correct throwable encoding -- we catch and encode Exceptions as
+    * RogueExceptions, but any Errors are left untouched.
+    */
+  @Test
+  def testRogueExceptionEncoding: Unit = {
+    var toThrow: Throwable = new IllegalArgumentException
+
+    val callbackFactory = new TwitterFutureMongoCallbackFactory
+    val testAsyncClientAdapter = new AsyncMongoClientAdapter(
+      asyncCollectionFactory,
+      callbackFactory,
+      new DefaultQueryUtilities[Future]
+    ) {
+      override protected def countImpl(
+        collection: AsyncMongoCollection[Document]
+      )(
+        filter: Bson,
+        options: CountOptions
+      ): Future[Long] = {
+        val resultCallback = callbackFactory.newCallback[Long]
+        val queryCallback = new SingleResultCallback[java.lang.Long] {
+          override def onResult(result: java.lang.Long, throwable: Throwable): Unit = {
+            resultCallback.onResult(result, toThrow)
+          }
+        }
+        collection.count(filter, options, queryCallback)
+        resultCallback.result
+      }
+    }
+
+    val testAsyncQueryExecutor = new QueryExecutor(
+      testAsyncClientAdapter,
+      queryOptimizer,
+      serializer
+    )
+
+    val testBlockingClientAdapter = new BlockingMongoClientAdapter(
+      blockingCollectionFactory,
+      new DefaultQueryUtilities[BlockingResult]
+    ) {
+      override protected def countImpl(
+        collection: BlockingMongoCollection[Document]
+      )(
+        filter: Bson,
+        options: CountOptions
+      ): BlockingResult[Long] = {
+        throw toThrow
+      }
+    }
+
+    val testBlockingQueryExecutor = new QueryExecutor(
+      testBlockingClientAdapter,
+      queryOptimizer,
+      serializer
+    )
+
+    Await.result(testAsyncQueryExecutor.count(SimpleRecord)) must throwA[RogueException]
+    testBlockingQueryExecutor.count(SimpleRecord) must throwA[RogueException]
+
+    toThrow = new Error
+
+    Await.result(testAsyncQueryExecutor.count(SimpleRecord)) must throwA[Error]
+    testBlockingQueryExecutor.count(SimpleRecord) must throwA[Error]
+  }
+
   /** Ensure correct logging of asynchronous queries -- this test will fail if logging is
     * run immediately upon invocation, as opposed to being asynchronously triggered upon
     * completion.
@@ -237,7 +303,7 @@ class TrivialORMQueryTest extends RogueMongoTest
       testQueryUtilities
     ) {
       override protected def countImpl(
-        collection: MongoCollection[Document]
+        collection: AsyncMongoCollection[Document]
       )(
         filter: Bson,
         options: CountOptions
