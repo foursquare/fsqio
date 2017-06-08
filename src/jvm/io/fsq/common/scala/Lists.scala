@@ -141,7 +141,7 @@ object Lists {
    */
   def nth[T](seq: Seq[T], target: Int)(implicit ord: Ordering[T]): Option[T] = {
     @tailrec
-    def nthHelper[T](
+    def nthHelper(
       beginIndex: Int,
       endIndex: Int,
       target: Int,
@@ -293,7 +293,7 @@ class FSTraversable[CC[X] <: Traversable[X], T, Repr <: TraversableLike[T, Repr]
 
   def flatGroupBy[S](f: T => Option[S]): Map[S, Repr] = {
     xs.groupBy(f).flatMap {
-      case (Some(s), ts) => Some(s, ts)
+      case (Some(s), ts) => Some((s, ts))
       case _ => None
     }
   }
@@ -519,7 +519,7 @@ class FSSet[
 ](
  val xs: SetLike[T, Repr] with GenericSetTemplate[T, CC]
 ) extends AnyVal {
-  def newBuilder[T] = xs.companion.newBuilder[T]
+  def newBuilder = xs.companion.newBuilder[T]
 
   def has(e: T): Boolean = xs.contains(e)
 }
