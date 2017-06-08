@@ -61,7 +61,7 @@ class MypyTask(Task):
       self.context.log.debug('No Python sources to check.')
       return
 
-    cmd = [self.get_options().py3_path, '-m', 'mypy', '-2'] + sources
+    cmd = [self.get_options().py3_path, '-m', 'mypy', '-2'] + self.get_passthru_args() + sources
     self.context.log.debug('mypy command: {}'.format(' '.join(cmd)))
 
     with self.context.new_workunit(
