@@ -6,7 +6,7 @@
 <%@ val clsContainer: String %>
 
 <% val brace = if (!cls.primaryKeyField.isDefined) "{" else "" %>
-trait ${cls.name} extends Object
+trait ${cls.name} extends io.fsq.spindle.runtime.Record[${cls.name}]
 #for (pkField <- cls.primaryKeyField)
     with _root_.io.fsq.spindle.runtime.HasPrimaryKey[${pkField.renderType.text}, ${cls.name}]
 #end

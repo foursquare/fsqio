@@ -27,19 +27,19 @@ package ${program.pkg}
     program.structs.foreach { cls =>
       cls.fields.foreach { field =>
         if (field.isForeignKey && field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.Container1RenderType]) {
-          importsToAdd("_root_.io.fsq.spindle.runtime.{ForeignKeySeqFieldDescriptor => _FKSeqFieldDesc}")
+          importsToAdd.add("_root_.io.fsq.spindle.runtime.{ForeignKeySeqFieldDescriptor => _FKSeqFieldDesc}")
         } else if (field.isForeignKey && !field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.ContainerRenderType]) {
-          importsToAdd("_root_.io.fsq.spindle.runtime.{ForeignKeyFieldDescriptor => _FKFieldDesc}")
+          importsToAdd.add("_root_.io.fsq.spindle.runtime.{ForeignKeyFieldDescriptor => _FKFieldDesc}")
         } else if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType]) {
-          importsToAdd("_root_.io.fsq.spindle.runtime.{BitfieldFieldDescriptor => _BitFieldDesc}")
+          importsToAdd.add("_root_.io.fsq.spindle.runtime.{BitfieldFieldDescriptor => _BitFieldDesc}")
         } else if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.ExceptionRenderType]) {
-          importsToAdd("_root_.io.fsq.spindle.runtime.{ExceptionFieldDescriptor => _ExceptionFieldDesc}")
+          importsToAdd.add("_root_.io.fsq.spindle.runtime.{ExceptionFieldDescriptor => _ExceptionFieldDesc}")
         } else if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.StructRenderType]) {
-          importsToAdd("_root_.io.fsq.spindle.runtime.{StructFieldDescriptor => _StructFieldDesc}")
+          importsToAdd.add("_root_.io.fsq.spindle.runtime.{StructFieldDescriptor => _StructFieldDesc}")
         } else if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.EnumRenderType]) {
-          importsToAdd("_root_.io.fsq.spindle.runtime.{OptionalFieldDescriptor => _OptFieldDesc}")
+          importsToAdd.add("_root_.io.fsq.spindle.runtime.{OptionalFieldDescriptor => _OptFieldDesc}")
         } else {
-          importsToAdd("_root_.io.fsq.spindle.runtime.{OptionalFieldDescriptor => _OptFieldDesc}")
+          importsToAdd.add("_root_.io.fsq.spindle.runtime.{OptionalFieldDescriptor => _OptFieldDesc}")
         }
       }
     }

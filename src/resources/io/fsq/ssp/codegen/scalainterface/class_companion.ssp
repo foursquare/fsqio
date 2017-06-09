@@ -15,7 +15,7 @@ object ${cls.name} extends ${cls.name}Meta {
   implicit val __$comparator: _root_.java.util.Comparator[${cls.name}]
 }
 
-class ${cls.name}Meta extends Object
+class ${cls.name}Meta extends io.fsq.spindle.runtime.MetaRecord[${cls.name}, ${cls.name}Meta]
 #for (pkField <- cls.primaryKeyField)
     with _root_.io.fsq.spindle.runtime.HasMetaPrimaryKey[${pkField.renderType.text}, ${cls.name}]
 #end
