@@ -4,10 +4,13 @@ package io.fsq.rogue.connection
 
 
 object MongoIdentifier {
-  def apply(name: String): MongoIdentifier = new MongoIdentifier(name)
+  def apply(name: String): MongoIdentifier = new DefaultMongoIdentifier(name)
 }
 
 /** A simple String wrapper identifying a mongo connection. */
-class MongoIdentifier(val name: String) extends AnyVal {
+trait MongoIdentifier {
+  def name: String
   override def toString: String = name
 }
+
+class DefaultMongoIdentifier(override val name: String) extends MongoIdentifier
