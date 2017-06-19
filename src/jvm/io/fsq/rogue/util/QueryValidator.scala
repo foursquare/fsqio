@@ -13,17 +13,17 @@ trait QueryValidator {
 
   def validateQuery[M](
     query: Query[M, _, _],
-    indexes: Option[Seq[UntypedMongoIndex]]
+    indexesOpt: Option[Seq[UntypedMongoIndex]]
   ): Unit
 
   def validateModify[M](
     modify: ModifyQuery[M, _],
-    indexes: Option[Seq[UntypedMongoIndex]]
+    indexesOpt: Option[Seq[UntypedMongoIndex]]
   ): Unit
 
   def validateFindAndModify[M, R](
     modify: FindAndModifyQuery[M, R],
-    indexes: Option[Seq[UntypedMongoIndex]]
+    indexesOpt: Option[Seq[UntypedMongoIndex]]
   ): Unit
 }
 
@@ -34,16 +34,16 @@ class DefaultQueryValidator extends QueryValidator {
 
   override def validateQuery[M](
     query: Query[M, _, _],
-    indexes: Option[Seq[UntypedMongoIndex]]
+    indexesOpt: Option[Seq[UntypedMongoIndex]]
   ): Unit = ()
 
   override def validateModify[M](
     modify: ModifyQuery[M, _],
-    indexes: Option[Seq[UntypedMongoIndex]]
+    indexesOpt: Option[Seq[UntypedMongoIndex]]
   ): Unit = ()
 
   override def validateFindAndModify[M, R](
     modify: FindAndModifyQuery[M, R],
-    indexes: Option[Seq[UntypedMongoIndex]]
+    indexesOpt: Option[Seq[UntypedMongoIndex]]
   ): Unit = ()
 }
