@@ -9,15 +9,18 @@ case class Degrees(value: Double)
 case class Radians(value: Double)
 case class LatLong(lat: Double, long: Double)
 
+trait IndexCheckerLogger {
+  def logIndexMismatch(query: Query[_, _, _], msg: => String): Unit
+  def logIndexHit(query: Query[_, _, _], index: UntypedMongoIndex): Unit
+}
+
 object QueryHelpers {
 
-  trait QueryLogger {
+  trait QueryLogger extends IndexCheckerLogger {
     def logCounter(nameParts: String*)(count: Int): Unit
     def log(query: Query[_, _, _], instanceName: String, msg: => String, timeMillis: Long): Unit
     def onExecuteQuery[T](query: Query[_, _, _], instanceName: String, msg: => String, func: => T): T
     def onExecuteWriteCommand[T](operationName: String, collectionName: String, instanceName: String, msg: => String, func: => T): T
-    def logIndexMismatch(query: Query[_, _, _], msg: => String)
-    def logIndexHit(query: Query[_, _, _], index: UntypedMongoIndex)
     def warn(query: Query[_, _, _], msg: => String): Unit
   }
 

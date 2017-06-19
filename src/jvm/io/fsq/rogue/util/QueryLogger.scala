@@ -2,11 +2,11 @@
 
 package io.fsq.rogue.util
 
-import io.fsq.rogue.Query
+import io.fsq.rogue.{IndexCheckerLogger, Query}
 import io.fsq.rogue.index.UntypedMongoIndex
 
 
-trait QueryLogger[Result[_]] {
+trait QueryLogger[Result[_]] extends IndexCheckerLogger {
   def logCounter(nameParts: String*)(count: Int): Unit
 
   def log(
@@ -30,10 +30,6 @@ trait QueryLogger[Result[_]] {
     msg: => String,
     f: => Result[T]
   ): Result[T]
-
-  def logIndexMismatch(query: Query[_, _, _], msg: => String)
-
-  def logIndexHit(query: Query[_, _, _], index: UntypedMongoIndex)
 
   def warn(query: Query[_, _, _], msg: => String): Unit
 }

@@ -2,7 +2,8 @@
 
 package io.fsq.rogue.indexchecker
 
-import io.fsq.rogue.{DocumentScan, Index, IndexScan, MongoHelpers, PartialIndexScan, Query, QueryClause, QueryHelpers}
+import io.fsq.rogue.{DocumentScan, Index, IndexCheckerLogger, IndexScan, MongoHelpers, PartialIndexScan, Query,
+    QueryClause, QueryHelpers}
 import io.fsq.rogue.index.UntypedMongoIndex
 
 trait IndexChecker {
@@ -32,10 +33,13 @@ trait IndexChecker {
  * A utility object which provides the capability to verify if the set of indexes that
  * actually exist for a MongoDB collection match the indexes that are expected by
  * a query.
- *
- * TODO(jacob): Make the QueryLogger used here configurable.
  */
-object MongoIndexChecker extends IndexChecker {
+class MongoIndexChecker extends IndexChecker {
+
+  // HACK(jacob): This should really just be a class parameter, but until we have totally
+  //    phased out the QueryHelpers singleton we need to support hot swapping the logger
+  //    implementation, else it would be fixed at object creation time with the default.
+  def logger: IndexCheckerLogger = QueryHelpers.logger
 
   /**
    * Flattens an arbitrary query into DNF - that is, into a list of query alternatives
@@ -182,3 +186,5 @@ object MongoIndexChecker extends IndexChecker {
     true
   }
 }
+
+object MongoIndexChecker extends MongoIndexChecker
