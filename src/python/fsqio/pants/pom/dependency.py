@@ -55,6 +55,10 @@ class Dependency(namedtuple('Dependency', dependency_attrs)):
         .format(groupId, artifactId, classifier))
 
     scope = attr_dict.get('scope', 'compile')
+    if "," in scope:
+      scopes = scope.split(",")
+      # HACK(iant): Use a hierarchy and just pick one
+      scope = (s for s in ('compile', 'provided', 'runtime', 'test', 'system') if s in scopes).next()
     if scope not in ('compile', 'provided', 'runtime', 'test', 'system'):
       raise ValueError(
         'While parsing XML for dependency ({}, {}), invalid scope: {}'

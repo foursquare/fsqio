@@ -23,19 +23,29 @@ class Pom(object):
       return properties.get(matchobj.group(1), matchobj.group(0))
     return re.sub(r'\$\{(.*?)\}', subfunc, text)
 
+  # See https://maven.apache.org/guides/introduction/introduction-to-the-pom.html#Project_Interpolation
   @staticmethod
-  def calculate_properties(coordinate, tree, parent_pom):
-    default_properties = {
-      'project.groupId': coordinate.groupId,
-      'project.artifactId': coordinate.artifactId,
-      'project.version': coordinate.version,
-      'pom.groupId': coordinate.groupId,
-      'pom.artifactId': coordinate.artifactId,
-      'pom.version': coordinate.version,
-      'groupId': coordinate.groupId,
-      'artifactId': coordinate.artifactId,
-      'version': coordinate.version,
-    }
+  def calculate_properties(tree, parent_pom):
+    # Traverses pom for properties. For example, "groupId", "build.directory", "organization.url" etc.
+    def xml_props(elem):
+      if elem.text and elem.text.strip():
+        yield (elem.tag, elem.text.strip())
+      else:
+        for child in elem:
+            # Only look at single children
+            if len(elem.findall(child.tag)) == 1:
+              for path, value in xml_props(child):
+                yield (elem.tag + "." + path, value)
+
+    project_model_properties = {}
+    for elem in tree:
+      if elem.tag != "properties":
+        for path, value in xml_props(elem):
+          # Allow prefix with project., pom., or no prefix
+          project_model_properties[path] = value
+          project_model_properties["project." + path] = value
+          project_model_properties["pom." + path] = value
+
     declared_properties = {}
     properties_tree = tree.find('properties')
     if properties_tree is not None:
@@ -51,7 +61,7 @@ class Pom(object):
     properties = {}
     if parent_pom:
       properties.update(parent_pom.properties)
-    properties.update(default_properties)
+    properties.update(project_model_properties)
     properties.update(declared_properties)
     for key, val in properties.items():
       properties[key] = Pom.resolve_placeholder(val, properties)
@@ -120,7 +130,7 @@ class Pom(object):
     packaging = tree.findtext('packaging', default='jar')
     classifier = tree.findtext('classifier')
     coordinate = Coordinate(groupId, artifactId, version, packaging, classifier, fetcher.repo)
-    properties = Pom.calculate_properties(coordinate, tree, parent_pom)
+    properties = Pom.calculate_properties(tree, parent_pom)
     tree = Pom.interpolate_properties(tree, properties)
 
     # We need to let property interpolation happen first, since the version might be
