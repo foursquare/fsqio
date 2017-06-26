@@ -252,6 +252,7 @@ jvm_third_party_map = {
   'edu': {
     'upc': 'freeling',
   },
+  'epic': 'epic',
   'gnu': {
     'trove': 'trove4j',
   },
