@@ -63,16 +63,13 @@ object Bytes extends Logger {
   // http://grepcode.com/file/repo1.maven.org/maven2/org.apache.hadoop/hadoop-common/2.5.0/org/apache/hadoop/io/WritableUtils.java#WritableUtils.readVInt%28java.io.DataInput%29
   def getVInt(mbb: ByteBuffer): Int = {
     val firstByte: Byte = mbb.get()
-    logger.trace(s"firstByte = $firstByte")
     val vIntSize = decodeVIntSize(firstByte)
-    logger.trace(s"vIntSize = $vIntSize")
     if (vIntSize == 1)
       firstByte
     else {
       var vInt = 0
       for (i <- 0 to (vIntSize - 2)) {
         val byte: Byte = mbb.get()
-        logger.trace(s"i=$i, byte=$byte")
         vInt = vInt << 8
         vInt = vInt | (byte & 0xFF)
       }
@@ -93,8 +90,6 @@ object Bytes extends Logger {
     byte < -120 || (byte >= -112 && byte < 0);
   }
 
-
-  @inline
   def compare(left: ByteBuffer, right: ByteBuffer): Int = {
     compare(left, right, right.position, right.remaining)
   }
@@ -104,12 +99,10 @@ object Bytes extends Logger {
    * This function is essentially providing same functionality as the above except it takes the input byte buffer
    * in multiple chunks.
    */
-  @inline
   def compare(splitKey: Seq[ByteBuffer], right: ByteBuffer): Int = {
     compare(splitKey, right, right.position, right.remaining)
   }
 
-  @inline
   def compare(left: ByteBuffer, right: ByteBuffer, rightPosition: Int, rightRemaining: Int): Int = {
     if (left.hasArray && right.hasArray) {
       HadoopByteBufferComparator.compare(left, right, rightPosition, rightRemaining)
@@ -118,7 +111,6 @@ object Bytes extends Logger {
     }
   }
 
-  @inline
   def compare(splitKey: Seq[ByteBuffer], right: ByteBuffer, rightPosition: Int, rightRemaining: Int): Int = {
     if (splitKey.forall(_.hasArray) && right.hasArray) {
       HadoopByteBufferComparator.compare(splitKey, right, rightPosition, rightRemaining)
@@ -167,12 +159,9 @@ object Bytes extends Logger {
   }
 
   object ByteBufferComparatorNoSlice extends Comparator[ByteBuffer] {
-    @inline
     def compare(left: ByteBuffer, right: ByteBuffer): Int =
       compare(left, right, right.position, right.remaining)
 
-
-    @inline
     def compare(left: ByteBuffer, right: ByteBuffer, rightPosition: Int, rightRemaining: Int): Int = {
 
       var end = left.position() + Math.min(left.remaining(), rightRemaining) -1
@@ -192,7 +181,6 @@ object Bytes extends Logger {
       }
     }
 
-    @inline
     def compare(lefts: Seq[ByteBuffer], right: ByteBuffer, rightPosition: Int, rightRemaining: Int): Int = {
       var res = 0
       var position = rightPosition
@@ -208,17 +196,14 @@ object Bytes extends Logger {
   }
 
   object HadoopByteBufferComparator extends Comparator[ByteBuffer] {
-    @inline
     def compare(left: ByteBuffer, right: ByteBuffer): Int =
       compare(left, right, right.position, right.remaining)
 
-    @inline
     def compare(left: ByteBuffer, right: ByteBuffer, rightPosition: Int, rightRemaining: Int): Int = {
       WritableComparator.compareBytes(left.array(), left.arrayOffset + left.position, left.remaining,
         right.array(), right.arrayOffset + rightPosition, rightRemaining)
     }
-
-    @inline
+    
     def compare(lefts: Seq[ByteBuffer], right: ByteBuffer, rightPosition: Int, rightRemaining: Int): Int = {
       var res = 0
       var position = rightPosition
