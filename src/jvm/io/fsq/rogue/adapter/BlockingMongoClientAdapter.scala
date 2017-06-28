@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.adapter
 
-import com.mongodb.{Block, MongoNamespace}
+import com.mongodb.{Block, DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException}
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.{CountOptions, UpdateOptions}
 import io.fsq.rogue.{Query, RogueException}
@@ -61,6 +61,33 @@ class BlockingMongoClientAdapter[
 
   override protected def getCollectionNamespace(collection: MongoCollection[Document]): MongoNamespace = {
     collection.getNamespace
+  }
+
+  // TODO(jacob): I THINK the new clients opt to throw write exceptions instead of
+  //    DuplicateKeyExceptions and that catching those here is unnecessary. This is a
+  //    difficult condition to test however, so we will have to wait and see what the
+  //    stats measure.
+  override protected def upsertWithDuplicateKeyRetry[T](upsert: => BlockingResult[T]): BlockingResult[T] = {
+    try {
+      upsert
+    } catch {
+      case rogueException: RogueException => Option(rogueException.getCause) match {
+        case Some(_: DuplicateKeyException) => {
+          queryHelpers.logger.logCounter("rogue", "adapter", "upsert", "DuplicateKeyException")(1)
+          upsert
+        }
+
+        case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
+          case ErrorCategory.DUPLICATE_KEY => {
+            queryHelpers.logger.logCounter("rogue", "adapter", "upsert", "MongoWriteException-DUPLICATE_KEY")(1)
+            upsert
+          }
+          case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw mwe
+        }
+
+        case _ => throw rogueException
+      }
+    }
   }
 
   override protected def runCommand[M <: MetaRecord, T](

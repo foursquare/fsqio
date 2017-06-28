@@ -229,4 +229,18 @@ class QueryExecutor[
       adapter.modifyOne(query, upsert = false, Some(writeConcern))
     }
   }
+
+  def upsertOne[M <: MetaRecord, State](
+    query: ModifyQuery[M, State],
+    writeConcern: WriteConcern = defaultWriteConcern
+  )(
+    implicit ev: RequireShardKey[M, State],
+    ev2: M !<:< MongoDisallowed
+  ): Result[Long] = {
+    if (optimizer.isEmptyQuery(query)) {
+      adapter.wrapResult(0L)
+    } else {
+      adapter.modifyOne(query, upsert = true, Some(writeConcern))
+    }
+  }
 }

@@ -46,6 +46,11 @@ abstract class MongoClientAdapter[
    */
   protected def getCollectionNamespace(collection: MongoCollection[Document]): MongoNamespace
 
+  /* NOTE(jacob): We have to retry upserts that fail with duplicate key exceptions, see
+   * https://jira.mongodb.org/browse/SERVER-14322
+   */
+  protected def upsertWithDuplicateKeyRetry[T](upsert: => Result[T]): Result[T]
+
   protected def runCommand[M <: MetaRecord, T](
     descriptionFunc: () => String,
     query: Query[M, _, _]
@@ -384,8 +389,14 @@ abstract class MongoClientAdapter[
           .upsert(upsert)
       }
 
-      runCommand(descriptionFunc, modifyClause.query) {
+      def run: Result[Long] = runCommand(descriptionFunc, modifyClause.query) {
         updateOneImpl(collection)(filter, update, options)
+      }
+
+      if (upsert) {
+        upsertWithDuplicateKeyRetry(run)
+      } else {
+        run
       }
     }
   }

@@ -1067,4 +1067,101 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.bulkDelete_!!(SimpleRecord).unwrap must_== 2
     blockingQueryExecutor.count(SimpleRecord).unwrap must_== 0
   }
+
+  @Test
+  def testAsyncUpsertOne: Unit = {
+    val testRecord = newTestRecord(0)
+
+    val serialTestFutures = Future.join(
+      asyncQueryExecutor.insert(newTestRecord(1)),
+
+      for {
+        // insert new record with only id/modified fields
+        _ <- asyncQueryExecutor.upsertOne(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+          ).map(_ must_== 0L)
+        _ <- asyncQueryExecutor.fetchOne(
+            SimpleRecord.where(_.id eqs testRecord.id)
+          ).map(_ must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int)))
+        // no-op upsert
+        _ <- asyncQueryExecutor.upsertOne(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+          ).map(_ must_== 0L)
+        // modify on existing record
+        _ <- asyncQueryExecutor.upsertOne(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10))
+          ).map(_ must_== 1L)
+        _ <- asyncQueryExecutor.fetchOne(
+            SimpleRecord.where(_.id eqs testRecord.id)
+          ).map(_ must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int.map(_ + 10))))
+      } yield ()
+    )
+
+    val testFutures = serialTestFutures.flatMap(_ => {
+      Future.join(
+        // updates fail on modifying _id
+        asyncQueryExecutor.upsertOne(SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId))
+          .map(_ => throw new Exception("Expected update failure when modifying _id field"))
+          .handle({
+            case mwe: MongoWriteException => mwe.getError.getCategory match {
+              case ErrorCategory.UNCATEGORIZED => ()
+              case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw mwe
+            }
+          }),
+
+        // match multiple records, but only modify one
+        asyncQueryExecutor.upsertOne(
+          SimpleRecord.modify(_.boolean setTo true)
+        ).map(_ must_== 1L)
+      )
+    })
+
+
+    Await.result(testFutures)
+  }
+
+  @Test
+  def testBlockingUpsertOne: Unit = {
+    val testRecord = newTestRecord(0)
+
+    // insert new record with only id/modified fields
+    blockingQueryExecutor.upsertOne(
+      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+    ).unwrap must_== 0L
+    blockingQueryExecutor.fetchOne(
+      SimpleRecord.where(_.id eqs testRecord.id)
+    ).unwrap must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int))
+
+    // no-op upsert
+    blockingQueryExecutor.upsertOne(
+      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+    ).unwrap must_== 0L
+
+    // modify on existing record
+    blockingQueryExecutor.upsertOne(
+      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10))
+    ).unwrap must_== 1L
+    blockingQueryExecutor.fetchOne(
+      SimpleRecord.where(_.id eqs testRecord.id)
+    ).unwrap must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int.map(_ + 10)))
+
+    // match multiple records, but only modify one
+    blockingQueryExecutor.insert(newTestRecord(1))
+    blockingQueryExecutor.upsertOne(
+      SimpleRecord.modify(_.boolean setTo true)
+    ).unwrap must_== 1L
+
+    // updates fail on modifying _id
+    try {
+      blockingQueryExecutor.upsertOne(
+        SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId)
+      )
+      throw new Exception("Expected update failure when modifying _id field")
+    } catch {
+      case mwe: MongoWriteException => mwe.getError.getCategory match {
+        case ErrorCategory.UNCATEGORIZED => ()
+        case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw mwe
+      }
+    }
+  }
 }
