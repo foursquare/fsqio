@@ -7,6 +7,7 @@ import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoCollection
 import com.mongodb.client.model.{CountOptions, UpdateOptions}
 import com.mongodb.client.result.{DeleteResult, UpdateResult}
+import io.fsq.common.scala.Identity._
 import io.fsq.rogue.{Query, RogueException}
 import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
 import io.fsq.rogue.util.QueryUtilities
@@ -196,7 +197,11 @@ class AsyncMongoClientAdapter[
     val resultCallback = callbackFactory.newCallback[Long]
     val queryCallback = new SingleResultCallback[DeleteResult] {
       override def onResult(deleteResult: DeleteResult, throwable: Throwable): Unit = {
-        resultCallback.onResult(deleteResult.getDeletedCount, throwable)
+        if (throwable !=? null) {
+          resultCallback.onResult(0L, throwable)
+        } else {
+          resultCallback.onResult(deleteResult.getDeletedCount, throwable)
+        }
       }
     }
     collection.deleteOne(document, queryCallback)
@@ -211,7 +216,11 @@ class AsyncMongoClientAdapter[
     val resultCallback = callbackFactory.newCallback[Long]
     val queryCallback = new SingleResultCallback[DeleteResult] {
       override def onResult(deleteResult: DeleteResult, throwable: Throwable): Unit = {
-        resultCallback.onResult(deleteResult.getDeletedCount, throwable)
+        if (throwable !=? null) {
+          resultCallback.onResult(0L, throwable)
+        } else {
+          resultCallback.onResult(deleteResult.getDeletedCount, throwable)
+        }
       }
     }
     collection.deleteMany(filter, queryCallback)
@@ -228,7 +237,11 @@ class AsyncMongoClientAdapter[
     val resultCallback = callbackFactory.newCallback[Long]
     val queryCallback = new SingleResultCallback[UpdateResult] {
       override def onResult(updateResult: UpdateResult, throwable: Throwable): Unit = {
-        resultCallback.onResult(updateResult.getModifiedCount, throwable)
+        if (throwable !=? null) {
+          resultCallback.onResult(0L, throwable)
+        } else {
+          resultCallback.onResult(updateResult.getModifiedCount, throwable)
+        }
       }
     }
     collection.updateOne(filter, update, options, queryCallback)
