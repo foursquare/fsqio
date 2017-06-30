@@ -7,7 +7,7 @@ import io.fsq.rogue.index.UntypedMongoIndex
 
 
 trait QueryLogger[Result[_]] extends IndexCheckerLogger {
-  def logCounter(nameParts: String*)(count: Int): Unit
+  def logCounter(name: String, count: Int = 1): Unit
 
   def log(
     query: Query[_, _, _],
@@ -35,7 +35,7 @@ trait QueryLogger[Result[_]] extends IndexCheckerLogger {
 }
 
 class DefaultQueryLogger[Result[_]] extends QueryLogger[Result] {
-  override def logCounter(nameParts: String*)(count: Int): Unit = ()
+  override def logCounter(name: String, count: Int = 1): Unit = ()
 
   override def log(
     query: Query[_, _, _],

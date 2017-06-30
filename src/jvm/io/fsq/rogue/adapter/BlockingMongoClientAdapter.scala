@@ -73,13 +73,13 @@ class BlockingMongoClientAdapter[
     } catch {
       case rogueException: RogueException => Option(rogueException.getCause) match {
         case Some(_: DuplicateKeyException) => {
-          queryHelpers.logger.logCounter("rogue", "adapter", "upsert", "DuplicateKeyException")(1)
+          queryHelpers.logger.logCounter("rogue.adapter.upsert.DuplicateKeyException")
           upsert
         }
 
         case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
           case ErrorCategory.DUPLICATE_KEY => {
-            queryHelpers.logger.logCounter("rogue", "adapter", "upsert", "MongoWriteException-DUPLICATE_KEY")(1)
+            queryHelpers.logger.logCounter("rogue.adapter.upsert.MongoWriteException-DUPLICATE_KEY")
             upsert
           }
           case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw mwe

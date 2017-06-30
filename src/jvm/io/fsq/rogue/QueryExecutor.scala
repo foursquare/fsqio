@@ -103,10 +103,10 @@ trait QueryExecutor[MB, RB] extends Rogue {
     }
 
     if (needToRetry) {
-      QueryHelpers.logger.logCounter("rogue", "executor", "fetchOne", query.collectionName, "masterFallback", "attempt")(1)
+      QueryHelpers.logger.logCounter(s"rogue.executor.fetchOne.${query.collectionName}.masterFallback.attempt")
       val result = fetch(query.limit(1), Some(ReadPreference.primary)).headOption
       result.foreach(_ => {
-        QueryHelpers.logger.logCounter("rogue", "executor", "fetchOne", query.collectionName, "masterFallback", "success")(1)
+        QueryHelpers.logger.logCounter(s"rogue.executor.fetchOne.${query.collectionName}.masterFallback.success")
       })
       result
     } else {
