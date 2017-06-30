@@ -77,7 +77,7 @@ class AsyncMongoClientAdapter[
               queryHelpers.logger.logCounter("rogue.adapter.upsert.MongoWriteException-DUPLICATE_KEY")
               upsert
             }
-            case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw mwe
+            case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw rogueException
           }
 
           case _ => wrapResult(throw rogueException)

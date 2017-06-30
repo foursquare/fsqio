@@ -1103,9 +1103,12 @@ class TrivialORMQueryTest extends RogueMongoTest
         asyncQueryExecutor.upsertOne(SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId))
           .map(_ => throw new Exception("Expected update failure when modifying _id field"))
           .handle({
-            case mwe: MongoWriteException => mwe.getError.getCategory match {
-              case ErrorCategory.UNCATEGORIZED => ()
-              case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw mwe
+            case rogueException: RogueException => Option(rogueException.getCause) match {
+              case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
+                case ErrorCategory.UNCATEGORIZED => ()
+                case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+              }
+              case _ => throw rogueException
             }
           }),
 
@@ -1158,9 +1161,12 @@ class TrivialORMQueryTest extends RogueMongoTest
       )
       throw new Exception("Expected update failure when modifying _id field")
     } catch {
-      case mwe: MongoWriteException => mwe.getError.getCategory match {
-        case ErrorCategory.UNCATEGORIZED => ()
-        case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw mwe
+      case rogueException: RogueException => Option(rogueException.getCause) match {
+        case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
+          case ErrorCategory.UNCATEGORIZED => ()
+          case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+        }
+        case _ => throw rogueException
       }
     }
   }
