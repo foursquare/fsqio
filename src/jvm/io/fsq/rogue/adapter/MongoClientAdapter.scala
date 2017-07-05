@@ -127,6 +127,14 @@ abstract class MongoClientAdapter[
     options: UpdateOptions
   ): Result[Long]
 
+  protected def updateManyImpl(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson,
+    update: Bson,
+    options: UpdateOptions
+  ): Result[Long]
+
   def count[
     M <: MetaRecord
   ](
@@ -358,9 +366,10 @@ abstract class MongoClientAdapter[
     }
   }
 
-  def modifyOne[M <: MetaRecord](
+  def modify[M <: MetaRecord](
     modifyQuery: ModifyQuery[M, _],
     upsert: Boolean,
+    multi: Boolean,
     writeConcernOpt: Option[WriteConcern]
   ): Result[Long] = {
     val modifyClause = queryHelpers.transformer.transformModify(modifyQuery)
@@ -378,7 +387,7 @@ abstract class MongoClientAdapter[
         modifyQuery.query.collectionName,
         modifyClause,
         upsert = upsert,
-        multi = false
+        multi = multi
       )
       // TODO(jacob): These casts will always succeed, but should be removed once there is a
       //    version of LegacyMongoBuilder that speaks the new CRUD api.
@@ -390,7 +399,11 @@ abstract class MongoClientAdapter[
       }
 
       def run: Result[Long] = runCommand(descriptionFunc, modifyClause.query) {
-        updateOneImpl(collection)(filter, update, options)
+        if (multi) {
+          updateManyImpl(collection)(filter, update, options)
+        } else {
+          updateOneImpl(collection)(filter, update, options)
+        }
       }
 
       if (upsert) {

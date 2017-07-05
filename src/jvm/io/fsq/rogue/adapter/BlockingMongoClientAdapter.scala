@@ -219,4 +219,15 @@ class BlockingMongoClientAdapter[
     val updateResult = collection.updateOne(filter, update, options)
     updateResult.getModifiedCount
   }
+
+  override protected def updateManyImpl(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson,
+    update: Bson,
+    options: UpdateOptions
+  ): BlockingResult[Long] = {
+    val updateResult = collection.updateMany(filter, update, options)
+    updateResult.getModifiedCount
+  }
 }

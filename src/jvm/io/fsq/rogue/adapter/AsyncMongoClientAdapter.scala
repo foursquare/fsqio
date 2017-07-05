@@ -279,4 +279,25 @@ class AsyncMongoClientAdapter[
     collection.updateOne(filter, update, options, queryCallback)
     resultCallback.result
   }
+
+  override protected def updateManyImpl(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson,
+    update: Bson,
+    options: UpdateOptions
+  ): Result[Long] = {
+    val resultCallback = callbackFactory.newCallback[Long]
+    val queryCallback = new SingleResultCallback[UpdateResult] {
+      override def onResult(updateResult: UpdateResult, throwable: Throwable): Unit = {
+        if (throwable !=? null) {
+          resultCallback.onResult(0L, throwable)
+        } else {
+          resultCallback.onResult(updateResult.getModifiedCount, throwable)
+        }
+      }
+    }
+    collection.updateMany(filter, update, options, queryCallback)
+    resultCallback.result
+  }
 }

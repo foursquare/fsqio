@@ -226,7 +226,20 @@ class QueryExecutor[
     if (optimizer.isEmptyQuery(query)) {
       adapter.wrapResult(0L)
     } else {
-      adapter.modifyOne(query, upsert = false, Some(writeConcern))
+      adapter.modify(query, upsert = false, multi = false, Some(writeConcern))
+    }
+  }
+
+  def updateMany[M <: MetaRecord, State](
+    query: ModifyQuery[M, State],
+    writeConcern: WriteConcern = defaultWriteConcern
+  )(
+    implicit ev: M !<:< MongoDisallowed
+  ): Result[Long] = {
+    if (optimizer.isEmptyQuery(query)) {
+      adapter.wrapResult(0L)
+    } else {
+      adapter.modify(query, upsert = false, multi = true, Some(writeConcern))
     }
   }
 
@@ -240,7 +253,7 @@ class QueryExecutor[
     if (optimizer.isEmptyQuery(query)) {
       adapter.wrapResult(0L)
     } else {
-      adapter.modifyOne(query, upsert = true, Some(writeConcern))
+      adapter.modify(query, upsert = true, multi = false, Some(writeConcern))
     }
   }
 }

@@ -1117,7 +1117,6 @@ class TrivialORMQueryTest extends RogueMongoTest
       )
     })
 
-
     Await.result(testFutures)
   }
 
@@ -1153,6 +1152,104 @@ class TrivialORMQueryTest extends RogueMongoTest
     // updates fail on modifying _id
     try {
       blockingQueryExecutor.updateOne(
+        SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId)
+      )
+      throw new Exception("Expected update failure when modifying _id field")
+    } catch {
+      case rogueException: RogueException => Option(rogueException.getCause) match {
+        case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
+          case ErrorCategory.UNCATEGORIZED => ()
+          case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+        }
+        case _ => throw rogueException
+      }
+    }
+  }
+
+  @Test
+  def testAsyncUpdateMany: Unit = {
+    val testRecord = newTestRecord(0)
+
+    val serialTestFutures = Future.join(
+      asyncQueryExecutor.insert(newTestRecord(1)),
+
+      for {
+        // update on non-existant record
+        _ <- asyncQueryExecutor.updateMany(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+          ).map(_ must_== 0L)
+        // no-op update
+        _ <- asyncQueryExecutor.insert(testRecord)
+        _ <- asyncQueryExecutor.updateMany(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+          ).map(_ must_== 0L)
+        // update on existing record
+        _ <- asyncQueryExecutor.updateMany(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10))
+          ).map(_ must_== 1L)
+        _ <- asyncQueryExecutor.fetchOne(
+            SimpleRecord.where(_.id eqs testRecord.id)
+          ).map(_ must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10))))
+      } yield ()
+    )
+
+    val testFutures = serialTestFutures.flatMap(_ => {
+      Future.join(
+        // updates fail on modifying _id
+        asyncQueryExecutor.updateMany(SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId))
+          .map(_ => throw new Exception("Expected update failure when modifying _id field"))
+          .handle({
+            case rogueException: RogueException => Option(rogueException.getCause) match {
+              case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
+                case ErrorCategory.UNCATEGORIZED => ()
+                case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+              }
+              case _ => throw rogueException
+            }
+          }),
+
+        // update multiple records
+        asyncQueryExecutor.updateMany(
+          SimpleRecord.modify(_.boolean setTo true)
+        ).map(_ must_== 2L)
+      )
+    })
+
+    Await.result(testFutures)
+  }
+
+  @Test
+  def testBlockingUpdateMany: Unit = {
+    val testRecord = newTestRecord(0)
+
+    // update on non-existant record
+    blockingQueryExecutor.updateMany(
+      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+    ).unwrap must_== 0L
+
+    // no-op update
+    blockingQueryExecutor.insert(testRecord)
+    blockingQueryExecutor.updateMany(
+      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+    ).unwrap must_== 0L
+
+    // update on existing record
+    blockingQueryExecutor.updateMany(
+      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10))
+    ).unwrap must_== 1L
+    blockingQueryExecutor.fetchOne(
+      SimpleRecord.where(_.id eqs testRecord.id)
+    ).unwrap must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10)))
+
+    // update multiple records
+    blockingQueryExecutor.insert(newTestRecord(1))
+    blockingQueryExecutor.updateMany(
+      SimpleRecord.modify(_.boolean setTo true)
+    ).unwrap must_== 2L
+
+    // updates fail on modifying _id
+    try {
+      blockingQueryExecutor.updateMany(
         SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId)
       )
       throw new Exception("Expected update failure when modifying _id field")
@@ -1217,7 +1314,6 @@ class TrivialORMQueryTest extends RogueMongoTest
         ).map(_ must_== 1L)
       )
     })
-
 
     Await.result(testFutures)
   }
