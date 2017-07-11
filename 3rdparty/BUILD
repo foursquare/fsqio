@@ -1,9 +1,5 @@
 # If we internally fork an otherwise publicly available jar, add the public jar targets here.
 
-def sjar(org, name, **kwargs):
-  scala_jar_version = '2.11'
-  return jar(org = org, name = '%s_%s' % (name, scala_jar_version), **kwargs)
-
 # Keep in sync with 3rdparty/BUILD.hadoop
 HADOOP_VERSION = '2.6.0'
 
@@ -59,7 +55,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-      sjar(org = 'net.liftweb', name = 'lift-mongodb', rev = liftVer, intransitive = True),
+      scala_jar(org = 'net.liftweb', name = 'lift-mongodb', rev = liftVer, intransitive = True),
   ],
   dependencies = [
     '3rdparty:mongo-java-driver-unpacked',
@@ -73,7 +69,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'net.liftweb', name = 'lift-common', rev = liftVer)
+    scala_jar(org = 'net.liftweb', name = 'lift-common', rev = liftVer)
   ]
 )
 
@@ -84,7 +80,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'net.liftweb', name = 'lift-json', rev = liftVer)
+    scala_jar(org = 'net.liftweb', name = 'lift-json', rev = liftVer)
   ]
 )
 
@@ -95,7 +91,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'net.liftweb', name = 'lift-record', rev = liftVer)
+    scala_jar(org = 'net.liftweb', name = 'lift-record', rev = liftVer)
   ]
 )
 
@@ -106,7 +102,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'net.liftweb', name = 'lift-mongodb-record', rev = liftVer, intransitive = True),
+    scala_jar(org = 'net.liftweb', name = 'lift-mongodb-record', rev = liftVer, intransitive = True),
   ],
   dependencies = [
     ':lift-mongodb',
@@ -134,7 +130,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'net.liftweb', name = 'lift-util', rev = liftVer)
+    scala_jar(org = 'net.liftweb', name = 'lift-util', rev = liftVer)
   ]
 )
 

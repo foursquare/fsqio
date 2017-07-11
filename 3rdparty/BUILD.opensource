@@ -2,10 +2,6 @@
 
 scala_version = '2.11.8'
 
-def sjar(org, name, **kwargs):
-  scala_jar_version = '2.11'
-  return jar(org = org, name = '%s_%s' % (name, scala_jar_version), **kwargs)
-
 jar_library(
   name = 'akka',
   tags = [
@@ -13,7 +9,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.typesafe.akka', name = 'akka-actor', rev = '2.3.11')
+    scala_jar(org = 'com.typesafe.akka', name = 'akka-actor', rev = '2.3.11')
   ],
 )
 
@@ -24,7 +20,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.twitter', name = 'algebird-core', rev = '0.11.0'),
+    scala_jar(org = 'com.twitter', name = 'algebird-core', rev = '0.11.0'),
   ],
 )
 
@@ -57,7 +53,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.mongodb', name = 'casbah-core', rev = '3.1.1'),
+    scala_jar(org = 'org.mongodb', name = 'casbah-core', rev = '3.1.1'),
   ],
   dependencies = [
     ':mongo-java-driver-unpacked',
@@ -172,7 +168,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.foursquare', name = 'country_revgeo', rev = '0.1a'),
+    scala_jar(org = 'com.foursquare', name = 'country_revgeo', rev = '0.1a'),
   ],
 )
 
@@ -210,18 +206,18 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.twitter', name = 'finagle-core', rev = finagle_rev),
-    sjar(org = 'com.twitter', name = 'finagle-http', rev = finagle_rev),
-    sjar(org = 'com.twitter', name = 'finagle-httpx', rev = finagle_rev),
-    sjar(org = 'com.twitter', name = 'finagle-httpx-compat', rev = finagle_rev),
-    sjar(org = 'com.twitter', name = 'finagle-stream', rev = finagle_rev),
-    sjar(org = 'com.twitter', name = 'finagle-kestrel', rev = finagle_rev),
-    sjar(org = 'com.twitter', name = 'finagle-kestrelx', rev = finagle_rev),
-    sjar(org = 'com.twitter', name = 'finagle-ostrich4', rev = finagle_rev),
-    sjar(org = 'com.twitter', name = 'finagle-serversets', rev = finagle_rev),
-    sjar(org = 'com.twitter', name = 'finagle-thrift', rev = finagle_rev),
-    sjar(org = 'com.twitter', name = 'finagle-memcached', rev = finagle_rev),
-    sjar(org = 'com.twitter', name = 'finagle-memcachedx', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-core', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-http', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-httpx', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-httpx-compat', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-stream', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-kestrel', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-kestrelx', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-ostrich4', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-serversets', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-thrift', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-memcached', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-memcachedx', rev = finagle_rev),
   ],
 )
 
@@ -350,7 +346,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.gilt', name = 'jerkson', rev = '0.6.7'),
+    scala_jar(org = 'com.gilt', name = 'jerkson', rev = '0.6.7'),
   ],
 )
 
@@ -394,8 +390,8 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.json4s', name = 'json4s-native', rev = '3.2.10'),
-    sjar(org = 'org.json4s', name = 'json4s-jackson', rev = '3.2.10'),
+    scala_jar(org = 'org.json4s', name = 'json4s-native', rev = '3.2.10'),
+    scala_jar(org = 'org.json4s', name = 'json4s-jackson', rev = '3.2.10'),
   ]
 )
 
@@ -578,7 +574,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.twitter', name = 'ostrich', rev = '9.8.0')
+    scala_jar(org = 'com.twitter', name = 'ostrich', rev = '9.8.0')
   ]
 )
 
@@ -591,7 +587,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.parboiled', name = 'parboiled-scala', rev = parboiled_rev),
+    scala_jar(org = 'org.parboiled', name = 'parboiled-scala', rev = parboiled_rev),
     jar(org = 'org.parboiled', name = 'parboiled-java', rev = parboiled_rev),
   ]
 )
@@ -630,7 +626,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.rockymadden.stringmetric', name = 'stringmetric-core', rev = '0.27.4')
+    scala_jar(org = 'com.rockymadden.stringmetric', name = 'stringmetric-core', rev = '0.27.4')
   ]
 )
 
@@ -641,7 +637,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.github.salat', name = 'salat', rev = '1.10.0')
+    scala_jar(org = 'com.github.salat', name = 'salat', rev = '1.10.0')
   ]
 )
 
@@ -652,7 +648,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.scala-lang.modules', name = 'scala-parser-combinators', rev = '1.0.4'),
+    scala_jar(org = 'org.scala-lang.modules', name = 'scala-parser-combinators', rev = '1.0.4'),
   ],
 )
 
@@ -685,7 +681,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.scala-lang.modules', name = 'scala-xml', rev = '1.0.5'),
+    scala_jar(org = 'org.scala-lang.modules', name = 'scala-xml', rev = '1.0.5'),
   ],
 )
 
@@ -707,7 +703,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.scalacheck', name = 'scalacheck', rev = '1.10.1')
+    scala_jar(org = 'org.scalacheck', name = 'scalacheck', rev = '1.10.1')
   ]
 )
 
@@ -718,7 +714,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.scalaj', name = 'scalaj-time', rev = '0.8'),
+    scala_jar(org = 'org.scalaj', name = 'scalaj-time', rev = '0.8'),
   ],
 )
 
@@ -729,7 +725,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.scalatra.scalate', name = 'scalate-core', rev = '1.7.1')
+    scala_jar(org = 'org.scalatra.scalate', name = 'scalate-core', rev = '1.7.1')
   ]
 )
 
@@ -741,10 +737,10 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.twitter', name = 'scalding-args', rev = scalding_ver),
-    sjar(org = 'com.twitter', name = 'scalding-commons', rev = scalding_ver),
-    sjar(org = 'com.twitter', name = 'scalding-core', rev = scalding_ver),
-    sjar(org = 'com.twitter', name = 'scalding-date', rev = scalding_ver),
+    scala_jar(org = 'com.twitter', name = 'scalding-args', rev = scalding_ver),
+    scala_jar(org = 'com.twitter', name = 'scalding-commons', rev = scalding_ver),
+    scala_jar(org = 'com.twitter', name = 'scalding-core', rev = scalding_ver),
+    scala_jar(org = 'com.twitter', name = 'scalding-date', rev = scalding_ver),
   ],
   dependencies = [
     ':algebird',
@@ -759,7 +755,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.twitter', name = 'scalding-repl', rev = scalding_ver),
+    scala_jar(org = 'com.twitter', name = 'scalding-repl', rev = scalding_ver),
   ]
 )
 
@@ -770,7 +766,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.twitter', name = 'chill', rev = '0.5.2'),
+    scala_jar(org = 'com.twitter', name = 'chill', rev = '0.5.2'),
   ],
 )
 
@@ -792,7 +788,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.github.scopt', name = 'scopt', rev = '3.5.0', intransitive = True)
+    scala_jar(org = 'com.github.scopt', name = 'scopt', rev = '3.5.0', intransitive = True)
   ]
 )
 
@@ -884,7 +880,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.slf4s', name = 'slf4s-api', rev = '1.7.13'),
+    scala_jar(org = 'org.slf4s', name = 'slf4s-api', rev = '1.7.13'),
   ]
 )
 
@@ -903,9 +899,9 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'org.specs2', name = 'specs2', rev = specs2_rev),
-    sjar(org = 'org.specs2', name = 'specs2-junit', rev = specs2_rev),
-    sjar(org = 'org.specs2', name = 'specs2-matcher', rev = specs2_rev),
+    scala_jar(org = 'org.specs2', name = 'specs2', rev = specs2_rev),
+    scala_jar(org = 'org.specs2', name = 'specs2-junit', rev = specs2_rev),
+    scala_jar(org = 'org.specs2', name = 'specs2-matcher', rev = specs2_rev),
   ],
     dependencies = [
     ':junit',
@@ -942,11 +938,11 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    sjar(org = 'com.twitter', name = 'util-codec', rev = twitter_util_rev),
-    sjar(org = 'com.twitter', name = 'util-core', rev = twitter_util_rev),
-    sjar(org = 'com.twitter', name = 'util-eval', rev = twitter_util_rev),
-    sjar(org = 'com.twitter', name = 'util-hashing', rev = twitter_util_rev),
-    sjar(org = 'com.twitter', name = 'util-logging', rev = twitter_util_rev),
+    scala_jar(org = 'com.twitter', name = 'util-codec', rev = twitter_util_rev),
+    scala_jar(org = 'com.twitter', name = 'util-core', rev = twitter_util_rev),
+    scala_jar(org = 'com.twitter', name = 'util-eval', rev = twitter_util_rev),
+    scala_jar(org = 'com.twitter', name = 'util-hashing', rev = twitter_util_rev),
+    scala_jar(org = 'com.twitter', name = 'util-logging', rev = twitter_util_rev),
   ],
 )
 
