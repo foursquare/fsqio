@@ -234,14 +234,14 @@ class ConcreteHFileReader(
   final def getDataBlock(key: ByteBuffer, min: Int, max: Int, lastDataBlockIndex: Int = -1): Int = {
     if (max < min) {
       if (lastDataBlockIndex == -1) { throw new Exception("key not found") }
-      logger.debug (s"min = $min")
+      logger.debug("min = %d", min)
       lastDataBlockIndex
     } else {
       val mid = min + ((max - min) / 2 )
       val res = dataIndex.compareFirstKey(key, mid)
 
       if (res == 0) {
-        logger.debug(s"mid = $mid")
+        logger.debug("mid = %d", mid)
         mid
       } else if (res > 0) {
         getDataBlock(key, mid + 1, max, mid)
@@ -260,14 +260,14 @@ class ConcreteHFileReader(
   ): Int = {
     if (max < min) {
       if (lastDataBlockIndex == -1) { throw new Exception("key not found") }
-      logger.debug (s"min = $min")
+      logger.debug("min = %d", min)
       lastDataBlockIndex
     } else {
       val mid = min + ((max - min) / 2 )
       val res = dataIndex.compareFirstKey(splitKey, mid)
 
       if (res == 0) {
-        logger.debug(s"mid = $mid")
+        logger.debug("mid = %d", mid)
         mid
       } else if (res > 0) {
         getDataBlockSplitKey(splitKey, mid + 1, max, mid)
