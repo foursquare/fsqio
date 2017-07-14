@@ -43,10 +43,6 @@ class ConcreteHFileScanner(reader: ConcreteHFileReader) extends HFileScanner wit
       val isEndOfDataBlock = (curKVOffset =? nextOffset)
       val isLastBlock = (curDataBlock.index =? reader.dataIndex.blockCount - 1)
 
-      // NOTE(petko): Commenting out since this prints a ton of logs for 1:30 minutes on every rec server start.
-      // logger.debug(s"isEndOfDataBlock = $isEndOfDataBlock curKVOffset = $curKVOffset nextOffset = $nextOffset")
-      // logger.debug(s"isLastBlock = $isLastBlock curDataBlock.index = ${curDataBlock.index} reader.dataIndex.blockCount = ${reader.dataIndex.blockCount}")
-
       if (!isEndOfDataBlock) {
         curKVOffset = nextOffset
         true
@@ -116,7 +112,7 @@ class ConcreteHFileScanner(reader: ConcreteHFileReader) extends HFileScanner wit
 
     // special case when the inputKey is smaller than the first key
     if (compareWithFirstKey < 0 ) {
-      logger.debug (s"seekToInner: found a key lower than the current key in block $startIndex")
+      logger.debug("seekToInner: found a key lower than the current key in block %", startIndex)
       setCurBuffer()
       -1
     } else {
@@ -144,7 +140,7 @@ class ConcreteHFileScanner(reader: ConcreteHFileReader) extends HFileScanner wit
 
     // special case when the inputKey is smaller than the first key
     if (compareWithFirstKey < 0 ) {
-      logger.debug (s"seekToInner: found a key lower than the current key in block $startIndex")
+      logger.debug("seekToInner: found a key lower than the current key in block %d", startIndex)
       setCurBuffer()
       -1
     } else {
