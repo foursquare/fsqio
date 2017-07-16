@@ -5,7 +5,7 @@ set -ea
 
 # Ensure this is only called through top-level upkeep wrapper so tasks can rely on the required environment variables.
 if [ -z "${BUILD_ROOT+x}" ]; then
-  exit_on_failure "BUILD_ROOT undefined! Only invoke upkeep through the top-level 'upkeep' script!"
+  exit_with_failure "BUILD_ROOT undefined! Only invoke upkeep through the top-level 'upkeep' script!"
 fi
 
 mkdir -p "${DEPENDENCIES_ROOT}"
@@ -14,15 +14,21 @@ function run_required() {
   local task_name=$(basename "$1")
   local task_file=$(find_upkeep_file "tasks" "${task_name}.sh") || \
     exit_with_failure "Could not find an upkeep task for '${task_name}'"
-
+  local required_path=$(find_upkeep_file "required" "${task_name}")
+  local current_path="$(get_current_path ${required_path} ${task_name})"
   colorized_warn "\nRunning ${task_name} upkeep...\n"
+
+  function clean_current_on_error() {
+    rm -rf ${current_path}
+    exit_with_failure "Failure during upkeep ${task_name}. Cleaning 'current' file to ensure clean run next time."
+  }
+
+  trap "clean_current_on_error" ERR INT
   "$task_file"
 
-  local required_path=$(find_upkeep_file "required" "${task_name}")
 
   # Update the 'current' file if the task happened to be required.
   if [ -f "${required_path}" ]; then
-    local current_path=$(get_current_path ${required_path} ${task_name})
     mkdir -p $(dirname ${current_path})
     # Changing this string will invalidate all upkeep tasks and may break the ordering algorithm!
     local requirement_string="${stamp}: './upkeep force ${forced_task}' required ${task_name}"
