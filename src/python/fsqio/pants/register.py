@@ -3,13 +3,29 @@
 
 from __future__ import absolute_import
 
-from pants.contrib.go.tasks.go_buildgen import GoBuildgen
-from pants.goal.goal import Goal
+import os
+
+from pants.backend.jvm.repository import Repository
+from pants.base.build_environment import get_buildroot
+from pants.build_graph.build_file_aliases import BuildFileAliases
 from pants.goal.task_registrar import TaskRegistrar as task
 from pants.task.task import Task
 
 from fsqio.pants.validate import Tagger, Validate
 
+
+oss_sonatype_repo = Repository(
+  name='oss_sonatype_repo',
+  url='https://oss.sonatype.org/#stagingRepositories',
+  push_db_basedir=os.path.join(get_buildroot(), 'pushdb'),
+)
+
+def build_file_aliases():
+  return BuildFileAliases(
+    objects={
+      'oss_sonatype_repo': oss_sonatype_repo,
+    },
+  )
 
 def register_goals():
   task(name='tag', action=Tagger).install()
@@ -23,10 +39,4 @@ def register_goals():
     def execute(self):
       pass
 
-  Goal.register('bg', 'Buildgen scoped to only Go.')
-
-  Goal.by_name('compile').uninstall_task('jvm-dep-check')
-  Goal.by_name('dep-usage').uninstall_task('jvm')
   task(name='validate-graph', action=ForceValidation).install('gen')
-  task(name='go', action=GoBuildgen).install('bg')
-  Goal.by_name('buildgen').uninstall_task('go')

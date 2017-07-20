@@ -18,6 +18,7 @@ MANAGED_DEP_ATTRS = [
   'scope',
   'systemPath',
   'optional',
+  'intransitive',
 ]
 
 dependency_attrs = ['groupId', 'artifactId', 'exclusions'] + MANAGED_DEP_ATTRS
@@ -91,6 +92,10 @@ class Dependency(namedtuple('Dependency', dependency_attrs)):
         exclusions.append((excluded_groupId, excluded_artifactId))
     exclusions = frozenset(exclusions)
 
+    # NOTE(mateo): This tracks instrantive deps as set in a pom.xml. Dependency instances are created for every
+    # JarDependency in 3rdparty, and intransitive is set to True based on the BUILD definition.
+    intransitive = bool(('*', '*') in exclusions or scope == 'provided' or optional)
+
     return cls(
       groupId=groupId,
       artifactId=artifactId,
@@ -101,11 +106,8 @@ class Dependency(namedtuple('Dependency', dependency_attrs)):
       systemPath=systemPath,
       optional=optional,
       exclusions=exclusions,
+      intransitive=intransitive,
     )
-
-  @property
-  def intransitive(self):
-    return ('*', '*') in self.exclusions or self.scope == 'provided' or self.optional
 
   @property
   def coordinate(self):

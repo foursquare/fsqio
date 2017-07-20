@@ -13,7 +13,7 @@ scala_library(
     '3rdparty:jts',
     '3rdparty:scala-reflect',
     '3rdparty:scalding',
-    '3rdparty:slf4j-log4j',  # Runtime dep.
+    '3rdparty:slf4j-all',
     '3rdparty:thrift',
     'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/spindle/runtime',

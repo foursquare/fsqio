@@ -49,7 +49,7 @@ class BuildSpindle(SpindleTask):
   def run_pants_no_lock(self, command, workunit_name=None, **kwargs):
     global_args = ['--quiet'] if self.get_options().quiet else []
     if self.get_options().level == 'debug':
-      global_args.append('--ldebug')
+      global_args.append('-ldebug')
     global_args.extend([
       '--no-pantsrc',
       '--no-lock',

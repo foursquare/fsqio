@@ -2,6 +2,72 @@
 
 scala_version = '2.11.8'
 
+
+### START Managed Dependencies START ###
+#
+# NOTE:(mateo) This is how upstream Pants pins artifact versions. This is respected by Ivy but ignored by pom-resolve!
+# Rely on this only if you are sure it is what you need - it is a candidate for deletion at any time!
+#
+# The jar_library defs in this section are not direct dependencies in our repo - we are using these defs to pin them.
+
+managed_jar_dependencies(
+  name='fsqio-management',
+  artifacts=[
+    ':algebird',
+    ':apache-httpclient',
+    ':bson',
+    ':cascading',
+    ':chill',
+    ':commons-logging',
+    jar(org = 'commons-codec', name = 'commons-codec', rev = '1.6'),
+    ':commons-net',
+    ':curator',
+    ':curator-test',
+    ':guava',
+    ':hamcrest-core',
+    ':jackson',
+    jar(org = 'com.fasterxml.jackson.core', name = 'jackson-annotations', rev = '2.6.5'),
+    jar(org = 'com.fasterxml.jackson.core', name = 'jackson-core', rev = '2.6.5'),
+    jar(org = 'com.fasterxml.jackson.core', name = 'jackson-databind', rev = '2.6.5'),    ':jackson-scala',
+    ':logback',
+    ':mockito',
+    ':mongodb-core',
+    ':mongodb-driver',
+    ':mongodb-driver-async',
+    ':ostrich',
+    ':reflections',
+    ':scalacheck',
+    scala_jar(org = 'org.scalaz.stream', name = 'scalaz-stream', rev = '0.7.3a'),
+    ':scalding',
+    ':slf4j-api',
+    ':slf4j-jcl',
+    ':slf4j-jul',
+    ':slf4j-nop',
+    ':slf4j-log4j',
+    ':thrift',
+    ':twitter-util',
+    jar(org = 'org.apache.xmlgraphics', name = 'batik-anim', rev = '1.8',
+      excludes = [exclude(org = 'org.apache.xmlgraphics', name = 'batik-dom')]),
+    jar(org = 'org.apache.xmlgraphics', name = 'batik-awt-util', rev = '1.8'),
+    jar(org = 'org.apache.xmlgraphics', name = 'batik-css', rev = '1.8'),
+    jar(org = 'org.apache.xmlgraphics', name = 'batik-dom', rev = '1.8',
+      excludes = [exclude(org = 'org.apache.xmlgraphics', name = 'batik-anim')]),
+    jar(org = 'org.apache.xmlgraphics', name = 'batik-ext', rev = '1.8'),
+    jar(org = 'org.apache.xmlgraphics', name = 'batik-parser', rev = '1.8'),
+    jar(org = 'org.apache.xmlgraphics', name = 'batik-svg-dom', rev = '1.8'),
+    jar(org = 'org.apache.xmlgraphics', name = 'batik-util', rev = '1.8'),
+    jar(org = 'org.apache.xmlgraphics', name = 'batik-xml', rev = '1.8'),
+    jar(org = 'org.apache.xmlgraphics', name = 'xmlgraphics-commons', rev = '1.3.1'),
+    jar(org = 'org.apache.xmlgraphics', name = 'xmlgraphics-commons', rev = '1.3.1',
+      excludes = [exclude(org = 'commons-logging', name = 'commons-logging')]),
+    ':zookeeper',
+  ],
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+)
+
 jar_library(
   name = 'akka',
   tags = [
@@ -32,8 +98,10 @@ jar_library(
   ],
   jars = [
     jar(org = 'org.apache.httpcomponents', name = 'httpclient', rev = '4.3.5'),
+    jar(org = 'org.apache.httpcomponents', name = 'httpcore', rev = '4.3.2'),
   ],
 )
+
 
 jar_library(
   name = 'caliper',
@@ -42,7 +110,9 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'com.google.caliper', name = 'caliper', rev='0.5-rc1'),
+    jar(org = 'com.google.caliper', name = 'caliper', rev='0.5-rc1',
+
+    ),
   ],
 )
 
@@ -53,10 +123,17 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'org.mongodb', name = 'casbah-core', rev = '3.1.1'),
+    scala_jar(org = 'org.mongodb', name = 'casbah-core', rev = '3.1.1',
+      excludes = [
+        exclude(org="org.mongodb", name="mongo-java-driver"),
+      ],
+    ),
   ],
   dependencies = [
-    ':mongo-java-driver-unpacked',
+    ':bson',
+    ':mongodb-core',
+    ':mongodb-driver',
+    ':mongodb-driver-async',
   ],
 )
 
@@ -180,10 +257,38 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.apache.curator', name = 'curator-framework', rev = curator_rev),
-    jar(org = 'org.apache.curator', name = 'curator-client', rev = curator_rev),
-    jar(org = 'org.apache.curator', name = 'curator-recipes', rev = curator_rev),
-    jar(org = 'org.apache.curator', name = 'curator-x-discovery', rev = curator_rev),
+    jar(org = 'org.apache.curator', name = 'curator-framework', rev = curator_rev,
+      excludes = [
+        exclude('org.apache.curator', name = 'apache-curator'),
+        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
+        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
+    jar(org = 'org.apache.curator', name = 'curator-client', rev = curator_rev,
+      excludes = [
+        exclude('org.apache.curator', name = 'apache-curator'),
+        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
+        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
+    jar(org = 'org.apache.curator', name = 'curator-recipes', rev = curator_rev,
+      excludes = [
+        exclude('org.apache.curator', name = 'apache-curator'),
+        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
+        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
+    jar(org = 'org.apache.curator', name = 'curator-x-discovery', rev = curator_rev,
+      excludes = [
+        exclude('org.apache.curator', name = 'apache-curator'),
+        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
+        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
   ],
 )
 
@@ -194,7 +299,14 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.apache.curator', name = 'curator-test', rev = curator_rev)
+    jar(org = 'org.apache.curator', name = 'curator-test', rev = curator_rev,
+      excludes = [
+        exclude('org.apache.curator', name = 'apache-curator'),
+        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
+        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    )
   ]
 )
 
@@ -206,18 +318,84 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'com.twitter', name = 'finagle-core', rev = finagle_rev),
-    scala_jar(org = 'com.twitter', name = 'finagle-http', rev = finagle_rev),
-    scala_jar(org = 'com.twitter', name = 'finagle-httpx', rev = finagle_rev),
-    scala_jar(org = 'com.twitter', name = 'finagle-httpx-compat', rev = finagle_rev),
-    scala_jar(org = 'com.twitter', name = 'finagle-stream', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-core', rev = finagle_rev,
+      excludes = [
+        exclude(org="org.slf4j", name="slf4j-jdk14"),
+        exclude(org="org.slf4j", name="slf4j-log4j12"),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'finagle-http', rev = finagle_rev,
+      excludes = [
+        exclude(org="org.slf4j", name="slf4j-jdk14"),
+        exclude(org="org.slf4j", name="slf4j-log4j12"),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'finagle-httpx', rev = finagle_rev,
+      excludes = [
+        exclude(org="org.slf4j", name="slf4j-jdk14"),
+        exclude(org="org.slf4j", name="slf4j-log4j12"),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'finagle-httpx-compat', rev = finagle_rev,
+      excludes = [
+        exclude(org="org.slf4j", name="slf4j-jdk14"),
+        exclude(org="org.slf4j", name="slf4j-log4j12"),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'finagle-stream', rev = finagle_rev,
+      excludes = [
+        exclude(org="org.slf4j", name="slf4j-jdk14"),
+        exclude(org="org.slf4j", name="slf4j-log4j12"),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
     scala_jar(org = 'com.twitter', name = 'finagle-kestrel', rev = finagle_rev),
-    scala_jar(org = 'com.twitter', name = 'finagle-kestrelx', rev = finagle_rev),
-    scala_jar(org = 'com.twitter', name = 'finagle-ostrich4', rev = finagle_rev),
-    scala_jar(org = 'com.twitter', name = 'finagle-serversets', rev = finagle_rev),
-    scala_jar(org = 'com.twitter', name = 'finagle-thrift', rev = finagle_rev),
-    scala_jar(org = 'com.twitter', name = 'finagle-memcached', rev = finagle_rev),
-    scala_jar(org = 'com.twitter', name = 'finagle-memcachedx', rev = finagle_rev),
+    scala_jar(org = 'com.twitter', name = 'finagle-kestrelx', rev = finagle_rev,
+      excludes = [
+        exclude(org="org.slf4j", name="slf4j-jdk14"),
+        exclude(org="org.slf4j", name="slf4j-log4j12"),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'finagle-ostrich4', rev = finagle_rev,
+      excludes = [
+        exclude(org="org.slf4j", name="slf4j-jdk14"),
+        exclude(org="org.slf4j", name="slf4j-log4j12"),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'finagle-serversets', rev = finagle_rev,
+      excludes = [
+        exclude(org="org.slf4j", name="slf4j-jdk14"),
+        exclude(org="org.slf4j", name="slf4j-log4j12"),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'finagle-thrift', rev = finagle_rev,
+      excludes = [
+        exclude(org="org.slf4j", name="slf4j-jdk14"),
+        exclude(org="org.slf4j", name="slf4j-log4j12"),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'finagle-memcached', rev = finagle_rev,
+      excludes = [
+        exclude(org="org.slf4j", name="slf4j-jdk14"),
+        exclude(org="org.slf4j", name="slf4j-log4j12"),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'finagle-memcachedx', rev = finagle_rev,
+      excludes = [
+        exclude(org="org.slf4j", name="slf4j-jdk14"),
+        exclude(org="org.slf4j", name="slf4j-log4j12"),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
   ],
 )
 
@@ -295,6 +473,7 @@ jar_library(
   ],
 )
 
+
 jar_library(
   name = 'guava',
   tags = [
@@ -302,11 +481,14 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'com.google.guava',name = 'guava', rev = '14.0'),
+    jar(org = 'com.google.guava',name = 'guava', rev = '14.0')
   ],
 )
 
 
+# NOTE(mateo): This is a bit of a time bomb. It is a hard requirement for some libs but is also fatjarred with  junit.
+# Additionally, some libraries import it, but just transitively inherit it from junit instead of referencing this def.
+# Fix is to add this to third_party_map and see what is up.
 jar_library(
   name='hamcrest-core',
   jars = [
@@ -363,9 +545,21 @@ jar_library(
 jar_library(
   name= 'jmh',
   jars = [
-    jar(org = 'org.openjdk.jmh', name = 'jmh-core', rev = '1.14'),
-    jar(org = 'org.openjdk.jmh', name = 'jmh-generator-annprocess', rev = '1.14'),
-    jar(org = 'org.openjdk.jmh', name = 'jmh-generator-bytecode', rev = '1.14'),
+    jar(org = 'org.openjdk.jmh', name = 'jmh-core', rev = '1.14',
+      excludes = [
+        exclude(org = 'org.ow2.asm'),
+      ],
+    ),
+    jar(org = 'org.openjdk.jmh', name = 'jmh-generator-annprocess', rev = '1.14',
+      excludes = [
+        exclude(org = 'org.ow2.asm'),
+      ],
+    ),
+    jar(org = 'org.openjdk.jmh', name = 'jmh-generator-bytecode', rev = '1.14',
+      excludes = [
+        exclude(org = 'org.ow2.asm'),
+      ],
+    ),
   ]
 )
 
@@ -588,8 +782,13 @@ jar_library(
   ],
   jars = [
     scala_jar(org = 'org.parboiled', name = 'parboiled-scala', rev = parboiled_rev),
-    jar(org = 'org.parboiled', name = 'parboiled-java', rev = parboiled_rev),
-  ]
+    jar(org = 'org.parboiled', name = 'parboiled-java', rev = parboiled_rev,
+      excludes=[
+        exclude(org = 'org.apache.hadoop', name = 'hadoop-core'),
+        exclude(org = 'org.ow2.asm'),
+      ],
+    ),
+  ],
 )
 
 jar_library(
@@ -637,8 +836,17 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'com.github.salat', name = 'salat', rev = '1.10.0')
-  ]
+    scala_jar(org = 'com.github.salat', name = 'salat-core', rev = '1.10.0',
+      excludes = [
+        exclude(org="org.mongodb", name="mongo-java-driver"),
+      ],
+    ),
+    scala_jar(org = 'com.github.salat', name = 'salat-util', rev = '1.10.0',
+      excludes = [
+        exclude(org="org.mongodb", name="mongo-java-driver"),
+      ],
+    ),
+  ],
 )
 
 jar_library(
@@ -737,10 +945,47 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'com.twitter', name = 'scalding-args', rev = scalding_ver),
-    scala_jar(org = 'com.twitter', name = 'scalding-commons', rev = scalding_ver),
-    scala_jar(org = 'com.twitter', name = 'scalding-core', rev = scalding_ver),
-    scala_jar(org = 'com.twitter', name = 'scalding-date', rev = scalding_ver),
+    scala_jar(org = 'com.twitter', name = 'scalding-args', rev = scalding_ver,
+      excludes=[
+        exclude(org = 'org.apache.hadoop', name = 'hadoop-core'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'scalding-commons', rev = scalding_ver,
+      excludes=[
+        exclude(org = 'org.apache.hadoop', name = 'hadoop-core'),
+        exclude(org = 'org.ow2.asm'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'scalding-core', rev = scalding_ver,
+      excludes=[
+        exclude(org = 'org.apache.hadoop', name = 'hadoop-core'),
+        exclude(org = 'org.ow2.asm'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'scalding-date', rev = scalding_ver,
+      excludes=[
+        exclude(org = 'org.apache.hadoop', name = 'hadoop-core'),
+        exclude(org = 'org.ow2.asm'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'scalding-commons', rev = scalding_ver,
+      excludes=[
+        exclude(org = 'org.apache.hadoop', name = 'hadoop-core'),
+        exclude(org = 'org.ow2.asm'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'scalding-core', rev = scalding_ver,
+      excludes=[
+        exclude(org = 'org.apache.hadoop', name = 'hadoop-core'),
+        exclude(org = 'org.ow2.asm'),
+      ],
+    ),
+    scala_jar(org = 'com.twitter', name = 'scalding-date', rev = scalding_ver,
+      excludes=[
+        exclude(org = 'org.apache.hadoop', name = 'hadoop-core'),
+        exclude(org = 'org.ow2.asm'),
+      ],
+    ),
   ],
   dependencies = [
     ':algebird',
@@ -766,18 +1011,26 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'com.twitter', name = 'chill', rev = '0.5.2'),
-  ],
-)
-
-jar_library(
-  name = 'kryo-serializers',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    jar(org = 'de.javakaffee', name = 'kryo-serializers', rev = '0.41'),
+    scala_jar(org = 'com.twitter', name = 'chill', rev = '0.5.2',
+      # YES! com.estoricsoftware and com.esoteric.$foo are indeed different orgs for the same lib.
+      excludes = [
+        exclude(org = 'com.esotericsoftware'),
+        exclude(org = 'com.esotericsoftware.kryo'),
+        exclude(org = 'com.esotericsoftware.reflectasm'),
+        exclude(org = 'com.esotericsoftware.minilog'),
+        exclude(org = 'org.ow2.asm'),
+      ],
+    ),
+    jar(org = 'com.twitter', name = 'chill-java', rev = '0.5.2',
+      excludes = [
+        exclude(org = 'com.esotericsoftware'),
+        exclude(org = 'com.esotericsoftware.kryo'),
+        exclude(org = 'com.esotericsoftware.reflectasm'),
+        exclude(org = 'com.esotericsoftware.minilog'),
+        exclude(org = 'org.ow2.asm'),
+        exclude(org = 'org.ow2.asm'),
+      ],
+    ),
   ],
 )
 
@@ -811,8 +1064,13 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.slf4j', name = 'slf4j-api', rev = slf4j_rev)
-  ]
+    jar(org = 'org.slf4j', name = 'slf4j-api', rev = slf4j_rev,
+      excludes = [
+        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
+        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
+      ],
+    ),
+  ],
 )
 
 jar_library(
@@ -822,8 +1080,13 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.slf4j', name = 'jcl-over-slf4j', rev = slf4j_rev)
-  ]
+    jar(org = 'org.slf4j', name = 'jcl-over-slf4j', rev = slf4j_rev,
+      excludes = [
+        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
+        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
+      ],
+    ),
+  ],
 )
 
 jar_library(
@@ -833,8 +1096,13 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.slf4j', name = 'jul-to-slf4j', rev = slf4j_rev)
-  ]
+    jar(org = 'org.slf4j', name = 'jul-to-slf4j', rev = slf4j_rev,
+      excludes = [
+        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
+        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
+      ],
+    ),
+  ],
 )
 
 jar_library(
@@ -844,7 +1112,12 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.slf4j', name = 'log4j-over-slf4j', rev = slf4j_rev),
+    jar(org = 'org.slf4j', name = 'log4j-over-slf4j', rev = slf4j_rev,
+      excludes = [
+        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
+        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
+      ],
+    ),
   ],
 )
 
@@ -900,6 +1173,7 @@ jar_library(
   ],
   jars = [
     scala_jar(org = 'org.specs2', name = 'specs2', rev = specs2_rev),
+    scala_jar(org = 'org.specs2', name = 'specs2-core', rev = specs2_rev),
     scala_jar(org = 'org.specs2', name = 'specs2-junit', rev = specs2_rev),
     scala_jar(org = 'org.specs2', name = 'specs2-matcher', rev = specs2_rev),
   ],
@@ -959,7 +1233,13 @@ jar_library(
 
 jar_library(name = 'zookeeper',
   jars = [
-    jar(org = 'org.apache.zookeeper', name = 'zookeeper', rev = '3.4.6', intransitive = True),
+    jar(org = 'org.apache.zookeeper', name = 'zookeeper', rev = '3.4.6', intransitive = True,
+      excludes = [
+        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
+        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
+        exclude(org = 'log4j', name = 'log4j'),
+      ],
+    ),
   ],
   tags = [
     'opensource',
@@ -969,3 +1249,4 @@ jar_library(name = 'zookeeper',
     ':slf4j-log4j',
   ],
 )
+

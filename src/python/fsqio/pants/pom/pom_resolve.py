@@ -396,6 +396,7 @@ class PomResolve(Task):
           scope='compile',
           systemPath=None,
           optional=False,
+          intransitive=jar_dep.intransitive,
         ))
       resolve_maven_deps_args.append((maven_deps, fetchers, global_pinned_versions, global_exclusions))
 
@@ -514,7 +515,7 @@ class PomResolve(Task):
 
   @classmethod
   def implementation_version(cls):
-    return super(PomResolve, cls).implementation_version() + [('PomResolve', 1)]
+    return super(PomResolve, cls).implementation_version() + [('PomResolve', 2)]
 
   def execute(self):
 

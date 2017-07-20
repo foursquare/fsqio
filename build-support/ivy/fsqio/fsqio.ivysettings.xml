@@ -7,7 +7,7 @@ Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
   <settings defaultResolver="chain-repos"/>
 
-  <property name="m2.repo.relpath" value="[organisation]/[module]/[revision]"/>
+  <property name="m2.repo.relpath" value="[orgPath]/[module]/[revision]"/>
   <property name="m2.repo.pom" value="${m2.repo.relpath}/[module]-[revision].pom"/>
   <property name="m2.repo.artifact"
             value="${m2.repo.relpath}/[artifact](-[classifier])-[revision].[ext]"/>
