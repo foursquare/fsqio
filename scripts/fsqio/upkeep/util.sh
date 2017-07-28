@@ -65,7 +65,7 @@ function print_all_tasks() {
     echo -e "\t$(join_array ${sep} ${task_chain[@]} )" || exit_with_failure "Error in upkeep, perhaps b/c of printf."
   done
   echo -e "\nOptions:"
-  echo -e "\t- Pass '--downstream' to list downstream tasks."
+  echo -e "\t- Enter './upkeep tasks --downstream' to list downstream tasks."
   echo -e "\t- Further upkeep usage can be seen with \`./upkeep --help\`\n"
 }
 
