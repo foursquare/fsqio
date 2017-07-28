@@ -7,5 +7,6 @@ junit_tests(
     '3rdparty:junit',
     'src/jvm/io/fsq/spindle/__shaded_for_spindle_bootstrap__/descriptors',
     'src/jvm/io/fsq/spindle/codegen/parser',
+    'test/thrift/io/fsq/spindle/codegen/parser/test',  # Manually added because there is no code dep - it loads files
   ],
 )
