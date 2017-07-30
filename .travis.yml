@@ -18,16 +18,11 @@ python:
 - '2.7'
 env:
   global:
-  - JAVA_HOME="$HOME/opt/jdk1.8.0_40"
   - PANTS_CONFIG_OVERRIDE="['pants.ini', 'pants-travis-ci.ini']"
-before_script: |
-  if ! "$HOME"/opt/jdk1.8.0_40/bin/java -version; then
-    mkdir -p ~/opt
-    wget --no-cookies --no-check-certificate --header \
-      "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" \
-      "http://download.oracle.com/otn-pub/java/jdk/8u40-b25/jdk-8u40-linux-x64.tar.gz"
-    tar xzf jdk-8u40-linux-x64.tar.gz -C ~/opt
-  fi
+addons:
+  apt:
+    packages:
+      - oracle-java8-set-default
 script: |
   uname -a
   ./pants buildgen
