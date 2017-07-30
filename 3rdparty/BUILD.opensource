@@ -28,7 +28,7 @@ managed_jar_dependencies(
     ':jackson',
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-annotations', rev = '2.6.5'),
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-core', rev = '2.6.5'),
-    jar(org = 'com.fasterxml.jackson.core', name = 'jackson-databind', rev = '2.6.5'),    ':jackson-scala',
+    jar(org = 'com.fasterxml.jackson.core', name = 'jackson-databind', rev = '2.6.5'),
     ':logback',
     ':mockito',
     ':mongodb-core',
