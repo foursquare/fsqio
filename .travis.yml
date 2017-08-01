@@ -1,6 +1,4 @@
 sudo: false
-services:
-- mongodb
 before_cache:
 - find . -name "*.py[co]" -print -delete
 - rm -fv $HOME/.ivy2/pants/*.{css,properties,xml,xsl}
@@ -21,7 +19,12 @@ env:
 addons:
   apt:
     packages:
+      - mongodb-org-server
       - oracle-java8-set-default
+    sources:
+    - mongodb-3.0-precise
+services:
+- mongodb
 script: |
   uname -a
   ./pants buildgen
