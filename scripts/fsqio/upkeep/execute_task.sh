@@ -14,7 +14,9 @@ function run_actual_task() {
   local task_file="$1"
   local current_path="$2"
   function clean_current_on_error() {
-    rm ${current_path}
+    if [ -f "${required_path}" ]; then
+      rm ${current_path}
+    fi
     exit_with_failure "Failure during upkeep ${task_file}. Cleaning 'current' file to ensure clean run."
   }
   trap "clean_current_on_error" ERR INT
