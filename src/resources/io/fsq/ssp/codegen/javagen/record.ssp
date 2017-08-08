@@ -39,7 +39,7 @@ package ${program.pkg};
 // WARNING: No package statement because no java namespace specified in Thrift file.
 #end
 
-class java_${source.baseName} {
+public class java_${source.baseName} {
 #for (enum <- program.enums)
 <% render("enum.ssp", Map("enum" -> enum)) %>
 #end

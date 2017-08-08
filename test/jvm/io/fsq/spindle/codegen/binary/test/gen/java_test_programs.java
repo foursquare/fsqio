@@ -9,7 +9,7 @@
 
 package io.fsq.spindle.codegen.binary.test.gen;
 
-class java_test_programs {
+public class java_test_programs {
 
 public static abstract class JavaProgramMeta<
   ProgramT extends io.fsq.spindle.runtime.Record<ProgramT>,
