@@ -282,7 +282,6 @@ jvm_third_party_map = {
       }
     }
   },
-  'kylm': 'kylm',
   'ml': {
     'dmlc': {
       'xgboost4j': 'xgboost4j',
