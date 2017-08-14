@@ -2,11 +2,12 @@
 
 package io.fsq.spindle.codegen.binary
 
+import io.fsq.common.scala.Identity._
 import io.fsq.spindle.__shaded_for_spindle_bootstrap__.runtime.Annotations
 import io.fsq.spindle.codegen.parser.{ParserException, ThriftParser}
 import io.fsq.spindle.codegen.runtime.{BitfieldRef, CodegenException, EnhancedTypeRef, EnhancedTypes, ProgramSource,
-    ScalaProgram, Scope, TypeDeclaration, TypeDeclarationResolver, TypeReference}
-import java.io.{File, PrintWriter}
+    RenderJson, ScalaProgram, Scope, TypeDeclaration, TypeDeclarationResolver, TypeReference}
+import java.io.{File, FileWriter, PrintWriter}
 import org.fusesource.scalate.{RenderContext, TemplateEngine}
 import scala.annotation.tailrec
 import scopt.OptionParser
@@ -25,7 +26,8 @@ case class ThriftCodegenConfig(
   namespaceOut: Option[File] = None,
   workingDir: Option[File] = None,
   extension: Option[String] = None,
-  allowReload: Boolean = false
+  allowReload: Boolean = false,
+  writeAnnotationsJson: Boolean = false
 )
 
 object ThriftCodegenConfig {
@@ -57,7 +59,7 @@ object ThriftCodegenConfig {
 
       opt[File]("namespace_out")
         .text("Root of the output namespace hierarchy. We add the intermediate directory structure there as needed. "
-          + "Required when compiling multiple files.")
+          + "Required when compiling multiple files or setting --write_annotations_json.")
         .action((v, c) => c.copy(namespaceOut = Some(v)))
 
       opt[File]("working_dir")
@@ -77,6 +79,11 @@ object ThriftCodegenConfig {
         .unbounded()
         .validate(f => if (f.exists) success else failure(s"Input file ${f.getName} does not exist."))
         .action((v, c) => c.copy(input = c.input :+ v))
+
+      opt[Boolean]("write_annotations_json")
+        .text("create *.annotations.json in $namespace_out/annotations, "
+          + "mapping generated class name to annotations from thrift IDL")
+        .action((_, c) => c.copy(writeAnnotationsJson = true))
     }
 
     parser.parse(args, ThriftCodegenConfig())
@@ -89,6 +96,9 @@ object ThriftCodegen {
       sys.exit(1)
     })
 
+    // TODO(awinter): this seems backwards to me -- instead of looping (templates; sources),
+    //   it should be (sources; templates). Otherwise we're doing duplicate thrift parsing,
+    //   right?
     try {
       args.javaTemplate.foreach(javaTemplate => {
         compile(
@@ -98,7 +108,8 @@ object ThriftCodegen {
           args.namespaceOut,
           args.workingDir,
           "java",
-          args.allowReload)
+          args.allowReload,
+          args.writeAnnotationsJson)
       })
       compile(
         args.template,
@@ -107,7 +118,8 @@ object ThriftCodegen {
         args.namespaceOut,
         args.workingDir,
         args.extension.getOrElse("scala"),
-        args.allowReload)
+        args.allowReload,
+        args.writeAnnotationsJson)
     } catch {
       case e: CodegenException =>
         println("Codegen error:\n%s".format(e.getMessage))
@@ -122,7 +134,8 @@ object ThriftCodegen {
       namespaceOutputPath: Option[File],
       workingDirPath: Option[File],
       extension: String,
-      allowReload: Boolean
+      allowReload: Boolean,
+      writeAnnotationsJson: Boolean
   ): Unit = {
     val (sourcesToCompile, typeDeclarations, enhancedTypes) = inputInfoForCompiler(inputFiles, includePaths)
 
@@ -147,12 +160,9 @@ object ThriftCodegen {
               throw new CodegenException("Error generating code for file %s:\n%s".format(source.file.toString, e.getMessage))
           }
 
-        extension match {
-
-          case _ => {}
-        }
-
         //val extraPath = pkg.map(_.split('.').mkString(File.separator, File.separator, "")).getOrElse("")
+        var jsonRoot: Option[File] = None
+        var jsonPath: Option[File] = None
         val out = (extension, namespaceOutputPath) match {
           case ("js", _) if (program.jsPackage.isEmpty) => {
             throw new IllegalStateException("%s does not have a js namespace defined!".format(source.baseName))
@@ -165,24 +175,23 @@ object ThriftCodegen {
             val outFile = new File(file)
             new PrintWriter(outFile, "UTF-8")
           }
-          case ("scala", Some(nsOut)) => {
+          case ("scala" | "java", Some(nsOut)) => {
             val prefix = program.pkg.map(_.split('.').mkString(File.separator, File.separator, "")).getOrElse("")
             val outputDir = nsOut.getAbsoluteFile.toString + prefix
             new File(outputDir).mkdirs()
-            val outputFile = new File(outputDir + File.separator + source.baseName + ".scala")
-            new PrintWriter(outputFile, "UTF-8")
-          }
-          case ("java", Some(nsOut)) => {
-            val prefix = program.pkg.map(_.split('.').mkString(File.separator, File.separator, "")).getOrElse("")
-            val outputDir = nsOut.getAbsoluteFile.toString + prefix
-            new File(outputDir).mkdirs()
-            val outputFile = new File(outputDir + File.separator + "java_" + source.baseName + ".java")
+            val outputFile = new File(extension match {
+              case "scala" => outputDir + File.separator + source.baseName + "." + extension
+              case "java" => outputDir + File.separator + "java_" + source.baseName + "." + extension
+            })
+            jsonRoot = Some(new File(nsOut, "annotations"))
+            jsonPath = Some(new File(jsonRoot.get, s"${program.pkg.get}.${source.baseName}.json"))
             new PrintWriter(outputFile, "UTF-8")
           }
           case (a, b) => {
             new PrintWriter(System.out, true)
           }
         }
+        // TODO(awinter): check that TemplateEngine is checking return codes from PrintWriter
         val args =
           Map(
             "program" -> program,
@@ -196,6 +205,22 @@ object ThriftCodegen {
             throw new CodegenException("Error generating code for file %s:\n%s".format(source.file.toString, e.getMessage))
         } finally {
           out.flush
+        }
+
+        if (writeAnnotationsJson && extension =? "scala") {
+          val (nObjects, body) = RenderJson().jsonBody(program)
+          if (nObjects > 0) {
+            require(jsonRoot.isDefined && jsonPath.isDefined,
+              "namespace_out required with write_annotations_json")
+            jsonRoot.get.mkdirs()
+            // TODO(awinter): do we need to worry about unicode in thrift annotations? write a test w/ unicode
+            val writer = new FileWriter(jsonPath.get)
+            try {
+              writer.write(body)
+            } finally {
+              writer.close()
+            }
+          }
         }
       }
     } finally {
@@ -240,6 +265,7 @@ object ThriftCodegen {
     }
   }
 
+  /* parse thrift @param _toParse. recurse over included dependencies. don't follow cycles. */
   @tailrec
   final def recursiveParsePrograms(
       parsed: Seq[ProgramSource],

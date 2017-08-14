@@ -6,6 +6,7 @@ scala_library(
   dependencies = [
     '3rdparty:scalate',
     '3rdparty:scopt',
+    'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/spindle/__shaded_for_spindle_bootstrap__/runtime',
     'src/jvm/io/fsq/spindle/codegen/parser',
     'src/jvm/io/fsq/spindle/codegen/runtime',

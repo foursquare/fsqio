@@ -67,6 +67,14 @@ class SpindleGen(NailgunTask, SpindleTask):
       type=target_option,
       help='Use this target as the java templates for spindle codegen (required to be 1 target).',
     )
+    register(
+      '--write-annotations-json',
+      fingerprint=True,
+      advanced=True,
+      type=bool,
+      default=False,
+      help='output *.annotations.json files for runtime class lists without reflection',
+    )
 
   @memoized_property
   def java_template(self):
@@ -158,6 +166,9 @@ class SpindleGen(NailgunTask, SpindleTask):
       '--namespace_out', self.namespace_out,
       '--working_dir', self.scalate_workdir,
     ]
+
+    if self.get_options().write_annotations_json:
+      spindle_args += ['--write_annotations_json', 'true']
 
     spindle_args.extend(sources)
 

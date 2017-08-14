@@ -5,6 +5,7 @@ package io.fsq.spindle.codegen.parser
 import io.fsq.spindle.__shaded_for_spindle_bootstrap__.descriptors.{Enum, Field, Function, Program, Service}
 import java.io.File
 
+/* uniqueness checks for various fields parsed from thrift. throws ParserException when it fails */
 class ThriftValidator(file: File) {
   def validateProgram(program: Program): Unit = {
     program.enums.foreach(validateEnum)
@@ -43,6 +44,7 @@ class ThriftValidator(file: File) {
     validateDistinct(fields.map(_.name), "field name(s)", Some(where))
   }
 
+  /* crash if @param xs has duplicate entries */
   def validateDistinct[A](xs: Seq[A], what: String, where: Option[String] = None): Unit = {
     if (xs.size != xs.distinct.size) {
       val repeats = xs.diff(xs.distinct)
