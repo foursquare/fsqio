@@ -12,9 +12,9 @@ class ThriftCodegenTest {
   @Test
   def testParseDuplicateWireName(): Unit = {
     try {
-      val (sources, typeDeclarations, enhancedTypes) = ThriftCodegen.inputInfoForCompiler(
+      val info = ThriftCodegen.inputInfoForCompiler(
         Seq(new File(base + "/parse_duplicate_wire_name.thrift")), Vector.empty)
-      val program = ScalaProgram(sources.head, typeDeclarations, enhancedTypes)
+      val program = ScalaProgram(info.sources.head, info.types, info.enhanced)
       program.structs.foreach(println _)
       fail("Parsing duplicate field wire_names should fail.")
     } catch {

@@ -90,18 +90,27 @@ object ThriftCodegenConfig {
   }
 }
 
+case class InputInfo(
+  sources: Seq[ProgramSource],
+  types: Map[ProgramSource, Map[String, TypeDeclaration]],
+  enhanced: EnhancedTypes) {}
+
 object ThriftCodegen {
   def main(_args: Array[String]): Unit = {
     val args = ThriftCodegenConfig.parse(_args).getOrElse({
       sys.exit(1)
     })
 
-    // TODO(awinter): this seems backwards to me -- instead of looping (templates; sources),
-    //   it should be (sources; templates). Otherwise we're doing duplicate thrift parsing,
-    //   right?
+    val timer = new BlockTimer
+    timer.start("compile")
+    val info = inputInfoForCompiler(args.input, args.includes.getOrElse(Nil))
+    timer.stop()
+    println("java size", args.javaTemplate.size)
     try {
       args.javaTemplate.foreach(javaTemplate => {
         compile(
+          info,
+          timer,
           javaTemplate,
           args.input,
           args.includes.getOrElse(Nil),
@@ -112,6 +121,8 @@ object ThriftCodegen {
           args.writeAnnotationsJson)
       })
       compile(
+        info,
+        timer,
         args.template,
         args.input,
         args.includes.getOrElse(Nil),
@@ -121,13 +132,17 @@ object ThriftCodegen {
         args.allowReload,
         args.writeAnnotationsJson)
     } catch {
+      // TODO(awinter): won't this print without catching the error?
       case e: CodegenException =>
         println("Codegen error:\n%s".format(e.getMessage))
         sys.exit(1)
     }
+    println("timer", timer.render().mkString(", "))
   }
 
   def compile(
+      info: InputInfo,
+      timer: BlockTimer,
       templatePath: String,
       inputFiles: Seq[File],
       includePaths: Seq[File],
@@ -137,8 +152,6 @@ object ThriftCodegen {
       allowReload: Boolean,
       writeAnnotationsJson: Boolean
   ): Unit = {
-    val (sourcesToCompile, typeDeclarations, enhancedTypes) = inputInfoForCompiler(inputFiles, includePaths)
-
     val engine = new TemplateEngine(Nil, "") {
       override protected def createRenderContext(uri: String, out: PrintWriter): RenderContext = {
         val renderContext = super.createRenderContext(uri, out)
@@ -151,10 +164,10 @@ object ThriftCodegen {
     engine.allowReload = allowReload
 
     try {
-      for (source <- sourcesToCompile) {
+      for (source <- info.sources) {
         val program =
           try {
-            ScalaProgram(source, typeDeclarations, enhancedTypes)
+            ScalaProgram(source, info.types, info.enhanced)
           } catch {
             case e: CodegenException =>
               throw new CodegenException("Error generating code for file %s:\n%s".format(source.file.toString, e.getMessage))
@@ -163,6 +176,7 @@ object ThriftCodegen {
         //val extraPath = pkg.map(_.split('.').mkString(File.separator, File.separator, "")).getOrElse("")
         var jsonRoot: Option[File] = None
         var jsonPath: Option[File] = None
+        timer.start("out")
         val out = (extension, namespaceOutputPath) match {
           case ("js", _) if (program.jsPackage.isEmpty) => {
             throw new IllegalStateException("%s does not have a js namespace defined!".format(source.baseName))
@@ -191,6 +205,7 @@ object ThriftCodegen {
             new PrintWriter(System.out, true)
           }
         }
+        timer.start("layout")
         // TODO(awinter): check that TemplateEngine is checking return codes from PrintWriter
         val args =
           Map(
@@ -207,6 +222,7 @@ object ThriftCodegen {
           out.flush
         }
 
+        timer.start("annotations")
         if (writeAnnotationsJson && extension =? "scala") {
           val (nObjects, body) = RenderJson().jsonBody(program)
           if (nObjects > 0) {
@@ -222,14 +238,14 @@ object ThriftCodegen {
             }
           }
         }
+        timer.stop()
       }
     } finally {
       engine.shutdown()
     }
   }
 
-  def inputInfoForCompiler(inputFiles: Seq[File], includePaths: Seq[File]):
-      (Seq[ProgramSource], Map[ProgramSource, Map[String, TypeDeclaration]], EnhancedTypes) = {
+  def inputInfoForCompiler(inputFiles: Seq[File], includePaths: Seq[File]): InputInfo = {
     val enhancedTypes = (ref: TypeReference, annots: Annotations, scope: Scope) => {
       if (annots.contains("enhanced_types")) {
         annots.get("enhanced_types").map(value => EnhancedTypeRef(value, ref))
@@ -253,7 +269,7 @@ object ThriftCodegen {
     val declarationResolver = new TypeDeclarationResolver(enhancedTypes)
     val sources = parsePrograms(inputFiles, includePaths)
     val typeDeclarations = declarationResolver.resolveAllTypeDeclarations(sources)
-    (sources, typeDeclarations, enhancedTypes)
+    InputInfo(sources, typeDeclarations, enhancedTypes)
  }
 
   def parsePrograms(toParse: Seq[File], includePaths: Seq[File]): Seq[ProgramSource] = {
