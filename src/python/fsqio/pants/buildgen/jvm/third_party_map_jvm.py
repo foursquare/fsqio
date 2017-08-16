@@ -402,6 +402,7 @@ jvm_third_party_map = {
       },
       'parquet': 'parquet',
       'sanselan': 'sanselan',
+      'scalatra': 'scalatra',
       'spark': 'spark',
       'thrift': 'thrift',
       'zookeeper': 'zookeeper',
