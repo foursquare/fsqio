@@ -446,7 +446,7 @@ jvm_third_party_map = {
     'hamcrest': 'junit',
     'hamcrest-lib': 'hamcrest-lib',
     'I0Itec': {
-      'zkclient': 'kafka',
+      'zkclient': 'I0Itec-zkclient',
     },
     'jboss': {
       'netty': 'netty',
