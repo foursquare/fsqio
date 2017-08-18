@@ -7,7 +7,7 @@ import io.fsq.spindle.__shaded_for_spindle_bootstrap__.runtime.Annotations
 import io.fsq.spindle.codegen.parser.{ParserException, ThriftParser}
 import io.fsq.spindle.codegen.runtime.{BitfieldRef, CodegenException, EnhancedTypeRef, EnhancedTypes, ProgramSource,
     RenderJson, ScalaProgram, Scope, TypeDeclaration, TypeDeclarationResolver, TypeReference}
-import java.io.{File, FileWriter, PrintWriter}
+import java.io.{File, FileWriter, IOException, PrintWriter}
 import org.fusesource.scalate.{RenderContext, TemplateEngine}
 import scala.annotation.tailrec
 import scopt.OptionParser
@@ -219,7 +219,9 @@ object ThriftCodegen {
           case e: CodegenException =>
             throw new CodegenException("Error generating code for file %s:\n%s".format(source.file.toString, e.getMessage))
         } finally {
-          out.flush
+          if (out.checkError()) {
+            throw new IOException("error in PrintWriter")
+          }
         }
 
         timer.start("annotations")

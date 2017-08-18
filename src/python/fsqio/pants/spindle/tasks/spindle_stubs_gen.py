@@ -11,10 +11,13 @@ from __future__ import (
   with_statement,
 )
 
+import os
 import shutil
 
 from pants.base.exceptions import TaskError
-from pants.util.dirutil import safe_rmtree
+from pants.base.workunit import WorkUnitLabel
+from pants.util.contextutil import temporary_dir
+from pants.util.dirutil import safe_mkdir
 from pants.util.memo import memoized_property
 
 from fsqio.pants.spindle.tasks.spindle_gen import SpindleGen
@@ -24,19 +27,25 @@ class SpindleStubsGen(SpindleGen):
   """Generate stub Spindle files for consumption by IDEs."""
 
   @classmethod
-  def product_types(cls):
-    return ['spindle_stubs']
-
-  @classmethod
   def register_options(cls, register):
     super(SpindleStubsGen, cls).register_options(register)
     register(
       '--stub-output-path',
-      fingerprint=False,
+      fingerprint=True,
       advanced=True,
       type=str,
       help='Overrides the output path for spindle record generation.',
     )
+    register(
+      '--skip',
+      default=True,
+      type=bool,
+      help='The stubs will only be generated if this option is False.',
+    )
+
+  @classmethod
+  def implementation_version(cls):
+    return super(SpindleStubsGen, cls).implementation_version() + [('SpindleStubsGen', 2)]
 
   @memoized_property
   def java_template(self):
@@ -51,12 +60,34 @@ class SpindleStubsGen(SpindleGen):
     return outpath
 
   def execute(self):
-    # This is an abuse. But it is a quick way to tack on an extra copy and I revisit when/if we rework spindle_gen.
-    super(SpindleStubsGen, self).execute()
-
+    if self.get_options().skip:
+      self.context.log.debug('SKIPPING {} because the skip option is True.'.format(self.options_scope))
+      return
     self.context.log.debug('Copying spindle stubs to: {}'.format(self.stubs_out))
-    safe_rmtree(self.stubs_out)
-    shutil.copytree(self.workdir, self.stubs_out)
+    with self.invalidated(
+      self.codegen_targets(),
+      invalidate_dependents=True,
+      fingerprint_strategy=self.get_fingerprint_strategy(),
+    ) as invalidation_check:
+      with self.context.new_workunit(name='stubs-create', labels=[WorkUnitLabel.MULTITOOL]):
+        with temporary_dir() as workdir:
+          for vt in invalidation_check.all_vts:
+            generated_sources = self.calculate_generated_sources(vt.target)
+            if not vt.valid:
+              self.execute_codegen(vt.target, vt.results_dir, workdir)
+              self.cache_generated_files(generated_sources, self.namespace_out(workdir), vt.results_dir, overwrite=True)
 
-  def _additional_generated_sources(self, target):
-    return None
+            # Copy the stubs to the output directory consumed by the IDE. We already know that the invalid targets were
+            # overwritten to that location, this next call just replaces any missing files in valid targets, in case
+            # this is the first run for a user, or if they deleted the output dir for some reason.
+            overwrite = not vt.valid
+            self.cache_generated_files(generated_sources, vt.results_dir, self.stubs_out, overwrite=overwrite)
+
+  def cache_generated_files(self, generated_files, src, dst, overwrite=False):
+    # For the stubs we add an overwrite flag. This is actually safe even in with mainline spindle, since the overwrite
+    # is True for invalid targets, which will always fail the isfile check. We skip it for perf reasons.
+    for gen_file in generated_files:
+      safe_mkdir(os.path.join(dst, os.path.dirname(gen_file)))
+      new_path = os.path.join(dst, gen_file)
+      if overwrite or not os.path.isfile(new_path):
+        shutil.copy2(os.path.join(src, gen_file), new_path)

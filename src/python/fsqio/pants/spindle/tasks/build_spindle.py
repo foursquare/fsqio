@@ -26,8 +26,7 @@ from fsqio.pants.spindle.tasks.spindle_task import SpindleTask
 
 
 class BuildSpindle(SpindleTask):
-  """
-  Build spindle in a shelled pants invocation before using it for limited codegen.
+  """Build spindle in a shelled pants invocation before using it for limited codegen.
 
   This task is specialized to build just one target - the spindle codegen binary. The spindle binary requires
   spindle to do codegen for itself in order to build. This self-dependency has required this hijack of
@@ -84,9 +83,9 @@ class BuildSpindle(SpindleTask):
   def product_types(cls):
     return ['spindle_binary']
 
-  @property
-  def cache_target_dirs(self):
-    return True
+  @classmethod
+  def implementation_version(cls):
+    return super(BuildSpindle, cls).implementation_version() + [('BuildSpindle', 1)]
 
   @memoized_property
   def spindle_bundle_out(self):
@@ -108,7 +107,6 @@ class BuildSpindle(SpindleTask):
         vt = targets[0]
         invalid_vts_by_target = {vt.target: vt}
         if not vt.valid:
-          # This disables the
           args = [
             '--no-cache-read', '--build-spindle-shelled', 'bundle', '--bundle-jvm-deployjar',
             '--cache-bundle-jvm-read-from=[]', '--cache-bundle-jvm-write-to=[]',
