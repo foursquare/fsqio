@@ -220,6 +220,24 @@ class AsyncMongoClientAdapter[
     resultCallback.result
   }
 
+  override protected def replaceOneImpl[R <: Record](
+    collection: MongoCollection[Document]
+  )(
+    record: R,
+    filter: Bson,
+    document: Document,
+    options: UpdateOptions
+  ): Result[R] = {
+    val resultCallback = callbackFactory.newCallback[R]
+    val queryCallback = new SingleResultCallback[UpdateResult] {
+      override def onResult(deleteResult: UpdateResult, throwable: Throwable): Unit = {
+        resultCallback.onResult(record, throwable)
+      }
+    }
+    collection.replaceOne(filter, document, options, queryCallback)
+    resultCallback.result
+  }
+
   override protected def removeImpl[R <: Record](
     collection: MongoCollection[Document]
   )(

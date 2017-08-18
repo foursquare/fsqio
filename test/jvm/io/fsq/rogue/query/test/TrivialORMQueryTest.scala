@@ -123,6 +123,45 @@ object SimpleRecord extends TrivialORMMetaRecord[SimpleRecord] {
   }
 }
 
+case class OptionalIdRecord(
+  id: Option[ObjectId] = None,
+  int: Option[Int] = None
+) extends TrivialORMRecord {
+  override type Self = OptionalIdRecord
+  override def meta = OptionalIdRecord
+}
+
+object OptionalIdRecord extends TrivialORMMetaRecord[OptionalIdRecord] {
+
+  val id = new OptionalField[ObjectId, OptionalIdRecord.type] {
+    override val owner = OptionalIdRecord
+    override val name = "_id"
+  }
+
+  val int = new OptionalField[Int, OptionalIdRecord.type] {
+    override val owner = OptionalIdRecord
+    override val name = "int"
+  }
+
+  override val collectionName = "test_optional_records"
+
+  override val mongoIdentifier = MongoIdentifier("test")
+
+  override def fromDocument(document: Document): OptionalIdRecord = {
+    OptionalIdRecord(
+      Option(document.getObjectId(id.name)),
+      Option(document.getInteger(int.name).asInstanceOf[Int])
+    )
+  }
+
+  override def toDocument(record: OptionalIdRecord): Document = {
+    val document = new Document
+    record.id.foreach(document.append(id.name, _))
+    record.int.foreach(document.append(int.name, _))
+    document
+  }
+}
+
 object TrivialORMQueryTest {
 
   val dbName = "test"
@@ -329,6 +368,80 @@ class TrivialORMQueryTest extends RogueMongoTest
       barrier.await()
     }
     Await.result(countFuture)
+  }
+
+  def testSingleAsyncSave(record: SimpleRecord): Future[Unit] = {
+    for {
+      _ <- asyncQueryExecutor.save(record)
+      foundOpt <- asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs record.id))
+    } yield {
+      foundOpt must_== Some(record)
+    }
+  }
+
+  @Test
+  def testAsyncSave: Unit = {
+    val duplicateId = new ObjectId
+    val noIdInt = 24601
+    val noIdRecord = OptionalIdRecord(int = Some(noIdInt))
+
+    val testFutures = Future.join(
+      testSingleAsyncSave(SimpleRecord()),
+      testSingleAsyncSave(SimpleRecord(duplicateId)),
+      testSingleAsyncSave(newTestRecord(1))
+    )
+
+    // Save existing record with modification
+    val duplicateTestFuture = for {
+      _ <- testFutures
+      _ <- testSingleAsyncSave(SimpleRecord(duplicateId, int = Some(5)))
+      _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 3)
+    } yield ()
+
+    val noIdRecordTestFuture = for {
+      // record was given id
+      _ <- asyncQueryExecutor.save(noIdRecord)
+      _ <- asyncQueryExecutor.fetchOne(OptionalIdRecord.where(_.int eqs noIdInt)).map(_.flatMap(_.id) must_!= None)
+      // second save with no id will insert a new copy
+      _ <- asyncQueryExecutor.save(noIdRecord)
+      _ <- asyncQueryExecutor.countDistinct(OptionalIdRecord)(_.id).map(_ must_== 2)
+    } yield ()
+
+    val allTestFutures = Future.join(
+      duplicateTestFuture,
+      noIdRecordTestFuture
+    )
+
+    Await.result(allTestFutures)
+  }
+
+  def testSingleBlockingSave(record: SimpleRecord): Unit = {
+    blockingQueryExecutor.save(record)
+    blockingQueryExecutor.fetchOne(
+      SimpleRecord.where(_.id eqs record.id)
+    ).unwrap must_== Some(record)
+  }
+
+  @Test
+  def testBlockingSave: Unit = {
+    val duplicateId = new ObjectId
+    val noIdInt = 24601
+    val noIdRecord = OptionalIdRecord(int = Some(noIdInt))
+
+    testSingleBlockingSave(SimpleRecord())
+    testSingleBlockingSave(SimpleRecord(duplicateId))
+    testSingleBlockingSave(newTestRecord(1))
+
+    // Save existing record with modification
+    testSingleBlockingSave(SimpleRecord(duplicateId, int = Some(5)))
+    blockingQueryExecutor.count(SimpleRecord).unwrap must_== 3
+
+    // record was given id
+    blockingQueryExecutor.save(noIdRecord)
+    blockingQueryExecutor.fetchOne(OptionalIdRecord.where(_.int eqs noIdInt)).flatMap(_.id) must_!= None
+    // second save with no id will insert a new copy
+    blockingQueryExecutor.save(noIdRecord)
+    blockingQueryExecutor.countDistinct(OptionalIdRecord)(_.id).unwrap must_== 2
   }
 
   def testSingleAsyncInsert(record: SimpleRecord): Future[Unit] = {

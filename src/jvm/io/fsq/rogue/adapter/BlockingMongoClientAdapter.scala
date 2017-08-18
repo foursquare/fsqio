@@ -190,6 +190,18 @@ class BlockingMongoClientAdapter[
     records
   }
 
+  override protected def replaceOneImpl[R <: Record](
+    collection: MongoCollection[Document]
+  )(
+    record: R,
+    filter: Bson,
+    document: Document,
+    options: UpdateOptions
+  ): BlockingResult[R] = {
+    collection.replaceOne(filter, document, options)
+    record
+  }
+
   override protected def removeImpl[R <: Record](
     collection: MongoCollection[Document]
   )(

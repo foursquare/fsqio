@@ -77,6 +77,17 @@ class QueryExecutor[
     }
   }
 
+  // TODO(jacob): Checking the MongoDisallowed trait against the record itself is broken.
+  //    These insertion methods need to take a meta record type parameter as well.
+  def save[R <: Record](
+    record: R,
+    writeConcern: WriteConcern = defaultWriteConcern
+  )(
+    implicit ev: R !<:< MongoDisallowed
+  ): Result[R] = {
+    adapter.save(record, serializer.writeToDocument(record), Some(writeConcern))
+  }
+
   def insert[R <: Record](
     record: R,
     writeConcern: WriteConcern = defaultWriteConcern

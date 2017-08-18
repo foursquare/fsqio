@@ -106,6 +106,15 @@ abstract class MongoClientAdapter[
     documents: Seq[Document]
   ): Result[Seq[R]]
 
+  protected def replaceOneImpl[R <: Record](
+    collection: MongoCollection[Document]
+  )(
+    record: R,
+    filter: Bson,
+    document: Document,
+    options: UpdateOptions
+  ): Result[R]
+
   protected def removeImpl[R <: Record](
     collection: MongoCollection[Document]
   )(
@@ -234,6 +243,40 @@ abstract class MongoClientAdapter[
     }
 
     distinctRunner(fieldsBuilder.result(): Seq[FieldType], appender)(query, fieldName, readPreferenceOpt)
+  }
+
+  def save[R <: Record](
+    record: R,
+    document: Document,
+    writeConcernOpt: Option[WriteConcern]
+  ): Result[R] = {
+    val collection = collectionFactory.getMongoCollectionFromRecord(record, writeConcernOpt = writeConcernOpt)
+    val collectionName = getCollectionNamespace(collection).getCollectionName
+    val instanceName = collectionFactory.getInstanceNameFromRecord(record)
+
+    // NOTE(jacob): This emulates the legacy behavior of DBCollection: either a replace
+    //    upsert by id or an insert if there is no id present.
+    def run: Result[R] = {
+      Option(document.get("_id"))
+        .map(id => {
+          val filter = collectionFactory.documentClass.newInstance
+          filter.put("_id", id)
+          val options = new UpdateOptions().upsert(true)
+          upsertWithDuplicateKeyRetry(
+            replaceOneImpl(collection)(record, filter, document, options)
+          )
+        }).getOrElse({
+          insertImpl(collection)(record, document)
+        })
+    }
+
+    queryHelpers.logger.onExecuteWriteCommand(
+      "save",
+      collectionName,
+      instanceName,
+      collectionFactory.documentToString(document),
+      run
+    )
   }
 
   def insert[R <: Record](
