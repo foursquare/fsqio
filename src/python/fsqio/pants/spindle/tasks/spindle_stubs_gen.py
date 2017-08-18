@@ -31,7 +31,7 @@ class SpindleStubsGen(SpindleGen):
     super(SpindleStubsGen, cls).register_options(register)
     register(
       '--stub-output-path',
-      fingerprint=True,
+      fingerprint=False,
       advanced=True,
       type=str,
       help='Overrides the output path for spindle record generation.',

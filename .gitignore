@@ -47,4 +47,5 @@ environ.sh
 log/*
 scripts/*/upkeep/current
 scripts/upkeep/current
+scripts/fsqio/Intellij/spindle_stubs/*
 target/
