@@ -26,6 +26,7 @@ managed_jar_dependencies(
     ':guava',
     ':hamcrest-core',
     ':jackson',
+    ':jackson-scala',
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-annotations', rev = '2.6.5'),
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-core', rev = '2.6.5'),
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-databind', rev = '2.6.5'),
@@ -518,6 +519,20 @@ jar_library(
     jar(org = 'org.codehaus.jackson', name = 'jackson-core-asl', rev = '1.9.8'),
     jar(org = 'org.codehaus.jackson', name = 'jackson-mapper-asl', rev = '1.9.8'),
     jar(org = 'org.codehaus.jackson', name = 'jackson-xc', rev = '1.9.8'),
+  ],
+)
+
+# A new version of jackson with different org and fully qualified class names. It won't conflict with other jackson.
+jar_library(
+  name = 'jackson-scala',
+  jars = [
+    scala_jar(org = 'com.fasterxml.jackson.module', name = 'jackson-module-scala', rev = '2.6.5'),
+    jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-joda', rev = '2.6.5'),
+    jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-guava', rev = '2.6.5'),
+    jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jdk7', rev = '2.6.5'),
+    jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jdk8', rev = '2.6.5'),
+    jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jsr310', rev = '2.6.5'),
+    jar(org = 'com.fasterxml.jackson.dataformat', name = 'jackson-dataformat-cbor', rev = '2.6.5')
   ],
 )
 
