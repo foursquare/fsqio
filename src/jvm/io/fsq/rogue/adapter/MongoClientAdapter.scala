@@ -3,9 +3,10 @@
 package io.fsq.rogue.adapter
 
 import com.mongodb.{Block, MongoNamespace, ReadPreference, WriteConcern}
-import com.mongodb.client.model.{CountOptions, FindOneAndUpdateOptions, ReturnDocument, UpdateOptions}
+import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, ReturnDocument,
+    UpdateOptions}
 import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, Query}
-import io.fsq.rogue.MongoHelpers.{MongoBuilder => LegacyMongoBuilder}
+import io.fsq.rogue.MongoHelpers.{MongoBuilder => LegacyMongoBuilder, MongoModify}
 import io.fsq.rogue.util.QueryUtilities
 import java.util.concurrent.TimeUnit
 import org.bson.{BsonDocument, BsonDocumentReader, BsonValue}
@@ -153,6 +154,15 @@ abstract class MongoClientAdapter[
     filter: Bson,
     update: Bson,
     options: FindOneAndUpdateOptions
+  ): Result[Option[R]]
+
+  protected def findOneAndDeleteImpl[R <: Record](
+    deserializer: Document => R
+  )(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson,
+    options: FindOneAndDeleteOptions
   ): Result[Option[R]]
 
   def count[
@@ -525,6 +535,44 @@ abstract class MongoClientAdapter[
       runCommand(descriptionFunc, findAndModifyClause.query) {
         findOneAndUpdateImpl(deserializer)(collection)(filter, update, options)
       }
+    }
+  }
+
+  def findOneAndDelete[M <: MetaRecord, R <: Record](
+    deserializer: Document => R
+  )(
+    query: Query[M, R, _],
+    writeConcernOpt: Option[WriteConcern]
+  ): Result[Option[R]] = {
+    val queryClause = queryHelpers.transformer.transformQuery(query)
+    queryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
+
+    val collection = collectionFactory.getMongoCollectionFromQuery(query, writeConcernOpt = writeConcernOpt)
+    val descriptionFunc = () => LegacyMongoBuilder.buildFindAndModifyString(
+      query.collectionName,
+      FindAndModifyQuery(queryClause, MongoModify(Nil)),
+      returnNew = false,
+      upsert = false,
+      remove = true
+    )
+
+    // TODO(jacob): These casts will always succeed, but should be removed once there is a
+    //    version of LegacyMongoBuilder that speaks the new CRUD api.
+    val filter = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+
+    val options = new FindOneAndDeleteOptions()
+    queryHelpers.config.maxTimeMSOpt(collectionFactory.getInstanceNameFromQuery(queryClause)).foreach(
+      options.maxTime(_, TimeUnit.MILLISECONDS)
+    )
+    queryClause.order.foreach(order => {
+      options.sort(LegacyMongoBuilder.buildOrder(order).asInstanceOf[Bson])
+    })
+    queryClause.select.foreach(select => {
+      options.projection(LegacyMongoBuilder.buildSelect(select).asInstanceOf[Bson])
+    })
+
+    runCommand(descriptionFunc, queryClause) {
+      findOneAndDeleteImpl(deserializer)(collection)(filter, options)
     }
   }
 }

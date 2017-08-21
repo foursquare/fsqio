@@ -1616,4 +1616,60 @@ class TrivialORMQueryTest extends RogueMongoTest
       }
     }
   }
+
+  @Test
+  def testAsyncFindAndDeleteOne: Unit = {
+    val testRecords = Array(
+      newTestRecord(0),
+      newTestRecord(1),
+      newTestRecord(2)
+    )
+
+    val testFuture = for {
+      // delete with no stored records
+      _ <- asyncQueryExecutor.findAndDeleteOne(SimpleRecord).map(_ must_== None)
+      // delete single record
+      _ <- asyncQueryExecutor.insertAll(testRecords)
+      _ <- asyncQueryExecutor.findAndDeleteOne(
+          SimpleRecord.where(_.id eqs testRecords(0).id)
+        ).map(_ must_== Some(testRecords(0)))
+      _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs testRecords(0).id)).map(_ must_== 0)
+      // delete query does not match
+      _ <- asyncQueryExecutor.findAndDeleteOne(SimpleRecord.where(_.id eqs testRecords(0).id)).map(_ must_== None)
+      _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 2)
+      // match multiple records but only delete one
+      _ <- asyncQueryExecutor.findAndDeleteOne(
+          SimpleRecord
+        ).map(_ must beOneOf(Some(testRecords(1)), Some(testRecords(2))))
+      _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 1)
+    } yield ()
+
+    Await.result(testFuture)
+  }
+
+  @Test
+  def testBlockingFindAndDeleteOne: Unit = {
+    val testRecords = Array(
+      newTestRecord(0),
+      newTestRecord(1),
+      newTestRecord(2)
+    )
+
+    // delete with no stored records
+    blockingQueryExecutor.findAndDeleteOne(SimpleRecord).unwrap must_== None
+    // delete single record
+    blockingQueryExecutor.insertAll(testRecords)
+    blockingQueryExecutor.findAndDeleteOne(
+      SimpleRecord.where(_.id eqs testRecords(0).id)
+    ).unwrap must_== Some(testRecords(0))
+    blockingQueryExecutor.count(SimpleRecord.where(_.id eqs testRecords(0).id)).unwrap must_== 0
+    // delete query does not match
+    blockingQueryExecutor.findAndDeleteOne(SimpleRecord.where(_.id eqs testRecords(0).id)).unwrap must_== None
+    blockingQueryExecutor.count(SimpleRecord).unwrap must_== 2
+    // match multiple records but only delete one
+    blockingQueryExecutor.findAndDeleteOne(
+      SimpleRecord
+    ).unwrap must beOneOf(Some(testRecords(1)), Some(testRecords(2)))
+    blockingQueryExecutor.count(SimpleRecord).unwrap must_== 1
+  }
 }

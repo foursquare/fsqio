@@ -284,4 +284,21 @@ class QueryExecutor[
       adapter.findOneAndUpdate(deserializer)(query, returnNew, Some(writeConcern))
     }
   }
+
+  def findAndDeleteOne[M <: MetaRecord, R <: Record, State](
+    query: Query[M, R, State],
+    writeConcern: WriteConcern = defaultWriteConcern
+  )(
+    implicit ev: RequireShardKey[M, State],
+    ev2: M !<:< MongoDisallowed
+  ): Result[Option[R]] = {
+    if (optimizer.isEmptyQuery(query)) {
+      adapter.wrapResult(None)
+    } else {
+      def deserializer(document: Document): R = {
+        serializer.readFromDocument(query.meta, query.select)(document)
+      }
+      adapter.findOneAndDelete(deserializer)(query, Some(writeConcern))
+    }
+  }
 }

@@ -4,7 +4,7 @@ package io.fsq.rogue.adapter
 
 import com.mongodb.{Block, DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException}
 import com.mongodb.client.MongoCollection
-import com.mongodb.client.model.{CountOptions, FindOneAndUpdateOptions, UpdateOptions}
+import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, UpdateOptions}
 import io.fsq.rogue.{Query, RogueException}
 import io.fsq.rogue.util.QueryUtilities
 import java.util.concurrent.TimeUnit
@@ -253,6 +253,18 @@ class BlockingMongoClientAdapter[
     options: FindOneAndUpdateOptions
   ): BlockingResult[Option[R]] = {
     val document = collection.findOneAndUpdate(filter, update, options)
+    Option(document).map(deserializer)
+  }
+
+  override protected def findOneAndDeleteImpl[R <: Record](
+    deserializer: Document => R
+  )(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson,
+    options: FindOneAndDeleteOptions
+  ): BlockingResult[Option[R]] = {
+    val document = collection.findOneAndDelete(filter, options)
     Option(document).map(deserializer)
   }
 }

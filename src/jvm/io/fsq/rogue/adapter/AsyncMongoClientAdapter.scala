@@ -5,7 +5,7 @@ package io.fsq.rogue.adapter
 import com.mongodb.{Block, DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException}
 import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoCollection
-import com.mongodb.client.model.{CountOptions, FindOneAndUpdateOptions, UpdateOptions}
+import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, UpdateOptions}
 import com.mongodb.client.result.{DeleteResult, UpdateResult}
 import io.fsq.common.scala.Identity._
 import io.fsq.rogue.{Query, RogueException}
@@ -339,6 +339,28 @@ class AsyncMongoClientAdapter[
       }
     }
     collection.findOneAndUpdate(filter, update, options, queryCallback)
+    resultCallback.result
+  }
+
+  override protected def findOneAndDeleteImpl[R <: Record](
+    deserializer: Document => R
+  )(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson,
+    options: FindOneAndDeleteOptions
+  ): Result[Option[R]] = {
+    val resultCallback = callbackFactory.newCallback[Option[R]]
+    val queryCallback = new SingleResultCallback[Document] {
+      override def onResult(document: Document, throwable: Throwable): Unit = {
+        if (throwable !=? null) {
+          resultCallback.onResult(null, throwable)
+        } else {
+          resultCallback.onResult(Option(document).map(deserializer), throwable)
+        }
+      }
+    }
+    collection.findOneAndDelete(filter, queryCallback)
     resultCallback.result
   }
 }
