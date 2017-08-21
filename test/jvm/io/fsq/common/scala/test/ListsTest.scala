@@ -196,7 +196,7 @@ class ListsTest extends Lists.Implicits {
   @Test
   def testRemoveDuplicatesOn(): Unit = {
     val propId = Prop.forAll { (l1: List[Int]) => {
-      val r = l1.distinctBy(x => x)
+      val r = l1.distinctBy(identity)
       r == l1.distinct
     }} label "identity check"
 
@@ -215,7 +215,7 @@ class ListsTest extends Lists.Implicits {
   @Test
   def testCountDistinctOn(): Unit = {
     val propId = Prop.forAll { (l1: List[Int]) => {
-      val r = l1.countDistinctBy(x => x)
+      val r = l1.countDistinctBy(identity)
       r == l1.distinct.length
     }} label "identity check"
 
@@ -294,8 +294,8 @@ class ListsTest extends Lists.Implicits {
 
   @Test
   def testGroupWhile(): Unit = {
-    val xs = List(1,2,3,11,12,13,21,22)
-    A.assertEquals(List(List(1,2,3),List(11,12,13), List(21,22)), xs.groupWhile(_ / 10 == _ / 10))
+    val xs = List(1, 2, 3, 11, 12, 13, 21, 22)
+    A.assertEquals(List(List(1, 2, 3),List(11, 12, 13), List(21, 22)), xs.groupWhile(_ / 10 == _ / 10))
     A.assertEquals(Nil, List.empty[Int].groupWhile(_ == _))
   }
 
@@ -430,7 +430,7 @@ class ListsTest extends Lists.Implicits {
   @Test
   def testToMapByKey(): Unit = {
     //Empty input
-    A.assertTrue(Seq.empty[Int].toMapByKey(x => x) equals Map.empty[Int, Int])
+    A.assertTrue(Seq.empty[Int].toMapByKey(identity) equals Map.empty[Int, Int])
 
     val testValue = Seq(1 -> "a", 2 -> "b").toMapByKey(_._1)
     val result = Map(1 -> (1, "a"), 2 -> (2, "b"))
@@ -442,7 +442,7 @@ class ListsTest extends Lists.Implicits {
     // Empty input
     A.assertTrue(Seq.empty[Int].groupByKeyValue(x => (x -> x)) equals Map.empty[Int, Seq[Int]])
 
-    val testValue = Seq(1 -> "a", 2 -> "a", 1 -> "b").groupByKeyValue(x => x)
+    val testValue = Seq(1 -> "a", 2 -> "a", 1 -> "b").groupByKeyValue(identity)
     val result = Map(1 -> Seq("a", "b"), 2 -> Seq("a"))
 
     A.assertTrue(testValue equals result)
@@ -485,7 +485,7 @@ class ListsTest extends Lists.Implicits {
     val prop = Prop.forAll { (l1: List[Int]) => {
       val m = l1.map(n => math.abs(n % 100000)).groupBy(_ % 10).mappedValues(_.head)
       val mopt = (0 to 9).map(k => k -> m.get(k)).toMap
-      val fm = mopt.flatMapValues(x => x)
+      val fm = mopt.flatMapValues(identity)
       mapContains(fm, m) && mapContains(m, fm)
     }}
     mustPass(prop)
@@ -501,37 +501,37 @@ class ListsTest extends Lists.Implicits {
 
   @Test
   def testSlidingPairsLists(): Unit = {
-    A.assertTrue(List(1,2,3).slidingPairs =? List((1,2), (2,3)))
-    A.assertTrue(List(1,2,3,4).slidingPairs =? List((1,2), (2,3), (3,4)))
+    A.assertTrue(List(1, 2, 3).slidingPairs =? List((1, 2), (2, 3)))
+    A.assertTrue(List(1, 2, 3, 4).slidingPairs =? List((1, 2), (2, 3), (3, 4)))
     A.assertTrue(List(1).slidingPairs =? Nil)
     A.assertTrue(Nil.slidingPairs =? Nil)
   }
 
   @Test
   def testSlidingPairsSeqs(): Unit = {
-    A.assertTrue(Seq(1,2,3).slidingPairs =? Seq((1,2), (2,3)))
-    A.assertTrue(Seq(1,2,3).slidingPairs =? Seq((1,2), (2,3)))
-    A.assertTrue(Seq(1,2,3,4).slidingPairs =? Seq((1,2), (2,3), (3,4)))
+    A.assertTrue(Seq(1, 2, 3).slidingPairs =? Seq((1, 2), (2, 3)))
+    A.assertTrue(Seq(1, 2, 3).slidingPairs =? Seq((1, 2), (2, 3)))
+    A.assertTrue(Seq(1, 2, 3, 4).slidingPairs =? Seq((1, 2), (2, 3), (3, 4)))
     A.assertTrue(Seq(1).slidingPairs =? Seq())
     A.assertTrue(Seq().slidingPairs =? Seq())
   }
 
   @Test
   def testSlidingPairsIterables(): Unit = {
-    A.assertTrue(Iterable(1,2,3).slidingPairs =? Iterable((1,2), (2,3)))
-    A.assertTrue(Iterable(1,2,3,4).slidingPairs =? Iterable((1,2), (2,3), (3,4)))
+    A.assertTrue(Iterable(1, 2, 3).slidingPairs =? Iterable((1, 2), (2, 3)))
+    A.assertTrue(Iterable(1, 2, 3, 4).slidingPairs =? Iterable((1, 2), (2, 3), (3, 4)))
     A.assertTrue(Iterable(1).slidingPairs =? Iterable())
     A.assertTrue(Iterable().slidingPairs =? Iterable())
   }
 
   @Test
   def testSlidingPairsOpts(): Unit = {
-    A.assertTrue(Iterable(1,2,3).slidingOptPairs =? Iterable(
+    A.assertTrue(Iterable(1, 2, 3).slidingOptPairs =? Iterable(
       (1,Some(2)),
       (2,Some(3)),
       (3, None)
     ))
-    A.assertTrue(Iterable(1,2,3,4).slidingOptPairs =? Iterable(
+    A.assertTrue(Iterable(1, 2, 3, 4).slidingOptPairs =? Iterable(
       (1,Some(2)),
       (2,Some(3)),
       (3,Some(4)),
@@ -541,24 +541,42 @@ class ListsTest extends Lists.Implicits {
     A.assertTrue(Iterable().slidingOptPairs =? Iterable())
   }
 
-  @Test
-  def testTopN(): Unit = {
-    // The order isn't guaranteed, hence the Set comparison
-    A.assertEquals(Iterable(-1,1,2,3,4).topN(1).toSet, Set(4))
-    A.assertEquals(Iterable(4,3,2,1,-1).topN(1).toSet, Set(4))
-    A.assertEquals(Iterable(-1,1,4,3,2).topN(1).toSet, Set(4))
-    A.assertEquals(Iterable(-1,1,4,2,3).topN(3).toSet, Set(4,2,3))
-    A.assertEquals(Iterable(-1,1,4,2,3).topN(5).toSet, Set(-1,1,4,2,3))
-    A.assertEquals(Iterable(-1,1,4,2,3).topN(100).toSet, Set(-1,1,4,2,3))
+   def testTopN(): Unit = {
+     // The order isn't guaranteed, hence the Set comparison
+    A.assertEquals(Iterable(-1, 1, 2, 3, 4).topN(1).toSet, Set(4))
+    A.assertEquals(Iterable(4, 3, 2, 1, -1).topN(1).toSet, Set(4))
+    A.assertEquals(Iterable(-1, 1, 4, 3, 2).topN(1).toSet, Set(4))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topN(3).toSet, Set(4, 2, 3))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topN(5).toSet, Set(-1, 1, 4, 2, 3))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topN(100).toSet, Set(-1, 1, 4, 2, 3))
     A.assertEquals(Iterable("k", "y", "m", "x", "c", "z").topN(3).toSet, Set("x", "y", "z"))
   }
 
   @Test
+  def testTopNPartition(): Unit = {
+    // The order isn't guaranteed, hence the Set comparison
+    A.assertEquals(Iterable(-1, 1, 2, 3, 4).topNPartition(1)._1.toSet, Set(4))
+    A.assertEquals(Iterable(-1, 1, 2, 3, 4).topNPartition(1)._2.toSet, Set(-1, 1, 2, 3))
+    A.assertEquals(Iterable(4, 3, 2, 1, -1).topNPartition(1)._1.toSet, Set(4))
+    A.assertEquals(Iterable(4, 3, 2, 1, -1).topNPartition(1)._2.toSet, Set(-1, 1, 2, 3))
+    A.assertEquals(Iterable(-1, 1, 4, 3, 2).topNPartition(1)._1.toSet, Set(4))
+    A.assertEquals(Iterable(-1, 1, 4, 3, 2).topNPartition(1)._2.toSet, Set(-1, 1, 2, 3))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topNPartition(3)._1.toSet, Set(4, 2, 3))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topNPartition(3)._2.toSet, Set(-1, 1))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topNPartition(5)._1.toSet, Set(-1, 1, 4, 2, 3))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topNPartition(5)._2.toSet, Set())
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topNPartition(100)._1.toSet, Set(-1, 1, 4, 2, 3))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topNPartition(100)._2.toSet, Set())
+    A.assertEquals(Iterable("k", "y", "m", "x", "c", "z").topNPartition(3)._1.toSet, Set("x", "y", "z"))
+    A.assertEquals(Iterable("k", "y", "m", "x", "c", "z").topNPartition(3)._2.toSet, Set("c", "m", "k"))
+  }
+
+  @Test
   def toListBy(): Unit = {
-    A.assertEquals(Iterable(1,2,3,4).toListBy(identity), List(1,2,3,4))
-    A.assertEquals(Iterable(1,2,3,4).toListBy(_ % 2 =? 0), List(false, true, false, true))
-    A.assertEquals(List(1,2,3,4).toListBy(_ % 2 =? 0), List(false, true, false, true))
-    A.assertEquals(Vector(1,2,3,4).toListBy(_ % 2 =? 0), List(false, true, false, true))
+    A.assertEquals(Iterable(1, 2, 3, 4).toListBy(identity), List(1, 2, 3, 4))
+    A.assertEquals(Iterable(1, 2, 3, 4).toListBy(_ % 2 =? 0), List(false, true, false, true))
+    A.assertEquals(List(1, 2, 3, 4).toListBy(_ % 2 =? 0), List(false, true, false, true))
+    A.assertEquals(Vector(1, 2, 3, 4).toListBy(_ % 2 =? 0), List(false, true, false, true))
     A.assertEquals(Map(1 -> Seq(10, 11), 2 -> Seq(20, 21)).toListBy(_._2).flatten.sorted, List(10, 11, 20, 21))
     A.assertEquals(Iterable[Int]().toListBy(_ % 2 =? 0), Nil)
   }
@@ -575,10 +593,10 @@ class ListsTest extends Lists.Implicits {
 
   @Test
   def toVectorBy(): Unit = {
-    A.assertEquals(Iterable(1,2,3,4).toVectorBy(identity), Vector(1,2,3,4))
-    A.assertEquals(Iterable(1,2,3,4).toVectorBy(_ % 2 =? 0), Vector(false, true, false, true))
-    A.assertEquals(List(1,2,3,4).toListBy(_ % 2 =? 0), Vector(false, true, false, true))
-    A.assertEquals(Vector(1,2,3,4).toListBy(_ % 2 =? 0), Vector(false, true, false, true))
+    A.assertEquals(Iterable(1, 2, 3, 4).toVectorBy(identity), Vector(1, 2, 3, 4))
+    A.assertEquals(Iterable(1, 2, 3, 4).toVectorBy(_ % 2 =? 0), Vector(false, true, false, true))
+    A.assertEquals(List(1, 2, 3, 4).toListBy(_ % 2 =? 0), Vector(false, true, false, true))
+    A.assertEquals(Vector(1, 2, 3, 4).toListBy(_ % 2 =? 0), Vector(false, true, false, true))
     A.assertEquals(Map(1 -> Seq(10, 11), 2 -> Seq(20, 21)).toListBy(_._2).flatten.sorted, Vector(10, 11, 20, 21))
     A.assertEquals(Iterable[Int]().toVectorBy(_ % 2 =? 0), Vector())
     A.assertEquals(Some(1).toVectorBy(identity), Vector(1))

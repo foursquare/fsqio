@@ -710,6 +710,30 @@ class FSIterable[CC[X] <: Iterable[X], T, Repr <: IterableLike[T, Repr] with Gen
     builder.result()
   }
 
+  /** Returns the top N elements in the Iterable.
+    * They'll come back in no particular order.
+    */
+  def topNPartition(size: Int)(implicit ord: Ordering[T]): (CC[T], CC[T]) = {
+    val pqTop = new PriorityQueue[T]()(ord.reverse)
+    val pqBottom = new PriorityQueue[T]()(ord.reverse)
+    xs.foreach(x => {
+      if (pqTop.size < size || ord.gt(x, pqTop.head)) {
+        pqTop.enqueue(x)
+        if (pqTop.size > size) {
+          pqBottom.enqueue(pqTop.dequeue())
+        }
+      } else {
+        pqBottom.enqueue(x)
+      }
+    })
+    val builderTop = newBuilder[T]
+    builderTop ++= pqTop.result()
+    val builderBottom = newBuilder[T]
+    builderBottom ++= pqBottom.result()
+
+    (builderTop.result(), builderBottom.result())
+  }
+
   /** Applies `f` to each item in the collection and returns a List
     */
   def toListBy[U](f: T => U): List[U] = {
