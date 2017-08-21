@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.query.test
 
-import com.mongodb.{ErrorCategory, MongoBulkWriteException, MongoWriteException, WriteConcern}
+import com.mongodb.{ErrorCategory, MongoBulkWriteException, MongoCommandException, MongoWriteException, WriteConcern}
 import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.{MongoCollection => AsyncMongoCollection}
 import com.mongodb.client.{MongoCollection => BlockingMongoCollection}
@@ -1473,6 +1473,144 @@ class TrivialORMQueryTest extends RogueMongoTest
         case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
           case ErrorCategory.UNCATEGORIZED => ()
           case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+        }
+        case _ => throw rogueException
+      }
+    }
+  }
+
+  @Test
+  def testAsyncFindAndUpdateOne: Unit = {
+    val testRecord = newTestRecord(0)
+    val updatedTestRecord = testRecord.copy(int = testRecord.int.map(_ + 10))
+    val otherRecord = newTestRecord(1)
+    val returnNewTestRecord = newTestRecord(2)
+    val updatedReturnNewTestRecord = returnNewTestRecord.copy(string = returnNewTestRecord.string.map(_ + " there"))
+
+    val serialTestFutures = Future.join(
+      asyncQueryExecutor.insert(otherRecord),
+
+      for {
+        // update on non-existant record
+        _ <- asyncQueryExecutor.findAndUpdateOne(
+            SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
+          ).map(_ must_== None)
+        // no-op update
+        _ <- asyncQueryExecutor.insert(testRecord)
+        _ <- asyncQueryExecutor.findAndUpdateOne(
+            SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
+          ).map(_ must_== Some(testRecord))
+        // update on existing record
+        _ <- asyncQueryExecutor.findAndUpdateOne(
+            SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo updatedTestRecord.int)
+          ).map(_ must_== Some(testRecord))
+        _ <- asyncQueryExecutor.fetchOne(
+            SimpleRecord.where(_.id eqs testRecord.id)
+          ).map(_ must_== Some(updatedTestRecord))
+      } yield (),
+
+      for {
+        // test returnNew = true
+        _ <- asyncQueryExecutor.insert(returnNewTestRecord)
+        _ <- asyncQueryExecutor.findAndUpdateOne(
+            SimpleRecord
+              .where(_.id eqs returnNewTestRecord.id)
+              .findAndModify(_.string setTo updatedReturnNewTestRecord.string),
+            returnNew = true
+          ).map(_ must_== Some(updatedReturnNewTestRecord))
+      } yield ()
+    )
+
+    val testFutures = serialTestFutures.flatMap(_ => {
+      Future.join(
+        // updates fail on modifying _id
+        asyncQueryExecutor.findAndUpdateOne(SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.id setTo new ObjectId))
+          .map(_ => throw new Exception("Expected update failure when modifying _id field"))
+          .handle({
+            case rogueException: RogueException => Option(rogueException.getCause) match {
+              case Some(mce: MongoCommandException) => mce.getErrorCode match {
+                case 66 => ()
+                case _ => throw rogueException
+              }
+              case _ => throw rogueException
+            }
+          }),
+
+        // match multiple records, but only modify one
+        for {
+          _ <- asyncQueryExecutor.findAndUpdateOne(
+              SimpleRecord.findAndModify(_.boolean setTo true)
+            ).map(_ must beOneOf(
+              Some(updatedTestRecord),
+              Some(otherRecord),
+              Some(updatedReturnNewTestRecord)
+            ))
+          _ <- asyncQueryExecutor.count(SimpleRecord.where(_.boolean eqs true)).map(_ must_== 1L)
+        } yield ()
+      )
+    })
+
+    Await.result(testFutures)
+  }
+
+  @Test
+  def testBlockingFindAndUpdateOne: Unit = {
+    val testRecord = newTestRecord(0)
+    val updatedTestRecord = testRecord.copy(int = testRecord.int.map(_ + 10))
+    val otherRecord = newTestRecord(1)
+    val returnNewTestRecord = newTestRecord(2)
+    val updatedReturnNewTestRecord = returnNewTestRecord.copy(string = returnNewTestRecord.string.map(_ + " there"))
+
+    // update on non-existant record
+    blockingQueryExecutor.findAndUpdateOne(
+      SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
+    ).unwrap must_== None
+
+    // no-op update
+    blockingQueryExecutor.insert(testRecord)
+    blockingQueryExecutor.findAndUpdateOne(
+      SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
+    ).unwrap must_== Some(testRecord)
+
+    // update on existing record
+    blockingQueryExecutor.findAndUpdateOne(
+      SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo updatedTestRecord.int)
+    ).unwrap must_== Some(testRecord)
+    blockingQueryExecutor.fetchOne(
+      SimpleRecord.where(_.id eqs testRecord.id)
+    ).unwrap must_== Some(updatedTestRecord)
+
+    // test returnNew = true
+    blockingQueryExecutor.insert(returnNewTestRecord)
+    blockingQueryExecutor.findAndUpdateOne(
+      SimpleRecord
+        .where(_.id eqs returnNewTestRecord.id)
+        .findAndModify(_.string setTo updatedReturnNewTestRecord.string),
+      returnNew = true
+    ).unwrap must_== Some(updatedReturnNewTestRecord)
+
+    // match multiple records, but only modify one
+    blockingQueryExecutor.insert(otherRecord)
+    blockingQueryExecutor.findAndUpdateOne(
+      SimpleRecord.findAndModify(_.boolean setTo true)
+    ).unwrap must beOneOf(
+      Some(updatedTestRecord),
+      Some(otherRecord),
+      Some(updatedReturnNewTestRecord)
+    )
+    blockingQueryExecutor.count(SimpleRecord.where(_.boolean eqs true)).unwrap must_== 1L
+
+    // updates fail on modifying _id
+    try {
+      blockingQueryExecutor.findAndUpdateOne(
+        SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.id setTo new ObjectId)
+      )
+      throw new Exception("Expected update failure when modifying _id field")
+    } catch {
+      case rogueException: RogueException => Option(rogueException.getCause) match {
+        case Some(mce: MongoCommandException) => mce.getErrorCode match {
+          case 66 => ()
+          case _ => throw rogueException
         }
         case _ => throw rogueException
       }

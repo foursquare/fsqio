@@ -3,10 +3,11 @@
 package io.fsq.rogue.adapter
 
 import com.mongodb.{Block, MongoNamespace, ReadPreference, WriteConcern}
-import com.mongodb.client.model.{CountOptions, UpdateOptions}
-import io.fsq.rogue.{ModifyQuery, Query}
+import com.mongodb.client.model.{CountOptions, FindOneAndUpdateOptions, ReturnDocument, UpdateOptions}
+import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, Query}
 import io.fsq.rogue.MongoHelpers.{MongoBuilder => LegacyMongoBuilder}
 import io.fsq.rogue.util.QueryUtilities
+import java.util.concurrent.TimeUnit
 import org.bson.{BsonDocument, BsonDocumentReader, BsonValue}
 import org.bson.codecs.DecoderContext
 import org.bson.conversions.Bson
@@ -143,6 +144,16 @@ abstract class MongoClientAdapter[
     update: Bson,
     options: UpdateOptions
   ): Result[Long]
+
+  protected def findOneAndUpdateImpl[R <: Record](
+    deserializer: Document => R
+  )(
+    collection: MongoCollection[Document]
+  )(
+    filter: Bson,
+    update: Bson,
+    options: FindOneAndUpdateOptions
+  ): Result[Option[R]]
 
   def count[
     M <: MetaRecord
@@ -453,6 +464,66 @@ abstract class MongoClientAdapter[
         upsertWithDuplicateKeyRetry(run)
       } else {
         run
+      }
+    }
+  }
+
+  def findOneAndUpdate[M <: MetaRecord, R <: Record](
+    deserializer: Document => R
+  )(
+    findAndModify: FindAndModifyQuery[M, R],
+    returnNew: Boolean,
+    writeConcernOpt: Option[WriteConcern]
+  ): Result[Option[R]] = {
+    val findAndModifyClause = queryHelpers.transformer.transformFindAndModify(findAndModify)
+
+    // TODO(jacob): This preserves existing behavior, but callers should have some way of
+    //    distinguishing "this query was empty and did not run" from "the query ran and
+    //    did not match anything". We should probably return some sort of datatype that
+    //    can encode that state.
+    if (findAndModifyClause.mod.clauses.isEmpty) {
+      wrapResult(None)
+
+    } else {
+      queryHelpers.validator.validateFindAndModify(
+        findAndModifyClause,
+        collectionFactory.getIndexes(findAndModifyClause.query)
+      )
+      val collection = collectionFactory.getMongoCollectionFromQuery(
+        findAndModifyClause.query,
+        writeConcernOpt = writeConcernOpt
+      )
+      val descriptionFunc = () => LegacyMongoBuilder.buildFindAndModifyString(
+        findAndModify.query.collectionName,
+        findAndModifyClause,
+        returnNew = returnNew,
+        upsert = false,
+        remove = false
+      )
+
+      // TODO(jacob): These casts will always succeed, but should be removed once there is a
+      //    version of LegacyMongoBuilder that speaks the new CRUD api.
+      val filter = LegacyMongoBuilder.buildCondition(findAndModifyClause.query.condition).asInstanceOf[Bson]
+      val update = LegacyMongoBuilder.buildModify(findAndModifyClause.mod).asInstanceOf[Bson]
+
+      val options = new FindOneAndUpdateOptions()
+      queryHelpers.config.maxTimeMSOpt(collectionFactory.getInstanceNameFromQuery(findAndModifyClause.query)).foreach(
+        options.maxTime(_, TimeUnit.MILLISECONDS)
+      )
+      findAndModifyClause.query.order.foreach(order => {
+        options.sort(LegacyMongoBuilder.buildOrder(order).asInstanceOf[Bson])
+      })
+      findAndModifyClause.query.select.foreach(select => {
+        options.projection(LegacyMongoBuilder.buildSelect(select).asInstanceOf[Bson])
+      })
+      if (returnNew) {
+        options.returnDocument(ReturnDocument.AFTER)
+      } else {
+        options.returnDocument(ReturnDocument.BEFORE)
+      }
+
+      runCommand(descriptionFunc, findAndModifyClause.query) {
+        findOneAndUpdateImpl(deserializer)(collection)(filter, update, options)
       }
     }
   }

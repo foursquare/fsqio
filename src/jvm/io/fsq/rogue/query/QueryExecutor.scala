@@ -4,8 +4,8 @@ package io.fsq.rogue.query
 
 import com.mongodb.{ReadPreference, WriteConcern}
 import io.fsq.field.Field
-import io.fsq.rogue.{!<:<, AddLimit, ModifyQuery, Query, QueryOptimizer, Required, RequireShardKey, Rogue,
-    ShardingOk, Unlimited, Unselected, Unskipped}
+import io.fsq.rogue.{!<:<, AddLimit, FindAndModifyQuery, ModifyQuery, Query, QueryOptimizer, Required, RequireShardKey,
+    Rogue, ShardingOk, Unlimited, Unselected, Unskipped}
 import io.fsq.rogue.adapter.MongoClientAdapter
 import io.fsq.rogue.types.MongoDisallowed
 import scala.collection.generic.CanBuildFrom
@@ -265,6 +265,23 @@ class QueryExecutor[
       adapter.wrapResult(0L)
     } else {
       adapter.modify(query, upsert = true, multi = false, Some(writeConcern))
+    }
+  }
+
+  def findAndUpdateOne[M <: MetaRecord, R <: Record](
+    query: FindAndModifyQuery[M, R],
+    returnNew: Boolean = false,
+    writeConcern: WriteConcern = defaultWriteConcern
+  )(
+    implicit ev: M !<:< MongoDisallowed
+  ): Result[Option[R]] = {
+    if (optimizer.isEmptyQuery(query)) {
+      adapter.wrapResult(None)
+    } else {
+      def deserializer(document: Document): R = {
+        serializer.readFromDocument(query.query.meta, query.query.select)(document)
+      }
+      adapter.findOneAndUpdate(deserializer)(query, returnNew, Some(writeConcern))
     }
   }
 }
