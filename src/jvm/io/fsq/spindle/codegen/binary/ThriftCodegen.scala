@@ -174,7 +174,6 @@ object ThriftCodegen {
           }
 
         //val extraPath = pkg.map(_.split('.').mkString(File.separator, File.separator, "")).getOrElse("")
-        var jsonRoot: Option[File] = None
         var jsonPath: Option[File] = None
         timer.start("out")
         val out = (extension, namespaceOutputPath) match {
@@ -197,8 +196,7 @@ object ThriftCodegen {
               case "scala" => outputDir + File.separator + source.baseName + "." + extension
               case "java" => outputDir + File.separator + "java_" + source.baseName + "." + extension
             })
-            jsonRoot = Some(new File(nsOut, "annotations"))
-            jsonPath = Some(new File(jsonRoot.get, s"${program.pkg.get}.${source.baseName}.json"))
+            jsonPath = Some(new File(nsOut, s"${program.pkg.get}.${source.baseName}.json"))
             new PrintWriter(outputFile, "UTF-8")
           }
           case (a, b) => {
@@ -228,9 +226,7 @@ object ThriftCodegen {
         if (writeAnnotationsJson && extension =? "scala") {
           val (nObjects, body) = RenderJson().jsonBody(program)
           if (nObjects > 0) {
-            require(jsonRoot.isDefined && jsonPath.isDefined,
-              "namespace_out required with write_annotations_json")
-            jsonRoot.get.mkdirs()
+            require(jsonPath.isDefined, "namespace_out required with write_annotations_json")
             // TODO(awinter): do we need to worry about unicode in thrift annotations? write a test w/ unicode
             val writer = new FileWriter(jsonPath.get)
             try {

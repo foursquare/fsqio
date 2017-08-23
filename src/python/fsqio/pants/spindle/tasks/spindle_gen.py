@@ -20,6 +20,8 @@ from pants.backend.jvm.targets.scala_library import ScalaLibrary
 from pants.base.build_environment import get_buildroot
 from pants.base.exceptions import TaskError
 from pants.base.workunit import WorkUnitLabel
+from pants.build_graph.address import Address
+from pants.build_graph.resources import Resources
 from pants.option.custom_types import target_list_option, target_option
 from pants.util.contextutil import temporary_dir
 from pants.util.dirutil import safe_mkdir
@@ -29,6 +31,8 @@ from fsqio.pants.spindle.targets.spindle_thrift_library import SpindleThriftLibr
 from fsqio.pants.spindle.tasks.spindle_task import SpindleTask
 
 
+# note: must agree with INDEX_NAME in SpindleAnnotations.scala
+INDEX_NAME = 'json-annotation.index'
 NAMESPACE_PARSER = re.compile(r'^\s*namespace\s+([^\s]+)\s+([^\s]+)\s*$')
 
 class SpindleGen(SpindleTask, SimpleCodegenTask):
@@ -134,10 +138,12 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
   def synthetic_target_extra_dependencies(self, target, target_workdir):
     return self._resolved_runtime_deps
 
-  def synthetic_target_type(self, target):
+  @staticmethod
+  def synthetic_target_type(target):
     return ScalaLibrary
 
-  def is_gentarget(self, target):
+  @staticmethod
+  def is_gentarget(target):
     return isinstance(target, SpindleThriftLibrary)
 
   def execute(self):
@@ -157,7 +163,6 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
     # This temporary directory serves as a stable workspace and cache for the entire task. The output is
     # copied to the vt.results_dir on a per-target basis and treated like regular Pants artifact from there.
 
-    all_size_checks = []
     with self.invalidated(
       self.codegen_targets(),
       invalidate_dependents=True,
@@ -165,16 +170,59 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
     ) as invalidation_check:
       with self.context.new_workunit(name='execute', labels=[WorkUnitLabel.MULTITOOL]):
         with temporary_dir() as workdir:
+          synth_targets = []
           for vt in invalidation_check.all_vts:
             if not vt.valid:
               if self._do_validate_sources_present(vt.target):
                 self.execute_codegen(vt.target, vt.results_dir, workdir)
                 self._handle_duplicate_sources(vt.target, vt.results_dir)
+                # TODO(awinter): mv next few lines to self.custom_copy(target) and then use
+                #   inherited SimpleCodegenTask.execute.
+                ns_out = self.namespace_out(workdir)
                 self.cache_generated_files(
-                  self.calculate_generated_sources(vt.target), self.namespace_out(workdir), vt.results_dir,
+                  self.calculate_generated_sources(vt.target, ns_out), ns_out, vt.results_dir,
                 )
                 vt.update()
-            self._inject_synthetic_target(vt.target, vt.results_dir)
+            synth_targets.append(
+              self._inject_synthetic_target(vt.target, vt.results_dir)
+            )
+        if self._annotations:
+          self.json_rollup(synth_targets)
+
+  def json_rollup(self, targets):
+    "build json index file & provide json Resources target"
+    json_paths = [
+      os.path.relpath(os.path.join(dir_, fname), self.workdir)
+      for target in targets
+      for dir_, _, files in os.walk(target.address.spec_path)
+      for fname in files
+      if fname.endswith('.json')
+    ]
+    synthetic = self.make_json_resource(json_paths)
+    self.write_index(json_paths)
+    self.connect_target(targets, synthetic)
+
+  def write_index(self, paths, fname=INDEX_NAME):
+    "Write text index of json paths at workdir/fname."
+    with open(os.path.join(self.workdir, fname), 'w') as f:
+      for path in paths:
+        f.write(path + '\n')
+
+  def connect_target(self, targets, synthetic):
+    """Set synthetic task as dependency for targets.
+    This may seem backwards because we're consuming the targets to created synthetic, but we
+    do it so that downstream code includes our synthetic resource in their classpath.
+    """
+    for target in targets:
+      self.context.build_graph.inject_dependency(target.address, synthetic.address)
+
+  def make_json_resource(self, paths):
+    "Return synthetic Resources target that provides our json in dependent classpaths."
+    return self.context.add_new_target(
+      address=Address(os.path.relpath(self.workdir, get_buildroot()), 'spindle'),
+      target_type=Resources,
+      sources=[INDEX_NAME] + paths,
+    )
 
   # Passing the intermediate 'workdir' here is a break with the upstream API. But the performance hit of regenerating
   # the scalalate workdir and every dependent spindle target was more then I could consider, especially when we are
@@ -217,13 +265,29 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
       old_path = os.path.join(src, gen_file)
       shutil.copy2(old_path, new_path)
 
-  def calculate_generated_sources(self, target):
+  def calculate_generated_sources(self, target, ns_out=None):
     generated_scala_sources = [
       '{0}.{1}'.format(source, 'scala')
       for source in self.sources_generated_by_target(target)
     ]
     extra_sources = self._additional_generated_sources(target) or []
-    return generated_scala_sources + extra_sources
+
+    # generate json.
+    if ns_out is not None:
+      gen_json = [
+        '.'.join(source.split('/')) + '.json'
+        for source in self.sources_generated_by_target(target)
+      ]
+      # note: json only created when annotations are nonempty, hence the need to check presence
+      actual_json = filter(
+        lambda f: ns_out and os.path.exists(os.path.join(ns_out, f)),
+        gen_json
+      )
+    else:
+      # note: this case is for SpindleStubsGen
+      actual_json = []
+
+    return generated_scala_sources + extra_sources + actual_json
 
   def _additional_generated_sources(self, target):
     generated_java_sources = [
