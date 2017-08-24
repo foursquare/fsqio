@@ -483,6 +483,7 @@ abstract class MongoClientAdapter[
   )(
     findAndModify: FindAndModifyQuery[M, R],
     returnNew: Boolean,
+    upsert: Boolean,
     writeConcernOpt: Option[WriteConcern]
   ): Result[Option[R]] = {
     val findAndModifyClause = queryHelpers.transformer.transformFindAndModify(findAndModify)
@@ -507,7 +508,7 @@ abstract class MongoClientAdapter[
         findAndModify.query.collectionName,
         findAndModifyClause,
         returnNew = returnNew,
-        upsert = false,
+        upsert = upsert,
         remove = false
       )
 
@@ -531,9 +532,16 @@ abstract class MongoClientAdapter[
       } else {
         options.returnDocument(ReturnDocument.BEFORE)
       }
+      options.upsert(upsert)
 
-      runCommand(descriptionFunc, findAndModifyClause.query) {
+      def run: Result[Option[R]] = runCommand(descriptionFunc, findAndModifyClause.query) {
         findOneAndUpdateImpl(deserializer)(collection)(filter, update, options)
+      }
+
+      if (upsert) {
+        upsertWithDuplicateKeyRetry(run)
+      } else {
+        run
       }
     }
   }

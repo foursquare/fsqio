@@ -1618,6 +1618,150 @@ class TrivialORMQueryTest extends RogueMongoTest
   }
 
   @Test
+  def testAsyncFindAndUpsertOne: Unit = {
+    val testRecord = newTestRecord(0)
+    val updatedTestRecord = testRecord.copy(int = testRecord.int.map(_ + 10))
+    val otherRecord = newTestRecord(1)
+    val returnNewTestRecord = newTestRecord(2)
+    val updatedReturnNewTestRecord = returnNewTestRecord.copy(string = returnNewTestRecord.string.map(_ + " there"))
+
+    val serialTestFutures = Future.join(
+      asyncQueryExecutor.insert(otherRecord),
+
+      for {
+        // insert new record with only id/modified fields
+        _ <- asyncQueryExecutor.findAndUpsertOne(
+            SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
+          ).map(_ must_== None)
+        _ <- asyncQueryExecutor.fetchOne(
+            SimpleRecord.where(_.id eqs testRecord.id)
+          ).map(_ must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int)))
+        // no-op update
+        _ <- asyncQueryExecutor.save(testRecord)
+        _ <- asyncQueryExecutor.findAndUpsertOne(
+            SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
+          ).map(_ must_== Some(testRecord))
+        // update on existing record
+        _ <- asyncQueryExecutor.findAndUpsertOne(
+            SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo updatedTestRecord.int)
+          ).map(_ must_== Some(testRecord))
+        _ <- asyncQueryExecutor.fetchOne(
+            SimpleRecord.where(_.id eqs testRecord.id)
+          ).map(_ must_== Some(updatedTestRecord))
+      } yield (),
+
+      for {
+        // test returnNew = true
+        _ <- asyncQueryExecutor.insert(returnNewTestRecord)
+        _ <- asyncQueryExecutor.findAndUpsertOne(
+            SimpleRecord
+              .where(_.id eqs returnNewTestRecord.id)
+              .findAndModify(_.string setTo updatedReturnNewTestRecord.string),
+            returnNew = true
+          ).map(_ must_== Some(updatedReturnNewTestRecord))
+      } yield ()
+    )
+
+    val testFutures = serialTestFutures.flatMap(_ => {
+      Future.join(
+        // updates fail on modifying _id
+        asyncQueryExecutor.findAndUpsertOne(SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.id setTo new ObjectId))
+          .map(_ => throw new Exception("Expected update failure when modifying _id field"))
+          .handle({
+            case rogueException: RogueException => Option(rogueException.getCause) match {
+              case Some(mce: MongoCommandException) => mce.getErrorCode match {
+                case 66 => ()
+                case _ => throw rogueException
+              }
+              case _ => throw rogueException
+            }
+          }),
+
+        // match multiple records, but only modify one
+        for {
+          _ <- asyncQueryExecutor.findAndUpsertOne(
+              SimpleRecord.findAndModify(_.boolean setTo true)
+            ).map(_ must beOneOf(
+              Some(updatedTestRecord),
+              Some(otherRecord),
+              Some(updatedReturnNewTestRecord)
+            ))
+          _ <- asyncQueryExecutor.count(SimpleRecord.where(_.boolean eqs true)).map(_ must_== 1L)
+        } yield ()
+      )
+    })
+
+    Await.result(testFutures)
+  }
+
+  @Test
+  def testBlockingFindAndUpsertOne: Unit = {
+    val testRecord = newTestRecord(0)
+    val updatedTestRecord = testRecord.copy(int = testRecord.int.map(_ + 10))
+    val otherRecord = newTestRecord(1)
+    val returnNewTestRecord = newTestRecord(2)
+    val updatedReturnNewTestRecord = returnNewTestRecord.copy(string = returnNewTestRecord.string.map(_ + " there"))
+
+    // insert new record with only id/modified fields
+    blockingQueryExecutor.findAndUpsertOne(
+      SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
+    ).unwrap must_== None
+    blockingQueryExecutor.fetchOne(
+      SimpleRecord.where(_.id eqs testRecord.id)
+    ).unwrap must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int))
+
+    // no-op update
+    blockingQueryExecutor.save(testRecord)
+    blockingQueryExecutor.findAndUpsertOne(
+      SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
+    ).unwrap must_== Some(testRecord)
+
+    // update on existing record
+    blockingQueryExecutor.findAndUpsertOne(
+      SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo updatedTestRecord.int)
+    ).unwrap must_== Some(testRecord)
+    blockingQueryExecutor.fetchOne(
+      SimpleRecord.where(_.id eqs testRecord.id)
+    ).unwrap must_== Some(updatedTestRecord)
+
+    // test returnNew = true
+    blockingQueryExecutor.insert(returnNewTestRecord)
+    blockingQueryExecutor.findAndUpsertOne(
+      SimpleRecord
+        .where(_.id eqs returnNewTestRecord.id)
+        .findAndModify(_.string setTo updatedReturnNewTestRecord.string),
+      returnNew = true
+    ).unwrap must_== Some(updatedReturnNewTestRecord)
+
+    // match multiple records, but only modify one
+    blockingQueryExecutor.insert(otherRecord)
+    blockingQueryExecutor.findAndUpsertOne(
+      SimpleRecord.findAndModify(_.boolean setTo true)
+    ).unwrap must beOneOf(
+      Some(updatedTestRecord),
+      Some(otherRecord),
+      Some(updatedReturnNewTestRecord)
+    )
+    blockingQueryExecutor.count(SimpleRecord.where(_.boolean eqs true)).unwrap must_== 1L
+
+    // updates fail on modifying _id
+    try {
+      blockingQueryExecutor.findAndUpsertOne(
+        SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.id setTo new ObjectId)
+      )
+      throw new Exception("Expected update failure when modifying _id field")
+    } catch {
+      case rogueException: RogueException => Option(rogueException.getCause) match {
+        case Some(mce: MongoCommandException) => mce.getErrorCode match {
+          case 66 => ()
+          case _ => throw rogueException
+        }
+        case _ => throw rogueException
+      }
+    }
+  }
+
+  @Test
   def testAsyncFindAndDeleteOne: Unit = {
     val testRecords = Array(
       newTestRecord(0),

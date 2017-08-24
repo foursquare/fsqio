@@ -281,7 +281,22 @@ class QueryExecutor[
       def deserializer(document: Document): R = {
         serializer.readFromDocument(query.query.meta, query.query.select)(document)
       }
-      adapter.findOneAndUpdate(deserializer)(query, returnNew, Some(writeConcern))
+      adapter.findOneAndUpdate(deserializer)(query, returnNew = returnNew, upsert = false, Some(writeConcern))
+    }
+  }
+
+  def findAndUpsertOne[M <: MetaRecord, R <: Record](
+    query: FindAndModifyQuery[M, R],
+    returnNew: Boolean = false,
+    writeConcern: WriteConcern = defaultWriteConcern
+  )(
+    implicit ev: M !<:< MongoDisallowed
+  ): Result[Option[R]] = {
+    if (optimizer.isEmptyQuery(query)) {
+      adapter.wrapResult(None)
+    } else {
+      val deserializer = serializer.readFromDocument(query.query.meta, query.query.select)(_)
+      adapter.findOneAndUpdate(deserializer)(query, returnNew = returnNew, upsert = true, Some(writeConcern))
     }
   }
 
