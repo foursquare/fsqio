@@ -13,10 +13,10 @@ from __future__ import (
 
 from pants.base.payload import Payload
 from pants.base.payload_field import PrimitiveField
-from pants.build_graph.target import Target
+from pants.build_graph.resources import Resources
 
 
-class RemoteSource(Target):
+class RemoteSource(Resources):
   """Represent a versioned bundle or file that can be used as source input during RPM builds."""
 
   @classmethod
@@ -25,10 +25,13 @@ class RemoteSource(Target):
 
   def __init__(
     self,
+    name=None,
+    filename=None,
     version=None,
     platform=None,
     arch=None,
     namespace=None,
+    extract=None,
     payload=None,
     **kwargs):
     """
@@ -39,8 +42,11 @@ class RemoteSource(Target):
     :param string version: version of the source distribution.
     :param string platform: Intended platform. Currently defaults to linux
     :param string arch: Intended architecture of the package. Currently defaults to 'x86_64'.
+    :param string filename: Name of the file intended for fetching. Defaults to the target name.
     :param string namespace: Directory name that holds these sources. Defaults to using the split filename,
       e.g. 'node' for 'node.tar.gz' or 'thrift' for 'thrift'. This argument is mostly for tricky edge cases.
+    :param bool extract: When True, remote source will be extracted. Supports
+      archive types understood by `pants.fs.archive.archiver_for_path(filename)`.
     """
 
     # TODO(mateo): Support platform-independent bundles, which is what most source distributions will be.
@@ -48,12 +54,16 @@ class RemoteSource(Target):
     self.version = version
     self.platform = platform or 'linux'
     self.arch = arch or 'x86_64'
-    self.namespace = namespace or kwargs['name'].split('.')[0]
+    self.filename = filename or name
+    self.namespace = namespace or self.filename.split('.')[0]
+    self.extract = extract
     payload = payload or Payload()
     payload.add_fields({
       'version': PrimitiveField(self.version),
       'platform': PrimitiveField(self.platform),
       'arch': PrimitiveField(self.arch),
+      'filename': PrimitiveField(self.filename),
       'namespace': PrimitiveField(self.namespace),
+      'extract': PrimitiveField(self.extract),
     })
-    super(RemoteSource, self).__init__(payload=payload, **kwargs)
+    super(RemoteSource, self).__init__(name=name, payload=payload, **kwargs)

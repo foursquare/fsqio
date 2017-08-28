@@ -16,6 +16,7 @@ from pants.goal.task_registrar import TaskRegistrar as task
 
 from fsqio.pants.rpmbuild.targets.remote_source import RemoteSource
 from fsqio.pants.rpmbuild.targets.rpm_spec import RpmSpecTarget
+from fsqio.pants.rpmbuild.tasks.remote_source_task import RemoteSourceTask
 from fsqio.pants.rpmbuild.tasks.rpmbuild_task import RpmbuildTask
 
 
@@ -29,4 +30,6 @@ def build_file_aliases():
 
 
 def register_goals():
+  task(name='fetch-remote-files', action=RemoteSourceTask).install('fetch-remote')
+
   task(name='rpmbuild', action=RpmbuildTask).install('rpmbuild')

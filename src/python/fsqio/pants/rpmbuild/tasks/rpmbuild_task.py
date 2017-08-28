@@ -27,7 +27,6 @@ from pants.util.dirutil import safe_mkdir
 from pkg_resources import resource_string
 from six import string_types
 
-from fsqio.pants.rpmbuild.subsystems.remote_source_fetcher import RemoteSourceFetcher
 from fsqio.pants.rpmbuild.targets.remote_source import RemoteSource
 from fsqio.pants.rpmbuild.targets.rpm_spec import RpmSpecTarget
 
@@ -76,11 +75,9 @@ class RpmbuildTask(Task):
              help='After invoking `rpmbuild`, commit the container state to a new image')
 
   @classmethod
-  def subsystem_dependencies(cls):
-    return super(RpmbuildTask, cls).subsystem_dependencies() + (RemoteSourceFetcher.Factory.scoped(cls),)
-
-  def __init__(self, *args, **kwargs):
-    super(RpmbuildTask, self).__init__(*args, **kwargs)
+  def prepare(cls, options, round_manager):
+    round_manager.require('remote_files')
+    super(RpmbuildTask, cls).prepare(options, round_manager)
 
   @classmethod
   def product_types(cls):
@@ -150,14 +147,23 @@ class RpmbuildTask(Task):
 
     # Copy sources to the buildroot. (TODO - unify these stanzas, they differ only in being relative vs absolute paths)
     local_sources = []
+    remote_files = self.context.products.get('remoste_files')
     for source in self._remote_source_targets(target):
-
-      remote_source = RemoteSourceFetcher.Factory.scoped_instance(self).create(source)
-      source_path = remote_source.path
-      shutil.copy(source_path, build_dir)
-      local_sources.append({
-        'basename': os.path.basename(os.path.relpath(source_path, get_buildroot())),
-      })
+      mapping = remote_files.get(source)
+      # The remote_files product is a mapping of [vt.target] => { vt.results_dir: os.listdir(vt.results_dir)}.
+      # The contents could be files or dirs, so both are handled here.
+      if mapping:
+        for dirname, filenamez in mapping.items():
+          for filename in filenamez:
+            source_path = os.path.join(dirname, filename)
+            # Allow for extracted rmeote sources.
+            if os.path.isfile(source_path):
+              shutil.copy(source_path, build_dir)
+            else:
+              shutil.copytree(source_path, build_dir)
+            local_sources.append({
+              'basename': filename,
+            })
     for source_rel_path in target.sources_relative_to_buildroot():
       shutil.copy(os.path.join(get_buildroot(), source_rel_path), build_dir)
       local_sources.append({

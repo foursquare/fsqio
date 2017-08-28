@@ -14,7 +14,9 @@ from __future__ import (
 import os
 
 from pants.binaries.binary_util import BinaryUtil
+from pants.fs.archive import archiver_for_path
 from pants.subsystem.subsystem import Subsystem
+from pants.util.contextutil import temporary_dir
 from pants.util.memo import memoized_property
 
 
@@ -66,18 +68,44 @@ class RemoteSourceFetcher(object):
     def create(self, remote_target):
       remote_source_util = RemoteSourceUtil.Factory.create()
       options = self.get_options()
-      relpath = os.path.join(options.supportdir, remote_target.namespace)
-      return RemoteSourceFetcher(remote_source_util, relpath, remote_target.version, remote_target.name)
+      return RemoteSourceFetcher(
+        remote_source_util,
+        options.supportdir,
+        remote_target.namespace,
+        remote_target.version,
+        remote_target.filename,
+        extract=remote_target.extract,
+      )
 
-  def __init__(self, remote_source_util, relpath, version, filename):
+  def __init__(self, remote_source_util, supportdir, namespace, version, filename, extract):
     self.remote_source_util = remote_source_util
-    self._relpath = relpath
-    self._version = version
+    self._supportdir = supportdir
+    self._namespace = namespace
     self._filename = filename
+    self.version = version
+    self._extract = extract or False
 
   @property
-  def version(self):
-    return self._version
+  def _relpath(self):
+    return os.path.join(self._supportdir, self._namespace)
+
+  @property
+  def extracted(self):
+    return self._extract
+
+  def _construct_path(self):
+    fetched = self.remote_source_util.select_binary(self._relpath, self.version, self._filename)
+    if not self._extract:
+      return fetched
+    unpacked_dir = os.path.dirname(fetched)
+    outdir = os.path.join(unpacked_dir, 'unpacked')
+    if not os.path.exists(outdir):
+      with temporary_dir(root_dir=unpacked_dir) as tmp_root:
+        # This is an upstream lever that pattern matches the filepath to an archive type.
+        archiver = archiver_for_path(fetched)
+        archiver.extract(fetched, tmp_root)
+        os.rename(tmp_root, outdir)
+    return os.path.join(outdir, self._namespace)
 
   @memoized_property
   def path(self):
@@ -85,4 +113,4 @@ class RemoteSourceFetcher(object):
 
     Safe to call repeatedly, the fetch itself is idempotent.
     """
-    return self.remote_source_util.select_binary(self._relpath, self.version, self._filename)
+    return self._construct_path
