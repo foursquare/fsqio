@@ -21,7 +21,6 @@ from pants.build_graph.resources import Resources as BaseResources
 from pants.contrib.node.tasks.node_paths import NodePaths
 from pants.contrib.node.tasks.node_task import NodeTask
 from pants.util.contextutil import pushd
-from pants.util.dirutil import safe_mkdir
 
 from fsqio.pants.node.targets.webpack_module import WebPackModule
 
@@ -98,9 +97,6 @@ class WebPack(NodeTask, SimpleCodegenTask):
       raise TaskError("No npm distribution was found!")
     node_path = node_paths.node_path(target)
     dest_dir = os.path.join(target_workdir, self.get_options().destination_dir)
-    # NOTE(mateo): The target_workdir is the 'current' symlink and not respected by clean=True. Need to fix upstream.
-    safe_mkdir(os.path.realpath(target_workdir), clean=True)
-
     # Added "bail" to the args since webpack only returns failure on failed transpiling, treating missing deps or
     # syntax errors as soft errors. This resulted in Pants returning success while the canary fails health check.
     args = [
