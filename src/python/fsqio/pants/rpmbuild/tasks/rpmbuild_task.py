@@ -144,14 +144,13 @@ class RpmbuildTask(Task):
     # TODO(mateo): There is a bit of an API conflation now that we have remote_source urls and targets.
     # Especially when you consider that there is also sources/dependencies.
     # The distinction between these things is going to be confusing, they should be unified or at least streamlined.
-
-    # Copy sources to the buildroot. (TODO - unify these stanzas, they differ only in being relative vs absolute paths)
     local_sources = []
-    remote_files = self.context.products.get('remoste_files')
+    remote_files = self.context.products.get('remote_files')
     for source in self._remote_source_targets(target):
       mapping = remote_files.get(source)
       # The remote_files product is a mapping of [vt.target] => { vt.results_dir: os.listdir(vt.results_dir)}.
       # The contents could be files or dirs, so both are handled here.
+      # TODO(mateo): The files should possibly be set as Source files with defines.
       if mapping:
         for dirname, filenamez in mapping.items():
           for filename in filenamez:

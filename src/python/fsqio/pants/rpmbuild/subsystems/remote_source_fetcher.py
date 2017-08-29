@@ -78,12 +78,13 @@ class RemoteSourceFetcher(object):
       )
 
   def __init__(self, remote_source_util, supportdir, namespace, version, filename, extract):
-    self.remote_source_util = remote_source_util
     self._supportdir = supportdir
     self._namespace = namespace
     self._filename = filename
-    self.version = version
     self._extract = extract or False
+
+    self.remote_source_util = remote_source_util
+    self.version = version
 
   @property
   def _relpath(self):
@@ -113,4 +114,4 @@ class RemoteSourceFetcher(object):
 
     Safe to call repeatedly, the fetch itself is idempotent.
     """
-    return self._construct_path
+    return self._construct_path()

@@ -54,7 +54,8 @@ class RemoteSourceTask(Task):
         source_path = remote_source.path
         file_dir = source_path if remote_source.extracted else os.path.dirname(source_path)
         file_namez = os.listdir(source_path) if remote_source.extracted else [os.path.basename(source_path)]
-        if not vt.valid:
-          for filename in file_namez:
-            relative_symlink(filename, os.path.join(vt.results_dir, filename))
+        for filename in file_namez:
+          symlink_file = os.path.join(vt.results_dir, filename)
+          if not vt.valid or not os.path.isfile(symlink_file):
+            relative_symlink(os.path.join(file_dir, filename), symlink_file)
         self.context.products.get('remote_files').add(vt.target, vt.results_dir).extend(file_namez)
