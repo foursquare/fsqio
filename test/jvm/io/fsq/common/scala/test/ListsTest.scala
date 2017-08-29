@@ -541,15 +541,26 @@ class ListsTest extends Lists.Implicits {
     A.assertTrue(Iterable().slidingOptPairs =? Iterable())
   }
 
-   def testTopN(): Unit = {
+   def testTopNUnsorted(): Unit = {
      // The order isn't guaranteed, hence the Set comparison
-    A.assertEquals(Iterable(-1, 1, 2, 3, 4).topN(1).toSet, Set(4))
-    A.assertEquals(Iterable(4, 3, 2, 1, -1).topN(1).toSet, Set(4))
-    A.assertEquals(Iterable(-1, 1, 4, 3, 2).topN(1).toSet, Set(4))
-    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topN(3).toSet, Set(4, 2, 3))
-    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topN(5).toSet, Set(-1, 1, 4, 2, 3))
-    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topN(100).toSet, Set(-1, 1, 4, 2, 3))
-    A.assertEquals(Iterable("k", "y", "m", "x", "c", "z").topN(3).toSet, Set("x", "y", "z"))
+    A.assertEquals(Iterable(-1, 1, 2, 3, 4).topNUnsorted(1).toSet, Set(4))
+    A.assertEquals(Iterable(4, 3, 2, 1, -1).topNUnsorted(1).toSet, Set(4))
+    A.assertEquals(Iterable(-1, 1, 4, 3, 2).topNUnsorted(1).toSet, Set(4))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topNUnsorted(3).toSet, Set(4, 2, 3))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topNUnsorted(5).toSet, Set(-1, 1, 4, 2, 3))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topNUnsorted(100).toSet, Set(-1, 1, 4, 2, 3))
+    A.assertEquals(Iterable("k", "y", "m", "x", "c", "z").topNUnsorted(3).toSet, Set("x", "y", "z"))
+  }
+
+  def topNSorted(): Unit = {
+     // The order isn't guaranteed, hence the Set comparison
+    A.assertEquals(Iterable(-1, 1, 2, 3, 4).topNSorted(1), Iterable(4))
+    A.assertEquals(Iterable(4, 3, 2, 1, -1).topNSorted(1), Iterable(4))
+    A.assertEquals(Iterable(-1, 1, 4, 3, 2).topNSorted(1), Iterable(4))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topNSorted(3), Iterable(2, 3, 4))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topNSorted(5), Iterable(-1, 1, 2, 3, 4))
+    A.assertEquals(Iterable(-1, 1, 4, 2, 3).topNSorted(100), Iterable(-1, 1, 2, 3, 4))
+    A.assertEquals(Iterable("k", "y", "m", "x", "c", "z").topNSorted(3), Iterable("x", "y", "z"))
   }
 
   @Test

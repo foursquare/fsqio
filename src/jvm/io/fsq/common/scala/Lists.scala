@@ -695,7 +695,7 @@ class FSIterable[CC[X] <: Iterable[X], T, Repr <: IterableLike[T, Repr] with Gen
   /** Returns the top N elements in the Iterable.
     * They'll come back in no particular order.
     */
-  def topN(size: Int)(implicit ord: Ordering[T]): CC[T] = {
+  def topNUnsorted(size: Int)(implicit ord: Ordering[T]): CC[T] = {
     val pq = new PriorityQueue[T]()(ord.reverse)
     xs.foreach(x => {
       if (pq.size < size || ord.gt(x, pq.head)) {
@@ -708,6 +708,13 @@ class FSIterable[CC[X] <: Iterable[X], T, Repr <: IterableLike[T, Repr] with Gen
     val builder = newBuilder[T]
     builder ++= pq.result()
     builder.result()
+  }
+
+  /** Returns the top N elements in the Iterable.
+    * They'll come back sorted :)
+    */
+  def topNSorted(size: Int)(implicit ord: Ordering[T]): Seq[T] = {
+    topNUnsorted(size)(ord).toVector.sortBy(identity)(ord)
   }
 
   /** Returns the top N elements in the Iterable.
