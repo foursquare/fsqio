@@ -4,6 +4,7 @@
 from __future__ import absolute_import, print_function
 
 from jaeger_client import Config
+import logging
 import opentracing
 
 from fsqio.pants.tracing.span_reporter import SpanReporter
@@ -24,10 +25,11 @@ class JaegerReporter(SpanReporter):
     super(JaegerReporter, self).__init__(*args, **kwargs)
     if self.opts.enabled:
       # TODO(awinter): document if this is creating global state.
+      logging.getLogger('jaeger_tracing').setLevel(logging.WARNING)
       self.tracer = Config(
         config={
           'sampler': {'type': 'const', 'param': 1},
-          'local_agent_group': {
+          'local_agent': {
             'reporting_host': self.opts.host,
             'reporting_port': self.opts.port,
           },
@@ -41,11 +43,13 @@ class JaegerReporter(SpanReporter):
     if self.opts.enabled:
       self.tracer.close()
 
-  def mkspan(self, name, parent=None):
-    if parent:
-      return opentracing.start_child_span(parent, operation_name=name)
-    else:
-      return self.tracer.start_span(operation_name=name)
+  def mkspan(self, name, parent=None, tags={}):
+    span = opentracing.start_child_span(parent, operation_name=name) \
+      if parent \
+      else self.tracer.start_span(operation_name=name)
+    for k, v in tags.items():
+      span.set_tag(k, v)
+    return span
 
   @staticmethod
   def span_name(span):

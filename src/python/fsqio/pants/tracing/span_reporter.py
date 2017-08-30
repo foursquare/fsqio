@@ -5,6 +5,7 @@ from __future__ import absolute_import, print_function
 
 import abc
 import functools
+import sys
 
 from pants.reporting.reporter import Reporter
 from pants.subsystem.subsystem import Subsystem
@@ -51,6 +52,10 @@ class SpanReporter(Reporter, Subsystem):
     self.workunit_to_span[workunit] = self.mkspan(
       workunit.name,
       parent=parent_span,
+      tags={} if workunit.parent else {
+        'argv': sys.argv,
+        'goal': sys.argv[1] if len(sys.argv) > 1 else 'unknown',
+      },
     )
 
   @if_enabled
@@ -60,7 +65,7 @@ class SpanReporter(Reporter, Subsystem):
     self.stop_span(span)
 
   @abc.abstractmethod
-  def mkspan(self, name, parent=None):
+  def mkspan(self, name, parent=None, tags={}):
     "Subclasses return a started span instance for their driver."
     raise NotImplementedError
 

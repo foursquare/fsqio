@@ -37,8 +37,9 @@ class ZipkinReporter(SpanReporter):
       help='Zipkin reporting URL.',
     )
 
-  def mkspan(self, name, parent=None):
+  def mkspan(self, name, parent=None, tags={}):
     "Helper to create (& optionally start) zipkin spans."
+    # TODO(awinter): support tags on zipkin
     span = zipkin_span(
       service_name='pants',
       span_name=name,
