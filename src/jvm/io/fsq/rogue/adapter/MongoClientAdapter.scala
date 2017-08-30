@@ -5,7 +5,7 @@ package io.fsq.rogue.adapter
 import com.mongodb.{Block, MongoNamespace, ReadPreference, WriteConcern}
 import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, ReturnDocument,
     UpdateOptions}
-import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, Query}
+import io.fsq.rogue.{FindAndModifyQuery, Iter, ModifyQuery, Query}
 import io.fsq.rogue.MongoHelpers.{MongoBuilder => LegacyMongoBuilder, MongoModify}
 import io.fsq.rogue.util.QueryUtilities
 import java.util.concurrent.TimeUnit
@@ -37,6 +37,11 @@ abstract class MongoClientAdapter[
   collectionFactory: MongoCollectionFactory[MongoCollection, DocumentValue, Document, MetaRecord, Record],
   val queryHelpers: QueryUtilities[Result]
 ) {
+
+  /** The type of cursor used by find query processors. This is FindIterable[Document]
+    * for both adapters, but they are different types.
+    */
+  type Cursor
 
   /** Wrap a result for a no-op query. */
   def wrapResult[T](value: => T): Result[T]
@@ -77,9 +82,30 @@ abstract class MongoClientAdapter[
     filter: Bson
   ): Result[T]
 
-  protected def findImpl[T](
+  /** A constructor for exhaustive cursor processors used in find queries. Essentially
+    * just calls cursor.forEach.
+    */
+  protected def forEachProcessor[T](
     resultAccessor: => T, // call by name
     accumulator: Block[Document]
+  )(
+    cursor: Cursor
+  ): Result[T]
+
+  /** A constructor for iterative cursor processors used in find queries. This uses the
+    * lower level cursor abstraction to allow short-circuiting consumption of the entire
+    * cursor.
+    */
+  protected def iterateProcessor[R <: Record, T](
+    initialIterState: T,
+    deserializer: Document => R,
+    handler: (T, Iter.Event[R]) => Iter.Command[T]
+  )(
+    cursor: Cursor
+  ): Result[T]
+
+  protected def findImpl[T](
+    processor: Cursor => Result[T]
   )(
     collection: MongoCollection[Document]
   )(
@@ -340,8 +366,7 @@ abstract class MongoClientAdapter[
   //    precedence over whatever is passed down to this method: batchSizeOpt is only
   //    applied if the global config is unset.
   private def queryRunner[M <: MetaRecord, T](
-    resultAccessor: => T, // call by name
-    accumulator: Block[Document]
+    processor: Cursor => Result[T]
   )(
     operation: String,
     query: Query[M, _, _],
@@ -369,7 +394,7 @@ abstract class MongoClientAdapter[
     }
 
     runCommand(descriptionFunc, queryClause) {
-      findImpl(resultAccessor, accumulator)(collection)(filter)(
+      findImpl(processor)(collection)(filter)(
         modifiers = MongoBuilder.buildQueryModifiers(queryClause),
         batchSizeOpt = queryHelpers.config.cursorBatchSize.getOrElse(batchSizeOpt),
         limitOpt = queryClause.lim,
@@ -393,7 +418,13 @@ abstract class MongoClientAdapter[
       override def apply(value: Document): Unit = singleResultProcessor(value)
     }
 
-    queryRunner(resultAccessor, accumulator)("find", query, batchSizeOpt, readPreferenceOpt, setMaxTimeMS = true)
+    queryRunner(forEachProcessor(resultAccessor, accumulator))(
+      "find",
+      query,
+      batchSizeOpt,
+      readPreferenceOpt,
+      setMaxTimeMS = true
+    )
   }
 
   def remove[R <: Record](
@@ -582,5 +613,21 @@ abstract class MongoClientAdapter[
     runCommand(descriptionFunc, queryClause) {
       findOneAndDeleteImpl(deserializer)(collection)(filter, options)
     }
+  }
+
+  def iterate[M <: MetaRecord, R <: Record, T](
+    query: Query[M, R, _],
+    initialIterState: T,
+    deserializer: Document => R,
+    readPreferenceOpt: Option[ReadPreference]
+  )(
+    handler: (T, Iter.Event[R]) => Iter.Command[T]
+  ): Result[T] = {
+    queryRunner(iterateProcessor(initialIterState, deserializer, handler))(
+      "find",
+      query,
+      None,
+      readPreferenceOpt
+    )
   }
 }

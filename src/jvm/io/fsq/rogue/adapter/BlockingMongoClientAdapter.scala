@@ -3,14 +3,15 @@
 package io.fsq.rogue.adapter
 
 import com.mongodb.{Block, DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException}
-import com.mongodb.client.MongoCollection
+import com.mongodb.client.{FindIterable, MongoCollection}
 import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, UpdateOptions}
-import io.fsq.rogue.{Query, RogueException}
+import io.fsq.rogue.{Iter, Query, RogueException}
 import io.fsq.rogue.util.QueryUtilities
 import java.util.concurrent.TimeUnit
 import org.bson.BsonValue
 import org.bson.conversions.Bson
 import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.util.{Failure, Success, Try}
 
 
 object BlockingResult {
@@ -56,6 +57,8 @@ class BlockingMongoClientAdapter[
   collectionFactory,
   queryHelpers
 ) with BlockingResult.Implicits {
+
+  type Cursor = FindIterable[Document]
 
   override def wrapResult[T](value: => T): BlockingResult[T] = new BlockingResult[T](value)
 
@@ -140,9 +143,54 @@ class BlockingMongoClientAdapter[
     resultAccessor
   }
 
-  override protected def findImpl[T](
+  override protected def forEachProcessor[T](
     resultAccessor: => T, // call by name
     accumulator: Block[Document]
+  )(
+    cursor: Cursor
+  ): BlockingResult[T] = {
+    cursor.forEach(accumulator)
+    resultAccessor
+  }
+
+  override protected def iterateProcessor[R <: Record, T](
+    initialIterState: T,
+    deserializer: Document => R,
+    handler: (T, Iter.Event[R]) => Iter.Command[T]
+  )(
+    cursor: Cursor
+  ): BlockingResult[T] = {
+    var iterState = initialIterState
+    var continue = true
+    val iterator = cursor.iterator
+
+    while (continue) {
+      if (iterator.hasNext) {
+        Try(deserializer(iterator.next())) match {
+          case Success(record) => handler(iterState, Iter.Item(record)) match {
+            case Iter.Continue(newIterState) => iterState = newIterState
+            case Iter.Return(finalState) => {
+              iterState = finalState
+              continue = false
+            }
+          }
+          case Failure(exception: Exception) => {
+            iterState = handler(iterState, Iter.Error(exception)).state
+            continue = false
+          }
+          case Failure(throwable) => throw throwable
+        }
+      } else {
+        iterState = handler(iterState, Iter.EOF).state
+        continue = false
+      }
+    }
+
+    iterState
+  }
+
+  override protected def findImpl[T](
+    processor: Cursor => BlockingResult[T]
   )(
     collection: MongoCollection[Document]
   )(
@@ -166,8 +214,7 @@ class BlockingMongoClientAdapter[
     projectionOpt.foreach(cursor.projection(_))
     maxTimeMSOpt.foreach(cursor.maxTime(_, TimeUnit.MILLISECONDS))
 
-    cursor.forEach(accumulator)
-    resultAccessor
+    processor(cursor)
   }
 
   override protected def insertImpl[R <: Record](

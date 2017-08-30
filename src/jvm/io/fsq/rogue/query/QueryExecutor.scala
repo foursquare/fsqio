@@ -4,8 +4,8 @@ package io.fsq.rogue.query
 
 import com.mongodb.{ReadPreference, WriteConcern}
 import io.fsq.field.Field
-import io.fsq.rogue.{!<:<, AddLimit, FindAndModifyQuery, ModifyQuery, Query, QueryOptimizer, Required, RequireShardKey,
-    Rogue, ShardingOk, Unlimited, Unselected, Unskipped}
+import io.fsq.rogue.{!<:<, AddLimit, FindAndModifyQuery, Iter, ModifyQuery, Query, QueryOptimizer, Required,
+    RequireShardKey, Rogue, ShardingOk, Unlimited, Unselected, Unskipped}
 import io.fsq.rogue.adapter.MongoClientAdapter
 import io.fsq.rogue.types.MongoDisallowed
 import scala.collection.generic.CanBuildFrom
@@ -314,6 +314,24 @@ class QueryExecutor[
         serializer.readFromDocument(query.meta, query.select)(document)
       }
       adapter.findOneAndDelete(deserializer)(query, Some(writeConcern))
+    }
+  }
+
+  def iterate[M <: MetaRecord, R <: Record, State, T](
+    query: Query[M, R, State],
+    initialIterState: T,
+    readPreferenceOpt: Option[ReadPreference] = None
+  )(
+    handler: (T, Iter.Event[R]) => Iter.Command[T]
+  )(
+    implicit ev: ShardingOk[M, State],
+    ev2: M !<:< MongoDisallowed
+  ): Result[T] = {
+    if (optimizer.isEmptyQuery(query)) {
+      adapter.wrapResult(handler(initialIterState, Iter.EOF).state)
+    } else {
+      val deserializer = serializer.readFromDocument(query.meta, query.select)(_)
+      adapter.iterate(query, initialIterState, deserializer, readPreferenceOpt)(handler)
     }
   }
 }

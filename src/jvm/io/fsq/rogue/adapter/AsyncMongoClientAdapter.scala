@@ -3,19 +3,20 @@
 package io.fsq.rogue.adapter
 
 import com.mongodb.{Block, DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException}
-import com.mongodb.async.SingleResultCallback
-import com.mongodb.async.client.MongoCollection
+import com.mongodb.async.{AsyncBatchCursor, SingleResultCallback}
+import com.mongodb.async.client.{FindIterable, MongoCollection}
 import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, UpdateOptions}
 import com.mongodb.client.result.{DeleteResult, UpdateResult}
 import io.fsq.common.scala.Identity._
-import io.fsq.rogue.{Query, RogueException}
+import io.fsq.rogue.{Iter, Query, RogueException}
 import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
 import io.fsq.rogue.util.QueryUtilities
+import java.util.{List => JavaList}
 import java.util.concurrent.TimeUnit
 import org.bson.BsonValue
 import org.bson.conversions.Bson
 import scala.collection.JavaConverters.seqAsJavaListConverter
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 
 object AsyncMongoClientAdapter {
@@ -47,6 +48,8 @@ class AsyncMongoClientAdapter[
   collectionFactory,
   queryHelpers
 ) with MongoCallback.Implicits {
+
+  type Cursor = FindIterable[Document]
 
   override def wrapResult[T](value: => T): Result[T] = {
     callbackFactory.wrapResult(value)
@@ -151,9 +154,117 @@ class AsyncMongoClientAdapter[
     resultCallback.result
   }
 
-  override protected def findImpl[T](
+  override protected def forEachProcessor[T](
     resultAccessor: => T, // call by name
     accumulator: Block[Document]
+  )(
+    cursor: Cursor
+  ): Result[T] = {
+    val resultCallback = callbackFactory.newCallback[T]
+    val queryCallback = new SingleResultCallback[Void] {
+      override def onResult(result: Void, throwable: Throwable): Unit = {
+        resultCallback.onResult(resultAccessor, throwable)
+      }
+    }
+
+    cursor.forEach(accumulator, queryCallback)
+    resultCallback.result
+  }
+
+  private def newIterateCursorCallback[R <: Record, T](
+    initialIterState: T,
+    deserializer: Document => R,
+    handler: (T, Iter.Event[R]) => Iter.Command[T]
+  )(
+    resultCallback: SingleResultCallback[T],
+    batchCursor: AsyncBatchCursor[Document]
+  ): SingleResultCallback[JavaList[Document]] = new SingleResultCallback[JavaList[Document]] {
+    @volatile var iterState = initialIterState
+
+    override def onResult(maybeBatch: JavaList[Document], throwable: Throwable): Unit = {
+      (Option(maybeBatch), Option(throwable)) match {
+        case (_, Some(exception: Exception)) => {
+          resultCallback.onResult(handler(iterState, Iter.Error(exception)).state, null)
+        }
+        case (_, Some(throwable)) => resultCallback.onResult(iterState, throwable)
+
+        case (None, None) => resultCallback.onResult(handler(iterState, Iter.EOF).state, null)
+
+        case (Some(batch), None) => {
+          var continue = true
+          val iterator = batch.iterator
+
+          while (continue && iterator.hasNext) {
+            Try(deserializer(iterator.next())) match {
+              case Success(record) => handler(iterState, Iter.Item(record)) match {
+                case Iter.Continue(newIterState) => iterState = newIterState
+                case Iter.Return(finalState) => {
+                  resultCallback.onResult(finalState, null)
+                  continue = false
+                }
+              }
+              case Failure(exception: Exception) => {
+                resultCallback.onResult(handler(iterState, Iter.Error(exception)).state, null)
+                continue = false
+              }
+              case Failure(throwable) => {
+                resultCallback.onResult(iterState, throwable)
+                continue = false
+              }
+            }
+          }
+
+          if (continue) {
+            batchCursor.next(this)
+          }
+        }
+      }
+    }
+  }
+
+  private def baseIterationProcessor[CursorResult, R <: Record, T](
+    initialIterState: T,
+    handler: (T, Iter.Event[R]) => Iter.Command[T],
+    cursorCallback: (SingleResultCallback[T], AsyncBatchCursor[Document]) => SingleResultCallback[JavaList[Document]]
+  )(
+    cursor: Cursor
+  ): Result[T] = {
+    val resultCallback = callbackFactory.newCallback[T]
+
+    val queryCallback = new SingleResultCallback[AsyncBatchCursor[Document]] {
+      override def onResult(batchCursor: AsyncBatchCursor[Document], throwable: Throwable): Unit = {
+        Option(throwable) match {
+          case None => batchCursor.next(cursorCallback(resultCallback, batchCursor))
+          case Some(exception: Exception) => {
+            resultCallback.onResult(handler(initialIterState, Iter.Error(exception)).state, null)
+          }
+          case Some(throwable) => resultCallback.onResult(initialIterState, throwable)
+        }
+      }
+    }
+
+    cursor.batchCursor(queryCallback)
+    resultCallback.result
+  }
+
+  override protected def iterateProcessor[R <: Record, T](
+    initialIterState: T,
+    deserializer: Document => R,
+    handler: (T, Iter.Event[R]) => Iter.Command[T]
+  )(
+    cursor: Cursor
+  ): Result[T] = {
+    baseIterationProcessor(
+      initialIterState,
+      handler,
+      newIterateCursorCallback(initialIterState, deserializer, handler)
+    )(
+      cursor
+    )
+  }
+
+  override protected def findImpl[T](
+    processor: Cursor => Result[T]
   )(
     collection: MongoCollection[Document]
   )(
@@ -177,15 +288,7 @@ class AsyncMongoClientAdapter[
     projectionOpt.foreach(cursor.projection(_))
     maxTimeMSOpt.foreach(cursor.maxTime(_, TimeUnit.MILLISECONDS))
 
-    val resultCallback = callbackFactory.newCallback[T]
-    val queryCallback = new SingleResultCallback[Void] {
-      override def onResult(result: Void, throwable: Throwable): Unit = {
-        resultCallback.onResult(resultAccessor, throwable)
-      }
-    }
-
-    cursor.forEach(accumulator, queryCallback)
-    resultCallback.result
+    processor(cursor)
   }
 
   override protected def insertImpl[R <: Record](
