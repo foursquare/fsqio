@@ -1129,8 +1129,7 @@ jar_library(
   jars = [
     jar(org = 'org.slf4j', name = 'log4j-over-slf4j', rev = slf4j_rev,
       excludes = [
-        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
-        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
+        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
   ],
