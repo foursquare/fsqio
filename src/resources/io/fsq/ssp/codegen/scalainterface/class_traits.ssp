@@ -19,6 +19,8 @@ trait ${cls.name} extends io.fsq.spindle.runtime.Record[${cls.name}]
 
 <% render("class_traits_mutablecopy.ssp", Map("cls" -> cls)) %>
 
+<% render("class_traits_copy.ssp", Map("cls" -> cls)) %>
+
 <% render("class_traits_mutable.ssp", Map("cls" -> cls)) %>
 
 <% render("class_traits_tobuilder.ssp", Map("cls" -> cls)) %>
