@@ -30,6 +30,7 @@ managed_jar_dependencies(
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-annotations', rev = '2.6.5'),
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-core', rev = '2.6.5'),
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-databind', rev = '2.6.5'),
+    ':jackson-scala',
     ':logback',
     ':mockito',
     ':mongodb-core',
@@ -87,7 +88,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'com.twitter', name = 'algebird-core', rev = '0.11.0'),
+    scala_jar(org = 'com.twitter', name = 'algebird-core', rev = '0.13.0'),
   ],
 )
 
@@ -952,7 +953,7 @@ jar_library(
   ]
 )
 
-scalding_ver = '0.15.1-RC13'
+scalding_ver = '0.17.2'
 jar_library(
   name = 'scalding',
   tags = [
@@ -963,24 +964,6 @@ jar_library(
     scala_jar(org = 'com.twitter', name = 'scalding-args', rev = scalding_ver,
       excludes=[
         exclude(org = 'org.apache.hadoop', name = 'hadoop-core'),
-      ],
-    ),
-    scala_jar(org = 'com.twitter', name = 'scalding-commons', rev = scalding_ver,
-      excludes=[
-        exclude(org = 'org.apache.hadoop', name = 'hadoop-core'),
-        exclude(org = 'org.ow2.asm'),
-      ],
-    ),
-    scala_jar(org = 'com.twitter', name = 'scalding-core', rev = scalding_ver,
-      excludes=[
-        exclude(org = 'org.apache.hadoop', name = 'hadoop-core'),
-        exclude(org = 'org.ow2.asm'),
-      ],
-    ),
-    scala_jar(org = 'com.twitter', name = 'scalding-date', rev = scalding_ver,
-      excludes=[
-        exclude(org = 'org.apache.hadoop', name = 'hadoop-core'),
-        exclude(org = 'org.ow2.asm'),
       ],
     ),
     scala_jar(org = 'com.twitter', name = 'scalding-commons', rev = scalding_ver,
@@ -1026,7 +1009,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'com.twitter', name = 'chill', rev = '0.5.2',
+    scala_jar(org = 'com.twitter', name = 'chill', rev = '0.9.2',
       # YES! com.estoricsoftware and com.esoteric.$foo are indeed different orgs for the same lib.
       excludes = [
         exclude(org = 'com.esotericsoftware'),
@@ -1036,7 +1019,7 @@ jar_library(
         exclude(org = 'org.ow2.asm'),
       ],
     ),
-    jar(org = 'com.twitter', name = 'chill-java', rev = '0.5.2',
+    jar(org = 'com.twitter', name = 'chill-java', rev = '0.9.2',
       excludes = [
         exclude(org = 'com.esotericsoftware'),
         exclude(org = 'com.esotericsoftware.kryo'),
