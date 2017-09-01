@@ -14,7 +14,7 @@ set -e
 #       -  for internal usage, at bodega at /data/appdata/bodega/4sq-dev/pants/fs-bootstrap/bin/jpostal_blobs/<etc>
 
 # Any environmental variables not defined here are being defined in env.sh.
-DIST_DIR="${BUILD_ROOT}/dist/jpostal_blobs/${OS_NAMESPACE}/x86_64/${JPOSTAL_VERSION}"
+DIST_DIR="${BUILD_ROOT}/dist/jpostal_blobs/${OS_NAMESPACE}/x86_64/${JPOSTAL_BLOBS_VERSION}"
 
 BLOBS_NAME='jpostal_blobs'
 BLOBS_FILE="${BLOBS_NAME}.tar.gz"
