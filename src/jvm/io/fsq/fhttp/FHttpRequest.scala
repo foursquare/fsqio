@@ -3,7 +3,7 @@
 package io.fsq.fhttp
 
 import com.twitter.conversions.time._
-import com.twitter.finagle.{Filter, NoStacktrace, Service, SimpleFilter}
+import com.twitter.finagle.{Filter, IndividualRequestTimeoutException, NoStacktrace, Service, SimpleFilter}
 import com.twitter.finagle.httpx.{Message, Method, Request, RequestBuilder, Response, Version}
 import com.twitter.finagle.service.TimeoutFilter
 import com.twitter.io.Buf
@@ -187,9 +187,23 @@ case class FHttpRequest(
   /**
    * Adds a request timeout (using the TimeoutFilter) to the stack.  Applies blocking or future responses.
    * @param millis The number of milliseconds to wait
+   *
+   * NOTE(jacob): We create our own exception to pass down here, as the default used by
+   *    TimeoutFilter does not include any stack trace information due to the way the
+   *    timeout is implemented (future.within) causing a loss of all useful stack data.
+   *    However, in some cases just having the call stack for this method invocation makes
+   *    debugging significantly easier, so we subclass IndividualRequestTimeoutException
+   *    and attach a useful stack trace to it via a proxied Exception, ensuring the
+   *    service name is set as we do.
    */
   def timeout(millis: Int): FHttpRequest = {
-    filter(new TimeoutFilter(millis.milliseconds, FTimer.finagleTimer))
+    val exception = new IndividualRequestTimeoutException(millis.milliseconds) {
+      val creationStackException = new Exception
+      override def getStackTrace: Array[StackTraceElement] = creationStackException.getStackTrace
+    }
+    exception.serviceName = client.name
+
+    filter(new TimeoutFilter(millis.milliseconds, exception, FTimer.finagleTimer))
   }
 
   /**
