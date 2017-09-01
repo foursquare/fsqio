@@ -123,6 +123,10 @@ function find_upkeep_file() {
   esac
 }
 
+function tempdir {
+  mktemp -d "$1"/upkeep.XXXXXX
+}
+
 function get_current_path() {
   req_dir=$(dirname "${1}")
   current_dir="${req_dir}/../current"
