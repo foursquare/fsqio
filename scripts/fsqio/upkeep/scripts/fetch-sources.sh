@@ -8,14 +8,6 @@
 # MUST be "ORG REPO VERSION" as a space-delineated string, i.e.
 #  "foursquare fsqio v1.0.0"
 
-
-# HACK - there is no release for libpostal 1.0.0 that compiles on our devbox's gcc.
-# Please unfork if possible by using the upstream release and deleting this code block.
-if [[ ! "${LIBPOSTAL_VERSION}" == "v1.0.0.fs1a" ]]; then
-  # NOTE(mateo): Remove the tagger.h and this entire if block if you get this message.
-  exit_with_failure "If you are updating libpostal, please try and consume the upstream release from openvenues!"
-fi
-
 files=( \
   "openvenues jpostal ${JPOSTAL_VERSION}" \
   "foursquare libpostal ${LIBPOSTAL_VERSION}" \

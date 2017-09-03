@@ -13,6 +13,15 @@ set -e
 #     * upload the tarball to bodega preserving the namespacing here.
 #       -  for internal usage, at bodega at /data/appdata/bodega/4sq-dev/pants/fs-bootstrap/bin/jpostal_blobs/<etc>
 
+
+# There is no official release for libpostal 1.0.0 that compiles on our devbox's gcc.
+# This release is current upstream master. Please unfork by using an upstream release and then remove this check.
+if [[ ! "${LIBPOSTAL_VERSION}" == "1.0.0.fs1a" ]]; then
+  exit_with_failure "Please try and consume the upstream libpostal release from openvenues: $0"
+fi
+
+"${BUILD_ROOT}/upkeep" run fetch-sources.sh
+
 # Any environmental variables not defined here are being defined in env.sh.
 DIST_DIR="${BUILD_ROOT}/dist/jpostal_blobs/${OS_NAMESPACE}/x86_64/${JPOSTAL_BLOBS_VERSION}"
 
@@ -34,11 +43,9 @@ function print_help() {
   echo -e "\nPackage jpostal and libpostal blobs for use inside Foursquare.web.\n"
   echo -e "\nThis outputs files in dist under jpostal blobs. If updating, please upload them to bodega.\n"
   echo -e "\nEvery supported OS needs to be compiled for with this, or taken from the existing RPM.\n"
-  echo -e "Usage:\n - ./upkeep run packge-jpostal.sh"
+  echo -e "Usage:\n - ./upkeep run package-jpostal.sh"
   exit
 }
-
-"${BUILD_ROOT}/upkeep" run fetch-sources.sh
 
 mkdir -p "${WORKROOT}"
 mkdir -p "${DIST_DIR}"

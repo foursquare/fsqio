@@ -3,9 +3,10 @@
 
 export PANTS_CONFIG_OVERRIDE=${PANTS_CONFIG_OVERRIDE:-"['pants.ini']"}
 
-# Internally, we use a tag from current master of Libpostal in order to get some gcc compilation bug fixes.
-export LIBPOSTAL_VERSION='v1.0.0'
 export JPOSTAL_VERSION='1.0'
+# Internally, we use a tag from current master of Libpostal in order to get some gcc compilation bug fixes.
+export LIBPOSTAL_VERSION='1.0.0.fs1a'
+export LIBPOSTAL_DATA_VERSION='v1'
 export JPOSTAL_BLOBS_VERSION="${LIBPOSTAL_VERSION}-${JPOSTAL_VERSION}"
 
 # The script below runs the pants bootstrap task and exports PANTSBINARY. Basically a noop if the pants_version
