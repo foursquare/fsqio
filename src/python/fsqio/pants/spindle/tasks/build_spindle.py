@@ -45,6 +45,10 @@ class BuildSpindle(SpindleTask):
   PANTS_SCRIPT_NAME = 'pants'
   PantsResult = namedtuple('PantsResult', ['command', 'returncode'])
 
+  @property
+  def cache_target_dirs(self):
+    return True
+
   def run_pants_no_lock(self, command, workunit_name=None, **kwargs):
     global_args = ['--quiet'] if self.get_options().quiet else []
     if self.get_options().level == 'debug':
@@ -119,7 +123,6 @@ class BuildSpindle(SpindleTask):
             raise TaskError()
 
           spindle_bundle = self.spindle_bundle_out
-          safe_mkdir(vt.results_dir)
           spindle_binary = os.path.join(vt.results_dir, 'spindle-bundle.jar')
           try:
             shutil.copy(spindle_bundle, spindle_binary)
