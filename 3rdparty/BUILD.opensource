@@ -18,19 +18,21 @@ managed_jar_dependencies(
     ':bson',
     ':cascading',
     ':chill',
+    jar(org = 'com.esotericsoftware', name = 'minlog', rev = '1.3.0'),
     ':commons-logging',
     jar(org = 'commons-codec', name = 'commons-codec', rev = '1.6'),
     ':commons-net',
     ':curator',
     ':curator-test',
     ':guava',
+    jar(org = 'com.google.code.gson', name = 'gson', rev = '2.2.4'),
     ':hamcrest-core',
     ':jackson',
     ':jackson-scala',
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-annotations', rev = '2.6.5'),
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-core', rev = '2.6.5'),
+    jar(org = 'com.fasterxml.jackson.core', name = 'jackson-core-asl', rev = '2.6.5'),
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-databind', rev = '2.6.5'),
-    ':jackson-scala',
     ':logback',
     ':mockito',
     ':mongodb-core',
@@ -39,6 +41,7 @@ managed_jar_dependencies(
     ':ostrich',
     ':reflections',
     ':scalacheck',
+    jar(org = 'org.scala-lang', name = 'scalap', rev = scala_version),
     scala_jar(org = 'org.scalaz.stream', name = 'scalaz-stream', rev = '0.7.3a'),
     ':scalding',
     ':slf4j-api',
@@ -46,6 +49,7 @@ managed_jar_dependencies(
     ':slf4j-jul',
     ':slf4j-nop',
     ':slf4j-log4j',
+    ':snappy-java',
     ':thrift',
     ':twitter-util',
     jar(org = 'org.apache.xmlgraphics', name = 'batik-anim', rev = '1.8',
@@ -1015,7 +1019,6 @@ jar_library(
         exclude(org = 'com.esotericsoftware'),
         exclude(org = 'com.esotericsoftware.kryo'),
         exclude(org = 'com.esotericsoftware.reflectasm'),
-        exclude(org = 'com.esotericsoftware.minilog'),
         exclude(org = 'org.ow2.asm'),
       ],
     ),
@@ -1157,7 +1160,7 @@ jar_library(
 jar_library(
   name='snappy-java',
   jars = [
-    jar(org='org.xerial.snappy', name='snappy-java', rev='1.0.5')
+    jar(org='org.xerial.snappy', name='snappy-java', rev='1.1.4')
   ]
 )
 
