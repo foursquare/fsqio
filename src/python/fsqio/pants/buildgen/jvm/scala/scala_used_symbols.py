@@ -23,6 +23,11 @@ from fsqio.pants.buildgen.jvm.scalac_buildgen_task_mixin import ScalacBuildgenTa
 
 class MapScalaUsedSymbols(ScalacBuildgenTaskMixin, SourceAnalysisTask, NailgunTask):
   """Provides a product mapping source files to the symbols used by that source."""
+
+  @classmethod
+  def implementation_version(cls):
+    return super(MapScalaUsedSymbols, cls).implementation_version() + [('MapScalaUsedSymbols', 3)]
+
   @classmethod
   def analysis_product_name(cls):
     return 'scala_source_to_used_symbols'

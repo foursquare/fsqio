@@ -14,9 +14,7 @@ from __future__ import (
 from itertools import chain
 import json
 import os
-from os import path as P
 
-from pants.base.build_environment import get_buildroot
 from pants.task.task import Task
 
 
@@ -27,10 +25,18 @@ class SourceAnalysisTask(Task):
   """
 
   @classmethod
+  def implementation_version(cls):
+    return super(SourceAnalysisTask, cls).implementation_version() + [('SourceAnalysisTask', 3)]
+
+  @classmethod
   def product_types(cls):
     return [
       cls.analysis_product_name(),
     ]
+
+  @property
+  def cache_target_dirs(self):
+    return True
 
   @classmethod
   def analysis_product_name(cls):
@@ -64,10 +70,10 @@ class SourceAnalysisTask(Task):
     products = self.context.products
     targets = [t for t in self.context.target_roots if isinstance(t, self.claimed_target_types)]
 
-    def vt_analysis_file(vt):
-      return P.join(self._workdir, vt.target.id, vt.cache_key.hash, 'analysis.json')
-
     with self.invalidated(targets, invalidate_dependents=False) as invalidation_check:
+      def target_analysis_file(vt):
+        return os.path.join(vt.results_dir, 'analysis.json')
+
       analyzable_sources_by_target = {
         vt.target: set(
           source for source in vt.target.sources_relative_to_buildroot()
@@ -75,6 +81,7 @@ class SourceAnalysisTask(Task):
         )
         for vt in invalidation_check.all_vts
       }
+
       invalid_targets = [vt.target for vt in invalidation_check.invalid_vts]
       invalid_analyzable_sources = set(
         chain.from_iterable(
@@ -93,31 +100,21 @@ class SourceAnalysisTask(Task):
           )
         )
 
-      vts_artifactfiles_pairs = []
-      for vt in invalidation_check.invalid_vts:
-        target_analysis = {}
-        for source in analyzable_sources_by_target[vt.target]:
-          target_analysis[source] = calculated_analysis[source]
-        target_analysis_bytes = json.dumps(target_analysis)
-        target_analysis_path = vt_analysis_file(vt)
-        target_analysis_abs_dir = P.dirname(P.join(get_buildroot(), target_analysis_path))
-        if not P.isdir(target_analysis_abs_dir):
-          os.makedirs(target_analysis_abs_dir)
-        with open(P.join(get_buildroot(), target_analysis_path), 'wb') as f:
-          f.write(target_analysis_bytes)
-        vts_artifactfiles_pairs.append((vt, [target_analysis_path]))
-
+      # This writes the per-target analysis to json for the cache. We should consider making a synthetic
+      # target to hold an aggregated bag and speed up the noop case.
       analysis_product = {}
-      analysis_product.update(calculated_analysis)
-
       for vt in invalidation_check.all_vts:
-        if vt.valid:
-          target_analysis_path = vt_analysis_file(vt)
-          with open(P.join(get_buildroot(), target_analysis_path), 'rb') as f:
-            analysis_bytes = f.read()
-          target_analysis = json.loads(analysis_bytes)
-          analysis_product.update(target_analysis)
+        target_analysis = {}
+        if not vt.valid:
+          for source in analyzable_sources_by_target[vt.target]:
+            target_analysis[source] = calculated_analysis[source]
+          target_analysis_bytes = json.dumps(target_analysis)
+          with open(target_analysis_file(vt), 'wb') as f:
+            f.write(target_analysis_bytes)
 
-      if self.artifact_cache_writes_enabled():
-        self.update_artifact_cache(vts_artifactfiles_pairs)
-      products.safe_create_data(self.analysis_product_name(), lambda: analysis_product)
+        with open(target_analysis_file(vt), 'rb') as f:
+          analysis_bytes = f.read()
+        target_analysis = json.loads(analysis_bytes)
+
+        analysis_product.update(target_analysis)
+        products.safe_create_data(self.analysis_product_name(), lambda: analysis_product)
