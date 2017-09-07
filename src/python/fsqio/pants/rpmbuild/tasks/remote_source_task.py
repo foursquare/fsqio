@@ -14,7 +14,7 @@ from __future__ import (
 import os
 
 from pants.task.task import Task
-from pants.util.dirutil import relative_symlink
+from pants.util.dirutil import relative_symlink, safe_mkdir
 
 from fsqio.pants.rpmbuild.subsystems.remote_source_fetcher import RemoteSourceFetcher
 from fsqio.pants.rpmbuild.targets.remote_source import RemoteSource
@@ -51,9 +51,9 @@ class RemoteSourceTask(Task):
       # The fetches are idempotent operations from the subsystem, invalidation only controls recreating the symlinks.
       for vt in invalidation_check.all_vts:
         remote_source = RemoteSourceFetcher.Factory.scoped_instance(self).create(vt.target)
-        source_path = remote_source.path
-        file_dir = source_path if remote_source.extracted else os.path.dirname(source_path)
-        file_namez = os.listdir(source_path) if remote_source.extracted else [os.path.basename(source_path)]
+        safe_mkdir(remote_source.path)
+        file_dir = remote_source.path if remote_source.extracted else os.path.dirname(remote_source.path)
+        file_namez = os.listdir(remote_source.path) if remote_source.extracted else [os.path.basename(remote_source.path)]
         for filename in file_namez:
           symlink_file = os.path.join(vt.results_dir, filename)
           if not vt.valid or not os.path.isfile(symlink_file):
