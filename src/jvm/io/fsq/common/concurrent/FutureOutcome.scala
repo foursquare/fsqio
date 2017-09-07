@@ -41,6 +41,12 @@ final class FutureOutcome[+S, +F](val resolve: Future[Outcome[S, F]]) extends An
   def flatten[T, FF >: F](implicit asFutureOutcome: (S) => FutureOutcome[T, FF]): FutureOutcome[T, FF] = {
     this.flatMap(asFutureOutcome)
   }
+
+  def orElse[B >: S, FF >: F](f: => FutureOutcome[B, FF]): FutureOutcome[B, FF] = FutureOutcome(
+    resolve.flatMap({
+      case Success(v) => Future.value(Success(v))
+      case Failure(_) => f.resolve
+    }))
 }
 
 object FutureOutcome {
