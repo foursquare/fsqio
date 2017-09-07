@@ -11,7 +11,6 @@ from __future__ import (
   with_statement,
 )
 
-from itertools import chain
 import os
 import re
 
@@ -88,19 +87,7 @@ class BuildgenSpindle(BuildgenScala):
 
   def buildgen_target(self, spindle_target):
     source_dependencies = ThriftDependencyMapper().target_source_dependencies(spindle_target)
-    def filtered_target_addresses(addresses, allowed_target_types=()):
-      for address in addresses:
-        target = self.context.build_graph.get_target(address)
-        if target.type_alias in allowed_target_types:
-          yield address
-    included_addresses = set(chain.from_iterable(
-      filtered_target_addresses(
-        self._source_mapper.target_addresses_for_source(source),
-        self.supported_target_aliases,
-      )
-      for source in source_dependencies
-    ))
-    included_addresses = set(addr for addr in included_addresses if addr != spindle_target.address)
+    included_addresses = self.included_addresses(source_dependencies, spindle_target)
     synthetic_scala_targets = list(
       t for t in self._concrete_target_to_derivatives[spindle_target]
       if isinstance(t, ScalaLibrary)

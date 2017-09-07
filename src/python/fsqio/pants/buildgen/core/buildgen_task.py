@@ -12,6 +12,7 @@ from __future__ import (
 )
 
 from copy import deepcopy
+from itertools import chain
 
 from pants.util.memo import memoized_property
 
@@ -63,6 +64,19 @@ class BuildgenTask(BuildgenBase):
     merge_map(merged_map, self.get_options().additional_third_party_map)
     return merged_map
 
+  def filtered_target_addresses(self, addresses):
+    for address in addresses:
+      target = self.context.build_graph.get_target(address)
+      if target.type_alias in self.supported_target_aliases:
+        yield address
+
+  def included_addresses(self, source_dependencies, target):
+    included_addresses = set(chain.from_iterable(
+      self.filtered_target_addresses(self._source_mapper.target_addresses_for_source(source))
+      for source in source_dependencies
+    ))
+    return set(addr for addr in included_addresses if addr != target.address)
+
   def adjust_target_build_file(self, target, computed_dep_addresses, whitelist=None):
     """Makes a BuildFileManipulator and adjusts the BUILD file to reflect the computed addresses"""
     alias_whitelist = whitelist or self.buildgen_subsystem.target_alias_whitelist
@@ -86,7 +100,6 @@ class BuildgenTask(BuildgenBase):
     for address in computed_dep_addresses:
       manipulator.add_dependency(address)
 
-    final_dep_addresses = manipulator.get_dependency_addresses()
     manipulator.write(dry_run=self.dryrun, use_colors=self.get_options().colors)
 
   def execute(self):
