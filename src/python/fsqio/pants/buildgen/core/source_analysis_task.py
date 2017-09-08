@@ -117,4 +117,4 @@ class SourceAnalysisTask(Task):
         target_analysis = json.loads(analysis_bytes)
 
         analysis_product.update(target_analysis)
-        products.safe_create_data(self.analysis_product_name(), lambda: analysis_product)
+      products.safe_create_data(self.analysis_product_name(), lambda: analysis_product)
