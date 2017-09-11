@@ -11,6 +11,11 @@ from __future__ import (
   with_statement,
 )
 
+import contextlib
+import json
+import os
+
+from pants.base.exceptions import TaskError
 from pants.contrib.node.subsystems.resolvers.npm_resolver import NpmResolver
 from pants.contrib.node.tasks.node_resolve import NodeResolve
 
@@ -21,11 +26,66 @@ class WebPackResolver(NpmResolver):
   """Subsystem to resolve the webpack_modules."""
   options_scope = 'webpack-resolver'
 
+  # All keys in package.json that may point to dependencies.
+  _dependencies_keys = [
+    'dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'
+  ]
+
   @classmethod
   def register_options(cls, register):
     NodeResolve.register_resolver_for_type(WebPackModule, cls)
     super(WebPackResolver, cls).register_options(register)
 
+  def _remove_file_uris_from_dependencies(self, package):
+    """Remove file: URIs from any dependencies in package.json."""
+    for key in self._dependencies_keys:
+      if key in package:
+        dependencies = package[key]
+        filtered_dependencies = {
+          name: spec for (name, spec) in dependencies.iteritems()
+                if not spec.startswith('file:')
+        }
+        package[key] = filtered_dependencies
+
+  @contextlib.contextmanager
+  def _json_file(self, path):
+    """Context manager that loads a JSON file, lets you manipulate any fields, and then writes it out again."""
+    data = {}
+    if os.path.isfile(path):
+      with open(path, 'r') as fp:
+        data = json.load(fp)
+
+    yield data
+
+    with open(path, 'wb') as fp:
+      json.dump(data, fp, indent=2)
+
   def _emit_package_descriptor(self, node_task, target, results_dir, node_paths):
-    # Upstream uses BUILD files to generate the package.json. I might be interested in trying that sometime.
-    pass
+    package_json_path = os.path.join(results_dir, 'package.json')
+    npm_shrinkwrap_path = os.path.join(results_dir, 'npm-shrinkwrap.json')
+
+    def version_or_path(dep):
+      return node_paths.node_path(dep) if node_task.is_node_module(dep) else dep.version
+
+    with self._json_file(package_json_path) as package:
+      if 'name' not in package:
+        package['name'] = target.package_name
+      elif package['name'] != target.package_name:
+        raise TaskError('Package name in the corresponding package.json is not the same '
+                        'as the BUILD target name for {}'.format(target.address.reference()))
+
+      self._remove_file_uris_from_dependencies(package)
+
+      # Add in any dependencies from the BUILD file.
+      dependencies_to_add = {
+        dep.package_name: version_or_path(dep) for dep in target.dependencies
+      }
+      if 'dependencies' not in package:
+        package['dependencies'] = {}
+      package['dependencies'].update(dependencies_to_add)
+
+    with self._json_file(npm_shrinkwrap_path) as npm_shrinkwrap:
+      # Modify the `version` field in npm-shrinkwrap.json with the updated path
+      for dep in target.dependencies:
+        if dep.package_name in npm_shrinkwrap['dependencies']:
+          npm_shrinkwrap['dependencies'][dep.package_name]['version'] = version_or_path(dep)
