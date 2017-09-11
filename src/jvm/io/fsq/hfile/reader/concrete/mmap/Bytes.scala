@@ -53,7 +53,7 @@ object Bytes extends Logger {
     val size = getVInt(mbb)
     assert(size > 0)
     val bytes = mbb.slice
-    logger.trace(s"p=${bytes.position}  c=${bytes.capacity}  r=${bytes.remaining} size=$size")
+    logger.trace("p=%d  c=%d  r=%d size=%d", bytes.position, bytes.capacity, bytes.remaining, size)
     bytes.limit(bytes.position + size)
     mbb.position(mbb.position + size)
     bytes
