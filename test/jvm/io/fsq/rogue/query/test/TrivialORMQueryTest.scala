@@ -30,6 +30,7 @@ import org.junit.{Before, Test}
 import org.specs2.matcher.{JUnitMustMatchers, MatchersImplicits}
 import scala.collection.JavaConverters.{iterableAsScalaIterableConverter, mapAsJavaMapConverter,
     mapAsScalaMapConverter, seqAsJavaListConverter}
+import scala.math.min
 
 
 case class SimpleRecord(
@@ -1823,7 +1824,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     initial: T
   )(
     expectedResult: T,
-    expectedVisted: Int
+    expectedVisited: Int
   )(
     handler: (T, Iter.Event[SimpleRecord]) => Iter.Command[T]
   ): Future[Unit] = {
@@ -1838,7 +1839,7 @@ class TrivialORMQueryTest extends RogueMongoTest
       }
     }).map(result => {
       result must_== expectedResult
-      visited must_== expectedVisted
+      visited must_== expectedVisited
     })
   }
 
@@ -1852,7 +1853,8 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     // NOTE(jacob): These numbers are dependent upon the behavior of newTestRecord.
     val shortCircuitCount = 3
-    val shortCircuitVisited = 4
+    val visitedMin = 4
+    val shortCircuitVisited = visitedMin
     val shortCircuitFiltered = filteredRecords.take(shortCircuitCount)
 
     val testFuture = asyncQueryExecutor.insertAll(testRecords).flatMap(_ => Future.join(
@@ -1954,7 +1956,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     initial: T
   )(
     expectedResult: T,
-    expectedVisted: Int
+    expectedVisited: Int
   )(
     handler: (T, Iter.Event[SimpleRecord]) => Iter.Command[T]
   ): Unit = {
@@ -1969,7 +1971,7 @@ class TrivialORMQueryTest extends RogueMongoTest
       }
     }).unwrap
     result must_== expectedResult
-    visited must_== expectedVisted
+    visited must_== expectedVisited
   }
 
   @Test
@@ -1983,7 +1985,8 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     // NOTE(jacob): These numbers are dependent upon the behavior of newTestRecord.
     val shortCircuitCount = 3
-    val shortCircuitVisited = 4
+    val visitedMin = 4
+    val shortCircuitVisited = visitedMin
     val shortCircuitFiltered = filteredRecords.take(shortCircuitCount)
 
     // no matching records
@@ -2072,6 +2075,320 @@ class TrivialORMQueryTest extends RogueMongoTest
       case (matched, Iter.Item(record)) => Iter.Continue(matched :+ record)
       case (matched, Iter.EOF) => Iter.Return(matched)
       case (_, Iter.Error(e)) => throw e
+    }
+  }
+
+  def testSingleAsyncIterateBatch[T](
+    query: Query[SimpleRecord.type, SimpleRecord, _],
+    batchSize: Int,
+    initial: T
+  )(
+    expectedResult: T,
+    expectedVisited: Int
+  )(
+    handler: (T, Iter.Event[Seq[SimpleRecord]]) => Iter.Command[T]
+  ): Future[Unit] = {
+    @volatile var visited = 0
+    asyncQueryExecutor.iterateBatch(query, batchSize, initial)({
+      case (cumulative, event) => {
+        event match {
+          case Iter.Item(items) => visited += items.size
+          case Iter.EOF | Iter.Error(_) => ()
+        }
+        handler(cumulative, event)
+      }
+    }).map(result => {
+      result must_== expectedResult
+      visited must_== expectedVisited
+    })
+  }
+
+  @Test
+  def testAsyncIterateBatch: Unit = {
+    val numInserts = 10
+    val testRecords = Seq.tabulate(numInserts)(newTestRecord)
+
+    val filterInts = Set(0, 1)
+    val filteredRecords = testRecords.filter(_.int.map(filterInts.has(_)).getOrElse(false))
+
+    def testBatchSize(batchSize: Int): Future[Unit] = {
+      // NOTE(jacob): These numbers are dependent upon the behavior of newTestRecord.
+      val shortCircuitCount = 3
+      val visitedMin = 4
+      val shortCircuitVisited = {
+        if (batchSize >= visitedMin) {
+          min(batchSize, numInserts)
+        } else if (visitedMin % batchSize == 0) {
+          visitedMin
+        } else {
+          batchSize * (visitedMin / batchSize + 1)
+        }
+      }
+      val shortCircuitFiltered = filteredRecords.take(shortCircuitCount)
+
+      Future.join(
+        // no matching records
+        testSingleAsyncIterateBatch(
+          SimpleRecord.where(_.id eqs new ObjectId),
+          batchSize,
+          0
+        )(
+          0,
+          0
+        ) {
+          case (count, Iter.Item(records)) => Iter.Continue(count + records.size)
+          case (count, Iter.EOF) => Iter.Return(count)
+          case (_, Iter.Error(e)) => throw e
+        },
+
+        // single matching record
+        testSingleAsyncIterateBatch(
+          SimpleRecord.where(_.id eqs testRecords.head.id),
+          batchSize,
+          0
+        )(
+          1,
+          1
+        ) {
+          case (count, Iter.Item(records)) => Iter.Continue(count + records.size)
+          case (count, Iter.EOF) => Iter.Return(count)
+          case (_, Iter.Error(e)) => throw e
+        },
+
+        // all records match
+        testSingleAsyncIterateBatch(SimpleRecord, batchSize, 0)(numInserts, numInserts) {
+          case (count, Iter.Item(records)) => Iter.Continue(count + records.size)
+          case (count, Iter.EOF) => Iter.Return(count)
+          case (_, Iter.Error(e)) => throw e
+        },
+
+        // filter via query vs iterator
+        testSingleAsyncIterateBatch(
+          SimpleRecord.where(_.int in filterInts).orderAsc(_.id),
+          batchSize,
+          Seq.empty[SimpleRecord]
+        )(
+          filteredRecords,
+          filteredRecords.size
+        ) {
+          case (matched, Iter.Item(records)) => Iter.Continue(matched ++ records)
+          case (matched, Iter.EOF) => Iter.Return(matched.sortBy(_.id))
+          case (_, Iter.Error(e)) => throw e
+        },
+
+        testSingleAsyncIterateBatch(
+          SimpleRecord,
+          batchSize,
+          Seq.empty[SimpleRecord]
+        )(
+          filteredRecords,
+          numInserts
+        ) {
+          case (matched, Iter.Item(records)) => {
+            val filtered = records.filter(_.int.map(filterInts.has(_)).getOrElse(false))
+            Iter.Continue(matched ++ filtered)
+          }
+          case (matched, Iter.EOF) => Iter.Return(matched.sortBy(_.id))
+          case (_, Iter.Error(e)) => throw e
+        },
+
+        // iterator filter + short circuit
+        testSingleAsyncIterateBatch(
+          SimpleRecord.orderAsc(_.id),
+          batchSize,
+          Seq.empty[SimpleRecord]
+        )(
+          filteredRecords.take(shortCircuitCount),
+          shortCircuitVisited
+        ) {
+          case (matched, Iter.Item(records)) => {
+            val filtered = records.filter(_.int.map(filterInts.has(_)).getOrElse(false))
+            val newMatched = matched ++ filtered.take(shortCircuitCount - matched.size)
+            if (newMatched.size >= shortCircuitCount) {
+              Iter.Return(newMatched)
+            } else {
+              Iter.Continue(newMatched)
+            }
+          }
+          case (matched, Iter.EOF) => Iter.Return(matched)
+          case (_, Iter.Error(e)) => throw e
+        },
+
+        // reverse ordering
+        testSingleAsyncIterateBatch(
+          SimpleRecord.orderDesc(_.id),
+          batchSize,
+          Seq.empty[SimpleRecord]
+        )(
+          testRecords.reverse,
+          numInserts
+        ) {
+          case (matched, Iter.Item(records)) => Iter.Continue(matched ++ records)
+          case (matched, Iter.EOF) => Iter.Return(matched)
+          case (_, Iter.Error(e)) => throw e
+        }
+      ).unit
+    }
+
+    val testFuture = asyncQueryExecutor.insertAll(testRecords).flatMap(_ => {
+      val batchTestFutures = (1 to numInserts + 1).map(testBatchSize)
+      Future.collect(batchTestFutures)
+    })
+    Await.result(testFuture)
+  }
+
+  def testSingleBlockingIterateBatch[T](
+    query: Query[SimpleRecord.type, SimpleRecord, _],
+    batchSize: Int,
+    initial: T
+  )(
+    expectedResult: T,
+    expectedVisited: Int
+  )(
+    handler: (T, Iter.Event[Seq[SimpleRecord]]) => Iter.Command[T]
+  ): Unit = {
+    var visited = 0
+    val result = blockingQueryExecutor.iterateBatch(query, batchSize, initial)({
+      case (cumulative, event) => {
+        event match {
+          case Iter.Item(items) => visited += items.size
+          case Iter.EOF | Iter.Error(_) => ()
+        }
+        handler(cumulative, event)
+      }
+    }).unwrap
+    result must_== expectedResult
+    visited must_== expectedVisited
+  }
+
+  @Test
+  def testBlockingIterateBatch: Unit = {
+    val numInserts = 10
+    val testRecords = Seq.tabulate(numInserts)(newTestRecord)
+
+    val filterInts = Set(0, 1)
+    val filteredRecords = testRecords.filter(_.int.map(filterInts.has(_)).getOrElse(false))
+
+    def testBatchSize(batchSize: Int): Unit = {
+      // NOTE(jacob): These numbers are dependent upon the behavior of newTestRecord.
+      val shortCircuitCount = 3
+      val visitedMin = 4
+      val shortCircuitVisited = {
+        if (batchSize >= visitedMin) {
+          min(batchSize, numInserts)
+        } else if (visitedMin % batchSize == 0) {
+          visitedMin
+        } else {
+          batchSize * (visitedMin / batchSize + 1)
+        }
+      }
+      val shortCircuitFiltered = filteredRecords.take(shortCircuitCount)
+
+      // no matching records
+      testSingleBlockingIterateBatch(
+        SimpleRecord.where(_.id eqs new ObjectId),
+        batchSize,
+        0
+      )(
+        0,
+        0
+      ) {
+        case (count, Iter.Item(records)) => Iter.Continue(count + records.size)
+        case (count, Iter.EOF) => Iter.Return(count)
+        case (_, Iter.Error(e)) => throw e
+      }
+
+      // single matching record
+      testSingleBlockingIterateBatch(
+        SimpleRecord.where(_.id eqs testRecords.head.id),
+        batchSize,
+        0
+      )(
+        1,
+        1
+      ) {
+        case (count, Iter.Item(records)) => Iter.Continue(count + records.size)
+        case (count, Iter.EOF) => Iter.Return(count)
+        case (_, Iter.Error(e)) => throw e
+      }
+
+      // all records match
+      testSingleBlockingIterateBatch(SimpleRecord, batchSize, 0)(numInserts, numInserts) {
+        case (count, Iter.Item(records)) => Iter.Continue(count + records.size)
+        case (count, Iter.EOF) => Iter.Return(count)
+        case (_, Iter.Error(e)) => throw e
+      }
+
+      // filter via query vs iterator
+      testSingleBlockingIterateBatch(
+        SimpleRecord.where(_.int in filterInts).orderAsc(_.id),
+        batchSize,
+        Seq.empty[SimpleRecord]
+      )(
+        filteredRecords,
+        filteredRecords.size
+      ) {
+        case (matched, Iter.Item(records)) => Iter.Continue(matched ++ records)
+        case (matched, Iter.EOF) => Iter.Return(matched.sortBy(_.id))
+        case (_, Iter.Error(e)) => throw e
+      }
+
+      testSingleBlockingIterateBatch(
+        SimpleRecord,
+        batchSize,
+        Seq.empty[SimpleRecord]
+      )(
+        filteredRecords,
+        numInserts
+      ) {
+        case (matched, Iter.Item(records)) => {
+          val filtered = records.filter(_.int.map(filterInts.has(_)).getOrElse(false))
+          Iter.Continue(matched ++ filtered)
+        }
+        case (matched, Iter.EOF) => Iter.Return(matched.sortBy(_.id))
+        case (_, Iter.Error(e)) => throw e
+      }
+
+      // iterator filter + short circuit
+      testSingleBlockingIterateBatch(
+        SimpleRecord.orderAsc(_.id),
+        batchSize,
+        Seq.empty[SimpleRecord]
+      )(
+        filteredRecords.take(shortCircuitCount),
+        shortCircuitVisited
+      ) {
+        case (matched, Iter.Item(records)) => {
+          val filtered = records.filter(_.int.map(filterInts.has(_)).getOrElse(false))
+          val newMatched = matched ++ filtered.take(shortCircuitCount - matched.size)
+          if (newMatched.size >= shortCircuitCount) {
+            Iter.Return(newMatched)
+          } else {
+            Iter.Continue(newMatched)
+          }
+        }
+        case (matched, Iter.EOF) => Iter.Return(matched)
+        case (_, Iter.Error(e)) => throw e
+      }
+
+      // reverse ordering
+      testSingleBlockingIterateBatch(
+        SimpleRecord.orderDesc(_.id),
+        batchSize,
+        Seq.empty[SimpleRecord]
+      )(
+        testRecords.reverse,
+        numInserts
+      ) {
+        case (matched, Iter.Item(records)) => Iter.Continue(matched ++ records)
+        case (matched, Iter.EOF) => Iter.Return(matched)
+        case (_, Iter.Error(e)) => throw e
+      }
+    }
+
+    blockingQueryExecutor.insertAll(testRecords)
+    for (batchSize <- 1 to numInserts + 1) {
+      testBatchSize(batchSize)
     }
   }
 }

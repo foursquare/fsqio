@@ -330,4 +330,23 @@ class QueryExecutor[
       adapter.iterate(query, initialIterState, deserializer, readPreferenceOpt)(handler)
     }
   }
+
+  def iterateBatch[M <: MetaRecord, R <: Record, State, T](
+    query: Query[M, R, State],
+    batchSize: Int,
+    initialIterState: T,
+    readPreferenceOpt: Option[ReadPreference] = None
+  )(
+    handler: (T, Iter.Event[Seq[R]]) => Iter.Command[T]
+  )(
+    implicit ev: ShardingOk[M, State],
+    ev2: M !<:< MongoDisallowed
+  ): Result[T] = {
+    if (optimizer.isEmptyQuery(query)) {
+      adapter.wrapResult(handler(initialIterState, Iter.EOF).state)
+    } else {
+      val deserializer = serializer.readFromDocument(query.meta, query.select)(_)
+      adapter.iterateBatch(query, batchSize, initialIterState, deserializer, readPreferenceOpt)(handler)
+    }
+  }
 }

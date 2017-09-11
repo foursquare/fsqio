@@ -104,6 +104,19 @@ abstract class MongoClientAdapter[
     cursor: Cursor
   ): Result[T]
 
+  /** A constructor for iterative cursor processors used in find queries. This uses the
+    * lower level cursor abstraction to allow short-circuiting consumption of the entire
+    * cursor.
+    */
+  protected def iterateBatchProcessor[R <: Record, T](
+    initialIterState: T,
+    deserializer: Document => R,
+    batchSize: Int,
+    handler: (T, Iter.Event[Seq[R]]) => Iter.Command[T]
+  )(
+    cursor: Cursor
+  ): Result[T]
+
   protected def findImpl[T](
     processor: Cursor => Result[T]
   )(
@@ -627,6 +640,23 @@ abstract class MongoClientAdapter[
       "find",
       query,
       None,
+      readPreferenceOpt
+    )
+  }
+
+  def iterateBatch[M <: MetaRecord, R <: Record, T](
+    query: Query[M, R, _],
+    batchSize: Int,
+    initialIterState: T,
+    deserializer: Document => R,
+    readPreferenceOpt: Option[ReadPreference]
+  )(
+    handler: (T, Iter.Event[Seq[R]]) => Iter.Command[T]
+  ): Result[T] = {
+    queryRunner(iterateBatchProcessor(initialIterState, deserializer, batchSize, handler))(
+      "find",
+      query,
+      Some(batchSize),
       readPreferenceOpt
     )
   }

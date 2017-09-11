@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit
 import org.bson.BsonValue
 import org.bson.conversions.Bson
 import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
 
 
@@ -183,6 +184,51 @@ class BlockingMongoClientAdapter[
       } else {
         iterState = handler(iterState, Iter.EOF).state
         continue = false
+      }
+    }
+
+    iterState
+  }
+
+  override protected def iterateBatchProcessor[R <: Record, T](
+    initialIterState: T,
+    deserializer: Document => R,
+    batchSize: Int,
+    handler: (T, Iter.Event[Seq[R]]) => Iter.Command[T]
+  )(
+    cursor: Cursor
+  ): BlockingResult[T] = {
+    var iterState = initialIterState
+    var continue = true
+    val batchBuffer = new ArrayBuffer[R]
+    val iterator = cursor.iterator
+
+    while (continue) {
+      val batchTry = Try {
+        batchBuffer.clear()
+        while (iterator.hasNext && batchBuffer.length < batchSize) {
+          batchBuffer += deserializer(iterator.next())
+        }
+        batchBuffer
+      }
+
+      batchTry match {
+        case Success(Seq()) => {
+          iterState = handler(iterState, Iter.EOF).state
+          continue = false
+        }
+        case Success(records) => handler(iterState, Iter.Item(records)) match {
+          case Iter.Continue(newIterState) => iterState = newIterState
+          case Iter.Return(finalState) => {
+            iterState = finalState
+            continue = false
+          }
+        }
+        case Failure(exception: Exception) => {
+          iterState = handler(iterState, Iter.Error(exception)).state
+          continue = false
+        }
+        case Failure(throwable) => throw throwable
       }
     }
 

@@ -11,11 +11,12 @@ import io.fsq.common.scala.Identity._
 import io.fsq.rogue.{Iter, Query, RogueException}
 import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
 import io.fsq.rogue.util.QueryUtilities
-import java.util.{List => JavaList}
+import java.util.{Iterator => JavaIterator, List => JavaList}
 import java.util.concurrent.TimeUnit
 import org.bson.BsonValue
 import org.bson.conversions.Bson
 import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
 
 
@@ -222,6 +223,61 @@ class AsyncMongoClientAdapter[
     }
   }
 
+  private def newIterateBatchCursorCallback[R <: Record, T](
+    initialIterState: T,
+    deserializer: Document => R,
+    batchSize: Int,
+    handler: (T, Iter.Event[Seq[R]]) => Iter.Command[T]
+  )(
+    resultCallback: SingleResultCallback[T],
+    batchCursor: AsyncBatchCursor[Document]
+  ): SingleResultCallback[JavaList[Document]] = new SingleResultCallback[JavaList[Document]] {
+    @volatile var iterState = initialIterState
+    val batchBuffer = new ArrayBuffer[R]
+
+    def batchDeserializer(iterator: JavaIterator[Document]): Seq[R] = {
+      batchBuffer.clear()
+      while (iterator.hasNext) {
+        batchBuffer += deserializer(iterator.next())
+      }
+      batchBuffer
+    }
+
+    override def onResult(maybeBatch: JavaList[Document], throwable: Throwable): Unit = {
+      (Option(maybeBatch), Option(throwable)) match {
+        case (_, Some(exception: Exception)) => {
+          resultCallback.onResult(handler(iterState, Iter.Error(exception)).state, null)
+        }
+        case (_, Some(throwable)) => resultCallback.onResult(iterState, throwable)
+
+        case (None, None) => resultCallback.onResult(handler(iterState, Iter.EOF).state, null)
+
+        case (Some(batch), None) => {
+          Try(batchDeserializer(batch.iterator)) match {
+            case Success(Seq()) => {
+              resultCallback.onResult(handler(iterState, Iter.EOF).state, null)
+            }
+            case Success(records) => handler(iterState, Iter.Item(records)) match {
+              case Iter.Continue(newIterState) => {
+                iterState = newIterState
+                batchCursor.next(this)
+              }
+              case Iter.Return(finalState) => {
+                resultCallback.onResult(finalState, null)
+              }
+            }
+            case Failure(exception: Exception) => {
+              resultCallback.onResult(handler(iterState, Iter.Error(exception)).state, null)
+            }
+            case Failure(throwable) => {
+              resultCallback.onResult(iterState, throwable)
+            }
+          }
+        }
+      }
+    }
+  }
+
   private def baseIterationProcessor[CursorResult, R <: Record, T](
     initialIterState: T,
     handler: (T, Iter.Event[R]) => Iter.Command[T],
@@ -258,6 +314,23 @@ class AsyncMongoClientAdapter[
       initialIterState,
       handler,
       newIterateCursorCallback(initialIterState, deserializer, handler)
+    )(
+      cursor
+    )
+  }
+
+  override protected def iterateBatchProcessor[R <: Record, T](
+    initialIterState: T,
+    deserializer: Document => R,
+    batchSize: Int,
+    handler: (T, Iter.Event[Seq[R]]) => Iter.Command[T]
+  )(
+    cursor: Cursor
+  ): Result[T] = {
+    baseIterationProcessor(
+      initialIterState,
+      handler,
+      newIterateBatchCursorCallback(initialIterState, deserializer, batchSize, handler)
     )(
       cursor
     )
