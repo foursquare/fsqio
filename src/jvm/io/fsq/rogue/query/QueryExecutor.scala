@@ -278,9 +278,7 @@ class QueryExecutor[
     if (optimizer.isEmptyQuery(query)) {
       adapter.wrapResult(None)
     } else {
-      def deserializer(document: Document): R = {
-        serializer.readFromDocument(query.query.meta, query.query.select)(document)
-      }
+      val deserializer = serializer.readFromDocument(query.query.meta, query.query.select)(_)
       adapter.findOneAndUpdate(deserializer)(query, returnNew = returnNew, upsert = false, Some(writeConcern))
     }
   }
@@ -310,9 +308,7 @@ class QueryExecutor[
     if (optimizer.isEmptyQuery(query)) {
       adapter.wrapResult(None)
     } else {
-      def deserializer(document: Document): R = {
-        serializer.readFromDocument(query.meta, query.select)(document)
-      }
+      val deserializer = serializer.readFromDocument(query.meta, query.select)(_)
       adapter.findOneAndDelete(deserializer)(query, Some(writeConcern))
     }
   }

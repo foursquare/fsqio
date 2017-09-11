@@ -1546,7 +1546,7 @@ class TrivialORMQueryTest extends RogueMongoTest
               Some(otherRecord),
               Some(updatedReturnNewTestRecord)
             ))
-          _ <- asyncQueryExecutor.count(SimpleRecord.where(_.boolean eqs true)).map(_ must_== 1L)
+          _ <- asyncQueryExecutor.count(SimpleRecord.where(_.boolean eqs true)).map(_ must_== 1)
         } yield ()
       )
     })
@@ -1599,7 +1599,7 @@ class TrivialORMQueryTest extends RogueMongoTest
       Some(otherRecord),
       Some(updatedReturnNewTestRecord)
     )
-    blockingQueryExecutor.count(SimpleRecord.where(_.boolean eqs true)).unwrap must_== 1L
+    blockingQueryExecutor.count(SimpleRecord.where(_.boolean eqs true)).unwrap must_== 1
 
     // updates fail on modifying _id
     try {
