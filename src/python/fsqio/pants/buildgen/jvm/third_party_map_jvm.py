@@ -166,6 +166,9 @@ jvm_third_party_map = {
     'jayway': {
       'restassured': 'restassured'
     },
+    'mapzen': {
+      'jpostal': 'jpostal',
+    },
     'maxmind': 'geoip',
     'mongodb': {
       'DEFAULT': 'mongodb-drivers',

@@ -19,7 +19,6 @@ import subprocess
 from pants.base.build_environment import get_buildroot
 from pants.base.exceptions import TaskError
 from pants.base.workunit import WorkUnitLabel
-from pants.util.dirutil import safe_mkdir
 from pants.util.memo import memoized_property
 
 from fsqio.pants.spindle.tasks.spindle_task import SpindleTask

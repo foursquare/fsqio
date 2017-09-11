@@ -3,8 +3,9 @@
 
 from __future__ import absolute_import, print_function
 
-from jaeger_client import Config
 import logging
+
+from jaeger_client import Config
 import opentracing
 
 from fsqio.pants.tracing.span_reporter import SpanReporter
