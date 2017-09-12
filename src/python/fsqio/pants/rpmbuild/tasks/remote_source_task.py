@@ -14,7 +14,7 @@ from __future__ import (
 import os
 
 from pants.task.task import Task
-from pants.util.dirutil import relative_symlink, safe_mkdir
+from pants.util.dirutil import relative_symlink, safe_delete, safe_mkdir
 
 from fsqio.pants.rpmbuild.subsystems.remote_source_fetcher import RemoteSourceFetcher
 from fsqio.pants.rpmbuild.targets.remote_source import RemoteSource
@@ -29,7 +29,7 @@ class RemoteSourceTask(Task):
 
   @classmethod
   def product_types(cls):
-    return ['remote_files']
+    return ['remote_files', 'runtime_classpath']
 
   # Create results_dirs but do not cache them. This allows a stable file path for adding to classpath but each user
   # must bootstrap individually.
@@ -56,6 +56,8 @@ class RemoteSourceTask(Task):
         file_namez = os.listdir(remote_source.path) if remote_source.extracted else [os.path.basename(remote_source.path)]
         for filename in file_namez:
           symlink_file = os.path.join(vt.results_dir, filename)
-          if not vt.valid or not os.path.isfile(symlink_file):
+          # This will be false if the symlink or the downloaded blob is missing.
+          if not vt.valid or not os.path.isfile(os.path.realpath(symlink_file)):
+            safe_delete(symlink_file)
             relative_symlink(os.path.join(file_dir, filename), symlink_file)
         self.context.products.get('remote_files').add(vt.target, vt.results_dir).extend(file_namez)
