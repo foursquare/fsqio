@@ -8,7 +8,7 @@ import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneA
 import io.fsq.rogue.{Iter, Query, RogueException}
 import io.fsq.rogue.util.QueryUtilities
 import java.util.concurrent.TimeUnit
-import org.bson.BsonValue
+import org.bson.{BsonBoolean, BsonDocument, BsonValue}
 import org.bson.conversions.Bson
 import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.mutable.ArrayBuffer
@@ -142,6 +142,12 @@ class BlockingMongoClientAdapter[
   ): BlockingResult[T] = {
     collection.distinct(fieldName, filter, classOf[BsonValue]).forEach(accumulator)
     resultAccessor
+  }
+
+  override protected def explainProcessor(cursor: Cursor): BlockingResult[String] = {
+    collectionFactory.documentToString(
+      cursor.modifiers(new BsonDocument("$explain", BsonBoolean.TRUE)).first()
+    )
   }
 
   override protected def forEachProcessor[T](

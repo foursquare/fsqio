@@ -13,7 +13,7 @@ import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
 import io.fsq.rogue.util.QueryUtilities
 import java.util.{Iterator => JavaIterator, List => JavaList}
 import java.util.concurrent.TimeUnit
-import org.bson.BsonValue
+import org.bson.{BsonBoolean, BsonDocument, BsonValue}
 import org.bson.conversions.Bson
 import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.mutable.ArrayBuffer
@@ -152,6 +152,21 @@ class AsyncMongoClientAdapter[
       }
     }
     collection.distinct(fieldName, filter, classOf[BsonValue]).forEach(accumulator, queryCallback)
+    resultCallback.result
+  }
+
+  override protected def explainProcessor(cursor: Cursor): Result[String] = {
+    val resultCallback = callbackFactory.newCallback[String]
+    val queryCallback = new SingleResultCallback[Document] {
+      override def onResult(explainDocument: Document, throwable: Throwable): Unit = {
+        if (throwable !=? null) {
+          resultCallback.onResult(null, throwable)
+        } else {
+          resultCallback.onResult(collectionFactory.documentToString(explainDocument), null)
+        }
+      }
+    }
+    cursor.modifiers(new BsonDocument("$explain", BsonBoolean.TRUE)).first(queryCallback)
     resultCallback.result
   }
 

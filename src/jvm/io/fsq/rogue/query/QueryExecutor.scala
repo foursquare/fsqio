@@ -30,6 +30,10 @@ class QueryExecutor[
 
   def defaultWriteConcern: WriteConcern = adapter.queryHelpers.config.defaultWriteConcern
 
+  def explain[M <: MetaRecord](query: Query[M, _, _]): Result[String] = {
+    adapter.explain(query)
+  }
+
   def count[M <: MetaRecord, State](
     query: Query[M, _, State],
     readPreferenceOpt: Option[ReadPreference] = None

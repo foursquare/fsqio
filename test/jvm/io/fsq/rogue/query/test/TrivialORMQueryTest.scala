@@ -372,6 +372,25 @@ class TrivialORMQueryTest extends RogueMongoTest
     Await.result(countFuture)
   }
 
+  // TODO(jacob): This is a very dumb check currently, as the output depends on the mongo
+  //    server version used, the db name for this test run, execution time for this query,
+  //    etc. Write a more robust check that actually verifies expected structure while
+  //    handling variability between runs.
+  def verifyExplainJson(json: String): Unit = {
+    json must_!= ""
+    json must_!= (new Document).toJson
+  }
+
+  @Test
+  def testAsyncExplain: Unit = {
+    Await.result(asyncQueryExecutor.explain(SimpleRecord).map(verifyExplainJson))
+  }
+
+  @Test
+  def testBlockingExplain: Unit = {
+    verifyExplainJson(blockingQueryExecutor.explain(SimpleRecord))
+  }
+
   def testSingleAsyncSave(record: SimpleRecord): Future[Unit] = {
     for {
       _ <- asyncQueryExecutor.save(record)

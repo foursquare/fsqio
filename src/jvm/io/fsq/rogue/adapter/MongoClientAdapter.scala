@@ -82,6 +82,9 @@ abstract class MongoClientAdapter[
     filter: Bson
   ): Result[T]
 
+  /** A cursor processor used for explain queries. */
+  protected def explainProcessor(cursor: Cursor): Result[String]
+
   /** A constructor for exhaustive cursor processors used in find queries. Essentially
     * just calls cursor.forEach.
     */
@@ -203,6 +206,16 @@ abstract class MongoClientAdapter[
     filter: Bson,
     options: FindOneAndDeleteOptions
   ): Result[Option[R]]
+
+  def explain[M <: MetaRecord](query: Query[M, _, _]): Result[String] = {
+    queryRunner(explainProcessor)(
+      "find",
+      query,
+      batchSizeOpt = None,
+      readPreferenceOpt = None,
+      setMaxTimeMS = true
+    )
+  }
 
   def count[
     M <: MetaRecord
