@@ -957,7 +957,7 @@ jar_library(
   ]
 )
 
-scalding_ver = '0.17.2'
+scalding_ver = '0.17.2-fs-1'
 jar_library(
   name = 'scalding',
   tags = [
