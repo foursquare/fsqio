@@ -445,8 +445,7 @@ jvm_third_party_map = {
       'geojson': 'gt-geojson',
       'DEFAULT': 'gt-shapefile'
     },
-    'hamcrest': 'junit',
-    'hamcrest-lib': 'hamcrest-lib',
+    'hamcrest': 'hamcrest-core',
     'I0Itec': {
       'zkclient': 'I0Itec-zkclient',
     },
