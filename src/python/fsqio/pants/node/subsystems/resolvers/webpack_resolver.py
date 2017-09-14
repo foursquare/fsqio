@@ -88,4 +88,4 @@ class WebPackResolver(NpmResolver):
       # Modify the `version` field in npm-shrinkwrap.json with the updated path
       for dep in target.dependencies:
         if dep.package_name in npm_shrinkwrap['dependencies']:
-          npm_shrinkwrap['dependencies'][dep.package_name]['version'] = version_or_path(dep)
+          npm_shrinkwrap['dependencies'][dep.package_name]['resolved'] = version_or_path(dep)
