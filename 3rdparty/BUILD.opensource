@@ -33,6 +33,7 @@ managed_jar_dependencies(
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-core', rev = '2.6.5'),
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-core-asl', rev = '2.6.5'),
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-databind', rev = '2.6.5'),
+    ':joda-time',
     ':logback',
     ':mockito',
     ':mongodb-core',
