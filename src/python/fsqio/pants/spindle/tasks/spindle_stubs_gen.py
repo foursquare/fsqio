@@ -44,8 +44,17 @@ class SpindleStubsGen(SpindleGen):
     )
 
   @classmethod
+  def product_types(cls):
+    return ['stubs']
+
+  @classmethod
+  def prepare(cls, options, round_manager):
+    super(SpindleStubsGen, cls).prepare(options, round_manager)
+    round_manager.require('spindle_binary')
+
+  @classmethod
   def implementation_version(cls):
-    return super(SpindleStubsGen, cls).implementation_version() + [('SpindleStubsGen', 2)]
+    return super(SpindleStubsGen, cls).implementation_version() + [('SpindleStubsGen', 3)]
 
   @memoized_property
   def java_template(self):
