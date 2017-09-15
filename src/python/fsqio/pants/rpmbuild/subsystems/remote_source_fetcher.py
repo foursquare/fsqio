@@ -106,7 +106,7 @@ class RemoteSourceFetcher(object):
         archiver = archiver_for_path(fetched)
         archiver.extract(fetched, tmp_root)
         os.rename(tmp_root, outdir)
-    return os.path.join(outdir, self._namespace)
+    return os.path.join(outdir)
 
   @memoized_property
   def path(self):
