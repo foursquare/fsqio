@@ -42,7 +42,7 @@ class SpindleTask(NailgunTask):
 
   @classmethod
   def implementation_version(cls):
-    return super(SpindleTask, cls).implementation_version() + [('SpindleTask', 2.1114)]
+    return super(SpindleTask, cls).implementation_version() + [('SpindleTask', 3)]
 
   @property
   def cache_target_dirs(self):

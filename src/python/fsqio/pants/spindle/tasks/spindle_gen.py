@@ -79,7 +79,7 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
 
   @classmethod
   def implementation_version(cls):
-    return super(SpindleGen, cls).implementation_version() + [('SpindleGen', 1)]
+    return super(SpindleGen, cls).implementation_version() + [('SpindleGen', 2)]
 
   @classmethod
   def prepare(cls, options, round_manager):
