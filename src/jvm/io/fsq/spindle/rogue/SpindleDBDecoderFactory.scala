@@ -42,9 +42,14 @@ case class SpindleDBDecoder(
   }
 }
 
-trait SpindleDBObject extends DBObject {
-  def record: UntypedRecord
+class SpindleDBObject(val record: UntypedRecord, underlying: DBObject) extends DBObject {
+
   override def isPartialObject(): Boolean = false
+  override def markAsPartialObject(): Unit = {
+    underlying.markAsPartialObject()
+  }
+
+  override def get(key: String): Object = underlying.get(key)
 
   override def put(key: String, dv: Object): Object = throw new UnsupportedOperationException()
   override def putAll(o: BSONObject): Unit = throw new UnsupportedOperationException()
@@ -54,24 +59,4 @@ trait SpindleDBObject extends DBObject {
   override def containsKey(s: String): Boolean = throw new UnsupportedOperationException()
   override def containsField(s: String): Boolean = throw new UnsupportedOperationException()
   override def keySet(): java.util.Set[String] = throw new UnsupportedOperationException()
-}
-
-case class SpindleNativeDBObject(record: UntypedRecord, errorMessage: String, code: Int) extends SpindleDBObject {
-  override def markAsPartialObject(): Unit = {}
-  override def get(key: String): Object = {
-    if ("$err" == key) {
-      errorMessage
-    } else if ("code" == key) {
-      code: java.lang.Integer
-    } else {
-      null
-    }
-  }
-}
-
-case class SpindleMongoDBObject(record: UntypedRecord, dbo: DBObject) extends SpindleDBObject {
-  override def markAsPartialObject(): Unit = {
-    dbo.markAsPartialObject()
-  }
-  override def get(key: String): Object = dbo.get(key)
 }

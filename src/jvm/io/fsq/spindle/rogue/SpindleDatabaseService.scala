@@ -40,7 +40,7 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
       val dbo: DBObject = decoder.decode(is, null)
       protocol.setSource(dbo)
       record.read(protocol)
-      SpindleMongoDBObject(record, dbo)
+      new SpindleDBObject(record, dbo)
     }
   }
 
