@@ -92,26 +92,9 @@ trait QueryExecutor[MB, RB] extends Rogue {
   }
 
   def fetchOne[M <: MB, R, State, S2](query: Query[M, R, State],
-                                      readPreference: Option[ReadPreference] = None,
-                                      masterFallback: Boolean = false)
+                                      readPreference: Option[ReadPreference] = None)
                                  (implicit ev1: AddLimit[State, S2], ev2: ShardingOk[M, S2], ev3: M !<:< MongoDisallowed): Option[R] = {
-
-    val initialResult = fetch(query.limit(1), readPreference).headOption
-
-    val needToRetry = {
-      masterFallback && initialResult.isEmpty && !readPreference.exists(_ == ReadPreference.primary)
-    }
-
-    if (needToRetry) {
-      QueryHelpers.logger.logCounter(s"rogue.executor.fetchOne.${query.collectionName}.masterFallback.attempt")
-      val result = fetch(query.limit(1), Some(ReadPreference.primary)).headOption
-      result.foreach(_ => {
-        QueryHelpers.logger.logCounter(s"rogue.executor.fetchOne.${query.collectionName}.masterFallback.success")
-      })
-      result
-    } else {
-      initialResult
-    }
+    fetch(query.limit(1), readPreference).headOption
   }
 
   def foreach[M <: MB, R, State](query: Query[M, R, State],
