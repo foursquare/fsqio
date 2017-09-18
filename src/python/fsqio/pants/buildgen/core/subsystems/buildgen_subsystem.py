@@ -65,6 +65,12 @@ class BuildgenSubsystem(object):
         type=bool,
         help='When True, buildgen will rewrite BUILD files in-place, otherwise it will print a diff to stdout.'
       )
+      register(
+        '--fail-on-diff',
+        default=False,
+        type=bool,
+        help='When True, buildgen will exit non 0. This is used for failing builds in CI.',
+      )
 
     def create(self):
       options = self.get_options()
@@ -74,19 +80,24 @@ class BuildgenSubsystem(object):
         options.target_whitelist,
         options.managed_dependency_aliases,
         options.buildgen_target_bags,
-        options.dry_run
+        options.dry_run,
+        options.fail_on_diff,
       )
 
-  def __init__(self,
-               source_dirs,
-               test_dirs,
-               target_whitelist,
-               managed_dependency_aliases,
-               buildgen_target_bags,
-               dry_run):
+  def __init__(
+    self,
+    source_dirs,
+    test_dirs,
+    target_whitelist,
+    managed_dependency_aliases,
+    buildgen_target_bags,
+    dry_run,
+    fail_on_diff,
+  ):
     self.source_dirs = source_dirs
     self.test_dirs = test_dirs
     self.target_alias_whitelist = target_whitelist
     self.managed_dependency_aliases = managed_dependency_aliases
     self.buildgen_target_bags = buildgen_target_bags
     self.dry_run = dry_run
+    self.fail_on_diff = fail_on_diff

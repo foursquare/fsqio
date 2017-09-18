@@ -100,7 +100,11 @@ class BuildgenTask(BuildgenBase):
     for address in computed_dep_addresses:
       manipulator.add_dependency(address)
 
-    manipulator.write(dry_run=self.dryrun, use_colors=self.get_options().colors)
+    manipulator.write(
+      dry_run=self.dryrun,
+      use_colors=self.get_options().colors,
+      fail_on_diff=self.get_options().fail_on_diff
+    )
 
   def execute(self):
     def task_targets():

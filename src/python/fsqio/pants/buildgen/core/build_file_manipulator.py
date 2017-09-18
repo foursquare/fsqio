@@ -424,7 +424,7 @@ class BuildFileManipulator(object):
                                   lineterm='')
     return list(diff_generator)
 
-  def write(self, dry_run=True, use_colors=True):
+  def write(self, dry_run=True, use_colors=True, fail_on_diff=False):
     """Write out the changes made to the BUILD file, and print the diff to stderr.
 
     :param dry_run: Don't actually write out the BUILD file, but do print the diff to stderr.
@@ -458,6 +458,12 @@ class BuildFileManipulator(object):
     diff_lines = self.diff_lines()
     if diff_lines:
       sys.stderr.write(terminal_msg(diff_lines))
+      # In CI we want the option to fail the build if buildgen writes a diff.
+      # Note: This will write out the diff for the first incorrect build file and then exit. There may be other changes
+      # which will be picked up if --fail-on-diff is not passed.
+      if fail_on_diff:
+        print("Buildgen wrote a diff. Run `./fs bg` locally and commit the buildfile diff with your changes.")
+        sys.exit(1)
       if not dry_run:
         with open(self.build_file.full_path, 'w') as f:
           f.write('\n'.join(self.build_file_lines()))
