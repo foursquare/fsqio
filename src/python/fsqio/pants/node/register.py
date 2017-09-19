@@ -8,7 +8,7 @@ from pants.goal.goal import Goal
 from pants.goal.task_registrar import TaskRegistrar as task
 
 from fsqio.pants.node.subsystems.resolvers.webpack_resolver import WebPackResolver
-from fsqio.pants.node.targets.webpack_module import WebPackModule
+from fsqio.pants.node.targets.webpack_module import NpmResource, WebPackModule
 from fsqio.pants.node.tasks.webpack import WebPack
 from fsqio.pants.node.tasks.webpack_bundle import WebPackBundle
 from fsqio.pants.node.tasks.webpack_resolve import WebPackResolve
@@ -20,6 +20,7 @@ def build_file_aliases():
     targets={
       'webpack_module': WebPackModule,
       'webpack_test': WebPackTest,
+      'npm_resource': NpmResource,
     },
   )
 

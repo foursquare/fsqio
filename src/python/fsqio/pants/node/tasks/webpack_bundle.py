@@ -18,6 +18,7 @@ from pants.fs.archive import ZipArchiver
 from pants.task.task import Task
 from pants.util.dirutil import safe_mkdir
 
+from fsqio.pants.node.targets.webpack_module import NpmResource
 from fsqio.pants.node.tasks.webpack import WebPack
 
 
@@ -40,12 +41,13 @@ class WebPackBundle(Task):
     targets = [t for t in self.context.targets() if isinstance(t, WebPack.Resources)]
     for target in targets:
       concrete_target = target.concrete_derived_from
-      bundle_dir = os.path.join(self.get_options().pants_distdir, 'webpack-bundles', concrete_target.id)
+      if not isinstance(concrete_target, NpmResource):
+        bundle_dir = os.path.join(self.get_options().pants_distdir, 'webpack-bundles', concrete_target.id)
 
-      safe_mkdir(bundle_dir, clean=True)
-      archiver = ZipArchiver(ZIP_DEFLATED, extension='zip')
-      archiver.create(
-        basedir=target.target_base,
-        outdir=bundle_dir,
-        name=concrete_target.id,
-      )
+        safe_mkdir(bundle_dir, clean=True)
+        archiver = ZipArchiver(ZIP_DEFLATED, extension='zip')
+        archiver.create(
+          basedir=target.target_base,
+          outdir=bundle_dir,
+          name=concrete_target.id,
+        )

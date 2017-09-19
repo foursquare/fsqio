@@ -22,7 +22,7 @@ from pants.contrib.node.tasks.node_paths import NodePaths
 from pants.contrib.node.tasks.node_task import NodeTask
 from pants.util.contextutil import pushd
 
-from fsqio.pants.node.targets.webpack_module import WebPackModule
+from fsqio.pants.node.targets.webpack_module import NpmResource, WebPackModule
 
 
 class WebPack(NodeTask, SimpleCodegenTask):
@@ -89,7 +89,7 @@ class WebPack(NodeTask, SimpleCodegenTask):
     return WebPack.Resources
 
   def is_gentarget(self, target):
-    return isinstance(target, WebPackModule)
+    return isinstance(target, WebPackModule) and not isinstance(target, NpmResource)
 
   def execute_codegen(self, target, target_workdir):
     node_paths = self.context.products.get_data(NodePaths)

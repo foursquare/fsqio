@@ -29,3 +29,6 @@ class WebPackModule(NodeModule):
         "WebPackModules are required to have a 'npm-shrinkwrap.json' file in sources.",
       )
     return npm_json
+
+class NpmResource(WebPackModule):
+  pass
