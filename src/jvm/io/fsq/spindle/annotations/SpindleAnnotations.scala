@@ -2,22 +2,29 @@
 
 package io.fsq.spindle.annotations
 
+import java.util.regex.Pattern
 import org.json4s.{DefaultFormats, JField, JObject}
 import org.json4s.native.JsonMethods.parse
+import org.reflections.scanners.ResourcesScanner
+import org.reflections.util.{ClasspathHelper, ConfigurationBuilder}
+import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
 import scala.io.Source
+
 
 /*
 Use this to read the json produced when spindle is run with --write_annotations_json.
 This provides a faster runtime alternative to reflection for enumerating classes & annotations.
 */
 object SpindleAnnotations {
-  // note: must agree with INDEX_NAME in spindle_rollup_task.py
-  val INDEX_NAME = "/json-annotation.index"
-
   /* @return resource paths for json annotations (as read from index). */
-  def paths(): Iterator[String] =
-    Source.fromInputStream(getClass.getResourceAsStream(INDEX_NAME)).getLines
+  def paths(): Iterator[String] = {
+    val reflections = new ConfigurationBuilder()
+      .addUrls(ClasspathHelper.forManifest())
+      .setScanners(new ResourcesScanner)
+      .build()
+    reflections.getResources(Pattern.compile(".+\\.gen\\..+\\.json$")).asScala.toIterator
+  }
 
   /* @return a JObject per path in this.paths() by parsing resources. */  
   def jsons(): Iterator[JObject] = for (path <- paths()) yield {

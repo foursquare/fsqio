@@ -5,5 +5,6 @@ scala_library(
   sources = globs('*.scala'),
   dependencies = [
     '3rdparty:json4s',
+    '3rdparty:reflections',
   ],
 )

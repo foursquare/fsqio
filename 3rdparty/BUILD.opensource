@@ -612,6 +612,12 @@ jar_library(
 )
 
 jar_library(
+  name = 'jsr305',
+  tags = ['opensource'],
+  jars = [jar(org = 'com.google.code.findbugs', name = 'jsr305', rev = '2.0.3')],
+)
+
+jar_library(
   name = 'jts',
   tags = [
     'opensource',
@@ -836,7 +842,9 @@ jar_library(
   # The reflections library optionally depends on servlet but we use the api that needs it. Forcing the dep here.
   # Pants loads classpaths into the manifest of synthetic jars and reflections needs servlet to take advantage of that.
   dependencies = [
+    ':jsr305',
     ':servlet',
+    ':slf4j-api',
   ],
 )
 

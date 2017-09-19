@@ -31,8 +31,6 @@ from fsqio.pants.spindle.targets.spindle_thrift_library import SpindleThriftLibr
 from fsqio.pants.spindle.tasks.spindle_task import SpindleTask
 
 
-# note: must agree with INDEX_NAME in SpindleAnnotations.scala
-INDEX_NAME = 'json-annotation.index'
 NAMESPACE_PARSER = re.compile(r'^\s*namespace\s+([^\s]+)\s+([^\s]+)\s*$')
 
 class SpindleGen(SpindleTask, SimpleCodegenTask):
@@ -132,10 +130,17 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
 
   @memoized_property
   def _resolved_runtime_deps(self):
+    """Returns a twitter.common.collections.orderedset.OrderedSet."""
     # Cache resolution of runtime deps, since all spindle targets share them.
     return self.resolve_deps(self.get_options().runtime_dependency)
 
   def synthetic_target_extra_dependencies(self, target, target_workdir):
+    """Bundle in spindle common and, optionally, json annotations."""
+    if self._annotations:
+      json_files = [path for path in os.listdir(target_workdir) if path.endswith('.json')]
+      if json_files:
+        return self._resolved_runtime_deps | \
+          [self.make_json_resource(os.path.relpath(target_workdir, get_buildroot()), json_files)]
     return self._resolved_runtime_deps
 
   @staticmethod
@@ -186,42 +191,15 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
             synth_targets.append(
               self._inject_synthetic_target(vt.target, vt.results_dir)
             )
-        if self._annotations:
-          self.json_rollup(synth_targets)
 
-  def json_rollup(self, targets):
-    "build json index file & provide json Resources target"
-    json_paths = [
-      os.path.relpath(os.path.join(dir_, fname), self.workdir)
-      for target in targets
-      for dir_, _, files in os.walk(target.address.spec_path)
-      for fname in files
-      if fname.endswith('.json')
-    ]
-    synthetic = self.make_json_resource(json_paths)
-    self.write_index(json_paths)
-    self.connect_target(targets, synthetic)
-
-  def write_index(self, paths, fname=INDEX_NAME):
-    "Write text index of json paths at workdir/fname."
-    with open(os.path.join(self.workdir, fname), 'w') as f:
-      for path in paths:
-        f.write(path + '\n')
-
-  def connect_target(self, targets, synthetic):
-    """Set synthetic task as dependency for targets.
-    This may seem backwards because we're consuming the targets to created synthetic, but we
-    do it so that downstream code includes our synthetic resource in their classpath.
-    """
-    for target in targets:
-      self.context.build_graph.inject_dependency(target.address, synthetic.address)
-
-  def make_json_resource(self, paths):
-    "Return synthetic Resources target that provides our json in dependent classpaths."
+  def make_json_resource(self, dirname, sources):
+    """Return synthetic Resources target that provides the json annotations for a generated ScalaLibrary"""
+    if os.path.isabs(dirname) or any(os.path.isabs(s) for s in sources):
+      raise TaskError("Abs paths here will cause cross-machine build invalidation")
     return self.context.add_new_target(
-      address=Address(os.path.relpath(self.workdir, get_buildroot()), 'spindle'),
+      address=Address(dirname, 'json'),
       target_type=Resources,
-      sources=[INDEX_NAME] + paths,
+      sources=sorted(sources),
     )
 
   # Passing the intermediate 'workdir' here is a break with the upstream API. But the performance hit of regenerating
