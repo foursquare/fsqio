@@ -4,6 +4,7 @@ package io.fsq.hfile.reader.concrete.mmap
 
 import io.fsq.common.logging.Logger
 import io.fsq.common.scala.Identity._
+import java.lang.{Long => JLong}
 import java.nio.ByteBuffer
 import java.util.Arrays
 
@@ -21,7 +22,7 @@ class DataIndex(
     extends Logger {
   val indexOffsets = new Array[DataBlockInfo](blockCount)
 
-  val MidKeyMetaDataSize = Bytes.SizeOfLong + (2 * Bytes.SizeOfInt)
+  val MidKeyMetaDataSize = JLong.BYTES + (2 * Integer.BYTES)
 
   // check for magic which signals the start of the DataIndex
   val magic = new Array[Byte](8)
@@ -95,7 +96,7 @@ class DataIndex(
     var heapSize = 0L
 
     heapSize += ClassSize.align(
-      (6 * ClassSize.REFERENCE) + (3 * Bytes.SizeOfInt) + ClassSize.OBJECT
+      (6 * ClassSize.REFERENCE) + (3 * Integer.BYTES) + ClassSize.OBJECT
     )
 
     heapSize += MidKeyMetaDataSize
@@ -111,11 +112,11 @@ class DataIndex(
     }
 
     heapSize += ClassSize.align(
-      ClassSize.ARRAY + (blockCount * Bytes.SizeOfLong)
+      ClassSize.ARRAY + (blockCount * JLong.BYTES)
     )
 
     heapSize += ClassSize.align(
-      ClassSize.ARRAY + (blockCount * Bytes.SizeOfInt)
+      ClassSize.ARRAY + (blockCount * Integer.BYTES)
     )
 
     ClassSize.align(heapSize)

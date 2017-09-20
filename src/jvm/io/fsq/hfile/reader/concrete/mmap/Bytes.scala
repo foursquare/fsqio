@@ -10,9 +10,6 @@ import java.util.Comparator
 import org.apache.hadoop.io.WritableComparator
 
 object Bytes extends Logger {
-  val SizeOfInt = 4
-  val SizeOfLong = 8
-
   def getByteArray(bb: ByteBuffer): Array[Byte] = {
       val bytes = new Array[Byte](bb.remaining)
       bb.slice.get(bytes)
