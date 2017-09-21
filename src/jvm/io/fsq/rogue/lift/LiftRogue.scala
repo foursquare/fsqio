@@ -12,7 +12,7 @@ import io.fsq.rogue.{BSONType, BsonRecordListModifyField, BsonRecordListQueryFie
     SafeModifyField, SelectField, ShardingOk, StringQueryField, StringsListQueryField, Unlimited, Unordered,
     Unselected, Unskipped}
 import io.fsq.rogue.MongoHelpers.AndCondition
-import io.fsq.rogue.index.IndexBuilder
+import io.fsq.rogue.index.MongoIndex
 import java.util.Date
 import net.liftweb.common.Box.box2Option
 import net.liftweb.json.JsonAST.{JArray, JInt}
@@ -46,8 +46,9 @@ trait LiftRogue {
     Query[M, M, InitialState](
       rec, rec.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
 
-  implicit def metaRecordToIndexBuilder[M <: MongoRecord[M]](rec: M with MongoMetaRecord[M]): IndexBuilder[M] =
-      IndexBuilder(rec)
+  implicit def metaRecordToIndexBuilder[M <: MongoRecord[M]](
+    rec: M with MongoMetaRecord[M]
+  ): MongoIndex.Builder[M] = MongoIndex.builder(rec)
 
   implicit def queryToLiftQuery[M <: MongoRecord[_], R, State]
     (query: Query[M, R, State])

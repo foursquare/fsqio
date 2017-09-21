@@ -124,6 +124,7 @@ object BucketRecordHistogram
   override def collectionName = "bucket_histograms"
 
   override val mongoIndexList = Vector(
-    BucketRecord.index(_._id, Asc))
+    BucketRecordHistogram.index(_._id, Asc)
+  )
 
 }
