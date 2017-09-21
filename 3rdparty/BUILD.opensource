@@ -787,6 +787,7 @@ jar_library(
   jars = [
     jar(org = 'io.netty', name = 'netty-all', rev = '4.1.8.Final'),
   ],
+  managed_dependencies=':default-management',
 )
 
 jar_library(
