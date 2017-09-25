@@ -331,6 +331,7 @@ jvm_third_party_map = {
         'httpclient': 'commons-httpclient',
         'io': 'commons-io',
         'lang': 'commons-lang',
+        'lang3': 'commons-lang3',
         'math': 'commons-math',
         'math3': 'commons-math3',
         'net': 'commons-net',
