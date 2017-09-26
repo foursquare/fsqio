@@ -48,6 +48,10 @@ class SourceAnalysisTask(Task):
     """A tuple of target types that the implementing class will do source analysis on."""
     raise NotImplementedError()
 
+  def targets(self):
+    """Returns targets to analyze. Override this to look at more than just roots."""
+    return filter(lambda t: isinstance(t, self.claimed_target_types), self.context.target_roots)
+
   def is_analyzable(self, source_relpath):
     """Whether or not a source is a candidate for analysis.
 
@@ -67,10 +71,7 @@ class SourceAnalysisTask(Task):
     super(SourceAnalysisTask, self).__init__(*args, **kwargs)
 
   def execute(self):
-    products = self.context.products
-    targets = [t for t in self.context.target_roots if isinstance(t, self.claimed_target_types)]
-
-    with self.invalidated(targets, invalidate_dependents=False) as invalidation_check:
+    with self.invalidated(self.targets(), invalidate_dependents=False) as invalidation_check:
       def target_analysis_file(vt):
         return os.path.join(vt.results_dir, 'analysis.json')
 
@@ -117,4 +118,4 @@ class SourceAnalysisTask(Task):
         target_analysis = json.loads(analysis_bytes)
 
         analysis_product.update(target_analysis)
-      products.safe_create_data(self.analysis_product_name(), lambda: analysis_product)
+      self.context.products.safe_create_data(self.analysis_product_name(), lambda: analysis_product)

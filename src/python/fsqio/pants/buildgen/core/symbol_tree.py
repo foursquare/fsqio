@@ -77,3 +77,15 @@ class SymbolTreeNode(object):
       allow_prefix_imports=allow_prefix_imports,
       exact=exact,
     )
+
+  def render(self, nindent=0, indent='  ', lines=None):
+    "Recursively render the tree. Top call returns a string."
+    top = lines is None
+    lines = lines or []
+    for val in self.values:
+      lines.append((nindent * indent, val))
+    for k, v in self.children.items():
+      lines.append((nindent * indent, k))
+      v.render(nindent + 1, indent, lines)
+    if top:
+      return '\n'.join(map(' '.join, lines))

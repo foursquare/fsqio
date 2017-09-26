@@ -165,6 +165,7 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
           used_addresses.add(dep.address)
 
     if errors:
+      print(self._internal_symbol_tree.render())
       print('ERROR: Failed to map these symbols used by the following target to a providing'
             ' target:', file=sys.stderr)
       err_msg = []

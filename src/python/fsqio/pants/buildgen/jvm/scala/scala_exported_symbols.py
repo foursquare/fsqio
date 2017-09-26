@@ -31,6 +31,9 @@ class MapScalaExportedSymbols(NailgunTask, SourceAnalysisTask, ScalacBuildgenTas
   def claimed_target_types(self):
     return (ScalaLibrary, JavaTests)
 
+  def targets(self):
+    return self.context.build_graph.targets(lambda t: isinstance(t, self.claimed_target_types))
+
   @classmethod
   def register_options(cls, register):
     super(MapScalaExportedSymbols, cls).register_options(register)
