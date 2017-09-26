@@ -39,6 +39,7 @@ managed_jar_dependencies(
     ':mongodb-core',
     ':mongodb-driver',
     ':mongodb-driver-async',
+    ':netty',
     ':ostrich',
     ':reflections',
     ':scalacheck',
