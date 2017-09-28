@@ -1103,3 +1103,4 @@ class FSOption[T](val opt: Option[T]) extends AnyVal {
 object Rand {
   lazy val rand = new scala.util.Random
 }
+ 
