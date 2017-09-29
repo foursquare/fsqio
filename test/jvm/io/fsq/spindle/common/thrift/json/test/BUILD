@@ -1,4 +1,4 @@
-java_tests(
+junit_tests(
   name = 'test',
   dependencies = [
     '3rdparty:junit',  # java-buildgen

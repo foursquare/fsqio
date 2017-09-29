@@ -24,12 +24,12 @@ import pickle
 import sys
 from uuid import uuid4
 
-from pants.backend.jvm.jar_dependency_utils import M2Coordinate, ResolvedJar
 from pants.backend.jvm.targets.jar_library import JarLibrary
 from pants.backend.jvm.tasks.classpath_products import ClasspathProducts
 from pants.base.fingerprint_strategy import TaskIdentityFingerprintStrategy
 from pants.base.specs import DescendantAddresses
 from pants.invalidation.cache_manager import VersionedTargetSet
+from pants.java.jar.jar_dependency_utils import M2Coordinate, ResolvedJar
 from pants.task.task import Task
 from pants.util.dirutil import safe_mkdir
 from pants.util.memo import memoized_property

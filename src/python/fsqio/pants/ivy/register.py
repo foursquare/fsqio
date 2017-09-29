@@ -17,7 +17,6 @@ from pants.backend.jvm.subsystems.jar_dependency_management import (
   JarDependencyManagement,
   JarDependencyManagementSetup,
 )
-from pants.backend.jvm.targets.exclude import Exclude
 from pants.backend.jvm.targets.jar_library import JarLibrary
 from pants.backend.jvm.tasks.classpath_products import ClasspathProducts
 from pants.backend.jvm.tasks.ivy_resolve import IvyResolve
@@ -27,6 +26,7 @@ from pants.base.exceptions import TaskError
 from pants.goal.goal import Goal
 from pants.goal.task_registrar import TaskRegistrar as task
 from pants.invalidation.cache_manager import VersionedTargetSet
+from pants.java.jar.exclude import Exclude
 from pants.util.dirutil import safe_concurrent_creation, safe_mkdir
 from pants.util.memo import memoized_property
 
@@ -185,7 +185,7 @@ class IvyGlobalResolve(JarDependencyGlobalManagementSetup, IvyResolve):
     if not targets:
       return NO_RESOLVE_RUN_RESULT
     confs = confs or ('default',)
-    fingerprint_strategy = IvyResolveFingerprintStrategy(self, confs)
+    fingerprint_strategy = IvyResolveFingerprintStrategy(confs)
     with self.invalidated(targets,
                           invalidate_dependents=invalidate_dependents,
                           silent=silent,

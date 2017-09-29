@@ -10,6 +10,7 @@ java_library(
     'test/thrift/io/fsq/spindle/benchmark',
     'test/thrift/io/fsq/spindle/runtime/structs/gen',
   ],
+  zinc_file_manager = False,
 )
 
 jvm_binary(

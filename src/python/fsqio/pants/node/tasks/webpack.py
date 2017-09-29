@@ -14,12 +14,12 @@ from __future__ import (
 import os.path
 from textwrap import dedent
 
-from pants.backend.codegen.tasks.simple_codegen_task import SimpleCodegenTask
 from pants.base.exceptions import TaskError
 from pants.base.workunit import WorkUnitLabel
 from pants.build_graph.resources import Resources as BaseResources
 from pants.contrib.node.tasks.node_paths import NodePaths
 from pants.contrib.node.tasks.node_task import NodeTask
+from pants.task.simple_codegen_task import SimpleCodegenTask
 from pants.util.contextutil import pushd
 
 from fsqio.pants.node.targets.webpack_module import NpmResource, WebPackModule
@@ -110,6 +110,7 @@ class WebPack(NodeTask, SimpleCodegenTask):
     with pushd(node_path):
       result, npm_run = self.execute_npm(
         args=args,
+        workunit_name='npm',
         workunit_labels=[WorkUnitLabel.RUN],
       )
       if result:

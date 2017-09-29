@@ -16,7 +16,7 @@ from copy import deepcopy
 from itertools import chain
 import sys
 
-from pants.backend.jvm.targets.java_tests import JavaTests
+from pants.backend.jvm.targets.junit_tests import JUnitTests
 from pants.backend.jvm.targets.scala_library import ScalaLibrary
 from pants.base.exceptions import TaskError
 from pants.build_graph.address import Address
@@ -181,7 +181,7 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
     products = self.context.products
     scala_library_to_used_addresses = defaultdict(set)
     def is_scala_lib(t):
-      return isinstance(t, (ScalaLibrary, JavaTests))
+      return isinstance(t, (ScalaLibrary, JUnitTests))
     for target in self.context.build_graph.targets(is_scala_lib):
       scala_library_to_used_addresses[target].update(self._scala_library_used_addresses(target))
     products.safe_create_data('scala_library_to_used_addresses',

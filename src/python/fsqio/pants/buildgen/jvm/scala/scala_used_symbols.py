@@ -13,7 +13,7 @@ from __future__ import (
 
 from os import path as P
 
-from pants.backend.jvm.targets.java_tests import JavaTests
+from pants.backend.jvm.targets.junit_tests import JUnitTests
 from pants.backend.jvm.targets.scala_library import ScalaLibrary
 from pants.backend.jvm.tasks.nailgun_task import NailgunTask
 
@@ -34,7 +34,7 @@ class MapScalaUsedSymbols(ScalacBuildgenTaskMixin, SourceAnalysisTask, NailgunTa
 
   @property
   def claimed_target_types(self):
-    return (ScalaLibrary, JavaTests)
+    return (ScalaLibrary, JUnitTests)
 
   @classmethod
   def register_options(cls, register):

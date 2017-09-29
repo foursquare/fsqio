@@ -15,7 +15,6 @@ import os
 import re
 import shutil
 
-from pants.backend.codegen.tasks.simple_codegen_task import SimpleCodegenTask
 from pants.backend.jvm.targets.scala_library import ScalaLibrary
 from pants.base.build_environment import get_buildroot
 from pants.base.exceptions import TaskError
@@ -23,6 +22,7 @@ from pants.base.workunit import WorkUnitLabel
 from pants.build_graph.address import Address
 from pants.build_graph.resources import Resources
 from pants.option.custom_types import target_list_option, target_option
+from pants.task.simple_codegen_task import SimpleCodegenTask
 from pants.util.contextutil import temporary_dir
 from pants.util.dirutil import safe_mkdir
 from pants.util.memo import memoized_property

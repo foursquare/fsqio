@@ -15,7 +15,6 @@ from collections import OrderedDict, defaultdict
 import os
 import pkgutil
 
-from pants.backend.jvm.targets.jar_dependency import JarDependency
 from pants.backend.jvm.targets.jar_library import JarLibrary
 from pants.backend.jvm.targets.jarable import Jarable
 from pants.backend.jvm.targets.scala_library import ScalaLibrary
@@ -29,6 +28,7 @@ from pants.build_graph.resources import Resources
 from pants.build_graph.target import Target
 from pants.ivy.bootstrapper import Bootstrapper
 from pants.ivy.ivy import Ivy
+from pants.java.jar.jar_dependency import JarDependency
 from pants.util.dirutil import safe_mkdir, safe_open, safe_rmtree
 from pants.util.memo import memoized_property
 from twitter.common.collections import OrderedSet

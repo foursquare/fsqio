@@ -16,7 +16,7 @@ import logging
 import os
 
 from pants.base.build_environment import get_buildroot
-from pants.base.fingerprint_strategy import TaskIdentityFingerprintStrategy
+from pants.base.fingerprint_strategy import DefaultFingerprintStrategy
 from pants.base.payload import Payload
 from pants.base.payload_field import PrimitiveField
 from pants.build_graph.address import Address
@@ -31,7 +31,7 @@ from fsqio.pants.node.targets.webpack_module import WebPackModule
 logger = logging.getLogger(__name__)
 
 
-class WebPackResolveFingerprintStrategy(TaskIdentityFingerprintStrategy):
+class WebPackResolveFingerprintStrategy(DefaultFingerprintStrategy):
 
   def compute_fingerprint(self, target):
     # TODO(mateo): Needs to mixin the node distribution from upstream node tests.
@@ -90,7 +90,7 @@ class WebPackResolve(NodeResolve):
     node_paths = self.context.products.get_data(NodePaths, init_func=NodePaths)
     invalidation_context = self.invalidated(
       targets,
-      fingerprint_strategy=WebPackResolveFingerprintStrategy(self),
+      fingerprint_strategy=WebPackResolveFingerprintStrategy(),
       topological_order=True,
       invalidate_dependents=True,
     )

@@ -13,7 +13,7 @@ from __future__ import (
 
 import os
 
-from pants.backend.jvm.targets.java_tests import JavaTests
+from pants.backend.jvm.targets.junit_tests import JUnitTests
 from pants.backend.jvm.targets.scala_library import ScalaLibrary
 from pants.backend.jvm.tasks.nailgun_task import NailgunTask
 
@@ -29,7 +29,7 @@ class MapScalaExportedSymbols(NailgunTask, SourceAnalysisTask, ScalacBuildgenTas
 
   @property
   def claimed_target_types(self):
-    return (ScalaLibrary, JavaTests)
+    return (ScalaLibrary, JUnitTests)
 
   def targets(self):
     return self.context.build_graph.targets(lambda t: isinstance(t, self.claimed_target_types))
