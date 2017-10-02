@@ -19,7 +19,7 @@ import re
 import sys
 
 import colors
-from pants.build_graph.address import Address, BuildFileAddress
+from pants.build_graph.address import Address
 
 
 logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class BuildFileManipulator(object):
   """
 
   @classmethod
-  def load(cls, build_file, name, target_aliases):
+  def load(cls, address, target_aliases):
     """A BuildFileManipulator factory class method.
 
     Note that BuildFileManipulator requires a very strict formatting of target declaration.
@@ -91,12 +91,13 @@ class BuildFileManipulator(object):
     restrictions as well--see the comments below or check out the example targets in
     the tests for this class.
 
-    :param build_file: A FilesystemBuildFile instance to operate on.
+    :param address: of type BuildFileAddress
     :param name: The name of the target (without the spec path or colon) to operate on.
     :target aliases: The callables injected into the build file context that we should treat
       as target declarations.
     """
-    with open(build_file.full_path, 'r') as f:
+    name = address.target_name
+    with open(address.rel_path, 'r') as f:
       source = f.read()
     source_lines = source.split('\n')
     tree = ast.parse(source)
@@ -139,17 +140,17 @@ class BuildFileManipulator(object):
             return keyword.value.s
           else:
             logger.warn('Saw a non-string-literal name argument to a target while '
-                        'looking through {build_file}.  Target type was {target_type}.'
+                        'looking through {address}.  Target type was {target_type}.'
                         'name value was {name_value}'
-                        .format(build_file=build_file,
+                        .format(address=address,
                                 target_type=call.func.id,
                                 name_value=keyword.value))
-      return os.path.basename(build_file.spec_path)
+      return os.path.basename(address.spec_path)
 
     calls_by_name = dict((name_from_call(call), call) for call in target_calls)
     if name not in calls_by_name:
-      raise BuildTargetParseError('Could not find target named {name} in {build_file}'
-                                  .format(name=name, build_file=build_file))
+      raise BuildTargetParseError('Could not find target named {name} in {address}'
+                                  .format(name=name, address=address))
 
     target_call = calls_by_name[name]
 
@@ -181,22 +182,22 @@ class BuildFileManipulator(object):
 
     if target_call.args:
       raise BuildTargetParseError('Targets cannot be called with non-keyword args.  Target was '
-                                  '{name} in {build_file}'
-                                  .format(name=name, build_file=build_file))
+                                  '{name} in {address}'
+                                  .format(name=name, address=address))
 
     # TODO(pl): This should probably be an assertion.  In order for us to have extracted
     # this target_call by name, it must have had at least one kwarg (name)
     if not target_call.keywords:
       raise BuildTargetParseError('Targets cannot have no kwargs.  Target type was '
-                                  '{target_type} in {build_file}'
-                                  .format(target_type=target_call.func.id, build_file=build_file))
+                                  '{target_type} in {address}'
+                                  .format(target_type=target_call.func.id, address=address))
 
     if target_call.lineno == target_call.keywords[0].value.lineno:
       raise BuildTargetParseError('Arguments to a target cannot be on the same line as the '
-                                  'target type.   Target type was {target_type} in {build_file} '
+                                  'target type.   Target type was {target_type} in {address} '
                                   'on line number {lineno}.'
                                   .format(target_type=target_call.func.id,
-                                          build_file=build_file,
+                                          address=address,
                                           lineno=target_call.lineno))
 
     for keyword in target_call.keywords:
@@ -208,8 +209,8 @@ class BuildFileManipulator(object):
       if not kwarg_line_re.match(source_line):
         raise BuildTargetParseError('kwarg line is malformed.  The value of a kwarg to a target '
                                     'must start after the equals sign of the line with the key.'
-                                    'Build file was: {build_file}.  Line number was: {lineno}'
-                                    .format(build_file=build_file, lineno=keyword.value.lineno))
+                                    'Build file was: {address}.  Line number was: {lineno}'
+                                    .format(address=address, lineno=keyword.value.lineno))
 
     # Same setup as for getting the target's interval
     target_call_intervals = [t.value.lineno - target_call.lineno for t in target_call.keywords]
@@ -223,9 +224,9 @@ class BuildFileManipulator(object):
     if last_kwarg_lines[-1].strip() != ')':
       raise BuildTargetParseError('All targets must end with a trailing ) on its own line.  It '
                                   "cannot go at the end of the last argument's line.  Build file "
-                                  'was {build_file}.  Target name was {target_name}.  Line number '
+                                  'was {address}.  Target name was {target_name}.  Line number '
                                   'was {lineno}'
-                                  .format(build_file=build_file,
+                                  .format(address=address,
                                           target_name=name,
                                           lineno=last_kwarg_end + target_call.lineno))
 
@@ -256,18 +257,18 @@ class BuildFileManipulator(object):
     if dependencies_node:
       if not isinstance(dependencies_node, ast.List):
         raise BuildTargetParseError('Found non-list dependencies argument on target {name} '
-                                    'in build file {build_file}.  Argument had invalid type '
+                                    'in build file {address}.  Argument had invalid type '
                                     '{node_type}'
                                     .format(name=name,
-                                            build_file=build_file,
+                                            address=address,
                                             node_type=type(dependencies_node)))
       last_lineno = dependencies_node.lineno
       for dep_node in dependencies_node.elts:
         if not dep_node.lineno > last_lineno:
-          raise BuildTargetParseError('On line number {lineno} of build file {build_file}, found '
+          raise BuildTargetParseError('On line number {lineno} of build file {address}, found '
                                       'dependencies declaration where the dependencies argument '
                                       'and dependencies themselves were not all on separate lines.'
-                                      .format(lineno=dep_node.lineno, build_file=build_file))
+                                      .format(lineno=dep_node.lineno, address=address))
 
         # First, we peek up and grab any whitespace/comments above us
         peek_lineno = dep_node.lineno - 1
@@ -281,11 +282,11 @@ class BuildFileManipulator(object):
             raise BuildTargetParseError('While parsing the dependencies of {target_name}, '
                                         'encountered an unusual line while trying to extract '
                                         'comments.  This probably means that a dependency at '
-                                        'line {lineno} in {build_file} is missing a trailing '
+                                        'line {lineno} in {address} is missing a trailing '
                                         'comma.  The string in question was {spec}'
                                         .format(target_name=name,
                                                 lineno=peek_lineno,
-                                                build_file=build_file,
+                                                address=address,
                                                 spec=spec))
           peek_lineno -= 1
 
@@ -319,7 +320,7 @@ class BuildFileManipulator(object):
       deps_end = -1
 
     return cls(name=name,
-               build_file=build_file,
+               address=address,
                build_file_source_lines=source_lines,
                target_source_lines=target_source_lines,
                target_interval=(target_start, target_end),
@@ -328,7 +329,7 @@ class BuildFileManipulator(object):
 
   def __init__(self,
                name,
-               build_file,
+               address,
                build_file_source_lines,
                target_source_lines,
                target_interval,
@@ -336,8 +337,7 @@ class BuildFileManipulator(object):
                dependencies_interval):
     """See BuildFileManipulator.load() for how to construct one as a user."""
     self.name = name
-    self.build_file = build_file
-    self.target_address = BuildFileAddress(build_file, name)
+    self.target_address = address
     self._build_file_source_lines = build_file_source_lines
     self._target_source_lines = target_source_lines
     self._target_interval = target_interval
@@ -345,13 +345,13 @@ class BuildFileManipulator(object):
     self._dependencies_by_address = {}
 
     for dep in dependencies:
-      dep_address = Address.parse(dep.spec, relative_to=build_file.spec_path)
+      dep_address = Address.parse(dep.spec, relative_to=address.spec_path)
       if dep_address in self._dependencies_by_address:
         raise BuildTargetParseError('The address {dep_address} occurred multiple times in the '
-                                    'dependency specs for target {name} in {build_file}. '
+                                    'dependency specs for target {name} in {address}. '
                                     .format(dep_address=dep_address.spec,
                                             name=name,
-                                            build_file=build_file))
+                                            address=address))
       self._dependencies_by_address[dep_address] = dep
 
   def get_dependency_addresses(self):
@@ -365,7 +365,7 @@ class BuildFileManipulator(object):
                     '{target_address}, but that dependency was already forced with a comment.'
                     .format(address=address.spec, target_address=self.target_address.spec))
         return
-    spec = address.reference(referencing_path=self.build_file.spec_path)
+    spec = address.reference(referencing_path=self.target_address.spec_path)
     self._dependencies_by_address[address] = DependencySpec(spec)
 
   def clear_unforced_dependencies(self):
@@ -419,8 +419,8 @@ class BuildFileManipulator(object):
     end_lines = self.build_file_lines()
     diff_generator = unified_diff(start_lines,
                                   end_lines,
-                                  fromfile=self.build_file.relpath,
-                                  tofile=self.build_file.relpath,
+                                  fromfile=self.target_address.rel_path,
+                                  tofile=self.target_address.rel_path,
                                   lineterm='')
     return list(diff_generator)
 
@@ -465,5 +465,5 @@ class BuildFileManipulator(object):
         print("Buildgen wrote a diff. Run `./pants builgen` locally and commit the buildfile diff with your changes.")
         sys.exit(1)
       if not dry_run:
-        with open(self.build_file.full_path, 'w') as f:
+        with open(self.target_address.full_path, 'w') as f:
           f.write('\n'.join(self.build_file_lines()))

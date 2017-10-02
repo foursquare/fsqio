@@ -80,9 +80,7 @@ class BuildgenTask(BuildgenBase):
   def adjust_target_build_file(self, target, computed_dep_addresses, whitelist=None):
     """Makes a BuildFileManipulator and adjusts the BUILD file to reflect the computed addresses"""
     alias_whitelist = whitelist or self.buildgen_subsystem.target_alias_whitelist
-    manipulator = BuildFileManipulator.load(target.address.build_file,
-                                            target.address.target_name,
-                                            alias_whitelist)
+    manipulator = BuildFileManipulator.load(target.address, alias_whitelist)
 
     existing_dep_addresses = manipulator.get_dependency_addresses()
     for address in existing_dep_addresses:
