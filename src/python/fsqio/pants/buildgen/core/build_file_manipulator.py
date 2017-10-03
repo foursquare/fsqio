@@ -465,5 +465,5 @@ class BuildFileManipulator(object):
         print("Buildgen wrote a diff. Run `./pants builgen` locally and commit the buildfile diff with your changes.")
         sys.exit(1)
       if not dry_run:
-        with open(self.target_address.full_path, 'w') as f:
+        with open(self.target_address.rel_path, 'w') as f:
           f.write('\n'.join(self.build_file_lines()))
