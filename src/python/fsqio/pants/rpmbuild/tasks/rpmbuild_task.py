@@ -11,6 +11,7 @@ from __future__ import (
   with_statement,
 )
 
+import io
 import os
 import shutil
 import subprocess
@@ -114,10 +115,10 @@ class RpmbuildTask(Task):
   def extract_build_reqs(self, rpm_spec):
     build_reqs = []
 
-    with open(rpm_spec, 'rb') as f:
+    with io.open(rpm_spec, 'r', encoding='utf8') as f:
       for line in f:
-        line = line.strip().lower()
-        if line.startswith('buildrequires'):
+        line = line.strip()
+        if line.lower().startswith('buildrequires'):
           raw_build_reqs = line.split(':', 1)[1].strip()
           build_reqs.extend(self.convert_build_req(raw_build_reqs))
 
@@ -229,7 +230,7 @@ class RpmbuildTask(Task):
       setup_commands=setup_commands,
       spec_basename=spec_basename,
       rpm_dependencies=rpm_products,
-      build_reqs={'reqs': ' '.join(build_reqs)} if build_reqs else None,
+      build_reqs={'reqs': ' '.join(["'{}'".format(req) for req in build_reqs])} if build_reqs else None,
       local_sources=local_sources,
       remote_sources=remote_sources,
     )
