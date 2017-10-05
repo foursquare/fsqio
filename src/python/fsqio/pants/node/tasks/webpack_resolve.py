@@ -62,7 +62,7 @@ class WebPackResolve(NodeResolve):
 
   @classmethod
   def implementation_version(cls):
-    return super(WebPackResolve, cls).implementation_version() + [('WebPackResolve', 5)]
+    return super(WebPackResolve, cls).implementation_version() + [('WebPackResolve', 6)]
 
   @classmethod
   def subsystem_dependencies(cls):

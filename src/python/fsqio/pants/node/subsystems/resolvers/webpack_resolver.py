@@ -16,10 +16,12 @@ import json
 import os
 
 from pants.base.exceptions import TaskError
+from pants.base.workunit import WorkUnitLabel
 from pants.contrib.node.subsystems.resolvers.npm_resolver import NpmResolver
 from pants.contrib.node.tasks.node_resolve import NodeResolve
+from pants.util.contextutil import pushd
 
-from fsqio.pants.node.targets.webpack_module import WebPackModule
+from fsqio.pants.node.targets.webpack_module import NpmResource, WebPackModule
 
 
 class WebPackResolver(NpmResolver):
@@ -34,7 +36,26 @@ class WebPackResolver(NpmResolver):
   @classmethod
   def register_options(cls, register):
     NodeResolve.register_resolver_for_type(WebPackModule, cls)
+    NodeResolve.register_resolver_for_type(NpmResource, cls)
     super(WebPackResolver, cls).register_options(register)
+
+  def resolve_target(self, node_task, target, results_dir, node_paths):
+    self._copy_sources(target, results_dir)
+    with pushd(results_dir):
+      if not os.path.exists('package.json'):
+        raise TaskError(
+          'Cannot find package.json. Did you forget to put it in target sources?')
+      package_manager = node_task.get_package_manager_for_target(target=target)
+      if package_manager != node_task.node_distribution.PACKAGE_MANAGER_NPM:
+        raise TaskError(
+          'Found package manager: {}. Only NPM is supported at this time!'.format(package_manager))
+      self._rewrite_package_descriptor(node_task, target, results_dir, node_paths)
+      result, npm_install = node_task.execute_npm(['install'],
+                                                  workunit_name=target.address.reference(),
+                                                  workunit_labels=[WorkUnitLabel.COMPILER])
+      if result != 0:
+        raise TaskError('Failed to resolve dependencies for {}:\n\t{} failed with exit code {}'
+                        .format(target.address.reference(), npm_install, result))
 
   def _remove_file_uris_from_dependencies(self, package):
     """Remove file: URIs from any dependencies in package.json."""
@@ -60,7 +81,7 @@ class WebPackResolver(NpmResolver):
     with open(path, 'wb') as fp:
       json.dump(data, fp, indent=2)
 
-  def _emit_package_descriptor(self, node_task, target, results_dir, node_paths):
+  def _rewrite_package_descriptor(self, node_task, target, results_dir, node_paths):
     package_json_path = os.path.join(results_dir, 'package.json')
     npm_shrinkwrap_path = os.path.join(results_dir, 'npm-shrinkwrap.json')
 
