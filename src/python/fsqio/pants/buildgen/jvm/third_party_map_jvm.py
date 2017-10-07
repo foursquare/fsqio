@@ -23,10 +23,15 @@ jvm_third_party_map = {
   },
   'com': {
     'amazon': {
-       'speech': 'alexa-skills-kit',
-       'emr': 'amazon-emr-kinesis'
+      'speech': 'alexa-skills-kit',
+      'emr': 'amazon-emr-kinesis'
     },
     'amazonaws': 'amazonaws',
+    'apporiented': {
+      'algorithm': {
+        'clustering': 'hierarchical-clustering'
+      }
+    },
     'beeswax': 'beeswaxrtb',
     'clearspring': {
       'analytics': {
