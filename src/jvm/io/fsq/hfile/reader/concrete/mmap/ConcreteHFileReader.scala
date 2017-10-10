@@ -6,11 +6,11 @@ import com.twitter.ostrich.stats.Stats
 import io.fsq.common.logging.Logger
 import io.fsq.common.scala.Identity._
 import io.fsq.hfile.reader.service.{HFileReader, HFileScanner, MsgAndSize}
-import java.io.{File, FileInputStream, IOException}
+import java.io.{EOFException, File, FileInputStream, IOException}
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel.MapMode.READ_ONLY
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.Path
+import org.apache.hadoop.fs.{FSDataInputStream, Path}
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
@@ -111,15 +111,22 @@ object ConcreteHFileReader {
     val remoteFS = path.getFileSystem(conf)
     val len = remoteFS.getFileStatus(path).getLen
     val stream = remoteFS.open(path)
-
+    val fsName = remoteFS.getClass.getName
+    //com.amazon.ws.emr.hadoop.fs.EmrFileSystem for s3 & s3n URI scheme on EMR
+    //org.apache.hadoop.fs.s3a.S3AFileSystem for s3a URI scheme
+    val isS3 = fsName.contains("EmrFileSystem") || fsName.contains("S3")
     val blockReader = new BlockReader {
       override def apply(start: Long, length: Long): ByteBuffer = {
         if (length > Int.MaxValue) {
           throw new IllegalArgumentException("Can't map a ByteBuffer that big: %d, %d".format(start, length))
         }
         val arr = new Array[Byte](length.toInt)
-        val bytesRead = stream.read(start, arr, 0, length.toInt)
-        ByteBuffer.wrap(arr, 0, bytesRead)
+        if (isS3) {
+          readFullyWorkAround(stream, start, arr, 0, length.toInt)
+        } else {
+          stream.readFully(start, arr, 0, length.toInt)
+        }
+        ByteBuffer.wrap(arr, 0, length.toInt)
       }
       override def close(): Unit = {
         stream.close()
@@ -139,6 +146,19 @@ object ConcreteHFileReader {
     new ConcreteHFileReader(name, input.length, "bytes", blockReader, false, false, None)
   }
 
+  //Work around for S3 before 2.8.1 see https://issues.apache.org/jira/browse/HADOOP-11694
+  //code inspired from https://issues.apache.org/jira/browse/HADOOP-11694
+  //TODO: remove after Amazon upgrades Hadoop
+  def readFullyWorkAround (stream: FSDataInputStream, position: Long, buffer: Array[Byte], offset: Int, length: Int): Unit =
+    stream.synchronized {
+      var nread = 0
+      stream.seek(position)
+      while (nread < length) {
+        val nbytes = stream.read(buffer, offset + nread, length - nread)
+        if (nbytes < 0) throw new EOFException("End of file reached before reading fully.")
+        nread += nbytes
+      }
+    }
 }
 
 class ConcreteHFileReader(
