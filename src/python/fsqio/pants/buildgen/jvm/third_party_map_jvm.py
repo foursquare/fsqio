@@ -115,7 +115,11 @@ jvm_third_party_map = {
             'auth': {
               'oauth2': 'libmirror'
             },
-            'javanet': 'gdata'
+            'batch': {
+              'json': 'libmirror'
+            },
+            'javanet': 'gdata',
+            'json': 'libmirror'
           },
           'auth': {
             'oauth2': 'gdata'  # note(stefano): this probably shouldn't be in gdata
