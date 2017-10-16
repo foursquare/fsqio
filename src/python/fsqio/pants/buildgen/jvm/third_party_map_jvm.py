@@ -102,6 +102,7 @@ jvm_third_party_map = {
       },
       'kafka9': 'kafka9-clients',
       'kafka10': 'kafka10-clients',
+      'kafka11': 'kafka11-clients',
       'lucene550': 'lucene-550'
     },
     'github': {
