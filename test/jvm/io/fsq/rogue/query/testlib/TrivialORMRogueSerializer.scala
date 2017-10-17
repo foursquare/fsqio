@@ -10,7 +10,7 @@ import org.bson.Document
 class TrivialORMRogueSerializer
 extends RogueSerializer[TrivialORMMetaRecord[_], TrivialORMRecord, Document] {
 
-  override def readFromDocument[M <: TrivialORMMetaRecord[_], R <: TrivialORMRecord](
+  override def readFromDocument[M <: TrivialORMMetaRecord[_], R](
     meta: M,
     selectOpt: Option[MongoSelect[M, R]]
   )(

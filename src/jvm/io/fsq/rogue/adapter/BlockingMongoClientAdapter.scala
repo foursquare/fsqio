@@ -160,7 +160,7 @@ class BlockingMongoClientAdapter[
     resultAccessor
   }
 
-  override protected def iterateProcessor[R <: Record, T](
+  override protected def iterateProcessor[R, T](
     initialIterState: T,
     deserializer: Document => R,
     handler: (T, Iter.Event[R]) => Iter.Command[T]
@@ -196,7 +196,7 @@ class BlockingMongoClientAdapter[
     iterState
   }
 
-  override protected def iterateBatchProcessor[R <: Record, T](
+  override protected def iterateBatchProcessor[R, T](
     initialIterState: T,
     deserializer: Document => R,
     batchSize: Int,
@@ -342,7 +342,7 @@ class BlockingMongoClientAdapter[
     updateResult.getModifiedCount
   }
 
-  override protected def findOneAndUpdateImpl[R <: Record](
+  override protected def findOneAndUpdateImpl[R](
     deserializer: Document => R
   )(
     collection: MongoCollection[Document]
@@ -355,7 +355,7 @@ class BlockingMongoClientAdapter[
     Option(document).map(deserializer)
   }
 
-  override protected def findOneAndDeleteImpl[R <: Record](
+  override protected def findOneAndDeleteImpl[R](
     deserializer: Document => R
   )(
     collection: MongoCollection[Document]

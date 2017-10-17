@@ -99,7 +99,7 @@ abstract class MongoClientAdapter[
     * lower level cursor abstraction to allow short-circuiting consumption of the entire
     * cursor.
     */
-  protected def iterateProcessor[R <: Record, T](
+  protected def iterateProcessor[R, T](
     initialIterState: T,
     deserializer: Document => R,
     handler: (T, Iter.Event[R]) => Iter.Command[T]
@@ -111,7 +111,7 @@ abstract class MongoClientAdapter[
     * lower level cursor abstraction to allow short-circuiting consumption of the entire
     * cursor.
     */
-  protected def iterateBatchProcessor[R <: Record, T](
+  protected def iterateBatchProcessor[R, T](
     initialIterState: T,
     deserializer: Document => R,
     batchSize: Int,
@@ -188,7 +188,7 @@ abstract class MongoClientAdapter[
     options: UpdateOptions
   ): Result[Long]
 
-  protected def findOneAndUpdateImpl[R <: Record](
+  protected def findOneAndUpdateImpl[R](
     deserializer: Document => R
   )(
     collection: MongoCollection[Document]
@@ -198,7 +198,7 @@ abstract class MongoClientAdapter[
     options: FindOneAndUpdateOptions
   ): Result[Option[R]]
 
-  protected def findOneAndDeleteImpl[R <: Record](
+  protected def findOneAndDeleteImpl[R](
     deserializer: Document => R
   )(
     collection: MongoCollection[Document]
@@ -535,7 +535,7 @@ abstract class MongoClientAdapter[
     }
   }
 
-  def findOneAndUpdate[M <: MetaRecord, R <: Record](
+  def findOneAndUpdate[M <: MetaRecord, R](
     deserializer: Document => R
   )(
     findAndModify: FindAndModifyQuery[M, R],
@@ -603,7 +603,7 @@ abstract class MongoClientAdapter[
     }
   }
 
-  def findOneAndDelete[M <: MetaRecord, R <: Record](
+  def findOneAndDelete[M <: MetaRecord, R](
     deserializer: Document => R
   )(
     query: Query[M, R, _],
@@ -641,7 +641,7 @@ abstract class MongoClientAdapter[
     }
   }
 
-  def iterate[M <: MetaRecord, R <: Record, T](
+  def iterate[M <: MetaRecord, R, T](
     query: Query[M, R, _],
     initialIterState: T,
     deserializer: Document => R,
@@ -657,7 +657,7 @@ abstract class MongoClientAdapter[
     )
   }
 
-  def iterateBatch[M <: MetaRecord, R <: Record, T](
+  def iterateBatch[M <: MetaRecord, R, T](
     query: Query[M, R, _],
     batchSize: Int,
     initialIterState: T,

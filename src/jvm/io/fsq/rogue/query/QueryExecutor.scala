@@ -114,7 +114,7 @@ class QueryExecutor[
     )
   }
 
-  def fetch[M <: MetaRecord, R <: Record, State, Collection[_]](
+  def fetch[M <: MetaRecord, R, State, Collection[_]](
     query: Query[M, R, State],
     readPreferenceOpt: Option[ReadPreference] = None
   )(
@@ -134,7 +134,7 @@ class QueryExecutor[
     }
   }
 
-  def fetchOne[M <: MetaRecord, R <: Record, State, LimitState](
+  def fetchOne[M <: MetaRecord, R, State, LimitState](
     query: Query[M, R, State],
     readPreferenceOpt: Option[ReadPreference] = None
   )(
@@ -153,7 +153,7 @@ class QueryExecutor[
     }
   }
 
-  def foreach[M <: MetaRecord, R <: Record, State](
+  def foreach[M <: MetaRecord, R, State](
     query: Query[M, R, State],
     readPreferenceOpt: Option[ReadPreference] = None
   )(
@@ -172,7 +172,7 @@ class QueryExecutor[
     }
   }
 
-  def fetchBatch[M <: MetaRecord, R <: Record, State, Collection[_], T](
+  def fetchBatch[M <: MetaRecord, R, State, Collection[_], T](
     query: Query[M, R, State],
     batchSize: Int,
     readPreferenceOpt: Option[ReadPreference] = None
@@ -287,7 +287,7 @@ class QueryExecutor[
     }
   }
 
-  def findAndUpsertOne[M <: MetaRecord, R <: Record](
+  def findAndUpsertOne[M <: MetaRecord, R](
     query: FindAndModifyQuery[M, R],
     returnNew: Boolean = false,
     writeConcern: WriteConcern = defaultWriteConcern
@@ -302,7 +302,7 @@ class QueryExecutor[
     }
   }
 
-  def findAndDeleteOne[M <: MetaRecord, R <: Record, State](
+  def findAndDeleteOne[M <: MetaRecord, R, State](
     query: Query[M, R, State],
     writeConcern: WriteConcern = defaultWriteConcern
   )(
@@ -317,7 +317,7 @@ class QueryExecutor[
     }
   }
 
-  def iterate[M <: MetaRecord, R <: Record, State, T](
+  def iterate[M <: MetaRecord, R, State, T](
     query: Query[M, R, State],
     initialIterState: T,
     readPreferenceOpt: Option[ReadPreference] = None
@@ -335,7 +335,7 @@ class QueryExecutor[
     }
   }
 
-  def iterateBatch[M <: MetaRecord, R <: Record, State, T](
+  def iterateBatch[M <: MetaRecord, R, State, T](
     query: Query[M, R, State],
     batchSize: Int,
     initialIterState: T,

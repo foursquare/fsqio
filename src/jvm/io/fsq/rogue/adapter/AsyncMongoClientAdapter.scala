@@ -187,7 +187,7 @@ class AsyncMongoClientAdapter[
     resultCallback.result
   }
 
-  private def newIterateCursorCallback[R <: Record, T](
+  private def newIterateCursorCallback[R, T](
     initialIterState: T,
     deserializer: Document => R,
     handler: (T, Iter.Event[R]) => Iter.Command[T]
@@ -238,7 +238,7 @@ class AsyncMongoClientAdapter[
     }
   }
 
-  private def newIterateBatchCursorCallback[R <: Record, T](
+  private def newIterateBatchCursorCallback[R, T](
     initialIterState: T,
     deserializer: Document => R,
     batchSize: Int,
@@ -293,7 +293,7 @@ class AsyncMongoClientAdapter[
     }
   }
 
-  private def baseIterationProcessor[CursorResult, R <: Record, T](
+  private def baseIterationProcessor[CursorResult, R, T](
     initialIterState: T,
     handler: (T, Iter.Event[R]) => Iter.Command[T],
     cursorCallback: (SingleResultCallback[T], AsyncBatchCursor[Document]) => SingleResultCallback[JavaList[Document]]
@@ -318,7 +318,7 @@ class AsyncMongoClientAdapter[
     resultCallback.result
   }
 
-  override protected def iterateProcessor[R <: Record, T](
+  override protected def iterateProcessor[R, T](
     initialIterState: T,
     deserializer: Document => R,
     handler: (T, Iter.Event[R]) => Iter.Command[T]
@@ -334,7 +334,7 @@ class AsyncMongoClientAdapter[
     )
   }
 
-  override protected def iterateBatchProcessor[R <: Record, T](
+  override protected def iterateBatchProcessor[R, T](
     initialIterState: T,
     deserializer: Document => R,
     batchSize: Int,
@@ -510,7 +510,7 @@ class AsyncMongoClientAdapter[
     resultCallback.result
   }
 
-  override protected def findOneAndUpdateImpl[R <: Record](
+  override protected def findOneAndUpdateImpl[R](
     deserializer: Document => R
   )(
     collection: MongoCollection[Document]
@@ -533,7 +533,7 @@ class AsyncMongoClientAdapter[
     resultCallback.result
   }
 
-  override protected def findOneAndDeleteImpl[R <: Record](
+  override protected def findOneAndDeleteImpl[R](
     deserializer: Document => R
   )(
     collection: MongoCollection[Document]

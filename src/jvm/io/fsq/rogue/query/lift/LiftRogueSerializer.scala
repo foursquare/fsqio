@@ -12,7 +12,7 @@ import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
 class LiftRogueSerializer
 extends RogueSerializer[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_], BasicDBObject] {
 
-  override def readFromDocument[M <: MongoRecord[_] with MongoMetaRecord[_], R <: MongoRecord[_]](
+  override def readFromDocument[M <: MongoRecord[_] with MongoMetaRecord[_], R](
     meta: M,
     selectOpt: Option[MongoSelect[M, R]]
   )(
