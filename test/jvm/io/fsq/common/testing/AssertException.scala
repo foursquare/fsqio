@@ -2,8 +2,9 @@
 
 package io.fsq.common.testing
 
-import org.junit.{Assert => A}
 import io.fsq.common.scala.Identity._
+import org.junit.{Assert => A}
+
 
 /**
  * This helper for JUnit tests allows you to verify that a block of code throws
@@ -24,20 +25,20 @@ object AssertException {
    */
   def apply(
     msg: String,
-    exceptionMatcher: PartialFunction[Exception, Boolean]
+    exceptionMatcher: PartialFunction[Throwable, Boolean]
   )(body: => Unit): Unit = {
     def doFail() = if (msg !=? "") {
       A.fail(msg)
     } else {
-      A.fail()
+      A.fail("Expected exception, but code did not throw or exception was not of expected type")
     }
 
     try {
       body
       doFail()
     } catch {
-      case e: Exception => {
-        if (!exceptionMatcher.isDefinedAt(e) || !exceptionMatcher(e)) {
+      case t: Throwable => {
+        if (!exceptionMatcher.isDefinedAt(t) || !exceptionMatcher(t)) {
           doFail()
         }
       }
@@ -49,7 +50,7 @@ object AssertException {
    * @param body The thunk to execute that should throw an exception.
    */
   def apply(
-    exceptionMatcher: PartialFunction[Exception, Boolean]
+    exceptionMatcher: PartialFunction[Throwable, Boolean]
   )(body: => Unit): Unit = {
     apply(
       "",
@@ -66,8 +67,8 @@ object AssertException {
    * @param msgRegex Regular expression to match against the exception message.
    * @param body The thunk to execute that should throw an exception.
    */
-  def matchesClassAndRegex[E <: Exception](
-    klass: Class[E],
+  def matchesClassAndRegex[T <: Throwable](
+    klass: Class[T],
     msgRegex: String
   )(body: => Unit): Unit = {
     try {
