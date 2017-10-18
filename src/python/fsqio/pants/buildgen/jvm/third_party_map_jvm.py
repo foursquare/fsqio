@@ -254,6 +254,13 @@ jvm_third_party_map = {
     'javakaffee': {
       'kryoserializers': 'kryo-serializers',
     },
+    'lmu': {
+      'ifi': {
+        'dbs': {
+          'elki': 'elki',
+        },
+      },
+    },
     'micromata': {
       'opengis': 'JavaAPIforKml'
     },
