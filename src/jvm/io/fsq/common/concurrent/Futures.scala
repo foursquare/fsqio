@@ -3,7 +3,7 @@
 package io.fsq.common.concurrent
 
 import com.twitter.finagle.{GlobalRequestTimeoutException, IndividualRequestTimeoutException}
-import com.twitter.util.{Await, Duration, Future, FuturePool, Promise, Stopwatch,
+import com.twitter.util.{Await, Duration, Future, FuturePool, Promise, Return, Stopwatch,
     TimeoutException => TUTimeoutException, Timer, Try}
 import io.fsq.macros.StackElement
 import java.util.concurrent.{ArrayBlockingQueue, TimeoutException}
@@ -131,6 +131,23 @@ object Futures {
    */
   def unzip[A, B, C](future: Future[(A, B, C)]): (Future[A], Future[B], Future[C]) = {
     (future.map(_._1), future.map(_._2), future.map(_._3))
+  }
+
+  def awaitSuccessfulWithinTimeout[A](
+    futures: Seq[Future[A]],
+    timeout: Duration,
+    onFailure: (Throwable) => Unit = _ => ()
+  )(implicit timer: Timer, caller: StackElement): Seq[A] = {
+    val triesF = {
+      Future.collectToTry(
+        futures.map(_
+          .within(timer, timeout, new FilledTimeoutException(timeout.toString, caller))
+          .onFailure(onFailure)
+        )
+      )
+    }
+    val results = Await.result(triesF)
+    results.collect({case Return(x) => x})
   }
 
   /**
