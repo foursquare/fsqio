@@ -18,7 +18,7 @@ extends RogueSerializer[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_], 
   )(
     document: BasicDBObject
   ): R = selectOpt match {
-    case Some(MongoSelect(fields, transformer)) =>
+    case Some(MongoSelect(fields, transformer)) => {
       val intermediateRecord = meta.createRecord.asInstanceOf[MongoRecord[_]]
 
       val selectedFields = fields.map(field => {
@@ -30,7 +30,10 @@ extends RogueSerializer[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_], 
           )
         )
       })
+
       transformer(selectedFields)
+    }
+
     case None => meta.fromDBObject(document).asInstanceOf[R]
   }
 

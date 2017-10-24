@@ -21,7 +21,13 @@ class SpindleRogueReadSerializer[M <: UntypedMetaRecord, R](meta: M, select: Opt
 
   private def getValueFromAny(sourceObj: Option[Any], fieldName: String): Option[Any] = sourceObj.flatMap(_ match {
     case (map: Map[_, _]) => map.find({case(key, value) => key.toString == fieldName}).map(_._2)
-    case (seq: Seq[_]) => Some(seq.map(v => getValueFromAny(Some(v), fieldName)))
+    case (seq: Seq[_]) => Some(seq.map(elem => {
+      val elemOpt = elem match {
+        case opt: Option[_] => opt
+        case nonOpt => Some(nonOpt)
+      }
+      getValueFromAny(elemOpt, fieldName)
+    }))
     case (rec: UntypedRecord) => getValueFromRecord(rec.meta, rec, fieldName)
     case _ => throw new Exception("Rogue bug: unepected object type")
   })
