@@ -335,7 +335,7 @@ class GeneratedCodeTest {
       .aMap(Map("1" -> InnerStruct.newBuilder.aString("NewOne").result(),
         "3" -> InnerStruct.newBuilder.aString("Three").result()))
       .aMyBinary(ByteBuffer.wrap(Array[Byte](8,10,12)))
-      .aStructList(Vector(InnerStruct.newBuilder.anInt(1).result))
+      .aStructList(Vector(InnerStruct.newBuilder.anInt(1).result()))
       .result()
 
     val TwoIntoOne = TestStruct.newBuilder
