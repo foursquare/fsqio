@@ -1,7 +1,22 @@
 <%@ val cls: _root_.io.fsq.spindle.codegen.runtime.StructLike %>
   override def deepMergeCopy(that: ${cls.name}): ${cls.name} = {
-    val ret = ${cls.name}.createRawRecord
-    ret.deepMerge(this)
-    ret.deepMerge(that)
-    ret
+    val builder = this.toBuilder()
+#for (field <- cls.fields)
+#if (!field.renderType.isRecord)
+    if (that.${field.isSetName} && !this.${field.isSetName}) {
+      builder.${field.escapedName}(that.${field.defaultName})
+#if (field.renderType.isContainer)
+    } else if (that.${field.isSetName} && this.${field.isSetName}) {
+      builder.${field.escapedName}(this.${field.escapedName} ++ that.${field.escapedName})
+#end
+    }
+#else
+    if (that.${field.isSetName} && this.${field.isSetName}) {
+      builder.${field.escapedName}(this.${field.defaultName}.deepMergeCopy(that.${field.defaultName}))
+    } else if (that.${field.isSetName} && !this.${field.isSetName}) {
+      builder.${field.escapedName}(that.${field.defaultName})
+    }
+#end
+#end
+    builder.result()
   }

@@ -774,8 +774,6 @@ trait MutableProgram extends Program
 
   def merge(that: Program): Unit
 
-  def deepMerge(that: Program): Unit
-
   def copy(
       namespaces: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace] = namespacesOrNull,
       includes: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include] = includesOrNull,
@@ -967,8 +965,6 @@ trait MutableProgramProxy extends MutableProgram with ProgramProxy {
   )
 
   override def merge(that: Program): Unit = underlying.merge(that)
-
-  override def deepMerge(that: Program): Unit = underlying.deepMerge(that)
 }
 
 
@@ -1524,98 +1520,6 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
     }
   }
 
-  override def deepMerge(that: Program): Unit = {
-
-
-    if (that.namespacesIsSet && !this.namespacesIsSet) {
-      this.namespaces_=(that.namespacesOrDefault)
-
-    } else if (that.namespacesIsSet && this.namespacesIsSet) {
-      this.namespaces_=(this.namespaces ++ that.namespaces)
-    }
-
-
-
-    if (that.includesIsSet && !this.includesIsSet) {
-      this.includes_=(that.includesOrDefault)
-
-    } else if (that.includesIsSet && this.includesIsSet) {
-      this.includes_=(this.includes ++ that.includes)
-    }
-
-
-
-    if (that.constantsIsSet && !this.constantsIsSet) {
-      this.constants_=(that.constantsOrDefault)
-
-    } else if (that.constantsIsSet && this.constantsIsSet) {
-      this.constants_=(this.constants ++ that.constants)
-    }
-
-
-
-    if (that.enumsIsSet && !this.enumsIsSet) {
-      this.enums_=(that.enumsOrDefault)
-
-    } else if (that.enumsIsSet && this.enumsIsSet) {
-      this.enums_=(this.enums ++ that.enums)
-    }
-
-
-
-    if (that.typedefsIsSet && !this.typedefsIsSet) {
-      this.typedefs_=(that.typedefsOrDefault)
-
-    } else if (that.typedefsIsSet && this.typedefsIsSet) {
-      this.typedefs_=(this.typedefs ++ that.typedefs)
-    }
-
-
-
-    if (that.structsIsSet && !this.structsIsSet) {
-      this.structs_=(that.structsOrDefault)
-
-    } else if (that.structsIsSet && this.structsIsSet) {
-      this.structs_=(this.structs ++ that.structs)
-    }
-
-
-
-    if (that.unionsIsSet && !this.unionsIsSet) {
-      this.unions_=(that.unionsOrDefault)
-
-    } else if (that.unionsIsSet && this.unionsIsSet) {
-      this.unions_=(this.unions ++ that.unions)
-    }
-
-
-
-    if (that.exceptionsIsSet && !this.exceptionsIsSet) {
-      this.exceptions_=(that.exceptionsOrDefault)
-
-    } else if (that.exceptionsIsSet && this.exceptionsIsSet) {
-      this.exceptions_=(this.exceptions ++ that.exceptions)
-    }
-
-
-
-    if (that.servicesIsSet && !this.servicesIsSet) {
-      this.services_=(that.servicesOrDefault)
-
-    } else if (that.servicesIsSet && this.servicesIsSet) {
-      this.services_=(this.services ++ that.services)
-    }
-
-
-
-    if (that.typeRegistryIsSet && this.typeRegistryIsSet) {
-      this.typeRegistryOrNull.mutable.deepMerge(that.typeRegistryOrNull)
-    } else  if (that.typeRegistryIsSet && !this.typeRegistryIsSet) {
-      this.typeRegistry_=(that.typeRegistryOrNull)
-    }
-
-  }
-
   override def mergeCopy(that: Program): Program = {
     val ret = Program.createRawRecord
     ret.merge(this)
@@ -1624,10 +1528,77 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
   }
 
   override def deepMergeCopy(that: Program): Program = {
-    val ret = Program.createRawRecord
-    ret.deepMerge(this)
-    ret.deepMerge(that)
-    ret
+    val builder = this.toBuilder()
+
+    if (that.namespacesIsSet && !this.namespacesIsSet) {
+      builder.namespaces(that.namespacesOrDefault)
+
+    } else if (that.namespacesIsSet && this.namespacesIsSet) {
+      builder.namespaces(this.namespaces ++ that.namespaces)
+    }
+
+    if (that.includesIsSet && !this.includesIsSet) {
+      builder.includes(that.includesOrDefault)
+
+    } else if (that.includesIsSet && this.includesIsSet) {
+      builder.includes(this.includes ++ that.includes)
+    }
+
+    if (that.constantsIsSet && !this.constantsIsSet) {
+      builder.constants(that.constantsOrDefault)
+
+    } else if (that.constantsIsSet && this.constantsIsSet) {
+      builder.constants(this.constants ++ that.constants)
+    }
+
+    if (that.enumsIsSet && !this.enumsIsSet) {
+      builder.enums(that.enumsOrDefault)
+
+    } else if (that.enumsIsSet && this.enumsIsSet) {
+      builder.enums(this.enums ++ that.enums)
+    }
+
+    if (that.typedefsIsSet && !this.typedefsIsSet) {
+      builder.typedefs(that.typedefsOrDefault)
+
+    } else if (that.typedefsIsSet && this.typedefsIsSet) {
+      builder.typedefs(this.typedefs ++ that.typedefs)
+    }
+
+    if (that.structsIsSet && !this.structsIsSet) {
+      builder.structs(that.structsOrDefault)
+
+    } else if (that.structsIsSet && this.structsIsSet) {
+      builder.structs(this.structs ++ that.structs)
+    }
+
+    if (that.unionsIsSet && !this.unionsIsSet) {
+      builder.unions(that.unionsOrDefault)
+
+    } else if (that.unionsIsSet && this.unionsIsSet) {
+      builder.unions(this.unions ++ that.unions)
+    }
+
+    if (that.exceptionsIsSet && !this.exceptionsIsSet) {
+      builder.exceptions(that.exceptionsOrDefault)
+
+    } else if (that.exceptionsIsSet && this.exceptionsIsSet) {
+      builder.exceptions(this.exceptions ++ that.exceptions)
+    }
+
+    if (that.servicesIsSet && !this.servicesIsSet) {
+      builder.services(that.servicesOrDefault)
+
+    } else if (that.servicesIsSet && this.servicesIsSet) {
+      builder.services(this.services ++ that.services)
+    }
+
+    if (that.typeRegistryIsSet && this.typeRegistryIsSet) {
+      builder.typeRegistry(this.typeRegistryOrNull.deepMergeCopy(that.typeRegistryOrNull))
+    } else if (that.typeRegistryIsSet && !this.typeRegistryIsSet) {
+      builder.typeRegistry(that.typeRegistryOrNull)
+    }
+    builder.result()
   }
 
   override def equals(that: Any): Boolean = that match {

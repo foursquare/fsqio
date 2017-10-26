@@ -5,12 +5,16 @@ package io.fsq.spindle.runtime.test
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import io.fsq.spindle.common.thrift.bson.TBSONProtocol
 import io.fsq.spindle.common.thrift.json.TReadableJSONProtocol
+import io.fsq.spindle.runtime.common.gen.TestStruct
+import io.fsq.spindle.runtime.structs.gen.InnerStruct
+import io.fsq.spindle.runtime.test.gen.TestFirstException
 import io.fsq.thriftexample.av.gen.Movie
 import io.fsq.thriftexample.av.gen.MovieTypedefs.{MinutesId, MovieId}
 import io.fsq.thriftexample.gen.{Content, MutableTvListingEntry, TvListingEntry}
 import io.fsq.thriftexample.gen.TvlistingTypedefs.{MyLong, MyObjectId, MyString}
 import io.fsq.thriftexample.people.gen.{ContactInfo, Gender, Person, PhoneNumber, PhoneType}
 import io.fsq.thriftexample.talent.gen.{Actor, CrewMember}
+import java.nio.ByteBuffer
 import org.apache.thrift.protocol.{TBinaryProtocol, TProtocolFactory}
 import org.apache.thrift.transport.{TMemoryBuffer, TTransport}
 import org.bson.types.ObjectId
@@ -114,7 +118,7 @@ class GeneratedCodeTest {
   private def doTestRoundTrip(protocolFactory: TProtocolFactory) { doTestRoundTrip(protocolFactory, protocolFactory) }
 
   @Test
-  def testEqualsMethod() {
+  def testEqualsMethod(): Unit = {
     val tvListingEntry1 = makeTvListingEntry()
     val tvListingEntry2 = makeTvListingEntry()
 
@@ -147,17 +151,17 @@ class GeneratedCodeTest {
   }
 
   @Test
-  def testBinaryProtocolRoundTrip() {
+  def testBinaryProtocolRoundTrip(): Unit = {
     doTestRoundTrip(new TBinaryProtocol.Factory())
   }
 
   @Test
-  def testBSONProtocolRoundTrip() {
+  def testBSONProtocolRoundTrip(): Unit = {
     doTestRoundTrip(new TBSONProtocol.WriterFactory(), new TBSONProtocol.ReaderFactory())
   }
 
   @Test
-  def testWrite() {
+  def testWrite(): Unit = {
     var expected = """{
   "st" : "2012-01-18 20:00:00",
   "et" : "2012-01-18 21:59:59",
@@ -225,7 +229,7 @@ class GeneratedCodeTest {
   }
 
   @Test
-  def testFieldSettersAndGetters() {
+  def testFieldSettersAndGetters(): Unit = {
     println("Testing getters and setters")
 
     val e = TvListingEntry.createRawRecord
@@ -251,7 +255,7 @@ class GeneratedCodeTest {
 
   /* this test should just compile */
   @Test
-  def testIds {
+  def testIds(): Unit = {
     def takesObjectId(x: ObjectId) {}
     def takesString(x: String) {}
     def takesLong(x: Long) {}
@@ -277,7 +281,7 @@ class GeneratedCodeTest {
 
   /* this test should just compile */
   @Test
-  def testIdImplicits {
+  def testIdImplicits(): Unit = {
     import io.fsq.thriftexample.gen.TvlistingTypedefImplicits._
 
     def takesMyObjectId(x: MyObjectId) {}
@@ -296,5 +300,106 @@ class GeneratedCodeTest {
     takesMyLong(iid)
 
     assertTrue(true)
+  }
+
+  @Test
+  def testDeepMergeCopy(): Unit = {
+    val struct1 = TestStruct.newBuilder
+      .aBool(true)
+      .aByte(60.toByte)
+      .anI16(42.toShort)
+      .anI32(123)
+      .anI64(12345L)
+      .aDouble(123.456d)
+      .aString("Hello")
+      .aBinary(ByteBuffer.wrap(Array[Byte](1,2,3)))
+      .aStruct(InnerStruct.newBuilder.aString("String").result())
+      .aSet(Set("A", "B", "C"))
+      .aList(Vector(1,1,2,3,5,8))
+      .aMap(Map("1" -> InnerStruct.newBuilder.aString("One").result(),
+        "2" -> InnerStruct.newBuilder.aString("Two").result()))
+      .aMyBinary(ByteBuffer.wrap(Array[Byte](4,5,6)))
+      .aStructList(Vector(InnerStruct.newBuilder.anInt(1).result(), InnerStruct.newBuilder.anInt(2).result()))
+      .result()
+    // Trivial case - check that if only 1 is defined, that side is used
+    assertEquals(struct1, struct1.deepMergeCopy(TestStruct.newBuilder.result()))
+    assertEquals(struct1, TestStruct.newBuilder.result().deepMergeCopy(struct1))
+
+    val struct2 = TestStruct.newBuilder
+      .anI32(12)
+      .aString("World")
+      .aBinary(ByteBuffer.wrap(Array[Byte](2,4,6)))
+      .aStruct(InnerStruct.newBuilder.aString("Different String").anInt(42).result())
+      .aSet(Set("A", "D", "E"))
+      .aList(Vector(2,3,5,7,11))
+      .aMap(Map("1" -> InnerStruct.newBuilder.aString("NewOne").result(),
+        "3" -> InnerStruct.newBuilder.aString("Three").result()))
+      .aMyBinary(ByteBuffer.wrap(Array[Byte](8,10,12)))
+      .aStructList(Vector(InnerStruct.newBuilder.anInt(1).result))
+      .result()
+
+    val TwoIntoOne = TestStruct.newBuilder
+      .aBool(true)
+      .aByte(60.toByte)
+      .anI16(42.toShort)
+      .anI32(123)
+      .anI64(12345L)
+      .aDouble(123.456d)
+      .aString("Hello")
+      .aBinary(ByteBuffer.wrap(Array[Byte](1,2,3)))
+      .aStruct(InnerStruct.newBuilder.aString("String").anInt(42).result()) //Merge substructs
+      .aSet(Set("A", "B", "C", "D", "E")) //Merge sets
+      .aList(Vector(1,1,2,3,5,8,2,3,5,7,11)) //Concatenate vectors
+      .aMap(Map("1" -> InnerStruct.newBuilder.aString("NewOne").result(), //this++that means values from 2 overwrite(!?)
+        "2" -> InnerStruct.newBuilder.aString("Two").result(),
+        "3" -> InnerStruct.newBuilder.aString("Three").result()))
+      .aMyBinary(ByteBuffer.wrap(Array[Byte](4,5,6)))
+      //Concatenate vectors of structs
+      .aStructList(Vector(InnerStruct.newBuilder.anInt(1).result(), InnerStruct.newBuilder.anInt(2).result(),
+        InnerStruct.newBuilder.anInt(1).result()))
+      .result()
+
+    val OneIntoTwo = TestStruct.newBuilder
+      .aBool(true)
+      .aByte(60.toByte)
+      .anI16(42.toShort)
+      .anI32(12)
+      .anI64(12345L)
+      .aDouble(123.456d)
+      .aString("World")
+      .aBinary(ByteBuffer.wrap(Array[Byte](2,4,6)))
+      .aStruct(InnerStruct.newBuilder.aString("Different String").anInt(42).result()) //Merge substructs
+      .aSet(Set("A", "B", "C", "D", "E")) //Merge sets
+      .aList(Vector(2,3,5,7,11,1,1,2,3,5,8)) //Concatenate vectors
+      .aMap(Map("1" -> InnerStruct.newBuilder.aString("One").result(), //this++that means values from 1 overwrite(!?)
+        "2" -> InnerStruct.newBuilder.aString("Two").result(),
+        "3" -> InnerStruct.newBuilder.aString("Three").result()))
+      .aMyBinary(ByteBuffer.wrap(Array[Byte](8,10,12)))
+      //Concatenate vectors of structs
+      .aStructList(Vector(InnerStruct.newBuilder.anInt(1).result(), InnerStruct.newBuilder.anInt(1).result(),
+        InnerStruct.newBuilder.anInt(2).result()))
+      .result()
+
+    assertEquals(TwoIntoOne, struct1.deepMergeCopy(struct2))
+    assertEquals(OneIntoTwo, struct2.deepMergeCopy(struct1))
+
+    // Exception behavior is odd - only the underlying struct is merged (Ditto for equality etc)
+    val exception1 = TestFirstException.Struct.newBuilder.value(42).result().toException
+    val exception2 = TestFirstException.Struct.newBuilder.value(123).result().toException
+    assertEquals(exception1, exception1.deepMergeCopy(exception2))
+    assertEquals(exception2, exception2.deepMergeCopy(exception1))
+
+    val exceptionString = new TestFirstException("Hello World")
+    assertEquals(exception1, exceptionString.deepMergeCopy(exception1))
+    assertEquals(exception1, exception1.deepMergeCopy(exceptionString))
+
+    val cause = new Throwable("placeholder")
+    val exceptionCause = new TestFirstException(cause)
+    assertEquals(exception1, exceptionCause.deepMergeCopy(exception1))
+    assertEquals(exception1, exception1.deepMergeCopy(exceptionCause))
+
+    val emptyException = TestFirstException.Struct.createRecord.toException
+    assertEquals(emptyException, exceptionString.deepMergeCopy(exceptionCause))
+    assertEquals(emptyException, exceptionCause.deepMergeCopy(exceptionString))
   }
 }

@@ -31,4 +31,6 @@ class ${cls.name}(msg: String) extends RuntimeException(msg) with ${cls.name}.St
   def this(cause: Throwable) = {
     this(null: String)
   }
+
+  def deepMergeCopy(that: ${cls.name}): ${cls.name}
 }

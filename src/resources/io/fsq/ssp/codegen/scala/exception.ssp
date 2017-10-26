@@ -42,4 +42,8 @@ class ${cls.name}(msg: String) extends RuntimeException(msg) with ${cls.name}.St
   }
 
   override def getMessage(): String = _underlying.toString
+
+  def deepMergeCopy(that: ${cls.name}): ${cls.name} = {
+    new ${cls.name}(_underlying.deepMergeCopy(that))
+  }
 }

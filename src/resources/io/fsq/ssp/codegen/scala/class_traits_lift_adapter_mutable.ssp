@@ -33,8 +33,6 @@ trait ${cls.name}LiftAdapterMutable extends Mutable${cls.name} {
 
   <% render("class_impls_merge.ssp", Map("cls" -> cls)) %>
 
-  <% render("class_impls_deepmerge.ssp", Map("cls" -> cls)) %>
-
   override final def mutableCopy(): ${cls.name}LiftAdapterMutable = {
     val newUnderlyingLift = underlyingLift.create.asInstanceOf[_root_.io.fsq.spindle.runtime.LiftAdapter[${cls.primaryKeyField.get.renderType.text}]]
     val ret = new ${cls.name}LiftAdapter(newUnderlyingLift) with ${cls.name}LiftAdapterMutable

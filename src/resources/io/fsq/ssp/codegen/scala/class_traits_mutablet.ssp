@@ -15,8 +15,6 @@ trait Mutable${cls.name} extends ${cls.name}
 
   def merge(that: ${cls.name}): Unit
 
-  def deepMerge(that: ${cls.name}): Unit
-
   def copy(
       ${cls.fields.map(field => "%s: %s = %sOrNull".format(field.escapedName, field.renderType.boxedText, field.name)).mkString(",\n      ")}
   ): Mutable${cls.name}

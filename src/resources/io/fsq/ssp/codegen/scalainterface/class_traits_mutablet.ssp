@@ -8,5 +8,4 @@ trait Mutable${cls.name} extends ${cls.name} {
 #for (field <- cls.fields)
 <% render(field.renderType.fieldMutableTemplate, Map("field" -> field)) %>
 #end
-  def deepMerge(that: ${cls.name}): Unit
 }
