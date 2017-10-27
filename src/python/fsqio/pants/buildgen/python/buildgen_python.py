@@ -101,7 +101,7 @@ class BuildgenPython(BuildgenTask):
       advanced=True,
       type=bool,
       help="If this is True, buildgen will not try to map dependencies based on the contents of the virtualenv and"
-        "will instead only rely on a third_party_map."
+           "will instead only rely on a third_party_map."
     )
     register(
       '--additional-virtualenv-roots',
@@ -109,7 +109,7 @@ class BuildgenPython(BuildgenTask):
       advanced=True,
       type=list,
       help="Pass a list of virtualenv roots for buildgen. As long as not opted-out, buildgen will walk these dirs to"
-        "map imports. If none are passed then buildgen will default to walking just the pants virtualenv."
+           "map imports. If none are passed then buildgen will default to walking just the pants virtualenv."
     )
 
   @classmethod
@@ -165,9 +165,7 @@ class BuildgenPython(BuildgenTask):
 
   @memoized_property
   def map_python_deps(self):
-    name_to_address_map = defaultdict(lambda: None)
     address_mapper = self.context.address_mapper
-    build_graph = self.context.build_graph
     source_dirs = self.get_options().third_party_dirs
     module_list = {}
     reqs = set()
@@ -258,6 +256,7 @@ class BuildgenPython(BuildgenTask):
     return hasher.hexdigest()
 
   _source_to_symbols_map = defaultdict(set)
+
   def get_used_symbols(self, source):
     if source not in self._source_to_symbols_map:
       import_linter = PythonImportParser(source, self.first_party_packages)
@@ -279,7 +278,6 @@ class BuildgenPython(BuildgenTask):
     safe_mkdir(self.workdir)
     source_files = [f for f in target.sources_relative_to_buildroot() if f.endswith('.py')]
     build_graph = self.context.build_graph
-    address_mapper = self.context.address_mapper
     source_to_addresses_mapper = self.context.products.get_data('source_to_addresses_mapper')
 
     # Gather symbols imported from first party source files.
@@ -359,7 +357,8 @@ class BuildgenPython(BuildgenTask):
         # Both of these return a target spec string if there is a match and None otherwise.
         dep = check_manually_defined(symbol, self.get_options().third_party_map) or import_map.get(prefix)
         if not dep:
-          msg = dedent("""
+          msg = dedent(
+            """\
             While running python buildgen, a symbol was found without a known providing target.
             Target: {}
             Symbol: {}

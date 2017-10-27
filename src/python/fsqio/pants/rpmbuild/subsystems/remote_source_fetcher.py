@@ -48,6 +48,7 @@ class RemoteSourceUtil(BinaryUtil):
     binary_path = self._select_binary_base_path(supportdir, version, name, uname_func=self.uname_func)
     return self._fetch_binary(name=name, binary_path=binary_path)
 
+
 class RemoteSourceFetcher(object):
   """Fetcher for remote sources which uses BinaryUtil pipeline."""
   # This allows long-lived caching of remote downloads, which are painful to to over and over when they aren't changing.
@@ -61,8 +62,12 @@ class RemoteSourceFetcher(object):
 
     @classmethod
     def register_options(cls, register):
-      register('--supportdir', advanced=True, default='bin', help='Find sources under this dir.'
-        'Used as part of the path to lookup the tool with --binary-util-baseurls and --pants-bootstrapdir'
+      register(
+        '--supportdir',
+        advanced=True,
+        default='bin',
+        help='Find sources under this dir.'
+        'Used as part of the path to lookup the tool with --binary-util-baseurls and --pants-bootstrapdir',
       )
 
     def create(self, remote_target):
