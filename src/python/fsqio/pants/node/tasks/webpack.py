@@ -58,7 +58,7 @@ class WebPack(NodeTask, SimpleCodegenTask):
 
   @classmethod
   def implementation_version(cls):
-    return super(WebPack, cls).implementation_version() + [('WebPack', 3)]
+    return super(WebPack, cls).implementation_version() + [('WebPack', 4)]
 
   @classmethod
   def prepare(cls, options, round_manager):
@@ -96,7 +96,7 @@ class WebPack(NodeTask, SimpleCodegenTask):
     if not node_paths:
       raise TaskError("No npm distribution was found!")
     node_path = node_paths.node_path(target)
-    dest_dir = os.path.join(target_workdir, self.get_options().destination_dir)
+    dest_dir = os.path.join(target_workdir, target.name, self.get_options().destination_dir)
     # Added "bail" to the args since webpack only returns failure on failed transpiling, treating missing deps or
     # syntax errors as soft errors. This resulted in Pants returning success while the canary fails health check.
     args = [
