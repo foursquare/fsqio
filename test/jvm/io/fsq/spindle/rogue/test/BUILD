@@ -7,7 +7,6 @@ junit_tests(
     '3rdparty:bson',
     '3rdparty:joda-time',
     '3rdparty:junit',
-    '3rdparty:junit-runner',
     '3rdparty:mongodb-drivers',
     '3rdparty:specs2',
     'src/jvm/io/fsq/field',
@@ -20,4 +19,5 @@ junit_tests(
     'test/jvm/io/fsq/util/compiler/test',
     'test/thrift/io/fsq/spindle/rogue/test',
   ],
+  concurrency="SERIAL",
 )

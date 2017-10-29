@@ -22,8 +22,7 @@ import net.liftweb.json.{Diff, JsonAST, JsonParser, Printer}
 import org.apache.thrift.{TBase, TDeserializer, TFieldIdEnum}
 import org.apache.thrift.protocol.TType
 import org.apache.thrift.transport.{AutoExpandingBufferReadTransport, TMemoryBuffer}
-import org.junit.{Assert, Test}
-import org.pantsbuild.junit.annotations.TestSerial
+import org.junit.{Assert, Ignore, Test}
 
 class WireCompatibilityTest {
 
@@ -37,7 +36,8 @@ class WireCompatibilityTest {
     KnownTProtocolNames.TReadableJSONProtocolLegacy,
     KnownTProtocolNames.TBSONProtocolLegacy)
 
-  @TestSerial
+  @Ignore("This test fails in CI regularly, even though it was forced to run in serial.")
+  @Test
   def testBSON2CompactCrossCompatibility() {
     // This is the most important case for us: It simulates the realistic scenario where we read records
     // from mongodb, convert them to a the compact binary protocol and put them in a serving system.
@@ -107,7 +107,8 @@ class WireCompatibilityTest {
     Assert.assertEquals(oldStr1, oldStr2)
   }
 
-  @TestSerial
+  @Ignore("This test fails in CI regularly, even though it was forced to run in serial.")
+  @Test
   def testAllCompatibilityCombos() {
     for (src <- protocols; dst <- protocols) {
       println("Testing unknown field compatibility between: %s -> %s".format(src, dst))

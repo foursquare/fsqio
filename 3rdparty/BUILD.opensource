@@ -648,13 +648,6 @@ jar_library(
 )
 
 jar_library(
-  name = 'junit-runner',
-  jars = [
-    jar(org = 'org.pantsbuild', name = 'junit-runner', rev = '1.0.13'),
-  ]
-)
-
-jar_library(
   name = 'language-detect',
   tags = [
     'opensource',

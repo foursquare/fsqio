@@ -7,7 +7,6 @@ junit_tests(
     '3rdparty:bson',
     '3rdparty:jackson',
     '3rdparty:junit',
-    '3rdparty:junit-runner',
     '3rdparty:lift-json',
     '3rdparty:phonenumbers',
     '3rdparty:thrift',
@@ -29,4 +28,5 @@ junit_tests(
     'test/thrift/io/fsq/thriftexample/people',
     'test/thrift/io/fsq/thriftexample/talent',
   ],
+  concurrency="SERIAL",
 )
