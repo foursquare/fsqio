@@ -11,7 +11,7 @@ from pants.build_graph.build_file_aliases import BuildFileAliases
 from pants.goal.task_registrar import TaskRegistrar as task
 from pants.task.task import Task
 
-from fsqio.pants.validate import Tagger, Validate
+from fsqio.pants.tags.validate import Tagger, Validate
 
 
 oss_sonatype_repo = Repository(
