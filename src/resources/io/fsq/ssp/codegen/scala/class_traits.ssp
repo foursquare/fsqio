@@ -33,9 +33,11 @@ trait ${cls.name}
 
 <% render("class_traits_copy.ssp", Map("cls" -> cls)) %>
 
+#if (cls.generateMutable)
 <% render("class_traits_mutablecopy.ssp", Map("cls" -> cls)) %>
 
 <% render("class_traits_mutable.ssp", Map("cls" -> cls)) %>
+#end
 
 <% render("class_traits_tobuilder.ssp", Map("cls" -> cls)) %>
 
@@ -48,14 +50,20 @@ trait ${cls.name}
 #end
 }
 
+#if (cls.generateMutable)
 <% render("class_traits_mutablet.ssp", Map("cls" -> cls)) %>
+#end
 
 #if (cls.generateProxy)
 <% render("class_traits_proxyt.ssp", Map("cls" -> cls)) %>
+#if (cls.generateMutable)
 <% render("class_traits_mutable_proxyt.ssp", Map("cls" -> cls)) %>
+#end
 #end
 
 #if (cls.generateLiftAdapter)
 <% render("class_traits_lift_adapter.ssp", Map("cls" -> cls)) %>
+#if (cls.generateMutable)
 <% render("class_traits_lift_adapter_mutable.ssp", Map("cls" -> cls)) %>
+#end
 #end

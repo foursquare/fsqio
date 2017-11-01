@@ -1,10 +1,15 @@
 <%
   // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
 
-  import _root_.io.fsq.spindle.codegen.runtime.ScalaField
+  import _root_.io.fsq.spindle.codegen.runtime.{ScalaField, StructLike}
 %>
+<%@ val cls: StructLike %>
 <%@ val field: ScalaField %>
-<% render("impl_ref.ssp", Map("field" -> field)) %>
+<% render("impl_ref.ssp", Map("field" -> field, "cls" -> cls)) %>
   override def ${field.name}ByteArray: Array[Byte] = { ${field.varName} = org.apache.thrift.TBaseHelper.rightSize(${field.varName}); ${field.varName}.array }
-  override def ${field.name}ByteArray_=(x: Array[Byte]): Unit = { ${field.varName} = java.nio.ByteBuffer.wrap(x) }
   override def ${field.name}ByteArrayOption: Option[Array[Byte]] = { if (${field.isSetName}) { ${field.varName} = org.apache.thrift.TBaseHelper.rightSize(${field.varName}); Some(${field.varName}.array) } else None }
+  #if (cls.generateMutable)
+  override def ${field.name}ByteArray_=(x: Array[Byte]): Unit = { ${field.varName} = java.nio.ByteBuffer.wrap(x) }
+  #else
+  def ${field.name}ByteArray_=(x: Array[Byte]): Unit = { ${field.varName} = java.nio.ByteBuffer.wrap(x) }
+  #end

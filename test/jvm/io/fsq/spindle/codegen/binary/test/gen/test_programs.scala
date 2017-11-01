@@ -155,7 +155,9 @@ object Program extends ProgramMeta {
       this
     }
 
-    def resultMutable()(implicit ev0: State <:< Builder.HasTypeRegistry): MutableProgram = {
+    
+    def result()(implicit ev0: State <:< Builder.HasTypeRegistry): Program = {
+      
       if (obj != null) {
         val ret = obj
         obj = null
@@ -163,9 +165,7 @@ object Program extends ProgramMeta {
       } else {
         throw new IllegalStateException("Program.Builder.result invoked multiple times. Use a new Builder.")
       }
-    }
-
-    def result()(implicit ev0: State <:< Builder.HasTypeRegistry): Program = resultMutable()(ev0)
+          }
   }
 
   def newBuilder: Program.Builder.AllUnspecified = new Builder(Program.createRawRecord)
@@ -677,44 +677,6 @@ trait Program
       typeRegistry: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry = typeRegistryOrNull
   ): Program
 
-  def mutableCopy(): MutableProgram = {
-    val ret = Program.createRawRecord
-
-    if (namespacesIsSet) ret.namespaces_=(namespacesOrNull)
-
-    if (includesIsSet) ret.includes_=(includesOrNull)
-
-    if (constantsIsSet) ret.constants_=(constantsOrNull)
-
-    if (enumsIsSet) ret.enums_=(enumsOrNull)
-
-    if (typedefsIsSet) ret.typedefs_=(typedefsOrNull)
-
-    if (structsIsSet) ret.structs_=(structsOrNull)
-
-    if (unionsIsSet) ret.unions_=(unionsOrNull)
-
-    if (exceptionsIsSet) ret.exceptions_=(exceptionsOrNull)
-
-    if (servicesIsSet) ret.services_=(servicesOrNull)
-
-    if (typeRegistryIsSet) ret.typeRegistry_=(typeRegistryOrNull)
-    ret
-  }
-
-  /** Returns a pointer to a Mutable version of this record.
-    *
-    * If the underlying implementation is mutable, `this` will be returned.
-    * If the underlying implementation is immutable, a mutable copy will be returned.
-    *
-    * After mutating the instance returned by this method, the original instance
-    * (on which `mutable` was called) will be in an undefined state. It may or may
-    * not have been modified, depending on whether it was immutable or not.
-    *
-    * This is included as an optimization for when we want access to a Mutable record
-    * but don't want to pay the cost of copying every time.
-    */
-  def mutable: MutableProgram
 
   def toBuilder(): Program.Builder.AllSpecified = {
     val ret = new Program.Builder(Program.createRawRecord)
@@ -747,48 +709,6 @@ trait Program
 
 }
 
-trait MutableProgram extends Program
-    with JavaProgramMutable[io.fsq.common.thrift.descriptors.constants.gen.Const, io.fsq.common.thrift.descriptors.enums.gen.Enum, io.fsq.common.thrift.descriptors.headers.gen.Include, io.fsq.common.thrift.descriptors.headers.gen.Namespace, io.fsq.common.thrift.descriptors.services.gen.Service, io.fsq.common.thrift.descriptors.structs.gen.Exception, io.fsq.common.thrift.descriptors.structs.gen.Struct, io.fsq.common.thrift.descriptors.structs.gen.Union, io.fsq.common.thrift.descriptors.types.gen.TypeRegistry, io.fsq.common.thrift.descriptors.types.gen.Typedef,
-      Program, RawProgram, ProgramMeta
-    ] {
-  def namespaces_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]): Unit
-  def namespacesUnset(): Unit
-  def includes_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]): Unit
-  def includesUnset(): Unit
-  def constants_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]): Unit
-  def constantsUnset(): Unit
-  def enums_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]): Unit
-  def enumsUnset(): Unit
-  def typedefs_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]): Unit
-  def typedefsUnset(): Unit
-  def structs_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]): Unit
-  def structsUnset(): Unit
-  def unions_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]): Unit
-  def unionsUnset(): Unit
-  def exceptions_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]): Unit
-  def exceptionsUnset(): Unit
-  def services_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]): Unit
-  def servicesUnset(): Unit
-  def typeRegistry_=(x: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry): Unit
-  def typeRegistryUnset(): Unit
-
-  def merge(that: Program): Unit
-
-  def copy(
-      namespaces: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace] = namespacesOrNull,
-      includes: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include] = includesOrNull,
-      constants: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const] = constantsOrNull,
-      enums: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum] = enumsOrNull,
-      typedefs: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef] = typedefsOrNull,
-      structs: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct] = structsOrNull,
-      unions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union] = unionsOrNull,
-      exceptions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception] = exceptionsOrNull,
-      services: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service] = servicesOrNull,
-      typeRegistry: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry = typeRegistryOrNull
-  ): MutableProgram
-
-  override def mutable: MutableProgram = this
-}
 
 
 trait ProgramProxy extends Program {
@@ -897,13 +817,9 @@ trait ProgramProxy extends Program {
     typeRegistry = typeRegistry
   )
 
-  override def mutableCopy(): MutableProgram = underlying.mutableCopy()
-
-  override def mergeCopy(that: Program): Program = underlying.mergeCopy(that)
+    override def mergeCopy(that: Program): Program = underlying.mergeCopy(that)
 
   override def deepMergeCopy(that: Program): Program = underlying.deepMergeCopy(that)
-
-  override def mutable: MutableProgram = underlying.mutable
 
   override def deepCopy(): Program = underlying.deepCopy()
 
@@ -916,165 +832,125 @@ trait ProgramProxy extends Program {
   override def equals(that: Any): Boolean = underlying.equals(that)
   override def toString(): String = underlying.toString
 }
-trait MutableProgramProxy extends MutableProgram with ProgramProxy {
-  protected def underlying: MutableProgram
-
-  override def namespaces_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]): Unit = { underlying.namespaces_=(x) }
-  override def namespacesUnset(): Unit = { underlying.namespacesUnset() }
-  override def includes_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]): Unit = { underlying.includes_=(x) }
-  override def includesUnset(): Unit = { underlying.includesUnset() }
-  override def constants_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]): Unit = { underlying.constants_=(x) }
-  override def constantsUnset(): Unit = { underlying.constantsUnset() }
-  override def enums_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]): Unit = { underlying.enums_=(x) }
-  override def enumsUnset(): Unit = { underlying.enumsUnset() }
-  override def typedefs_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]): Unit = { underlying.typedefs_=(x) }
-  override def typedefsUnset(): Unit = { underlying.typedefsUnset() }
-  override def structs_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]): Unit = { underlying.structs_=(x) }
-  override def structsUnset(): Unit = { underlying.structsUnset() }
-  override def unions_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]): Unit = { underlying.unions_=(x) }
-  override def unionsUnset(): Unit = { underlying.unionsUnset() }
-  override def exceptions_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]): Unit = { underlying.exceptions_=(x) }
-  override def exceptionsUnset(): Unit = { underlying.exceptionsUnset() }
-  override def services_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]): Unit = { underlying.services_=(x) }
-  override def servicesUnset(): Unit = { underlying.servicesUnset() }
-  override def typeRegistry_=(x: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry): Unit = { underlying.typeRegistry_=(x) }
-  override def typeRegistryUnset(): Unit = { underlying.typeRegistryUnset() }
-
-  override def copy(
-      namespaces: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace] = namespacesOrNull,
-      includes: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include] = includesOrNull,
-      constants: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const] = constantsOrNull,
-      enums: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum] = enumsOrNull,
-      typedefs: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef] = typedefsOrNull,
-      structs: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct] = structsOrNull,
-      unions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union] = unionsOrNull,
-      exceptions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception] = exceptionsOrNull,
-      services: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service] = servicesOrNull,
-      typeRegistry: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry = typeRegistryOrNull
-  ): MutableProgram = underlying.copy(
-    namespaces = namespaces,
-    includes = includes,
-    constants = constants,
-    enums = enums,
-    typedefs = typedefs,
-    structs = structs,
-    unions = unions,
-    exceptions = exceptions,
-    services = services,
-    typeRegistry = typeRegistry
-  )
-
-  override def merge(that: Program): Unit = underlying.merge(that)
-}
 
 
 final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.constants.gen.Const, io.fsq.common.thrift.descriptors.enums.gen.Enum, io.fsq.common.thrift.descriptors.headers.gen.Include, io.fsq.common.thrift.descriptors.headers.gen.Namespace, io.fsq.common.thrift.descriptors.services.gen.Service, io.fsq.common.thrift.descriptors.structs.gen.Exception, io.fsq.common.thrift.descriptors.structs.gen.Struct, io.fsq.common.thrift.descriptors.structs.gen.Union, io.fsq.common.thrift.descriptors.types.gen.TypeRegistry, io.fsq.common.thrift.descriptors.types.gen.Typedef,
       Program, RawProgram, ProgramMeta
-    ]
-    with MutableProgram {
-  override def meta: ProgramMeta = Program
+    
+    ] with Program {
+      override def meta: ProgramMeta = Program
 
   // fields
   // Field #1 - namespaces
   private[this] var _namespaces: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]
   override def namespaces: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace] = namespacesOrDefault
-  override def namespaces_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]): Unit = { _namespaces = x }
   override def namespacesOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]] = if (namespacesIsSet) Some(_namespaces) else None
   override def namespacesOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace] = if (namespacesIsSet) _namespaces else scala.collection.immutable.Vector.empty
   override def namespacesOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace] = _namespaces
   override def namespacesOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace] = if (namespacesIsSet) _namespaces else throw new java.lang.NullPointerException("field namespaces of Program missing")
   override def namespacesIsSet: Boolean = _namespaces != null
-  override def namespacesUnset(): Unit = { _namespaces = null }
+
+  def namespaces_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]): Unit = { _namespaces = x }
+  def namespacesUnset(): Unit = { _namespaces = null }
   // Field #2 - includes
   private[this] var _includes: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]
   override def includes: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include] = includesOrDefault
-  override def includes_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]): Unit = { _includes = x }
   override def includesOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]] = if (includesIsSet) Some(_includes) else None
   override def includesOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include] = if (includesIsSet) _includes else scala.collection.immutable.Vector.empty
   override def includesOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include] = _includes
   override def includesOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include] = if (includesIsSet) _includes else throw new java.lang.NullPointerException("field includes of Program missing")
   override def includesIsSet: Boolean = _includes != null
-  override def includesUnset(): Unit = { _includes = null }
+
+  def includes_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]): Unit = { _includes = x }
+  def includesUnset(): Unit = { _includes = null }
   // Field #3 - constants
   private[this] var _constants: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]
   override def constants: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const] = constantsOrDefault
-  override def constants_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]): Unit = { _constants = x }
   override def constantsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]] = if (constantsIsSet) Some(_constants) else None
   override def constantsOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const] = if (constantsIsSet) _constants else scala.collection.immutable.Vector.empty
   override def constantsOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const] = _constants
   override def constantsOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const] = if (constantsIsSet) _constants else throw new java.lang.NullPointerException("field constants of Program missing")
   override def constantsIsSet: Boolean = _constants != null
-  override def constantsUnset(): Unit = { _constants = null }
+
+  def constants_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]): Unit = { _constants = x }
+  def constantsUnset(): Unit = { _constants = null }
   // Field #4 - enums
   private[this] var _enums: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]
   override def enums: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum] = enumsOrDefault
-  override def enums_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]): Unit = { _enums = x }
   override def enumsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]] = if (enumsIsSet) Some(_enums) else None
   override def enumsOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum] = if (enumsIsSet) _enums else scala.collection.immutable.Vector.empty
   override def enumsOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum] = _enums
   override def enumsOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum] = if (enumsIsSet) _enums else throw new java.lang.NullPointerException("field enums of Program missing")
   override def enumsIsSet: Boolean = _enums != null
-  override def enumsUnset(): Unit = { _enums = null }
+
+  def enums_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]): Unit = { _enums = x }
+  def enumsUnset(): Unit = { _enums = null }
   // Field #5 - typedefs
   private[this] var _typedefs: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]
   override def typedefs: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef] = typedefsOrDefault
-  override def typedefs_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]): Unit = { _typedefs = x }
   override def typedefsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]] = if (typedefsIsSet) Some(_typedefs) else None
   override def typedefsOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef] = if (typedefsIsSet) _typedefs else scala.collection.immutable.Vector.empty
   override def typedefsOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef] = _typedefs
   override def typedefsOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef] = if (typedefsIsSet) _typedefs else throw new java.lang.NullPointerException("field typedefs of Program missing")
   override def typedefsIsSet: Boolean = _typedefs != null
-  override def typedefsUnset(): Unit = { _typedefs = null }
+
+  def typedefs_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]): Unit = { _typedefs = x }
+  def typedefsUnset(): Unit = { _typedefs = null }
   // Field #6 - structs
   private[this] var _structs: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]
   override def structs: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct] = structsOrDefault
-  override def structs_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]): Unit = { _structs = x }
   override def structsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]] = if (structsIsSet) Some(_structs) else None
   override def structsOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct] = if (structsIsSet) _structs else scala.collection.immutable.Vector.empty
   override def structsOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct] = _structs
   override def structsOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct] = if (structsIsSet) _structs else throw new java.lang.NullPointerException("field structs of Program missing")
   override def structsIsSet: Boolean = _structs != null
-  override def structsUnset(): Unit = { _structs = null }
+
+  def structs_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]): Unit = { _structs = x }
+  def structsUnset(): Unit = { _structs = null }
   // Field #7 - unions
   private[this] var _unions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]
   override def unions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union] = unionsOrDefault
-  override def unions_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]): Unit = { _unions = x }
   override def unionsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]] = if (unionsIsSet) Some(_unions) else None
   override def unionsOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union] = if (unionsIsSet) _unions else scala.collection.immutable.Vector.empty
   override def unionsOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union] = _unions
   override def unionsOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union] = if (unionsIsSet) _unions else throw new java.lang.NullPointerException("field unions of Program missing")
   override def unionsIsSet: Boolean = _unions != null
-  override def unionsUnset(): Unit = { _unions = null }
+
+  def unions_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]): Unit = { _unions = x }
+  def unionsUnset(): Unit = { _unions = null }
   // Field #8 - exceptions
   private[this] var _exceptions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]
   override def exceptions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception] = exceptionsOrDefault
-  override def exceptions_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]): Unit = { _exceptions = x }
   override def exceptionsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]] = if (exceptionsIsSet) Some(_exceptions) else None
   override def exceptionsOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception] = if (exceptionsIsSet) _exceptions else scala.collection.immutable.Vector.empty
   override def exceptionsOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception] = _exceptions
   override def exceptionsOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception] = if (exceptionsIsSet) _exceptions else throw new java.lang.NullPointerException("field exceptions of Program missing")
   override def exceptionsIsSet: Boolean = _exceptions != null
-  override def exceptionsUnset(): Unit = { _exceptions = null }
+
+  def exceptions_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]): Unit = { _exceptions = x }
+  def exceptionsUnset(): Unit = { _exceptions = null }
   // Field #9 - services
   private[this] var _services: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service] = null  // Underlying type: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]
   override def services: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service] = servicesOrDefault
-  override def services_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]): Unit = { _services = x }
   override def servicesOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]] = if (servicesIsSet) Some(_services) else None
   override def servicesOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service] = if (servicesIsSet) _services else scala.collection.immutable.Vector.empty
   override def servicesOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service] = _services
   override def servicesOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service] = if (servicesIsSet) _services else throw new java.lang.NullPointerException("field services of Program missing")
   override def servicesIsSet: Boolean = _services != null
-  override def servicesUnset(): Unit = { _services = null }
+
+  def services_=(x: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]): Unit = { _services = x }
+  def servicesUnset(): Unit = { _services = null }
   // Field #98 - typeRegistry
   private[this] var _typeRegistry: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry = null  // Underlying type: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry
   override def typeRegistry: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry = typeRegistryOrThrow
-  override def typeRegistry_=(x: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry): Unit = { _typeRegistry = x }
   override def typeRegistryOption: Option[io.fsq.common.thrift.descriptors.types.gen.TypeRegistry] = if (typeRegistryIsSet) Some(_typeRegistry) else None
   override def typeRegistryOrNull: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry = _typeRegistry
   override def typeRegistryOrThrow: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry = if (typeRegistryIsSet) _typeRegistry else throw new java.lang.NullPointerException("field typeRegistry of Program missing")
   override def typeRegistryIsSet: Boolean = _typeRegistry != null
-  override def typeRegistryUnset(): Unit = { _typeRegistry = null }
-  // end fields
+  
+  def typeRegistryUnset(): Unit = { _typeRegistry = null }
+  def typeRegistry_=(x: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry): Unit = { _typeRegistry = x }
+    // end fields
 
 
   private[this] var unknownFields: List[_root_.io.fsq.spindle.runtime.UnknownFields] = Nil

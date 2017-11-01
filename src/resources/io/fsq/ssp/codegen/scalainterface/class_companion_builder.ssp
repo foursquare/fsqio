@@ -53,7 +53,9 @@ val requiredTraits = requiredFields.map(field => "Has" + field.name.capitalize)
   val resultImplicitParams = if (hasRequiredFields) "(implicit %s)".format(paramDecls.mkString(", ")) else ""
   val resultParams = if (hasRequiredFields) "(%s)".format(paramNames.mkString(", ")) else ""
 %>
+    #if (cls.generateMutable)
     def resultMutable()${resultImplicitParams}: Mutable${cls.name}
+    #end
     def result()${resultImplicitParams}: ${cls.name}
   }
 

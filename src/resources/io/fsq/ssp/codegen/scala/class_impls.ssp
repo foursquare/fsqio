@@ -7,8 +7,11 @@
 <%@ val clsContainer: String %>
 final class Raw${cls.name} extends #if(clsContainer.nonEmpty)Java${clsContainer}.#endJava${cls.name}Raw[#if (cls.typeParameterFields.nonEmpty)${cls.typeParameterFields.map(_.text).distinct.mkString(", ")},#end<%----%>
       ${cls.name}, Raw${cls.name}, ${cls.name}Meta
-    ]
-    with Mutable${cls.name} {
+    #if(cls.generateMutable)
+    ] with Mutable${cls.name} {
+    #else
+    ] with ${cls.name} {
+    #end
   override def meta: ${cls.name}Meta = ${cls.name}
 
   // fields

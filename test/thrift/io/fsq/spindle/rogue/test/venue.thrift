@@ -64,4 +64,5 @@ struct ThriftVenue {
    index="geolatlng:2d, tags:asc"
    mongo_identifier="rogue_mongo"
    mongo_collection="venues"
+   generate_mutable="true"
 )

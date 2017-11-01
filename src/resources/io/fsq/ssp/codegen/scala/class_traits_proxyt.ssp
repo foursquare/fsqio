@@ -26,13 +26,13 @@ trait ${cls.name}Proxy extends ${cls.name} {
     ${cls.fields.map(field => "%s = %s".format(field.escapedName, field.escapedName)).mkString(",\n    ")}
   )
 
+  #if (cls.generateMutable)
   override def mutableCopy(): Mutable${cls.name} = underlying.mutableCopy()
-
+  override def mutable: Mutable${cls.name} = underlying.mutable
+  #end
   override def mergeCopy(that: ${cls.name}): ${cls.name} = underlying.mergeCopy(that)
 
   override def deepMergeCopy(that: ${cls.name}): ${cls.name} = underlying.deepMergeCopy(that)
-
-  override def mutable: Mutable${cls.name} = underlying.mutable
 
   override def deepCopy(): ${cls.name} = underlying.deepCopy()
 

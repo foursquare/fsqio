@@ -41,6 +41,7 @@ class ScalaClass(
 
   override val generateProxy = annotations.contains("generate_proxy")
   override val generateLiftAdapter = annotations.contains("generate_lift_adapter")
+  override val generateMutable = annotations.contains("generate_mutable")
 
   // Check that no retired_ids or retired_wire_names are being used in
   {

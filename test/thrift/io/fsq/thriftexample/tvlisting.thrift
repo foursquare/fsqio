@@ -20,6 +20,8 @@ struct TvListingEntry {
   1: DateTime startTime (wire_name="st")
   2: DateTime endTime (wire_name="et")
   3: Content content
-}
+} (
+  generate_mutable="true"
+)
 
 typedef list<TvListingEntry> TvListing

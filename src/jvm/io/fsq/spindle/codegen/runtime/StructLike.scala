@@ -14,4 +14,5 @@ trait StructLike extends HasAnnotations {
   def isException: Boolean = false
   def generateProxy: Boolean = false
   def generateLiftAdapter: Boolean = false
+  def generateMutable: Boolean = false
 }

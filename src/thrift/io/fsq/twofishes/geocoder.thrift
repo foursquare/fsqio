@@ -140,7 +140,9 @@ struct FeatureGeometry {
 
   9: optional list<i64> s2Covering
   10: optional list<i64> s2Interior
-}
+} (
+  generate_mutable="true"
+)
 
 enum GeocodeRelationType {
   PARENT = 1
@@ -172,7 +174,9 @@ struct GeocodeFeatureAttributes {
   8: optional NeighborhoodType neighborhoodType
   9: optional list<string> urls
   10: optional bool worldcity = 0
-}
+} (
+   generate_mutable="true"
+)
 
 // index-only data structure
 struct ScoringFeatures {
@@ -184,7 +188,9 @@ struct ScoringFeatures {
   8: optional list<i64> extraRelationIds = []
 
   3: optional list<string> DEPRECATED_parents = []
-}
+} (
+   generate_mutable="true"
+)
 
 struct GeocodeFeature {
   // country code
@@ -216,7 +222,9 @@ struct GeocodeFeature {
   19: optional YahooWoeType role
 
   20: optional list<i64> relatedLongIds
-}
+} (
+  generate_mutable="true"
+)
 
 struct GeocodeFeatures {
   1: optional list<GeocodeFeature> features
@@ -230,7 +238,9 @@ struct GeocodeServingFeature {
   6: optional list<string> slugs
 
   1: optional string DEPRECATED_id
-}
+} (
+  generate_mutable="true"
+)
 
 struct InterpretationScoringFeatures {
 //  1: optional i32 population = 0
@@ -361,7 +371,9 @@ struct GeocodeRequest {
 
   // in forward geocode mode, specifies if where-before-what parsing (slow) should be enabled
   21: optional bool allowWhereBeforeWhatParses = 0
-}
+} (
+  generate_mutable="true"
+)
 
 // I'd like to replace most of the params in geocoderequest with one instance of this
 // that can be shared by multiple request types.

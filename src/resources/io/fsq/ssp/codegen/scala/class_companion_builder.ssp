@@ -84,6 +84,7 @@ val requiredTraits = requiredFields.map(field => "Has" + field.name.capitalize)
   val resultImplicitParams = if (hasRequiredFields) "(implicit %s)".format(paramDecls.mkString(", ")) else ""
   val resultParams = if (hasRequiredFields) "(%s)".format(paramNames.mkString(", ")) else ""
 %>
+    #if (cls.generateMutable)
     def resultMutable()${resultImplicitParams}: Mutable${cls.name} = {
       if (obj != null) {
         val ret = obj
@@ -93,8 +94,21 @@ val requiredTraits = requiredFields.map(field => "Has" + field.name.capitalize)
         throw new IllegalStateException("${cls.name}.Builder.result invoked multiple times. Use a new Builder.")
       }
     }
+    #end
 
-    def result()${resultImplicitParams}: ${cls.name} = resultMutable()${resultParams}
+    def result()${resultImplicitParams}: ${cls.name} = {
+      #if (cls.generateMutable)
+      resultMutable()${resultParams}
+      #else
+      if (obj != null) {
+        val ret = obj
+        obj = null
+        ret
+      } else {
+        throw new IllegalStateException("${cls.name}.Builder.result invoked multiple times. Use a new Builder.")
+      }
+      #end
+    }
   }
 
   def newBuilder: ${cls.name}.Builder.AllUnspecified = new Builder(${cls.name}.createRawRecord)
