@@ -34,7 +34,7 @@ class JaegerReporter(SpanReporter):
             'reporting_host': self.opts.host,
             'reporting_port': self.opts.port,
           },
-          'logging': False, # note: this doesn't seem to do anything
+          'logging': False,  # note: this doesn't seem to do anything
         },
         service_name='pants'
       ).initialize_tracer()
