@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 class CycleException(Exception):
   """Thrown when a circular dependency is detected."""
+
   def __init__(self, cycle):
     Exception.__init__(self, 'Cycle detected:\n\t%s' % (
         ' ->\n\t'.join(str(t) for t in cycle)

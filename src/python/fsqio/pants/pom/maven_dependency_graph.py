@@ -94,6 +94,7 @@ class MavenDependencyGraph(object):
 
   def conflicted_dependencies(self):
     topo_sorted_deps = sort_projects(self.unversioned_dep_graph())
+
     def conflicted_deps_iter():
       for coord in topo_sorted_deps:
         rev_to_deps = self._coord_to_versioned_deps[coord]

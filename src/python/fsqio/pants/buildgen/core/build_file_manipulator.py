@@ -387,6 +387,7 @@ class BuildFileManipulator(object):
     If there are no dependencies, this returns an empty list.
     """
     deps = sorted(self._dependencies_by_address.values(), key=lambda d: d.spec)
+
     def dep_lines():
       yield '  dependencies = ['
       for dep in deps:

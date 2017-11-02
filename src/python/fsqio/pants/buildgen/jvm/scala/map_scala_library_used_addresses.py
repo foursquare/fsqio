@@ -180,6 +180,7 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
   def execute(self):
     products = self.context.products
     scala_library_to_used_addresses = defaultdict(set)
+
     def is_scala_lib(t):
       return isinstance(t, (ScalaLibrary, JUnitTests))
     for target in self.context.build_graph.targets(is_scala_lib):

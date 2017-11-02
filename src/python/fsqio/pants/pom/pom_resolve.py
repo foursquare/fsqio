@@ -496,6 +496,7 @@ class PomResolve(Task):
     return [global_vts]
 
   _all_jar_libs = None
+
   @property
   def all_jar_libs(self):
     # NOTE: We always operate over 3rdparty::.  This is somewhat arbitrary and could instead

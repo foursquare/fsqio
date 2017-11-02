@@ -23,6 +23,7 @@ class cached_property(object):
   with an ordinary attribute. Deleting the attribute resets the property.
   Source: https://github.com/bottlepy/bottle/commit/fa7733e075da0d790d809aa3d2f53071897e6f76
   """   # noqa
+
   def __init__(self, func):
     self.__doc__ = getattr(func, '__doc__')
     self.func = func
@@ -145,6 +146,7 @@ class PythonImportParser(object):
         # When indexing into our list of strings, we are 0-indexed, but lineno is 1-indexed.
         real_code_index = node.lineno - 1
         # Now we walk the line back as long as we see comments
+
         def is_comment(index):
           line = self.source_lines[index].strip()
           return line.startswith('#')
