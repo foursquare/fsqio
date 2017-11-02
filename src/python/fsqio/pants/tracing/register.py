@@ -28,6 +28,7 @@ def generic_decorator(f, pre=None, post=None):
     return ret
   return wrapper
 
+
 def run_tracker_prestart(self, report):
   "Installs our reporters on global RunTracker."
   assert isinstance(self, RunTracker)
@@ -36,12 +37,14 @@ def run_tracker_prestart(self, report):
   report.add_reporter('jaeger', JaegerReporter(self, Reporter.Settings(logging.INFO)))
   return (self, report), {}
 
+
 def exit_options_pre(*args, **kwargs):
   "Registers the global Options instance as a class attribute on SpanReporter."
   _, options = args
   assert isinstance(options, Options)
   SpanReporter.GLOBAL_OPTIONS_INSTANCE = options
   return args, kwargs
+
 
 def global_subsystems():
   "Register our reporter subclasses as subsystems (see comments for why), register init hooks."

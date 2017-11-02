@@ -23,6 +23,7 @@ def http_transport(url, data):
     # note: we don't want to crash builds on this
     print('error uploading zipkin stats', err)
 
+
 class ZipkinReporter(SpanReporter):
   "Send spans to a zipkin instance."
 

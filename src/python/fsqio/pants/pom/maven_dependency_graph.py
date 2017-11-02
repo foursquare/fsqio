@@ -24,6 +24,7 @@ logging.getLogger('fsqio.pants.pom').setLevel(logging.WARN)
 def defaultdictset():
   return defaultdict(set)
 
+
 class MavenDependencyGraph(object):
   def __init__(self):
     # unversioned coordinate -> {rev -> set<Dependency>}

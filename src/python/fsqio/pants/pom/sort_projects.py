@@ -19,6 +19,7 @@ from twitter.common.collections import OrderedSet
 
 logger = logging.getLogger(__name__)
 
+
 class CycleException(Exception):
   """Thrown when a circular dependency is detected."""
 

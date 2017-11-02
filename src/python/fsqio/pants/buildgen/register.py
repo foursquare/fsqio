@@ -34,6 +34,7 @@ def build_file_aliases():
     },
   )
 
+
 def register_goals():
 
   task(

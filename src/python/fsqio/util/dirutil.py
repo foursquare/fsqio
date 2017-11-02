@@ -33,6 +33,7 @@ def safe_mkdir(directory, clean=False):
     if e.errno != errno.EEXIST:
       raise
 
+
 # NOTE(mateo):
 # safe_deep_mkdir and makedirs_with_mode are not proven safe for Pants plugins and are POC from an Fsqio standpoint.
 def safe_deep_mkdir(directory, clean=False, mode=0777):
@@ -46,6 +47,7 @@ def safe_deep_mkdir(directory, clean=False, mode=0777):
   except OSError as e:
     if e.errno != errno.EEXIST:
       raise
+
 
 def makedirs_with_mode(name, mode=0777):
   """makedirs_with_mode(path [, mode=0777])

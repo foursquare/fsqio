@@ -25,6 +25,7 @@ class NameTagsAndDepFingerprintStrategy(FingerprintStrategy):
   def __eq__(self, other):
     return type(other) == type(self)
 
+
 class Tagger(Task):
   @classmethod
   def register_options(cls, register):
@@ -67,7 +68,9 @@ class BuildGraphRuleViolation(object):
     self.tag = tag
     self.direct = dep in target.dependencies
 
+
 class TagValidationError(TaskError): pass
+
 
 class BannedTag(BuildGraphRuleViolation):
   def msg(self):

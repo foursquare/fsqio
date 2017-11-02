@@ -45,6 +45,7 @@ from fsqio.pants.pom.sort_projects import CycleException
 
 logger = logging.getLogger(__name__)
 
+
 def stderr(*args, **kwargs):
   print(*args, file=sys.stderr, **kwargs)
 

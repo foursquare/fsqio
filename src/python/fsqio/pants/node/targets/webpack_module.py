@@ -30,5 +30,6 @@ class WebPackModule(NodeModule):
       )
     return npm_json
 
+
 class NpmResource(WebPackModule):
   pass

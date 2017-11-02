@@ -19,6 +19,7 @@ def if_enabled(f):
       return f(self, *args, **kwargs)
   return f2
 
+
 class SpanReporter(Reporter, Subsystem):
   "Common logic for external span reporting (zipkin / jaeger)."
   # note: Reporter comes before Subsystem because we want Reporter's __init__ and

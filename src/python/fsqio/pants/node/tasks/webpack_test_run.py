@@ -19,6 +19,7 @@ from pants.contrib.node.tasks.node_test import NodeTest as NodeTestRun
 class WebPackTest(NodeTest):
   """Dummy target to get around upstream type check."""
 
+
 class WebPackTestRun(NodeTestRun):
   """Run webpack on WebPackModule targets.
 

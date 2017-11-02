@@ -24,8 +24,10 @@ def build_file_aliases():
     },
   )
 
+
 def global_subsystems():
   return (WebPackResolver,)
+
 
 def register_goals():
   Goal.register('webpack', 'Build Node.js webpack modules.')

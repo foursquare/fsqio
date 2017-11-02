@@ -23,6 +23,7 @@ MANAGED_DEP_ATTRS = [
 
 dependency_attrs = ['groupId', 'artifactId', 'exclusions'] + MANAGED_DEP_ATTRS
 
+
 class Dependency(namedtuple('Dependency', dependency_attrs)):
   """A wrapper and constructor for Maven Dependency nodes.
 

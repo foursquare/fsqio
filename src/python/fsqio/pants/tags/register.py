@@ -20,12 +20,14 @@ oss_sonatype_repo = Repository(
   push_db_basedir=os.path.join(get_buildroot(), 'pushdb'),
 )
 
+
 def build_file_aliases():
   return BuildFileAliases(
     objects={
       'oss_sonatype_repo': oss_sonatype_repo,
     },
   )
+
 
 def register_goals():
   task(name='tag', action=Tagger).install()

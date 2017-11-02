@@ -15,6 +15,7 @@ coordinate_attrs = [
   'repo_url',
 ]
 
+
 class Coordinate(namedtuple('Coordinate', coordinate_attrs)):
   """A wrapper, parser, and constructor classmethods for the Maven POM coordinate.
 
