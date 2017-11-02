@@ -7,6 +7,7 @@ import io.fsq.field.Field
 import io.fsq.rogue.{!<:<, AddLimit, FindAndModifyQuery, Iter, ModifyQuery, Query, QueryOptimizer, Required,
     RequireShardKey, Rogue, ShardingOk, Unlimited, Unselected, Unskipped}
 import io.fsq.rogue.adapter.MongoClientAdapter
+import io.fsq.rogue.index.TypedMongoIndex
 import io.fsq.rogue.types.MongoDisallowed
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.ArrayBuffer
@@ -29,6 +30,13 @@ class QueryExecutor[
 ) extends Rogue {
 
   def defaultWriteConcern: WriteConcern = adapter.queryHelpers.config.defaultWriteConcern
+
+  def createIndexes[M <: MetaRecord](
+    firstIndex: TypedMongoIndex[M],
+    restIndexes: TypedMongoIndex[M]*
+  ): Result[Seq[String]] = {
+    adapter.createIndexes(firstIndex, restIndexes: _*)
+  }
 
   def explain[M <: MetaRecord](query: Query[M, _, _]): Result[String] = {
     adapter.explain(query)

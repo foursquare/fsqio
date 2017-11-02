@@ -3,13 +3,14 @@
 package io.fsq.rogue.adapter
 
 import com.mongodb.{Block, MongoNamespace, ReadPreference, WriteConcern}
-import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, ReturnDocument,
-    UpdateOptions}
+import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, IndexModel,
+    ReturnDocument, UpdateOptions}
 import io.fsq.rogue.{FindAndModifyQuery, Iter, ModifyQuery, Query}
 import io.fsq.rogue.MongoHelpers.{MongoBuilder => LegacyMongoBuilder, MongoModify}
+import io.fsq.rogue.index.{TypedMongoIndex, UntypedMongoIndex}
 import io.fsq.rogue.util.QueryUtilities
 import java.util.concurrent.TimeUnit
-import org.bson.{BsonDocument, BsonDocumentReader, BsonValue}
+import org.bson.{BsonDocument, BsonDocumentReader, BsonInt32, BsonString, BsonValue}
 import org.bson.codecs.DecoderContext
 import org.bson.conversions.Bson
 
@@ -206,6 +207,33 @@ abstract class MongoClientAdapter[
     filter: Bson,
     options: FindOneAndDeleteOptions
   ): Result[Option[R]]
+
+  private def convertMongoIndexToBson(index: UntypedMongoIndex): Bson = {
+    val indexDocument = new BsonDocument
+    index.asListMap.foreach({
+      case (key, value: Int) => indexDocument.append(key, new BsonInt32(value))
+      case (key, value: String) => indexDocument.append(key, new BsonString(value))
+      case (key, value) => throw new RuntimeException(s"Unrecognized value type for MongoIndex: $value")
+    })
+    indexDocument
+  }
+
+  protected def createIndexesImpl(
+    collection: MongoCollection[Document]
+  )(
+    indexes: Seq[IndexModel]
+  ): Result[Seq[String]]
+
+  def createIndexes[M <: MetaRecord](
+    firstIndex: TypedMongoIndex[M],
+    restIndexes: TypedMongoIndex[M]*
+  ): Result[Seq[String]] = {
+    val collection = collectionFactory.getMongoCollectionFromMetaRecord(firstIndex.meta)
+    val indexModels = (firstIndex +: restIndexes.toVector).map(index => {
+      new IndexModel(convertMongoIndexToBson(index))
+    })
+    createIndexesImpl(collection)(indexModels)
+  }
 
   def explain[M <: MetaRecord](query: Query[M, _, _]): Result[String] = {
     queryRunner(explainProcessor)(

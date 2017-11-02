@@ -36,4 +36,6 @@ class TwitterFutureMongoCallbackFactory extends MongoCallbackFactory[Future] {
   }
 
   override def wrapResult[T](value: => T): Future[T] = Future(value)
+
+  override def wrapException[T](e: Throwable): Future[T] = Future.exception(e)
 }

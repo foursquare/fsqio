@@ -3,7 +3,6 @@
 package io.fsq.rogue.adapter
 
 import io.fsq.rogue.Query
-import io.fsq.rogue.index.{Asc, Desc, Hashed, TwoD}
 import org.bson.{BsonDocument, BsonInt32, BsonString}
 import org.bson.conversions.Bson
 
@@ -18,12 +17,15 @@ object MongoBuilder {
 
     query.hint.foreach(hint => {
       val hintDocument = new BsonDocument
-      hint.asTypedListMap.foreach({
-        case (fieldName, intModifier @ (Asc | Desc)) => {
-          hintDocument.put(fieldName, new BsonInt32(intModifier.value.asInstanceOf[Int]))
+      hint.asListMap.foreach({
+        case (fieldName, intModifier: Int) => {
+          hintDocument.put(fieldName, new BsonInt32(intModifier))
         }
-        case (fieldName, stringModifier @ (TwoD | Hashed)) => {
-          hintDocument.put(fieldName, new BsonString(stringModifier.value.asInstanceOf[String]))
+        case (fieldName, stringModifier: String) => {
+          hintDocument.put(fieldName, new BsonString(stringModifier))
+        }
+        case (fieldName, wronglyTypedModifier) => {
+          throw new RuntimeException(s"Found index modifier of unsupported type: $wronglyTypedModifier")
         }
       })
       modifiers.put("$hint", hintDocument)

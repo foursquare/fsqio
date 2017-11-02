@@ -60,6 +60,22 @@ class LiftMongoCollectionFactory[
     )
   }
 
+  override def getMongoCollectionFromMetaRecord[M <: MongoRecord[_] with MongoMetaRecord[_]](
+    meta: M,
+    readPreferenceOpt: Option[ReadPreference] = None,
+    writeConcernOpt: Option[WriteConcern] = None
+  ): MongoCollection[BasicDBObject] = {
+    clientManager.useCollection(
+      MongoIdentifier(meta.connectionIdentifier.jndiName),
+      meta.collectionName,
+      documentClass,
+      readPreferenceOpt,
+      writeConcernOpt
+    )(
+      identity
+    )
+  }
+
   override def getMongoCollectionFromRecord[R <: MongoRecord[_]](
     record: R,
     readPreferenceOpt: Option[ReadPreference] = None,

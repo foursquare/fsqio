@@ -60,19 +60,31 @@ class SpindleMongoCollectionFactory[
     )
   }
 
-  override def getMongoCollectionFromRecord[R <: UntypedRecord](
-    record: R,
+  override def getMongoCollectionFromMetaRecord[M <: UntypedMetaRecord](
+    meta: M,
     readPreferenceOpt: Option[ReadPreference] = None,
     writeConcernOpt: Option[WriteConcern] = None
   ): MongoCollection[BasicDBObject] = {
     clientManager.useCollection(
-      MongoIdentifier(SpindleHelpers.getIdentifier(record.meta)),
-      SpindleHelpers.getCollection(record.meta),
+      MongoIdentifier(SpindleHelpers.getIdentifier(meta)),
+      SpindleHelpers.getCollection(meta),
       documentClass,
       readPreferenceOpt,
       writeConcernOpt
     )(
       identity
+    )
+  }
+
+  override def getMongoCollectionFromRecord[R <: UntypedRecord](
+    record: R,
+    readPreferenceOpt: Option[ReadPreference] = None,
+    writeConcernOpt: Option[WriteConcern] = None
+  ): MongoCollection[BasicDBObject] = {
+    getMongoCollectionFromMetaRecord(
+      record.meta,
+      readPreferenceOpt = readPreferenceOpt,
+      writeConcernOpt = writeConcernOpt
     )
   }
 

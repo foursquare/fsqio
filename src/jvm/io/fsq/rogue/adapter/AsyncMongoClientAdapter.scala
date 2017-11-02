@@ -5,7 +5,8 @@ package io.fsq.rogue.adapter
 import com.mongodb.{Block, DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException}
 import com.mongodb.async.{AsyncBatchCursor, SingleResultCallback}
 import com.mongodb.async.client.{FindIterable, MongoCollection}
-import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, UpdateOptions}
+import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, IndexModel,
+    UpdateOptions}
 import com.mongodb.client.result.{DeleteResult, UpdateResult}
 import io.fsq.common.scala.Identity._
 import io.fsq.rogue.{Iter, Query, RogueException}
@@ -15,7 +16,7 @@ import java.util.{Iterator => JavaIterator, List => JavaList}
 import java.util.concurrent.TimeUnit
 import org.bson.{BsonBoolean, BsonDocument, BsonValue}
 import org.bson.conversions.Bson
-import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
 
@@ -553,5 +554,18 @@ class AsyncMongoClientAdapter[
     }
     collection.findOneAndDelete(filter, queryCallback)
     resultCallback.result
+  }
+
+  override protected def createIndexesImpl(
+    collection: MongoCollection[Document]
+  )(
+    indexes: Seq[IndexModel]
+  ): Result[Seq[String]] = {
+    val commandCallback = callbackFactory.newCallback[JavaList[String]]
+    collection.createIndexes(indexes.asJava, commandCallback)
+    callbackFactory.mapResult(
+      commandCallback.result,
+      (result: JavaList[String]) => result.asScala
+    )
   }
 }

@@ -4,13 +4,14 @@ package io.fsq.rogue.adapter
 
 import com.mongodb.{Block, DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException}
 import com.mongodb.client.{FindIterable, MongoCollection}
-import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, UpdateOptions}
+import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, IndexModel,
+    UpdateOptions}
 import io.fsq.rogue.{Iter, Query, RogueException}
 import io.fsq.rogue.util.QueryUtilities
 import java.util.concurrent.TimeUnit
 import org.bson.{BsonBoolean, BsonDocument, BsonValue}
 import org.bson.conversions.Bson
-import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
 
@@ -365,5 +366,13 @@ class BlockingMongoClientAdapter[
   ): BlockingResult[Option[R]] = {
     val document = collection.findOneAndDelete(filter, options)
     Option(document).map(deserializer)
+  }
+
+  override protected def createIndexesImpl(
+    collection: MongoCollection[Document]
+  )(
+    indexes: Seq[IndexModel]
+  ): BlockingResult[Seq[String]] = {
+    collection.createIndexes(indexes.asJava).asScala
   }
 }

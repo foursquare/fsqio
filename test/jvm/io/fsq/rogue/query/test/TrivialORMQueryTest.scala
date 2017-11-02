@@ -10,26 +10,27 @@ import com.mongodb.client.model.CountOptions
 import com.twitter.util.{Await, Future}
 import io.fsq.common.concurrent.Futures
 import io.fsq.common.scala.Identity._
-import io.fsq.common.scala.Lists.Implicits.set2FSSet
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.field.{OptionalField, RequiredField}
 import io.fsq.rogue.{InitialState, Iter, Query, QueryOptimizer, Rogue, RogueException}
 import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.adapter.{AsyncMongoClientAdapter, BlockingMongoClientAdapter, BlockingResult}
-import io.fsq.rogue.adapter.callback.twitter.TwitterFutureMongoCallbackFactory
+import io.fsq.rogue.adapter.callback.twitter.{TwitterFutureMongoCallback, TwitterFutureMongoCallbackFactory}
 import io.fsq.rogue.connection.MongoIdentifier
 import io.fsq.rogue.connection.testlib.RogueMongoTest
+import io.fsq.rogue.index.{Asc, Desc, MongoIndex}
 import io.fsq.rogue.query.QueryExecutor
 import io.fsq.rogue.query.testlib.{TrivialORMMetaRecord, TrivialORMMongoCollectionFactory, TrivialORMRecord,
     TrivialORMRogueSerializer}
 import io.fsq.rogue.util.{DefaultQueryLogger, DefaultQueryUtilities, QueryLogger}
+import java.util.ArrayList
 import java.util.concurrent.CyclicBarrier
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
-import org.junit.{Before, Test}
+import org.junit.{Assert, Before, Test}
 import org.specs2.matcher.{JUnitMustMatchers, MatchersImplicits}
-import scala.collection.JavaConverters.{iterableAsScalaIterableConverter, mapAsJavaMapConverter,
-    mapAsScalaMapConverter, seqAsJavaListConverter}
+import scala.collection.JavaConverters._
 import scala.math.min
 
 
@@ -2409,5 +2410,54 @@ class TrivialORMQueryTest extends RogueMongoTest
     for (batchSize <- 1 to numInserts + 1) {
       testBatchSize(batchSize)
     }
+  }
+
+  def assertsForCreateIndexesTest(listedIndexes: Seq[Document]): Unit = {
+    val indexMap = listedIndexes.toMapByKey(_.getString("name"))
+    val intIndex = indexMap.getOrElse("int_1",
+      throw new RuntimeException("Expected int_1 index"))
+    Assert.assertEquals(
+      """{ "int" : 1 }""",
+      intIndex.get("key", classOf[Document]).toJson
+    )
+    val booleanLongIndex = indexMap.getOrElse("boolean_1_long_-1",
+      throw new RuntimeException("Expected boolean_1_long_-1 index"))
+    Assert.assertEquals(
+      """{ "boolean" : 1, "long" : -1 }""",
+      booleanLongIndex.get("key", classOf[Document]).toJson
+    )
+  }
+
+  @Test
+  def testBlockingCreateIndexes: Unit = {
+    val coll = blockingCollectionFactory.getMongoCollectionFromMetaRecord(SimpleRecord)
+    blockingQueryExecutor.createIndexes(
+      MongoIndex.builder(SimpleRecord).index(_.int, Asc),
+      MongoIndex.builder(SimpleRecord).index(_.boolean, Asc, _.long, Desc)
+    )
+    val listedIndexes = coll.listIndexes().asScala.toVector
+    assertsForCreateIndexesTest(listedIndexes)
+  }
+
+  @Test
+  def testAsyncCreateIndexes: Unit = {
+    val coll = asyncCollectionFactory.getMongoCollectionFromMetaRecord(SimpleRecord)
+
+    val testFuture = for {
+      _ <- asyncQueryExecutor.createIndexes(
+        MongoIndex.builder(SimpleRecord).index(_.int, Asc),
+        MongoIndex.builder(SimpleRecord).index(_.boolean, Asc, _.long, Desc)
+      )
+      listedIndexesIterable = coll.listIndexes()
+      javaListedIndexes = new ArrayList[Document]()
+      resultCallback = new TwitterFutureMongoCallback[ArrayList[Document]]
+      _ = listedIndexesIterable.into(javaListedIndexes, resultCallback)
+      listedIndexesJava <- resultCallback.result
+      listedIndexes = listedIndexesJava.asScala
+    } yield {
+      assertsForCreateIndexesTest(listedIndexes)
+    }
+
+    Await.result(testFuture)
   }
 }

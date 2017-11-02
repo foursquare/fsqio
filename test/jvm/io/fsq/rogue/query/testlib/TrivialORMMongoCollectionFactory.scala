@@ -47,19 +47,31 @@ class TrivialORMMongoCollectionFactory[MongoClient, MongoDatabase, MongoCollecti
     )
   }
 
-  override def getMongoCollectionFromRecord[R <: TrivialORMRecord](
-    record: R,
+  override def getMongoCollectionFromMetaRecord[M <: TrivialORMMetaRecord[_]](
+    meta: M,
     readPreferenceOpt: Option[ReadPreference] = None,
     writeConcernOpt: Option[WriteConcern] = None
   ): MongoCollection[Document] = {
     clientManager.useCollection(
-      record.meta.mongoIdentifier,
-      record.meta.collectionName,
+      meta.mongoIdentifier,
+      meta.collectionName,
       documentClass,
       readPreferenceOpt,
       writeConcernOpt
     )(
       identity
+    )
+  }
+
+  override def getMongoCollectionFromRecord[R <: TrivialORMRecord](
+    record: R,
+    readPreferenceOpt: Option[ReadPreference] = None,
+    writeConcernOpt: Option[WriteConcern] = None
+  ): MongoCollection[Document] = {
+    getMongoCollectionFromMetaRecord(
+      record.meta,
+      readPreferenceOpt = readPreferenceOpt,
+      writeConcernOpt = writeConcernOpt
     )
   }
 

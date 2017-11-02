@@ -32,6 +32,12 @@ trait MongoCollectionFactory[
     writeConcernOpt: Option[WriteConcern] = None
   ): MongoCollection[Document]
 
+  def getMongoCollectionFromMetaRecord[M <: MetaRecord](
+    meta: M,
+    readPreferenceOpt: Option[ReadPreference] = None,
+    writeConcernOpt: Option[WriteConcern] = None
+  ): MongoCollection[Document]
+
   def getMongoCollectionFromRecord[R <: Record](
     record: R,
     readPreferenceOpt: Option[ReadPreference] = None,
