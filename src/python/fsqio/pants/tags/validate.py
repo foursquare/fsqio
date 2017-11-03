@@ -69,7 +69,8 @@ class BuildGraphRuleViolation(object):
     self.direct = dep in target.dependencies
 
 
-class TagValidationError(TaskError): pass
+class TagValidationError(TaskError):
+  pass
 
 
 class BannedTag(BuildGraphRuleViolation):

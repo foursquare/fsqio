@@ -25,7 +25,8 @@ from pants.build_graph.address import Address
 logger = logging.getLogger(__name__)
 
 
-class BuildTargetParseError(Exception): pass
+class BuildTargetParseError(Exception):
+  pass
 
 
 class DependencySpec(object):
