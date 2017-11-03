@@ -14,7 +14,7 @@ from __future__ import (
 import os
 
 from pants.task.task import Task
-from pants.util.dirutil import relative_symlink, rm_rf, safe_mkdir, safe_rmtree
+from pants.util.dirutil import relative_symlink, safe_mkdir, safe_rmtree
 
 from fsqio.pants.rpmbuild.subsystems.remote_source_fetcher import RemoteSourceFetcher
 from fsqio.pants.rpmbuild.targets.remote_source import RemoteSource
@@ -70,8 +70,6 @@ class RemoteSourceTask(Task):
 
         stable_target_root = self.stable_root(stable_outpath)
         safe_mkdir(stable_target_root)
-        if not vt.valid:
-          safe_rmtree(stable_target_root)
 
         for filename in filenames:
           symlink_file = os.path.join(vt.results_dir, filename)
