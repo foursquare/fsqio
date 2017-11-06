@@ -202,4 +202,3 @@ class TestThirdPartyMapUtil(unittest.TestCase):
     self.assertEqual(len(default['twitter']['finagle']), 1)
     self.assertIn('DEFAULT', default['twitter']['finagle'])
     self.assertEqual(default['twitter']['finagle']['DEFAULT'], 'a_bird_name')
-

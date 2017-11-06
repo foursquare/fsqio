@@ -178,4 +178,3 @@ class ScalacBuildgenTaskMixin(JvmToolTaskMixin):
         global_symbol_map.update(symbols_by_source)
 
     return global_symbol_map
-
