@@ -147,7 +147,6 @@ class MavenVersionRangeRef(object):
     for matched_substr in matches:
       range_match = self.RANGE_REF_REGEX.match(matched_substr)
       begin_range_token = range_match.group('begin_range')
-      end_range_token = range_match.group('end_range')
       range_content_match = self.RANGE_CONTENT_REGEX.match(range_match.group('range_content'))
 
       left_version = range_content_match.group('left_version')
@@ -155,22 +154,22 @@ class MavenVersionRangeRef(object):
       if left_version:
         left_maven_version = MavenVersion(left_version)
         if begin_range_token == '[':
-          left_matcher = lambda candidate: left_maven_version <= candidate
+          left_matcher = lambda candidate: left_maven_version <= candidate  # nopep8
         else:
-          left_matcher = lambda candidate: left_maven_version < candidate
+          left_matcher = lambda candidate: left_maven_version < candidate  # nopep8
       else:
-        left_matcher = lambda _: True
+        left_matcher = lambda _: True  # nopep8
 
       right_version = range_content_match.group('right_version')
       right_matcher = None
       if right_version:
         right_maven_version = MavenVersion(right_version)
         if begin_range_token == ']':
-          right_matcher = lambda candidate: candidate <= right_maven_version
+          right_matcher = lambda candidate: candidate <= right_maven_version  # nopep8
         else:
-          right_matcher = lambda candidate: candidate < right_maven_version
+          right_matcher = lambda candidate: candidate < right_maven_version  # nopep8
       else:
-        right_matcher = lambda _: True
+        right_matcher = lambda _: True  # nopep8
       self._matchers.append(lambda mv: left_matcher(mv) and right_matcher(mv))
 
   def matches(self, maven_version):
