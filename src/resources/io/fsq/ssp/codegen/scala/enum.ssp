@@ -23,7 +23,8 @@ sealed abstract class ${enum.name} private (
     override val stringValue: String
 ) extends _root_.io.fsq.spindle.runtime.Enum[${enum.name}]
   with Java${enum.name}
-  with org.apache.thrift.TEnum {
+  with org.apache.thrift.TEnum
+  with _root_.java.io.Serializable {
 
   override def toString: String = stringValue
   override def getValue: Int = id
