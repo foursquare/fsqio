@@ -1,3 +1,3 @@
 namespace java io.fsq.twofishes.gen
 
-typedef binary ThriftObjectId
+typedef binary (enhanced_types="bson:ObjectId") ThriftObjectId

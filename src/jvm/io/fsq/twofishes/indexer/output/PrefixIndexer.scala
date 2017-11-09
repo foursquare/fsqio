@@ -1,18 +1,14 @@
 package io.fsq.twofishes.indexer.output
 
-import com.mongodb.Bytes
-import com.mongodb.casbah.Imports._
+import io.fsq.common.scala.Identity._
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.core.Indexes
 import io.fsq.twofishes.gen.{FeatureNameFlags, YahooWoeType}
-import io.fsq.twofishes.indexer.mongo.{NameIndex, NameIndexDAO}
+import io.fsq.twofishes.indexer.mongo.NameIndex
+import io.fsq.twofishes.indexer.mongo.RogueImplicits._
+import io.fsq.twofishes.model.gen.ThriftNameIndex
 import io.fsq.twofishes.util.StoredFeatureId
-import java.io._
-import org.apache.hadoop.hbase.util.Bytes._
-import salat._
-import salat.annotations._
-import salat.dao._
-import salat.global._
-import scala.collection.JavaConverters._
+import java.util.regex.Pattern
 import scala.collection.mutable.HashSet
 
 
@@ -46,7 +42,7 @@ class PrefixIndexer(
     // and then pick the top from each group by turn and cycle through
     // input: a (US), b (US), c (CN), d (US), e (AU), f (AU), g (CN)
     // desired output: a (US), c (CN), e (AU), b (US), g (CN), f (AU), d (US)
-    records.groupBy(_.cc)                   // (US -> a, b, d), (CN -> c, g), (AU -> e, f)
+    records.flatGroupBy(_.ccOption)         // (US -> a, b, d), (CN -> c, g), (AU -> e, f)
       .values.toList                        // (a, b, d), (c, g), (e, f)
       .flatMap(_.zipWithIndex)              // (a, 0), (b, 1), (d, 2), (c, 0), (g, 1), (e, 0), (f, 1)
       .groupBy(_._2).toList                 // (0 -> a, c, e), (1 -> b, g, f), (2 -> d)
@@ -57,12 +53,12 @@ class PrefixIndexer(
     val (prefPureNames, nonPrefPureNames) =
       records.partition(r =>
         (hasFlag(r, FeatureNameFlags.PREFERRED) || hasFlag(r, FeatureNameFlags.ALT_NAME)) &&
-        (r.lang == "en" || hasFlag(r, FeatureNameFlags.LOCAL_LANG))
+        (r.langOption.has("en") || hasFlag(r, FeatureNameFlags.LOCAL_LANG))
       )
 
     val (secondBestNames, worstNames) =
       nonPrefPureNames.partition(r =>
-        r.lang == "en"
+        r.langOption.has("en")
         || hasFlag(r, FeatureNameFlags.LOCAL_LANG)
       )
 
@@ -70,19 +66,21 @@ class PrefixIndexer(
   }
 
   def getRecordsByPrefix(prefix: String, limit: Int) = {
-    val nameCursor = NameIndexDAO.find(
-      MongoDBObject(
-        "name" -> prefix,
-        "excludeFromPrefixIndex" -> false)
-    ).sort(orderBy = MongoDBObject("pop" -> -1)).limit(limit)
-    nameCursor.option = Bytes.QUERYOPTION_NOTIMEOUT
-    val prefixCursor = NameIndexDAO.find(
-      MongoDBObject(
-        "name" -> MongoDBObject("$regex" -> "^%s".format(prefix)),
-        "excludeFromPrefixIndex" -> false)
-    ).sort(orderBy = MongoDBObject("pop" -> -1)).limit(limit)
-    prefixCursor.option = Bytes.QUERYOPTION_NOTIMEOUT
-    (nameCursor ++ prefixCursor).toSeq.distinct.take(limit)
+    val names = executor.fetch(
+      Q(ThriftNameIndex)
+        .scan(_.name eqs prefix)
+        .scan(_.excludeFromPrefixIndex neqs true)
+        .orderDesc(_.pop)
+        .limit(limit)
+    )
+    val prefixes = executor.fetch(
+      Q(ThriftNameIndex)
+        .where(_.name matches Pattern.compile("^%s".format(prefix)))
+        .scan(_.excludeFromPrefixIndex neqs true)
+        .orderDesc(_.pop)
+        .limit(limit)
+    )
+    (names ++ prefixes).distinct.take(limit).map(new NameIndex(_))
   }
 
   def writeIndexImpl() {
@@ -117,7 +115,7 @@ class PrefixIndexer(
       val records = getRecordsByPrefix(prefix, PrefixIndexer.MaxNamesToConsider)
 
       val (woeMatches, woeMismatches) = records.partition(r =>
-        bestWoeTypes.contains(r.woeType))
+        bestWoeTypes.contains(r.woeTypeOrThrow))
 
       val (prefSortedRecords, unprefSortedRecords) =
         sortRecordsByNames(woeMatches.toList)

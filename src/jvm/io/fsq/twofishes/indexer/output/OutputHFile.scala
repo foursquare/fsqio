@@ -1,20 +1,14 @@
 package io.fsq.twofishes.indexer.output
 
-import com.mongodb.Bytes
-import com.mongodb.casbah.Imports._
 import com.twitter.util.{Await, Future, FuturePool}
+import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
-import io.fsq.twofishes.indexer.mongo.MongoGeocodeDAO
-import io.fsq.twofishes.indexer.util.SlugEntryMap
+import io.fsq.twofishes.indexer.mongo.IndexerQueryExecutor
+import io.fsq.twofishes.indexer.mongo.RogueImplicits._
+import io.fsq.twofishes.indexer.util.{GeocodeRecord, SlugEntryMap}
+import io.fsq.twofishes.model.gen.ThriftGeocodeRecord
 import io.fsq.twofishes.util.DurationUtils
-import java.io._
 import java.util.concurrent.{CountDownLatch, Executors}
-import org.apache.hadoop.hbase.util.Bytes._
-import salat._
-import salat.annotations._
-import salat.dao._
-import salat.global._
-import scala.collection.JavaConverters._
 import scala.collection.mutable.HashMap
 
 class OutputIndexes(
@@ -25,6 +19,8 @@ class OutputIndexes(
   outputS2Covering: Boolean = true,
   outputS2Interior: Boolean = true
 ) extends DurationUtils {
+  lazy val executor = IndexerQueryExecutor.instance
+
   def buildIndexes(s2CoveringLatch: Option[CountDownLatch]) {
     val fidMap = logPhase("preload fid map") { new FidMap(preload = true) }
 
@@ -34,11 +30,9 @@ class OutputIndexes(
     // this should really really be done by now
     s2CoveringLatch.foreach(_.await())
 
-    val hasPolyCursor =
-      MongoGeocodeDAO.find(MongoDBObject("hasPoly" -> true))
-    hasPolyCursor.option = Bytes.QUERYOPTION_NOTIMEOUT
+    val hasPolyRecords = executor.fetch(Q(ThriftGeocodeRecord).scan(_.hasPoly eqs true)).map(new GeocodeRecord(_))
     val polygonMap = logPhase("preloading polygon map") {
-      hasPolyCursor.map(r => (r.polyId, (r._id, r.woeType))).toList
+      hasPolyRecords.map(r => (r.polyIdOrThrow, (r.id, r.woeTypeOrThrow))).toList
         .groupBy(_._1)
         .mappedValues(v => v.map(_._2).toList)
         .toMap

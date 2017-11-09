@@ -1,20 +1,16 @@
 package io.fsq.twofishes.indexer.output
 
-import com.mongodb.Bytes
-import com.mongodb.casbah.Imports._
 import com.vividsolutions.jts.io.WKBReader
 import io.fsq.common.scala.Identity._
+import io.fsq.rogue.Iter
 import io.fsq.twofishes.core.Indexes
 import io.fsq.twofishes.gen.{GeocodeServingFeature, YahooWoeType}
-import io.fsq.twofishes.indexer.mongo.{MongoGeocodeDAO, PolygonIndex, PolygonIndexDAO, RevGeoIndexDAO}
+import io.fsq.twofishes.indexer.mongo.{IndexerQueryExecutor, PolygonIndex, RevGeoIndex}
+import io.fsq.twofishes.indexer.mongo.RogueImplicits._
 import io.fsq.twofishes.indexer.util.GeocodeRecord
+import io.fsq.twofishes.model.gen.{ThriftGeocodeRecord, ThriftPolygonIndex, ThriftRevGeoIndex}
 import io.fsq.twofishes.util.{GeoTools, GeometryUtils, StoredFeatureId}
-import java.io._
-import org.apache.hadoop.hbase.util.Bytes._
-import salat._
-import salat.annotations._
-import salat.dao._
-import salat.global._
+import org.bson.types.ObjectId
 import scala.collection.JavaConverters._
 
 class FeatureIndexer(
@@ -28,11 +24,18 @@ class FeatureIndexer(
   override val outputs = Seq(index)
 
   def makeGeocodeRecordWithoutGeometry(g: GeocodeRecord, poly: Option[PolygonIndex]): GeocodeServingFeature = {
-    val fullFeature = poly.map(p =>
-        g.copy(
-          polygon = Some(p.polygon),
-          polygonSource = Some(p.source))
-        ).getOrElse(g).toGeocodeServingFeature()
+    val fullFeature = (for {
+      p <- poly
+      polygon <- p.polygonOption
+      source <- p.sourceOption
+    } yield {
+      new GeocodeRecord(
+        g.toBuilder
+        .polygon(polygon)
+        .polygonSource(source)
+        .result()
+      )
+    }).getOrElse(g).toGeocodeServingFeature()
 
     val partialFeature = fullFeature.copy(
       feature = fullFeature.feature.copy(
@@ -64,14 +67,17 @@ class FeatureIndexer(
       val cells: Seq[Long] = GeometryUtils.s2PolygonCovering(geom).map(_.id)
 
       // now for each cell, find the matches in our index
-      val candidates = RevGeoIndexDAO.find(MongoDBObject("cellid" -> MongoDBObject("$in" -> cells)))
+      val candidates = IndexerQueryExecutor.instance.fetch(
+        Q(ThriftRevGeoIndex)
+          .where(_.cellId in cells)
+      ).map(new RevGeoIndex(_))
 
       // for each candidate, check if it's full or we're in it
       val matches = (for {
         revGeoCell <- candidates
-        fidLong <- polygonMap.getOrElse(revGeoCell.polyId, Nil)
-        if (revGeoCell.full || revGeoCell.geom.exists(geomBytes =>
-          wkbReader.read(geomBytes).contains(geom)))
+        fidLong <- polygonMap.getOrElse(revGeoCell.polyIdOrThrow, Nil)
+        if (revGeoCell.full || revGeoCell.geomOption.exists(geomBuffer =>
+          wkbReader.read(geomBuffer.array()).contains(geom)))
       } yield { fidLong }).toList
 
       parents = matches.map(_._1)
@@ -85,29 +91,37 @@ class FeatureIndexer(
   def writeIndexImpl() {
     val writer = buildMapFileWriter(index, indexInterval = Some(2))
     var fidCount = 0
-    val fidSize = MongoGeocodeDAO.collection.count()
-    val fidCursor = MongoGeocodeDAO.find(MongoDBObject())
-      .sort(orderBy = MongoDBObject("_id" -> 1)) // sort by _id asc
-    fidCursor.option = Bytes.QUERYOPTION_NOTIMEOUT
 
-    for {
-      gCursor <- fidCursor.grouped(1000)
-      group = gCursor.toList
-      toFindPolys: Map[Long, ObjectId] = group.filter(f => f.hasPoly).map(r => (r._id, r.polyId)).toMap
-      polyMap: Map[ObjectId, PolygonIndex] =
-        PolygonIndexDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> toFindPolys.values.toList)))
-          .toList
-          .groupBy(_._id).map({case (k, v) => (k, v(0))})
-      f <- group
-    } {
-      val polyOpt = polyMap.get(f.polyId)
-      writer.append(
-        f.featureId, makeGeocodeRecordWithoutGeometry(f, polyOpt))
-      fidCount += 1
-      if (fidCount % 100000 == 0) {
-        log.info("processed %d of %d features".format(fidCount, fidSize))
+    val fidSize: Long = executor.count(Q(ThriftGeocodeRecord))
+    executor.iterateBatch(
+      Q(ThriftGeocodeRecord).orderAsc(_.id),
+      1000,
+      ()
+    )((_: Unit, event: Iter.Event[Seq[ThriftGeocodeRecord]]) => {
+      event match {
+        case Iter.Item(group) => {
+          val toFindPolys: Map[Long, ObjectId] = group.filter(f => f.hasPoly).map(r => (r.id, r.polyIdOrThrow)).toMap
+          val polyMap: Map[ObjectId, PolygonIndex] = executor.fetch(
+            Q(ThriftPolygonIndex)
+              .where(_.id in toFindPolys.values)
+          ).groupBy(_.id).map({ case (k, v) => (k, new PolygonIndex(v(0))) })
+          group.foreach(unwrapped => {
+            val f = new GeocodeRecord(unwrapped)
+            val polyOpt = polyMap.get(f.polyIdOrThrow)
+            writer.append(
+              f.featureId, makeGeocodeRecordWithoutGeometry(f, polyOpt))
+            fidCount += 1
+            if (fidCount % 100000 == 0) {
+              log.info("processed %d of %d features".format(fidCount, fidSize))
+            }
+          })
+          Iter.Continue(())
+        }
+        case Iter.EOF => Iter.Return(())
+        case Iter.Error(e) => throw e
       }
-    }
+    })
+
     writer.close()
   }
 }

@@ -1,34 +1,40 @@
 package io.fsq.twofishes.indexer.output
 
-import com.mongodb.Bytes
-import com.mongodb.casbah.Imports._
-import io.fsq.twofishes.indexer.mongo.MongoGeocodeDAO
+import io.fsq.rogue.Iter
+import io.fsq.twofishes.indexer.mongo.IndexerQueryExecutor
+import io.fsq.twofishes.indexer.mongo.RogueImplicits._
+import io.fsq.twofishes.indexer.util.GeocodeRecord
+import io.fsq.twofishes.model.gen.ThriftGeocodeRecord
 import io.fsq.twofishes.util.{DurationUtils, StoredFeatureId}
-import java.io._
-import org.apache.hadoop.hbase.util.Bytes._
-import salat._
-import salat.annotations._
-import salat.dao._
-import salat.global._
-import scala.collection.JavaConverters._
 import scala.collection.mutable.HashMap
 
 class FidMap(preload: Boolean) extends DurationUtils {
   val fidMap = new HashMap[StoredFeatureId, Option[StoredFeatureId]]
 
+  lazy val executor = IndexerQueryExecutor.instance
+
   if (preload) {
     logPhase("preloading fids") {
       var i = 0
-      val total = MongoGeocodeDAO.collection.count()
-      val geocodeCursor = MongoGeocodeDAO.find(MongoDBObject())
-      geocodeCursor.option = Bytes.QUERYOPTION_NOTIMEOUT
-      geocodeCursor.foreach(geocodeRecord => {
-        geocodeRecord.featureIds.foreach(id => {
-          fidMap(id) = Some(geocodeRecord.featureId)
-        })
-        i += 1
-        if (i % (100*1000) == 0) {
-          log.info("preloaded %d/%d fids".format(i, total))
+      val total: Long = executor.count(Q(ThriftGeocodeRecord))
+      executor.iterate(
+        Q(ThriftGeocodeRecord),
+        ()
+      )((_: Unit, event: Iter.Event[ThriftGeocodeRecord]) => {
+        event match {
+          case Iter.Item(unwrapped) => {
+            val geocodeRecord = new GeocodeRecord(unwrapped)
+            geocodeRecord.featureIds.foreach(id => {
+              fidMap(id) = Some(geocodeRecord.featureId)
+            })
+            i += 1
+            if (i % (100*1000) == 0) {
+              log.info("preloaded %d/%d fids".format(i, total))
+            }
+            Iter.Continue(())
+          }
+          case Iter.EOF => Iter.Return(())
+          case Iter.Error(e) => throw e
         }
       })
     }
@@ -39,8 +45,9 @@ class FidMap(preload: Boolean) extends DurationUtils {
       fidMap.getOrElse(fid, None)
     } else {
       if (!fidMap.contains(fid)) {
-        val longidOpt = MongoGeocodeDAO.primitiveProjection[Long](
-          MongoDBObject("_id" -> fid.longId), "_id")
+        val longidOpt = executor.fetchOne(
+          Q(ThriftGeocodeRecord).where(_.id eqs fid.longId).select(_.id)
+        ).flatten
         fidMap(fid) = longidOpt.flatMap(StoredFeatureId.fromLong _)
         if (longidOpt.isEmpty) {
           //println("missing fid: %s".format(fid))

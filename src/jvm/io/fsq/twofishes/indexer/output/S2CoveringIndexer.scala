@@ -1,11 +1,13 @@
 
 package io.fsq.twofishes.indexer.output
 
-import com.mongodb.Bytes
-import com.mongodb.casbah.Imports._
+import io.fsq.rogue.Iter
 import io.fsq.twofishes.core.Indexes
-import io.fsq.twofishes.indexer.mongo.{MongoGeocodeDAO, S2CoveringIndex, S2CoveringIndexDAO}
+import io.fsq.twofishes.indexer.mongo.RogueImplicits._
+import io.fsq.twofishes.indexer.util.GeocodeRecord
+import io.fsq.twofishes.model.gen.{ThriftGeocodeRecord, ThriftS2CoveringIndex}
 import io.fsq.twofishes.util.S2CoveringConstants
+import org.bson.types.ObjectId
 
 class S2CoveringIndexer(
   override val basepath: String,
@@ -15,13 +17,8 @@ class S2CoveringIndexer(
   override val outputs = Seq(index)
 
   def writeIndexImpl() {
-    val polygonSize = S2CoveringIndexDAO.collection.count()
-    val usedPolygonSize = MongoGeocodeDAO.count(MongoDBObject("hasPoly" -> true))
-
-    val hasPolyCursor =
-      MongoGeocodeDAO.find(MongoDBObject("hasPoly" -> true))
-        .sort(orderBy = MongoDBObject("_id" -> 1)) // sort by _id asc
-    hasPolyCursor.option = Bytes.QUERYOPTION_NOTIMEOUT
+    val polygonSize: Long = executor.count(Q(ThriftS2CoveringIndex))
+    val usedPolygonSize: Long = executor.count(Q(ThriftGeocodeRecord).where(_.hasPoly eqs true))
 
     val writer = buildMapFileWriter(
       index,
@@ -35,23 +32,38 @@ class S2CoveringIndexer(
     var numUsedPolygon = 0
     val groupSize = 1000
     // would be great to unify this with featuresIndex
-    for {
-      (g, groupIndex) <- hasPolyCursor.grouped(groupSize).zipWithIndex
-      group = g.toList
-      toFindCovers: Map[Long, ObjectId] = group.filter(f => f.hasPoly).map(r => (r._id, r.polyId)).toMap
-      coverMap: Map[ObjectId, S2CoveringIndex] = S2CoveringIndexDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> toFindCovers.values.toList)))
-        .toList
-        .groupBy(_._id).map({case (k, v) => (k, v(0))})
-      (f, coverIndex) <- group.zipWithIndex
-      covering <- coverMap.get(f.polyId)
-    } {
-      if (coverIndex == 0) {
-        log.info("S2CoveringIndexer: outputted %d of %d used polys, %d of %d total polys seen".format(
-          numUsedPolygon, usedPolygonSize, polygonSize, groupIndex*groupSize))
+    executor.iterateBatch(
+      Q(ThriftGeocodeRecord)
+        .where(_.hasPoly eqs true)
+        .orderAsc(_.id),
+      groupSize,
+      0
+    )((groupIndex: Int, event: Iter.Event[Seq[ThriftGeocodeRecord]]) => {
+      event match {
+        case Iter.Item(unwrappedGroup) => {
+          val group = unwrappedGroup.map(new GeocodeRecord(_))
+          val toFindCovers: Map[Long, ObjectId] = group.filter(f => f.hasPoly).map(r => (r.id, r.polyIdOrThrow)).toMap
+          val coverMap: Map[ObjectId, ThriftS2CoveringIndex] = executor.fetch(
+            Q(ThriftS2CoveringIndex).where(_.id in toFindCovers.values)
+          ).groupBy(_.id).map({ case (k, v) => (k, v(0)) })
+          for {
+            (f, coverIndex) <- group.zipWithIndex
+            covering <- coverMap.get(f.polyIdOrThrow)
+          } {
+            if (coverIndex == 0) {
+              log.info("S2CoveringIndexer: outputted %d of %d used polys, %d of %d total polys seen".format(
+                numUsedPolygon, usedPolygonSize, polygonSize, groupIndex*groupSize))
+            }
+            numUsedPolygon += 1
+            writer.append(f.featureId, covering.cellIds)
+          }
+          Iter.Continue(groupIndex + 1)
+        }
+        case Iter.EOF => Iter.Return(groupIndex)
+        case Iter.Error(e) => throw e
       }
-      numUsedPolygon += 1
-      writer.append(f.featureId, covering.cellIds)
-    }
+    })
+
     writer.close()
 
     log.info("done")

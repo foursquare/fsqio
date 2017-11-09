@@ -78,10 +78,10 @@ class BaseGettyFeaturesImporterJob(
         val featureId = GettyId(id)
 
         val geocodeRecord = GeocodeRecord(
-          _id = featureId.longId,
+          id = featureId.longId,
           names = Nil,
           cc = ccOpt.getOrElse("XX"),
-          _woeType = YahooWoeType.UNKNOWN.id,
+          woeType = YahooWoeType.UNKNOWN.id,
           lat = centerLatLng._1,
           lng = centerLatLng._2,
           displayNames = names.toList,

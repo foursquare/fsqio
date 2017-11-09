@@ -10,11 +10,14 @@ import com.vividsolutions.jts.io.{WKBWriter, WKTReader}
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.gen._
-import io.fsq.twofishes.indexer.mongo._
+import io.fsq.twofishes.indexer.mongo.{GeocodeRecordIndexes, IndexerQueryExecutor, NameIndex, RevGeoIndex,
+    RogueMongoGeocodeStorageService}
 import io.fsq.twofishes.indexer.output._
 import io.fsq.twofishes.indexer.util.{BoundingBox, DisplayName, GeocodeRecord, Point, SlugEntry}
 import io.fsq.twofishes.indexer.util.FsqSimpleFeatureImplicits._
 import io.fsq.twofishes.indexer.util.ShapefileIterator
+import io.fsq.twofishes.model.gen.{ThriftGeocodeRecord, ThriftNameIndex, ThriftPolygonIndex, ThriftRevGeoIndex,
+    ThriftS2CoveringIndex, ThriftS2InteriorIndex}
 import io.fsq.twofishes.util.{DurationUtils, GeoTools, GeonamesId, GeonamesNamespace, Helpers, NameNormalizer,
     StoredFeatureId}
 import io.fsq.twofishes.util.Helpers._
@@ -76,7 +79,7 @@ object GeonamesParser extends DurationUtils {
     })
   }
 
-  val store = new MongoGeocodeStorageService()
+  val store = new RogueMongoGeocodeStorageService()
   lazy val slugIndexer = new SlugIndexer()
 
   def main(args: Array[String]) {
@@ -93,12 +96,12 @@ object GeonamesParser extends DurationUtils {
     }
 
     if (config.reloadData) {
-      MongoGeocodeDAO.collection.drop()
-      NameIndexDAO.collection.drop()
-      PolygonIndexDAO.collection.drop()
-      RevGeoIndexDAO.collection.drop()
-      S2CoveringIndexDAO.collection.drop()
-      S2InteriorIndexDAO.collection.drop()
+      IndexerQueryExecutor.dropCollection(ThriftGeocodeRecord)
+      IndexerQueryExecutor.dropCollection(ThriftNameIndex)
+      IndexerQueryExecutor.dropCollection(ThriftPolygonIndex)
+      IndexerQueryExecutor.dropCollection(ThriftRevGeoIndex)
+      IndexerQueryExecutor.dropCollection(ThriftS2CoveringIndex)
+      IndexerQueryExecutor.dropCollection(ThriftS2InteriorIndex)
       parser.loadIntoMongo()
       writeIndexes(parser.s2CoveringLatch)
     } else {
@@ -116,10 +119,7 @@ object GeonamesParser extends DurationUtils {
 
   def makeFinalIndexes() {
     logPhase("making indexes before generating output") {
-      PolygonIndexDAO.makeIndexes()
-      RevGeoIndexDAO.makeIndexes()
-      S2CoveringIndexDAO.makeIndexes()
-      S2InteriorIndexDAO.makeIndexes()
+      RevGeoIndex.makeIndexes(store.executor)
     }
   }
 
@@ -150,7 +150,7 @@ case class ShortenInfo(from: Regex, to: String, flags: Int)
 
 import io.fsq.twofishes.indexer.importers.geonames.GeonamesParser._
 class GeonamesParser(
-  store: GeocodeStorageWriteService,
+  store: RogueMongoGeocodeStorageService,
   slugIndexer: SlugIndexer
 ) extends Logging {
   lazy val polygonLoader = new PolygonLoader(this, store, config)
@@ -290,7 +290,7 @@ class GeonamesParser(
     )
 
     logPhase("building name indexes pre parseNameTransforms") {
-      NameIndexDAO.makeIndexes()
+      NameIndex.makeIndexes(store.executor)
     }
 
     logPhase("parseNameTransforms") {
@@ -305,7 +305,7 @@ class GeonamesParser(
     }
 
     logPhase("building feature indexes pre polygon loading") {
-      MongoGeocodeDAO.makeIndexes()
+      GeocodeRecordIndexes.makeIndexes(store.executor)
     }
     polygonLoader.load(GeonamesNamespace)
   }
@@ -367,11 +367,10 @@ class GeonamesParser(
     val name = NameNormalizer.normalize(dn.name).trim
     val cc: String = record.map(_.cc).getOrElse("")
     val pop: Int =
-      record.flatMap(_.population).getOrElse(0) + record.flatMap(_.boost).getOrElse(0)
-    val woeType: Int =
-      record.map(_._woeType).getOrElse(0)
+      record.map(_.population).getOrElse(0) + record.map(_.boost).getOrElse(0)
+    val woeType: Int = record.flatMap(_.woeTypeOption.map(_.id)).getOrElse(0)
     val excludeFromPrefixIndex = shouldExcludeFromPrefixIndex(dn, YahooWoeType.findByIdOrNull(woeType))
-    NameIndex(name, fid.longId, cc, pop, woeType, dn.flags, dn.lang, excludeFromPrefixIndex, dn._id)
+    NameIndex(name, fid.longId, cc, pop, woeType, dn.flags, dn.lang, excludeFromPrefixIndex, dn.idOrThrow)
   }
 
   def rewriteNames(names: List[String]): (List[String], List[String]) = {
@@ -608,17 +607,17 @@ class GeonamesParser(
         flags = displayNames.foldLeft(0)((f, dn) => f | dn.flags))})
 
     val record = GeocodeRecord(
-      _id = geonameId.longId,
+      id = geonameId.longId,
       names = Nil,
       cc = feature.countryCode,
-      _woeType = feature.featureClass.woeType.getValue,
+      woeType = feature.featureClass.woeType.getValue,
       lat = lat,
       lng = lng,
       parents = allParents.map(_.longId),
       population = feature.population,
       displayNames = finalDisplayNames,
       boost = boost,
-      boundingbox = bbox,
+      boundingBox = bbox,
       displayBounds = displayBboxTable.get(geonameId),
       canGeocode = canGeocode,
       slug = slug,
@@ -627,7 +626,7 @@ class GeonamesParser(
       ids = ids.map(_.longId),
       polyId = polygonRecordOpt.map(_.id).getOrElse(GeocodeRecord.dummyOid),
       hasPoly = polygonRecordOpt.isDefined
-    )
+    ).applyIf(attributesSet, _.withAttributes(Some(attributesBuilder.result)))
 
     polygonRecordOpt.foreach(polygonRecord => {
       polygonLoader.indexPolygon(
@@ -636,10 +635,6 @@ class GeonamesParser(
         "self_point"
       )
     })
-
-    if (attributesSet) {
-      record.setAttributes(Some(attributesBuilder.result))
-    }
 
     record
   }
@@ -696,7 +691,7 @@ class GeonamesParser(
     store.insert(recordsToInsert)
 
     val displayNamesToInsert = recordsToInsert.flatMap(r =>
-      createNameIndexRecords(r.displayNames, r.featureId, Some(r))
+      createNameIndexRecords(r.displayNames.map(new DisplayName(_)).toList, r.featureId, Some(r))
     )
     store.addNameIndexes(displayNamesToInsert)
   }
@@ -880,7 +875,7 @@ class GeonamesParser(
           // name transform can therefore have at most one display name dupe
           // combine flags with that dupe, if it exists
           var merged = false
-          val mergedNames = record.displayNames.map(dn => {
+          val mergedNames = record.displayNames.map(new DisplayName(_)).map(dn => {
             if (dn.lang =? lang && dn.name =? name) {
               log.info("merged display name %s with name transform: id %s, lang %s, name %s, flags %d".format(dn, idString, lang, name, flagsMaskComputed))
               merged = true
@@ -918,7 +913,7 @@ class GeonamesParser(
             } else {
               dn
             }
-          })
+          }).toList
 
           val newNames = modifiedNames ++
             (if (merged) {

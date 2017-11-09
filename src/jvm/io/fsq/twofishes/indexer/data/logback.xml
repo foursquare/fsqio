@@ -3,7 +3,7 @@
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>log/twofishes/twofishes.${bySecond}.log</file>
         <encoder>
-            <pattern>%-5relative %-5level %logger{35} - %msg%n</pattern>
+            <pattern>[%d{ISO8601}] %-5level %logger{35} - %msg%n</pattern>
             <!-- <pattern>%d{dd HH:mm:ss:SSS} [%thread] %-5level %logger{35} - %msg%n</pattern> -->
         </encoder>
     </appender>

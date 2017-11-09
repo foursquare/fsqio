@@ -7,26 +7,66 @@ import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.core.YahooWoeTypes
 import io.fsq.twofishes.gen._
+import io.fsq.twofishes.model.gen.{ThriftBoundingBox, ThriftBoundingBoxProxy, ThriftDisplayName,
+    ThriftDisplayNameProxy, ThriftGeocodeRecord, ThriftGeocodeRecordProxy, ThriftPoint, ThriftPointProxy}
 import io.fsq.twofishes.util.StoredFeatureId
 import java.nio.ByteBuffer
 import org.apache.thrift.{TDeserializer, TSerializer}
 import org.apache.thrift.protocol.TCompactProtocol
 import org.bson.types.ObjectId
-import scala.collection.JavaConverters._
 
-case class DisplayName(
-  lang: String,
-  name: String,
-  flags: Int = 0,
-  _id: ObjectId = new ObjectId()
-)
+class DisplayName(override val underlying: ThriftDisplayName) extends ThriftDisplayNameProxy {
+  // I did this for porting convenience
+  def name: String = nameOption.getOrElse("")
+  def lang: String = langOption.getOrElse("")
+}
 
-case class Point(lat: Double, lng: Double)
+object DisplayName {
+  def apply(
+    lang: String,
+    name: String,
+    flags: Int = 0,
+    id: ObjectId = new ObjectId()
+  ): DisplayName = {
+    new DisplayName(
+      ThriftDisplayName.newBuilder
+        .lang(lang)
+        .name(name)
+        .flags(flags)
+        .id(id)
+        .result()
+    )
+  }
+}
 
-case class BoundingBox(
-  ne: Point,
-  sw: Point
-)
+class Point(override val underlying: ThriftPoint) extends ThriftPointProxy
+
+object Point {
+  def apply(lat: Double, lng: Double): ThriftPoint = {
+    new Point(
+      ThriftPoint.newBuilder
+        .lat(lat)
+        .lng(lng)
+        .result()
+    )
+  }
+}
+
+class BoundingBox(override val underlying: ThriftBoundingBox) extends ThriftBoundingBoxProxy
+
+object BoundingBox {
+  def apply(
+    ne: ThriftPoint,
+    sw: ThriftPoint
+  ): BoundingBox = {
+    new BoundingBox(
+      ThriftBoundingBox.newBuilder
+        .ne(ne)
+        .sw(sw)
+        .result()
+    )
+  }
+}
 
 object GeoJsonPoint {
   def apply(lat: Double, lng: Double): GeoJsonPoint =
@@ -41,65 +81,97 @@ case class GeoJsonPoint(
 
 object GeocodeRecord {
   val dummyOid = new ObjectId()
-}
 
-case class GeocodeRecord(
-  _id: Long,
-  names: List[String],
-  cc: String,
-  _woeType: Int,
-  lat: Double,
-  lng: Double,
-  displayNames: List[DisplayName] = Nil,
-  parents: List[Long] = Nil,
-  population: Option[Int] = None,
-  boost: Option[Int] = None,
-  boundingbox: Option[BoundingBox] = None,
-  displayBounds: Option[BoundingBox] = None,
-  canGeocode: Boolean = true,
-  slug: Option[String] = None,
-  polygon: Option[Array[Byte]] = None,
-  hasPoly: Boolean = false,
-  var attributes: Option[Array[Byte]] = None,
-  extraRelations: List[Long] = Nil,
-  polyId: ObjectId = GeocodeRecord.dummyOid,
-  ids: List[Long] = Nil,
-  polygonSource: Option[String] = None
-) extends Ordered[GeocodeRecord] {
-
-  val factory = new TCompactProtocol.Factory()
-  val serializer = new TSerializer(factory)
-  val deserializer = new TDeserializer(factory)
-
-  def setAttributes(attr: Option[GeocodeFeatureAttributes]) {
-    attributes = attr.map(a => serializer.serialize(a))
+  private[util] val deserializer = new ThreadLocal[TDeserializer] {
+    override def initialValue = new TDeserializer(new TCompactProtocol.Factory())
   }
 
-  def getAttributes(): Option[GeocodeFeatureAttributes] = {
-    attributes.map(bytes => {
+  private[util] val serializer = new ThreadLocal[TSerializer] {
+    override def initialValue = new TSerializer(new TCompactProtocol.Factory())
+  }
+
+  def apply(
+    id: Long,
+    names: Seq[String],
+    cc: String,
+    woeType: Int,
+    lat: Double,
+    lng: Double,
+    displayNames: Seq[ThriftDisplayName] = Vector.empty,
+    parents: Seq[Long] = Vector.empty,
+    population: Option[Int] = None,
+    boost: Option[Int] = None,
+    boundingBox: Option[ThriftBoundingBox] = None,
+    displayBounds: Option[ThriftBoundingBox] = None,
+    canGeocode: Boolean = true,
+    slug: Option[String] = None,
+    polygon: Option[Array[Byte]] = None,
+    hasPoly: Boolean = false,
+    attributes: Option[Array[Byte]] = None,
+    extraRelations: Seq[Long] = Vector.empty,
+    polyId: ObjectId = GeocodeRecord.dummyOid,
+    ids: Seq[Long] = Vector.empty,
+    polygonSource: Option[String] = None
+  ): GeocodeRecord = {
+    val thriftModel = ThriftGeocodeRecord.newBuilder
+      .id(id)
+      .names(names)
+      .cc(cc)
+      .woeType(YahooWoeType.findById(woeType).getOrElse(throw new Exception(s"Unknown YahooWoeType ID: ${woeType}")))
+      .lat(lat)
+      .lng(lng)
+      .displayNames(displayNames)
+      .parents(parents)
+      .population(population)
+      .boost(boost)
+      .boundingBox(boundingBox)
+      .displayBounds(displayBounds)
+      .canGeocode(canGeocode)
+      .slug(slug)
+      .polygon(polygon.map(ByteBuffer.wrap))
+      .hasPoly(hasPoly)
+      .rawAttributes(attributes.map(ByteBuffer.wrap))
+      .extraRelations(extraRelations)
+      .polyId(polyId)
+      .ids(ids)
+      .polygonSource(polygonSource)
+      .result()
+    new GeocodeRecord(thriftModel)
+  }
+}
+
+class GeocodeRecord(
+  override val underlying: ThriftGeocodeRecord
+) extends ThriftGeocodeRecordProxy {
+  lazy val attributes: Option[GeocodeFeatureAttributes] = {
+    rawAttributesOption.map(byteBuffer => {
       val attr = new RawGeocodeFeatureAttributes()
-      deserializer.deserialize(attr, bytes)
+      GeocodeRecord.deserializer.get.deserialize(attr, byteBuffer.array())
       attr
     })
   }
 
-  def featureId: StoredFeatureId = StoredFeatureId.fromLong(_id).getOrElse(
-    throw new RuntimeException("can't convert %s to a StoredFeatureId".format(_id)))
+  def withAttributes(attr: Option[GeocodeFeatureAttributes]): GeocodeRecord = {
+    val serializedAttributesOpt = attr.map(a => ByteBuffer.wrap(GeocodeRecord.serializer.get.serialize(a)))
+    new GeocodeRecord(underlying.toBuilder.rawAttributes(serializedAttributesOpt).result())
+  }
 
-  def allIds = (List(_id) ++ ids).distinct
+  def featureId: StoredFeatureId = StoredFeatureId.fromLong(id).getOrElse(
+    throw new RuntimeException("can't convert %s to a StoredFeatureId".format(id)))
+
+  def allIds = (List(id) ++ ids).distinct
   def featureIds: List[StoredFeatureId] = allIds.flatMap(StoredFeatureId.fromLong)
 
-  def parentFeatureIds: List[StoredFeatureId] = parents.flatMap(StoredFeatureId.fromLong _)
-
-  lazy val woeType = YahooWoeType.findByIdOrNull(_woeType)
+  def parentFeatureIds: Seq[StoredFeatureId] = parents.flatMap(StoredFeatureId.fromLong _)
 
   def center = {
     val geomFactory = new GeometryFactory()
     geomFactory.createPoint(new Coordinate(lng, lat))
   }
 
-  def compare(that: GeocodeRecord): Int = {
-    YahooWoeTypes.getOrdering(this.woeType) - YahooWoeTypes.getOrdering(that.woeType)
+  // Note this overrides from the Spindle proxy, which is why `that` is a ThriftGeocodeRecord.
+  override def compare(that: ThriftGeocodeRecord): Int = {
+    YahooWoeTypes.getOrdering(woeTypeOrThrow) - YahooWoeTypes.getOrdering(that.woeTypeOrThrow)
   }
 
   def fixRomanianName(s: String) = {
@@ -128,21 +200,21 @@ case class GeocodeRecord(
     // geom
     val geometryBuilder = FeatureGeometry.newBuilder
       .center(GeocodePoint(lat, lng))
-      .source(polygonSource)
+      .source(polygonSourceOption)
 
-    if (polygon.isEmpty) {
-      boundingbox.foreach(bounds => {
-        val currentBounds = (bounds.ne.lat, bounds.ne.lng, bounds.sw.lat, bounds.sw.lng)
+    if (!polygonIsSet) {
+      boundingBoxOption.foreach(bounds => {
+        val currentBounds = (bounds.neOrThrow.lat, bounds.neOrThrow.lng, bounds.swOrThrow.lat, bounds.swOrThrow.lng)
 
         // This breaks at 180, I get that, to fix.
         val finalBounds = (
-          List(bounds.ne.lat, bounds.sw.lat).max,
-          List(bounds.ne.lng, bounds.sw.lng).max,
-          List(bounds.ne.lat, bounds.sw.lat).min,
-          List(bounds.ne.lng, bounds.sw.lng).min
+          List(bounds.neOrThrow.lat, bounds.swOrThrow.lat).max,
+          List(bounds.neOrThrow.lng, bounds.swOrThrow.lng).max,
+          List(bounds.neOrThrow.lat, bounds.swOrThrow.lat).min,
+          List(bounds.neOrThrow.lng, bounds.swOrThrow.lng).min
         )
 
-        if (finalBounds != currentBounds) {
+        if (finalBounds !=? currentBounds) {
           println("incorrect bounds %s -> %s".format(currentBounds, finalBounds))
         }
 
@@ -153,18 +225,18 @@ case class GeocodeRecord(
       })
     }
 
-    displayBounds.foreach(bounds => {
-      val currentBounds = (bounds.ne.lat, bounds.ne.lng, bounds.sw.lat, bounds.sw.lng)
+    displayBoundsOption.foreach(bounds => {
+      val currentBounds = (bounds.neOrThrow.lat, bounds.neOrThrow.lng, bounds.swOrThrow.lat, bounds.swOrThrow.lng)
 
       // This breaks at 180, I get that, to fix.
       val finalBounds = (
-        List(bounds.ne.lat, bounds.sw.lat).max,
-        List(bounds.ne.lng, bounds.sw.lng).max,
-        List(bounds.ne.lat, bounds.sw.lat).min,
-        List(bounds.ne.lng, bounds.sw.lng).min
+        List(bounds.neOrThrow.lat, bounds.swOrThrow.lat).max,
+        List(bounds.neOrThrow.lng, bounds.swOrThrow.lng).max,
+        List(bounds.neOrThrow.lat, bounds.swOrThrow.lat).min,
+        List(bounds.neOrThrow.lng, bounds.swOrThrow.lng).min
       )
 
-      if (finalBounds != currentBounds) {
+      if (finalBounds !=? currentBounds) {
         println("incorrect bounds %s -> %s".format(currentBounds, finalBounds))
       }
 
@@ -174,11 +246,11 @@ case class GeocodeRecord(
       ))
     })
 
-    polygon.foreach(poly => {
-      geometryBuilder.wkbGeometry(ByteBuffer.wrap(poly))
+    polygonOption.foreach(poly => {
+      geometryBuilder.wkbGeometry(poly)
 
       val wkbReader = new WKBReader()
-      val g = wkbReader.read(poly)
+      val g = wkbReader.read(poly.array())
 
       val envelope = g.getEnvelopeInternal()
 
@@ -188,11 +260,13 @@ case class GeocodeRecord(
       ))
     })
 
-    val allNames: List[DisplayName] = displayNames.filterNot(n => List("post", "link").contains(n.lang))
+    val allNames: Seq[ThriftDisplayName] = {
+      displayNames.filterNot(n => n.langOption.has("post") || n.langOption.has("link"))
+    }
 
     val nameCandidates = allNames.map(name => {
       var flags: List[FeatureNameFlags] = Nil
-      if (name.lang == "abbr") {
+      if (name.langOption.has("abbr")) {
         flags ::= FeatureNameFlags.ABBREVIATION
       }
 
@@ -202,14 +276,16 @@ case class GeocodeRecord(
         }
       })
 
-      FeatureName.newBuilder.name(name.name).lang(name.lang)
+      FeatureName.newBuilder
+        .name(name.nameOrThrow)
+        .lang(name.langOrThrow)
         .applyIf(flags.nonEmpty, _.flags(flags))
-        .result
+        .result()
     })
 
     var finalNames = nameCandidates
       .groupBy(n => "%s%s".format(n.lang, n.name))
-      .flatMap({case (k,values) => {
+      .flatMap({case (k, values) => {
         var allFlags = values.flatMap(_.flags)
 
         // If we collapsed multiple names, and not all of them had ALIAS,
@@ -222,7 +298,7 @@ case class GeocodeRecord(
         values.headOption.map(_.copy(flags = allFlags.distinct))
       }})
       .map(n => {
-        if (n.lang == "ro") {
+        if (n.lang =? "ro") {
           n.copy(
             name = fixRomanianName(n.name)
           )
@@ -232,7 +308,7 @@ case class GeocodeRecord(
       })
 
     // Lately geonames has these stupid JP aliases, like "Katsuura Gun" for "Katsuura-gun"
-    if (cc =? "JP" || cc =? "TH") {
+    if (ccOption.has("JP") || ccOption.has("TH")) {
       def isPossiblyBad(s: String): Boolean = {
         s.contains(" ") && s.split(" ").forall(_.headOption.exists(Character.isUpperCase))
       }
@@ -244,7 +320,7 @@ case class GeocodeRecord(
         (head.toList ++ rest.map(_.toLowerCase)).mkString("-")
       }
 
-      val enNames = finalNames.filter(_.lang == "en")
+      val enNames = finalNames.filter(_.lang =? "en")
       enNames.foreach(n => {
         if (isPossiblyBad(n.name)) {
           finalNames = finalNames.filterNot(_.name =? makeBetterName(n.name))
@@ -253,20 +329,20 @@ case class GeocodeRecord(
     }
 
     val feature = GeocodeFeature.newBuilder
-      .cc(cc)
+      .cc(ccOption)
       .geometry(geometryBuilder.result)
-      .woeType(this.woeType)
+      .woeType(woeTypeOption)
       .ids(featureIds.map(_.thriftFeatureId))
       .id(featureIds.headOption.map(_.humanReadableString))
       .longId(featureIds.headOption.map(_.longId))
-      .slug(slug)
-      .names(finalNames.toSeq)
-      .attributes(getAttributes())
+      .slug(slugOption)
+      .names(finalNames.toVector)
+      .attributes(attributes)
       .result
 
     val scoringBuilder = ScoringFeatures.newBuilder
-      .boost(boost)
-      .population(population)
+      .boost(boostOption)
+      .population(populationOption)
       .parentIds(parents)
       .applyIf(extraRelations.nonEmpty, _.extraRelationIds(extraRelations))
       .applyIf(hasPoly, _.hasPoly(hasPoly))
@@ -286,16 +362,18 @@ case class GeocodeRecord(
     servingFeature
   }
 
-  def isCountry = woeType == YahooWoeType.COUNTRY
-  def isPostalCode = woeType == YahooWoeType.POSTAL_CODE
+  def isCountry = woeTypeOption.has(YahooWoeType.COUNTRY)
+  def isPostalCode = woeTypeOption.has(YahooWoeType.POSTAL_CODE)
 
   def debugString(): String = {
     "%s - %s %s - %s,%s".format(
       featureId,
-      displayNames.headOption.map(_.name).getOrElse("????"),
-      cc,
+      displayNames.headOption.flatMap(_.nameOption).getOrElse("????"),
+      ccOption.getOrElse("??"),
       lat,
       lng
     )
   }
+
+  def cc = ccOption.getOrElse("")
 }

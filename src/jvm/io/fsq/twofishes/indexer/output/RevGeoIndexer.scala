@@ -1,26 +1,22 @@
 package io.fsq.twofishes.indexer.output
 
-import com.mongodb.Bytes
-import com.mongodb.casbah.Imports._
+import io.fsq.common.scala.Identity._
+import io.fsq.common.scala.Lists.Implicits._
+import io.fsq.rogue.{InitialState, Iter, Query}
 import io.fsq.twofishes.core.Indexes
 import io.fsq.twofishes.gen.{CellGeometries, CellGeometry, YahooWoeType}
-import io.fsq.twofishes.indexer.mongo.RevGeoIndexDAO
+import io.fsq.twofishes.indexer.mongo.RevGeoIndex
+import io.fsq.twofishes.indexer.mongo.RogueImplicits._
+import io.fsq.twofishes.model.gen.{ThriftRevGeoIndex, ThriftRevGeoIndexMeta}
 import io.fsq.twofishes.util.RevGeoConstants
-import java.io._
-import java.nio.ByteBuffer
-import org.apache.hadoop.hbase.util.Bytes._
-import salat._
-import salat.annotations._
-import salat.dao._
-import salat.global._
-import scala.collection.JavaConverters._
+import org.bson.types.ObjectId
 import scala.collection.mutable.ListBuffer
 
 class RevGeoIndexer(
   override val basepath: String,
   override val fidMap: FidMap,
   polygonMap: Map[ObjectId, List[(Long, YahooWoeType)]]
-) extends Indexer with RevGeoConstants{
+) extends Indexer with RevGeoConstants {
   val index = Indexes.S2Index
   override val outputs = Seq(index)
 
@@ -33,51 +29,63 @@ class RevGeoIndexer(
     )
   )
 
-  def writeRevGeoIndex(
-    restrict: MongoDBObject
-  ) = {
-    val total = RevGeoIndexDAO.count(restrict)
+  type QueryType = Query[ThriftRevGeoIndexMeta, ThriftRevGeoIndex, InitialState]
 
-    val revGeoCursor = RevGeoIndexDAO.find(restrict)
-      .sort(orderBy = MongoDBObject("cellid" -> 1))
-    revGeoCursor.option = Bytes.QUERYOPTION_NOTIMEOUT
+  def writeRevGeoIndex(
+    restrict: QueryType => QueryType
+  ) = {
+    val baseQuery: QueryType = Q(ThriftRevGeoIndex)
+    val restrictedQuery: QueryType = restrict(baseQuery)
+    val total: Long = executor.count(restrictedQuery)
 
     var currentKey = 0L
     var currentCells = new ListBuffer[CellGeometry]
-    for {
-      (revgeoIndexRecord, index) <- revGeoCursor.zipWithIndex
-      (geoid, woeType) <- polygonMap.getOrElse(revgeoIndexRecord.polyId, Nil)
-    } {
-      if (index % 10000 == 0) {
-        log.info("processed %d of %d revgeo entries for %s".format(index, total, restrict))
-      }
-      if (currentKey != revgeoIndexRecord.cellid) {
-        if (currentKey != 0L) {
-          writer.append(currentKey, CellGeometries(currentCells))
-        }
-        currentKey = revgeoIndexRecord.cellid
-        currentCells.clear
-      }
-      val builder = CellGeometry.newBuilder
-        .woeType(woeType)
-        .longId(geoid)
 
-      if (revgeoIndexRecord.full) {
-        builder.full(true)
-      } else {
-        builder.wkbGeometry(revgeoIndexRecord.geom.map(ByteBuffer.wrap))
+    executor.iterate(
+      restrictedQuery.orderAsc(_.cellId),
+      0
+    )((index: Int, event: Iter.Event[ThriftRevGeoIndex]) => {
+      event match {
+        case Iter.Item(unwrapped) => {
+          val revgeoIndexRecord = new RevGeoIndex(unwrapped)
+          for {
+            (geoid, woeType) <- polygonMap.getOrElse(revgeoIndexRecord.polyIdOrThrow, Nil)
+          } {
+            if (index % 10000 =? 0) {
+              log.info("processed %d of %d revgeo entries for %s".format(index, total, restrict))
+            }
+            if (currentKey !=? revgeoIndexRecord.cellIdOrThrow) {
+              if (currentKey !=? 0L) {
+                writer.append(currentKey, CellGeometries(currentCells))
+              }
+              currentKey = revgeoIndexRecord.cellIdOrThrow
+              currentCells.clear
+            }
+            val builder = CellGeometry.newBuilder
+              .woeType(woeType)
+              .longId(geoid)
+
+            if (revgeoIndexRecord.full) {
+              builder.full(true)
+            } else {
+              builder.wkbGeometry(revgeoIndexRecord.geomOrThrow)
+            }
+            currentCells.append(builder.result)
+          }
+          Iter.Continue(index + 1)
+        }
+        case Iter.EOF => Iter.Return(index)
+        case Iter.Error(e) => throw e
       }
-      currentCells.append(builder.result)
-    }
+    })
 
     writer.append(currentKey, CellGeometries(currentCells))
   }
 
   def writeIndexImpl() {
     // in byte order, positives come before negative
-    writeRevGeoIndex(MongoDBObject("cellid" -> MongoDBObject("$gte" -> 0)))
-    writeRevGeoIndex(MongoDBObject("cellid" -> MongoDBObject("$lt" -> 0)))
-    //
+    writeRevGeoIndex(_.scan(_.cellId gte 0))
+    writeRevGeoIndex(_.scan(_.cellId lt 0))
 
     writer.close()
   }

@@ -3,14 +3,13 @@ package io.fsq.twofishes.indexer.importers.geonames
 import akka.actor.{Actor, ActorSystem, PoisonPill, Props}
 import akka.routing.{Broadcast, RoundRobinPool}
 import com.google.common.geometry.S2CellId
-import com.mongodb.Bytes
-import com.mongodb.casbah.Imports._
 import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.{Point => JTSPoint}
 import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory
 import com.vividsolutions.jts.io.{WKBReader, WKBWriter}
-import io.fsq.twofishes.indexer.mongo.{PolygonIndexDAO, RevGeoIndex, RevGeoIndexDAO, S2CoveringIndex,
-    S2CoveringIndexDAO, S2InteriorIndex, S2InteriorIndexDAO}
+import io.fsq.twofishes.indexer.mongo.{IndexerQueryExecutor, RevGeoIndex}
+import io.fsq.twofishes.indexer.mongo.RogueImplicits._
+import io.fsq.twofishes.model.gen.{ThriftPolygonIndex, ThriftS2CoveringIndex, ThriftS2InteriorIndex}
 import io.fsq.twofishes.util.{DurationUtils, GeometryCleanupUtils, GeometryUtils, RevGeoConstants, S2CoveringConstants,
     ShapefileS2Util}
 import java.util.concurrent.CountDownLatch
@@ -47,11 +46,12 @@ class S2CoveringWorker extends Actor with DurationUtils with RevGeoConstants wit
   val wkbReader = new WKBReader()
   val wkbWriter = new WKBWriter()
 
+  lazy val executor = IndexerQueryExecutor.instance
+
   def calculateCoverFromMongo(msg: CalculateCoverFromMongo) {
-    val records = PolygonIndexDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> msg.polyIds)))
-    records.option = Bytes.QUERYOPTION_NOTIMEOUT
+    val records = executor.fetch(Q(ThriftPolygonIndex).where(_.id in msg.polyIds))
     records.foreach(p =>
-      calculateCover(p._id, p.polygon, msg.options)
+      calculateCover(p.id, p.polygonOrThrow.array(), msg.options)
     )
   }
 
@@ -79,8 +79,8 @@ class S2CoveringWorker extends Actor with DurationUtils with RevGeoConstants wit
           ).toList
         }
 
-        val record = S2CoveringIndex(polyId, cells.map(_.id()))
-        S2CoveringIndexDAO.insert(record)
+        val record = ThriftS2CoveringIndex(polyId, cells.map(_.id()))
+        executor.insert(record)
       }
 
       if (options.forS2InteriorIndex) {
@@ -99,8 +99,8 @@ class S2CoveringWorker extends Actor with DurationUtils with RevGeoConstants wit
           ).toList
         }
 
-        val record = S2InteriorIndex(polyId, cells.map(_.id()))
-        S2InteriorIndexDAO.insert(record)
+        val record = ThriftS2InteriorIndex(polyId, cells.map(_.id()))
+        executor.insert(record)
       }
 
       if (options.forRevGeoIndex) {
@@ -141,14 +141,15 @@ class S2CoveringWorker extends Actor with DurationUtils with RevGeoConstants wit
                   intersection
                 }
                 RevGeoIndex(
-                  cellid.id(), polyId,
+                  cellid.id(),
+                  polyId,
                   full = false,
                   geom = Some(wkbWriter.write(geomToIndex))
                 )
               }
             }
           })
-          RevGeoIndexDAO.insert(records)
+          records.foreach(r => executor.insert(r))
         }
       }
     }
@@ -172,7 +173,8 @@ class S2CoveringMaster(val latch: CountDownLatch) extends Actor with Logging {
   var start: Long = 0
 
   val _system = ActorSystem("RoundRobinRouterExample")
-  val router = _system.actorOf(Props[S2CoveringWorker].withRouter(new RoundRobinPool(8)), name = "myRoundRobinRouterActor")
+  val numThreads = Runtime.getRuntime.availableProcessors
+  val router = _system.actorOf(Props[S2CoveringWorker].withRouter(new RoundRobinPool(numThreads)), name = "myRoundRobinRouterActor")
   var inFlight = 0
   var seenDone = false
 

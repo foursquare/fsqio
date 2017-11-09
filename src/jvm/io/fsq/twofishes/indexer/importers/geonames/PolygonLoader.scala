@@ -4,8 +4,7 @@ package io.fsq.twofishes.indexer.importers.geonames
 import com.cybozu.labs.langdetect.DetectorFactory
 import com.foursquare.geo.quadtree.CountryRevGeo
 import com.ibm.icu.text.Transliterator
-import com.mongodb.{Bytes, MongoException}
-import com.mongodb.casbah.Imports._
+import com.mongodb.MongoException
 import com.rockymadden.stringmetric.similarity.JaroWinklerMetric
 import com.rockymadden.stringmetric.transform._
 import com.twitter.ostrich.stats.Stats
@@ -13,12 +12,14 @@ import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBReader, WKBWriter}
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
+import io.fsq.rogue.Iter
 import io.fsq.twofishes.country.CountryInfo
 import io.fsq.twofishes.gen._
-import io.fsq.twofishes.indexer.mongo.{GeocodeStorageWriteService, MongoGeocodeDAO, PolygonIndex, PolygonIndexDAO,
-    RevGeoIndexDAO}
+import io.fsq.twofishes.indexer.mongo.{GeocodeStorageWriteService, IndexerQueryExecutor, PolygonIndex}
+import io.fsq.twofishes.indexer.mongo.RogueImplicits._
 import io.fsq.twofishes.indexer.util.{DisplayName, FsqSimpleFeature, GeoJsonIterator, GeocodeRecord, ShapeIterator,
     ShapefileIterator}
+import io.fsq.twofishes.model.gen.{ThriftGeocodeRecord, ThriftPolygonIndex, ThriftRevGeoIndex}
 import io.fsq.twofishes.util.{AdHocId, DurationUtils, FeatureNamespace, GeonamesNamespace, Helpers, NameNormalizer,
     StoredFeatureId}
 import io.fsq.twofishes.util.Helpers._
@@ -27,7 +28,6 @@ import java.nio.charset.Charset
 import org.bson.types.ObjectId
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import salat.global._
 import scala.collection.JavaConverters._
 
 object LanguageDetector {
@@ -108,6 +108,8 @@ class PolygonLoader(
 ) extends DurationUtils {
   val wkbWriter = new WKBWriter()
 
+  lazy val executor = IndexerQueryExecutor.instance
+
   val matchExtension = ".match.tsv"
 
   val coverOptions = CoverOptions(
@@ -161,7 +163,7 @@ class PolygonLoader(
   ) {
     Stats.incr("PolygonLoader.indexPolygon")
     val geomBytes = wkbWriter.write(geom)
-    PolygonIndexDAO.save(PolygonIndex(polyId, geomBytes, source))
+    executor.save(PolygonIndex(polyId, geomBytes, source))
     parser.s2CoveringMaster.foreach(_ ! CalculateCover(polyId, geomBytes, coverOptions))
   }
 
@@ -207,95 +209,72 @@ class PolygonLoader(
       load(defaultNamespace, f)
     }
     log.info("post processing, looking for bad poly matches")
-    val polygons =
-      PolygonIndexDAO.find(MongoDBObject())
-        .sort(orderBy = MongoDBObject("_id" -> 1)) // sort by _id asc
-    polygons.option = Bytes.QUERYOPTION_NOTIMEOUT
 
     val wkbReader = new WKBReader()
-    for {
-      (polyRecord, index) <- polygons.zipWithIndex
-      featureRecord <- getFeaturesByPolyId(polyRecord._id)
-      polyData = polyRecord.polygon
-    } {
-      val polygon = wkbReader.read(polyData)
-      val point = featureRecord.center
-      if (!polygon.contains(point) && polygon.distance(point) > 0.03) {
-        log.info("bad poly on %s -- %s too far from %s".format(
-          featureRecord.featureId, polygon, point))
+    executor.iterate(
+      Q(ThriftPolygonIndex).orderAsc(_.id),
+      0
+    )((index: Int, event: Iter.Event[ThriftPolygonIndex]) => {
+      event match {
+        case Iter.Item(polyRecord) => {
+          for {
+            featureRecord <- getFeaturesByPolyId(polyRecord.id)
+            polyData = polyRecord.polygonOrThrow
+          } {
+            val polygon = wkbReader.read(polyData.array())
+            val point = featureRecord.center
+            if (!polygon.contains(point) && polygon.distance(point) > 0.03) {
+              log.info("bad poly on %s -- %s too far from %s".format(
+                featureRecord.featureId, polygon, point))
 
-          MongoGeocodeDAO.update(MongoDBObject("_id" -> featureRecord.featureId.longId),
-            MongoDBObject("$set" ->
-              MongoDBObject(
-                "hasPoly" -> false
+              executor.updateOne(
+                Q(ThriftGeocodeRecord)
+                  .where(_.id eqs featureRecord.featureId.longId)
+                  .modify(_.hasPoly setTo false)
               )
-            ),
-            false, false)
 
-          Stats.incr("PolygonLoader.removeBadPolygon")
+              Stats.incr("PolygonLoader.removeBadPolygon")
+            }
+          }
+          Iter.Continue(index + 1)
+        }
+        case Iter.EOF => Iter.Return(index)
+        case Iter.Error(e) => throw e
       }
-    }
+    })
     log.info("done reading in polys")
     parser.s2CoveringMaster.foreach(_ ! Done())
   }
 
   private def getFeaturesByPolyId(id: ObjectId) = {
-    val featureCursor = MongoGeocodeDAO.find(MongoDBObject("polyId" -> id))
-    featureCursor.option = Bytes.QUERYOPTION_NOTIMEOUT
-    featureCursor.toList
+    executor.fetch(Q(ThriftGeocodeRecord).where(_.polyId eqs id)).map(new GeocodeRecord(_))
   }
 
   def rebuildRevGeoIndex {
-    RevGeoIndexDAO.collection.drop()
-    PolygonIndexDAO.primitiveProjections[ObjectId](MongoDBObject(), "_id")
-      .grouped(1000).foreach(group => {
-        parser.s2CoveringMaster.foreach(_ ! CalculateCoverFromMongo(group.toList, coverOptions))
-      })
+    IndexerQueryExecutor.dropCollection(ThriftRevGeoIndex)
+    executor.iterateBatch(
+      Q(ThriftPolygonIndex),
+      1000,
+      ()
+    )((_: Unit, event: Iter.Event[Seq[ThriftPolygonIndex]]) => {
+      event match {
+        case Iter.Item(group) => {
+          parser.s2CoveringMaster.foreach(_ ! CalculateCoverFromMongo(group.map(_.id).toList, coverOptions))
+          Iter.Continue(())
+        }
+        case Iter.EOF => Iter.Return(())
+        case Iter.Error(e) => throw e
+      }
+    })
     log.info("done reading in polys")
     parser.s2CoveringMaster.foreach(_ ! Done())
   }
 
-  def buildQuery(geometry: Geometry, woeTypes: List[YahooWoeType]) = {
-    // we can't use the geojson this spits out because it's a string and
-    // seeming MongoDBObject has no from-string parser
-    // The bounding box is easier to reason about anyway.
-    // val geoJson = GeometryJSON.toString(geometry)
-    val envelope = geometry.getEnvelope().buffer(0.01).getEnvelope()
-    val coords = envelope.getCoordinates().toList
-
-    MongoDBObject(
-      "loc" ->
-      MongoDBObject("$geoWithin" ->
-        MongoDBObject("$geometry" ->
-          MongoDBObject(
-            "type" -> "Polygon",
-            "coordinates" -> List(List(
-              List(coords(0).x, coords(0).y),
-              List(coords(1).x, coords(1).y),
-              List(coords(2).x, coords(2).y),
-              List(coords(3).x, coords(3).y),
-              List(coords(0).x, coords(0).y)
-            ))
-          )
-        )
-      ),
-      "_woeType" -> MongoDBObject("$in" -> woeTypes.map(_.getValue()))
-    )
-  }
-
   def findMatchCandidates(geometry: Geometry, woeTypes: List[YahooWoeType]): Iterator[GeocodeRecord] = {
-    val query = buildQuery(geometry, woeTypes)
-    val size = MongoGeocodeDAO.count(query)
-    if (size > 10000) {
-      log.error("result set too big: %s for %s".format(size, query))
-      return Iterator.empty
-    } else if (size > 2000) {
-      log.info("oversize result set: %s for %s".format(size, query))
-    }
-
-    val candidateCursor = MongoGeocodeDAO.find(query)
-    candidateCursor.option = Bytes.QUERYOPTION_NOTIMEOUT
-    candidateCursor
+    // This was using a query over a "loc" field that was never set anywhere, so it would never
+    // return anything anyway.
+    log.warn("findMatchCandidates doesn't return anything!!")
+    Iterator.empty
   }
 
   def removeDiacritics(text: String) = {
@@ -424,7 +403,7 @@ class PolygonLoader(
   ): PolygonMatch = {
     val featureNames = getFixedNames(config, feature)
 
-    val candidateNames = candidate.displayNames.map(_.name).filterNot(_.isEmpty)
+    val candidateNames = candidate.displayNames.map(new DisplayName(_)).map(_.name).filterNot(_.isEmpty)
     val polygonMatch = PolygonMatch(
       candidate,
       nameScore = bestNameScore(featureNames.map(_.name), candidateNames)
@@ -462,7 +441,7 @@ class PolygonLoader(
     var candidatesSeen = 0
 
     if (!hasName(config, feature)) {
-      log.info("no names on " + debugFeature(config, feature) + " - " + buildQuery(geometry, config.getAllWoeTypes))
+      log.info("no names on " + debugFeature(config, feature))
       return Nil
     }
 
@@ -501,10 +480,9 @@ class PolygonLoader(
           .find(_.nonEmpty).toList.flatten
 
       if (candidatesSeen == 0) {
-        log.debug("failed couldn't find any candidates for " + debugFeature(config, feature) + " - " + buildQuery(geometry, config.getAllWoeTypes))
+        log.debug("failed couldn't find any candidates for " + debugFeature(config, feature))
       } else if (acceptableCandidates.isEmpty) {
         log.debug("failed to match: %s".format(debugFeature(config, feature)))
-        log.debug("%s".format(buildQuery(geometry, config.getAllWoeTypes)))
         matchAtWoeType(config.getAllWoeTypes, withLogging = true)
       } else {
         log.debug("matched %s %s to %s".format(
@@ -606,8 +584,8 @@ class PolygonLoader(
         }
       }).toList
 
-      parser.insertGeocodeRecords(List(geocodeRecord.copy(
-        displayNames = langIdDisplayNames)))
+      parser.insertGeocodeRecords(List(new GeocodeRecord(geocodeRecord.copy(
+        displayNames = langIdDisplayNames))))
       id
     }
 

@@ -1,19 +1,13 @@
 package io.fsq.twofishes.indexer.output
 
-import com.mongodb.Bytes
-import com.mongodb.casbah.Imports._
 import io.fsq.common.scala.Identity._
+import io.fsq.rogue.Iter
 import io.fsq.twofishes.core.Indexes
-import io.fsq.twofishes.indexer.mongo.MongoGeocodeDAO
-import io.fsq.twofishes.indexer.util.SlugEntryMap
+import io.fsq.twofishes.indexer.mongo.IndexerQueryExecutor
+import io.fsq.twofishes.indexer.mongo.RogueImplicits._
+import io.fsq.twofishes.indexer.util.{GeocodeRecord, SlugEntryMap}
+import io.fsq.twofishes.model.gen.ThriftGeocodeRecord
 import io.fsq.twofishes.util.StoredFeatureId
-import java.io._
-import org.apache.hadoop.hbase.util.Bytes._
-import salat._
-import salat.annotations._
-import salat.dao._
-import salat.global._
-import scala.collection.JavaConverters._
 
 class IdIndexer(
   override val basepath: String,
@@ -32,14 +26,24 @@ class IdIndexer(
       slug -> canonicalFid
     }
 
-    val featureCursor = MongoGeocodeDAO.find(MongoDBObject())
-    featureCursor.option = Bytes.QUERYOPTION_NOTIMEOUT
-    val extraIds: List[(String, StoredFeatureId)]  = featureCursor.flatMap(f => {
-      (for {
-        id <- f.ids.filterNot(_ =? f._id)
-        extraId <- StoredFeatureId.fromLong(id)
-      } yield { List((id.toString -> f.featureId), (extraId.humanReadableString -> f.featureId)) }).flatten
-    }).toList
+    val extraIds: List[(String, StoredFeatureId)] = IndexerQueryExecutor.instance.iterate(
+      Q(ThriftGeocodeRecord),
+      List.empty[(String, StoredFeatureId)]
+    )((acc: List[(String, StoredFeatureId)], event: Iter.Event[ThriftGeocodeRecord]) => {
+      event match {
+        case Iter.Item(unwrapped) => {
+          val f = new GeocodeRecord(unwrapped)
+          val items = (for {
+            id <- f.ids.filterNot(_ =? f.id)
+            extraId <- StoredFeatureId.fromLong(id)
+          } yield { List((id.toString -> f.featureId), (extraId.humanReadableString -> f.featureId)) }).flatten
+          // Even though we build this list in reverse, it gets sorted anyway below. Yay O(1) prepend.
+          Iter.Continue(items.toList ::: acc)
+        }
+        case Iter.EOF => Iter.Return(acc)
+        case Iter.Error(e) => throw e
+      }
+    })
 
     val writer = buildMapFileWriter(index)
 

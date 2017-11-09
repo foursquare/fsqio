@@ -1,17 +1,11 @@
 package io.fsq.twofishes.indexer.output
 
-import com.mongodb.Bytes
-import com.mongodb.casbah.Imports._
+import io.fsq.rogue.Iter
 import io.fsq.twofishes.core.Indexes
-import io.fsq.twofishes.indexer.mongo.NameIndexDAO
+import io.fsq.twofishes.indexer.mongo.NameIndex
+import io.fsq.twofishes.indexer.mongo.RogueImplicits._
+import io.fsq.twofishes.model.gen.ThriftNameIndex
 import io.fsq.twofishes.util.StoredFeatureId
-import java.io._
-import org.apache.hadoop.hbase.util.Bytes._
-import salat._
-import salat.annotations._
-import salat.dao._
-import salat.global._
-import scala.collection.JavaConverters._
 import scala.collection.mutable.{HashSet, ListBuffer}
 
 
@@ -26,13 +20,7 @@ class NameIndexer(
 
   def writeIndexImpl() {
     var nameCount = 0
-    val nameSize = NameIndexDAO.collection.count()
-    val nameCursor = NameIndexDAO.find(MongoDBObject())
-      // sort by nameBytes asc
-      // then by eligibility for prefix matching
-      // finally static importance desc
-      .sort(orderBy = MongoDBObject("name" -> 1, "excludeFromPrefixIndex" -> 1, "pop" -> -1))
-    nameCursor.option = Bytes.QUERYOPTION_NOTIMEOUT
+    val nameSize: Long = executor.count(Q(ThriftNameIndex))
 
     var prefixSet = new HashSet[String]
 
@@ -55,22 +43,39 @@ class NameIndexer(
       }
     }
 
-    nameCursor.filterNot(_.name.isEmpty).foreach(n => {
-      if (lastName != n.name) {
-        if (lastName != "") {
-          writeFidsForLastName()
+    executor.iterate(
+      // sort by nameBytes asc
+      // then by eligibility for prefix matching
+      // finally static importance desc
+      Q(ThriftNameIndex).orderAsc(_.name).andAsc(_.excludeFromPrefixIndex).andDesc(_.pop),
+      ()
+    )((_: Unit, event: Iter.Event[ThriftNameIndex]) => {
+      event match {
+        case Iter.Item(unwrapped) => {
+          val n = new NameIndex(unwrapped)
+          if (n.nameOption.exists(_.nonEmpty)) {
+            if (lastName != n.nameOrThrow) {
+              if (lastName != "") {
+                writeFidsForLastName()
+              }
+              nameFids.clear()
+              lastName = n.nameOrThrow
+            }
+
+            nameFids.append(n.fidAsFeatureId)
+
+            nameCount += 1
+            if (nameCount % 100000 == 0) {
+              log.info("processed %d of %d names".format(nameCount, nameSize))
+            }
+          }
+          Iter.Continue(())
         }
-        nameFids.clear()
-        lastName = n.name
-      }
-
-      nameFids.append(n.fidAsFeatureId)
-
-      nameCount += 1
-      if (nameCount % 100000 == 0) {
-        log.info("processed %d of %d names".format(nameCount, nameSize))
+        case Iter.EOF => Iter.Return(())
+        case Iter.Error(e) => throw e
       }
     })
+
     writeFidsForLastName()
     writer.close()
 

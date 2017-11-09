@@ -3,8 +3,10 @@ package io.fsq.twofishes.indexer.importers.geonames
 
 import io.fsq.twofishes.core.YahooWoeTypes
 import io.fsq.twofishes.gen._
-import io.fsq.twofishes.indexer.mongo.{GeocodeStorageWriteService, MongoGeocodeDAO}
-import io.fsq.twofishes.indexer.util.{SlugEntry, SlugEntryMap}
+import io.fsq.twofishes.indexer.mongo.{GeocodeStorageWriteService, IndexerQueryExecutor}
+import io.fsq.twofishes.indexer.mongo.RogueImplicits._
+import io.fsq.twofishes.indexer.util.{GeocodeRecord, SlugEntry, SlugEntryMap}
+import io.fsq.twofishes.model.gen.ThriftGeocodeRecord
 import io.fsq.twofishes.util.{Helpers, NameUtils, SlugBuilder, StoredFeatureId}
 import java.io.File
 import scala.collection.JavaConverters._
@@ -54,16 +56,12 @@ class SlugIndexer {
     println("read %d slugs".format(slugEntryMap.size))
   }
 
-   // TODO: not in love with this talking directly to mongo, please fix
-  import com.mongodb.casbah.Imports._
-  import salat._
-  import salat.annotations._
-  import salat.dao._
-  import salat.global._
   val parentMap = new HashMap[StoredFeatureId, Option[GeocodeFeature]]
 
   def findFeature(fid: StoredFeatureId): Option[GeocodeServingFeature] = {
-    val ret = MongoGeocodeDAO.findOne(MongoDBObject("_id" -> fid.longId)).map(_.toGeocodeServingFeature)
+     // TODO: not in love with this talking directly to mongo, please fix
+    val ret = IndexerQueryExecutor.instance.fetchOne(Q(ThriftGeocodeRecord).where(_.id eqs fid.longId)).map(r =>
+      new GeocodeRecord(r).toGeocodeServingFeature)
     if (ret.isEmpty) {
       println("couldn't find %s".format(fid))
     }

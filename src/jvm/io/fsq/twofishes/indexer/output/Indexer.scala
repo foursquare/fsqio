@@ -1,22 +1,17 @@
   package io.fsq.twofishes.indexer.output
 
-import com.mongodb.casbah.Imports._
 import io.fsq.twofishes.core.{Index, MapFileUtils}
+import io.fsq.twofishes.indexer.mongo.IndexerQueryExecutor
 import io.fsq.twofishes.util.{DurationUtils, StoredFeatureId}
-import java.io._
+import java.io.File
 import java.net.URI
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{LocalFileSystem, Path}
 import org.apache.hadoop.hbase.io.hfile.{Compression, HFile}
 import org.apache.hadoop.hbase.io.hfile.hacks.TwofishesFoursquareCacheConfigHack
-import org.apache.hadoop.hbase.util.Bytes._
+import org.apache.hadoop.hbase.util.Bytes.ByteArrayComparator
 import org.apache.hadoop.io.{BytesWritable, MapFile}
 import org.apache.thrift.protocol.TCompactProtocol
-import salat._
-import salat.annotations._
-import salat.dao._
-import salat.global._
-import scala.collection.JavaConverters._
 
 trait WrappedWriter[K, V] {
   def append(k: K, v: V)
@@ -42,6 +37,8 @@ class WrappedHFileWriter[K, V](writer: HFile.Writer, index: Index[K, V]) extends
 abstract class Indexer extends DurationUtils {
   def basepath: String
   def fidMap: FidMap
+
+  protected lazy val executor = IndexerQueryExecutor.instance
 
   def outputs: Seq[Index[_, _]]
 

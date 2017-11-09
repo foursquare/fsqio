@@ -20,5 +20,6 @@ scala_library(
     'src/jvm/io/fsq/twofishes/core',
     'src/jvm/io/fsq/twofishes/util',
     'src/thrift/io/fsq/twofishes',
+    'src/thrift/io/fsq/twofishes/model',
   ],
 )

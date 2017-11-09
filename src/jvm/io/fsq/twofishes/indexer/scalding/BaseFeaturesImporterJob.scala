@@ -153,10 +153,10 @@ class BaseFeaturesImporterJob(
     }
 
     val geocodeRecord = GeocodeRecord(
-      _id = feature.featureId.longId,
+      id = feature.featureId.longId,
       names = Nil,
       cc = feature.countryCode,
-      _woeType = feature.featureClass.woeType.getValue,
+      woeType = feature.featureClass.woeType.getValue,
       lat = feature.latitude,
       lng = feature.longitude,
       // add basic minimal set of names from feature which might be removed/demoted later when merging alternate names
@@ -175,13 +175,12 @@ class BaseFeaturesImporterJob(
       population = feature.population,
       canGeocode = getEmbeddedCanGeocode(feature),
       // add embedded bounding box which might be replaced when merging external bounding boxes/polygons
-      boundingbox = getEmbeddedBoundingBox(feature),
+      boundingBox = getEmbeddedBoundingBox(feature),
       // will be populated by subsequent joins
       displayBounds = None,
       slug = None,
       extraRelations = Nil
-    )
-    geocodeRecord.setAttributes(getEmbeddedAttributes(feature))
+    ).withAttributes(getEmbeddedAttributes(feature))
 
     val servingFeature = geocodeRecord.toGeocodeServingFeature()
     (new LongWritable(servingFeature.longId) -> servingFeature)
