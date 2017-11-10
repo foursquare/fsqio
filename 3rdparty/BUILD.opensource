@@ -854,26 +854,6 @@ jar_library(
 )
 
 jar_library(
-  name = 'salat',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    scala_jar(org = 'com.github.salat', name = 'salat-core', rev = '1.10.0',
-      excludes = [
-        exclude(org="org.mongodb", name="mongo-java-driver"),
-      ],
-    ),
-    scala_jar(org = 'com.github.salat', name = 'salat-util', rev = '1.10.0',
-      excludes = [
-        exclude(org="org.mongodb", name="mongo-java-driver"),
-      ],
-    ),
-  ],
-)
-
-jar_library(
   name = 'scala-parser-combinators',
   tags = [
     'opensource',

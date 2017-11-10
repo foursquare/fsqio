@@ -539,7 +539,6 @@ jvm_third_party_map = {
       'jedis': 'jedis',
     },
   },
-  'salat': 'salat',
   'scala': {
     'util': {
       'parsing': 'scala-parser-combinators',
