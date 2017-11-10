@@ -17,7 +17,9 @@ function run_actual_task() {
     if [ -f "${current_path}" ]; then
       rm ${current_path}
     fi
-    exit_with_failure "Failure during upkeep ${task_file}. Cleaning 'current' file to ensure clean run."
+    # Not printing the exit_with_failure message because this should come from the task.
+    # But exiting with an error code to protect any misconfigured tasks from reporting inaccurate success.
+    exit -1
   }
   trap "clean_current_on_error" ERR INT
   "$task_file"
