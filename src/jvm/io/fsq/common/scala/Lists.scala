@@ -472,7 +472,7 @@ class FSTraversable[CC[X] <: Traversable[X], T, Repr <: TraversableLike[T, Repr]
   }
 
   /**
-   * Return a histogram (sequence of of (item, count) elements) by a
+   * Return a histogram (sequence of (item, count) elements) by a
    * given function.
    *
    * Usage:
