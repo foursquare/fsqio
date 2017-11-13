@@ -59,7 +59,7 @@ object IndexerQueryExecutor {
   */
   lazy val instance: ExecutorT = {
     val mongoClient = Option(System.getProperty("mongodb.server")) match {
-      case Some(address) => new MongoClient(new MongoClientURI("mongodb://$address"))
+      case Some(address) => new MongoClient(new MongoClientURI(s"mongodb://$address"))
       case None => new MongoClient() // Connect on default host and port
     }
 

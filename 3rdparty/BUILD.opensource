@@ -120,27 +120,6 @@ jar_library(
   ],
 )
 
-jar_library(
-  name = 'casbah',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    scala_jar(org = 'org.mongodb', name = 'casbah-core', rev = '3.1.1',
-      excludes = [
-        exclude(org="org.mongodb", name="mongo-java-driver"),
-      ],
-    ),
-  ],
-  dependencies = [
-    ':bson',
-    ':mongodb-core',
-    ':mongodb-driver',
-    ':mongodb-driver-async',
-  ],
-)
-
 cascading_rev = '2.6.3'
 jar_library(
   name = 'cascading',

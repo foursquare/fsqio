@@ -182,7 +182,6 @@ jvm_third_party_map = {
     'maxmind': 'geoip',
     'mongodb': {
       'DEFAULT': 'mongodb-drivers',
-      'casbah': 'casbah',
     },
     'mchange': {
       'v2': {
