@@ -276,8 +276,10 @@ jvm_third_party_map = {
     'trove': 'trove4j',
   },
   'io': {
-    'kubernetes': {
-      'client-java': 'kubernetes-client-java',
+    'fabric8': {
+      'kubernetes': {
+        'client': 'kubernetes-client-java',
+      }
     },
     'netty': 'netty4',
   },
