@@ -3,7 +3,9 @@
 package io.fsq.spindle.rogue
 
 import com.mongodb.{BulkWriteResult, DBObject, DefaultDBDecoder, WriteConcern}
-import io.fsq.rogue.{!<:<, MongoHelpers, MongoJavaDriverAdapter, Query, QueryExecutor, QueryHelpers, QueryOptimizer}
+import io.fsq.rogue.{!<:<, BulkInsertOne, BulkOperation, BulkRemove, BulkRemoveOne,
+    BulkReplaceOne, BulkUpdateMany, BulkUpdateOne, MongoHelpers, MongoJavaDriverAdapter, Query, QueryExecutor,
+    QueryHelpers, QueryOptimizer}
 import io.fsq.rogue.MongoHelpers.{AndCondition, MongoBuilder, MongoSelect}
 import io.fsq.rogue.types.MongoDisallowed
 import io.fsq.spindle.common.thrift.bson.TBSONObjectProtocol
@@ -69,8 +71,8 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
     ): Option[BulkWriteResult] = {
     clauses.headOption.map(firstClause => {
       val meta = firstClause match {
-        case BulkInsertOne(record) => {
-          record.meta
+        case BulkInsertOne(meta, _) => {
+          meta
         }
         case BulkRemoveOne(query) => {
           query.meta
@@ -84,7 +86,7 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
         case BulkUpdateOne(query, upsert) => {
           query.query.meta
         }
-        case BulkUpdate(query, upsert) => {
+        case BulkUpdateMany(query, upsert) => {
           query.query.meta
         }
       }
@@ -108,7 +110,7 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
         clause <- clauses
       } {
         clause match {
-          case BulkInsertOne(record) => {
+          case BulkInsertOne(_, record) => {
             val s = writeSerializer(record)
             val dbo = s.toDBObject(record)
             builder.insert(dbo)
@@ -170,7 +172,7 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
 
 
           }
-          case BulkUpdate(query, upsert) => {
+          case BulkUpdateMany(query, upsert) => {
             val modClause = transformer.transformModify(query)
             validator.validateModify(modClause, dbCollectionFactory.getIndexes(modClause.query))
             if (!modClause.mod.clauses.isEmpty) {

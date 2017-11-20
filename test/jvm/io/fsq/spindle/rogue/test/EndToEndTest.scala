@@ -3,9 +3,8 @@
 package io.fsq.spindle.rogue.test
 
 import com.mongodb.ReadPreference
-import io.fsq.rogue.Iter
-import io.fsq.spindle.rogue.{BulkInsertOne, BulkRemove, BulkRemoveOne, BulkReplaceOne, BulkUpdate, BulkUpdateOne,
-    SpindleQuery}
+import io.fsq.rogue.{BulkInsertOne, BulkRemove, BulkRemoveOne, BulkReplaceOne, BulkUpdateMany, BulkUpdateOne, Iter}
+import io.fsq.spindle.rogue.SpindleQuery
 import io.fsq.spindle.rogue.SpindleRogue._
 import io.fsq.spindle.rogue.test.gen.{ThriftClaimStatus, ThriftLike, ThriftTip, ThriftVenue, ThriftVenueClaim,
     ThriftVenueClaimBson, ThriftVenueStatus}
@@ -425,7 +424,7 @@ class EndToEndTest extends JUnitMustMatchers {
   def testBulkInsertOne: Unit = {
     val venues = (1 to 5).map(_ => baseTestVenue())
     val venueIds = venues.map(_.id)
-    val clauses = venues.map(v => BulkInsertOne(v))
+    val clauses = venues.map(v => BulkInsertOne(ThriftVenue, v))
     db.bulk(clauses)
 
     db.count(Q(ThriftVenue).where(_.id in venueIds)) must_== venues.length
@@ -539,14 +538,14 @@ class EndToEndTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testBulkUpdate: Unit = {
+  def testBulkUpdateMany: Unit = {
     val venuesToUpdate = (1 to 5).map(_ => baseTestVenue().toBuilder().userid(1).result())
     val venuesToNotUpdate = (1 to 3).map(_ => baseTestVenue().toBuilder().userid(1).result())
     db.insertAll(venuesToUpdate ++ venuesToNotUpdate)
 
 
     val clause = {
-      BulkUpdate(Q(ThriftVenue).where(_.id in venuesToUpdate.map(_.id)).modify(_.userid setTo 999), upsert = false)
+      BulkUpdateMany(Q(ThriftVenue).where(_.id in venuesToUpdate.map(_.id)).modify(_.userid setTo 999), upsert = false)
     }
     db.bulk(Vector(clause))
     Assert.assertEquals("Wrong number of un-updated records",
@@ -556,7 +555,7 @@ class EndToEndTest extends JUnitMustMatchers {
 
     val upsertVenue = baseTestVenue().toBuilder().result()
     val upsertClause = {
-      BulkUpdateOne(Q(ThriftVenue).where(_.id eqs upsertVenue.id).modify(_.userid setTo 999), upsert = true)
+      BulkUpdateMany(Q(ThriftVenue).where(_.id eqs upsertVenue.id).modify(_.userid setTo 999), upsert = true)
     }
     db.bulk(Vector(upsertClause))
     Assert.assertEquals("Upsert did not insert", 1, db.count(Q(ThriftVenue).where(_.id eqs upsertVenue.id)))
