@@ -3,12 +3,16 @@
 package io.fsq.rogue.adapter
 
 import com.mongodb.{Block, MongoNamespace, ReadPreference, WriteConcern}
-import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, IndexModel,
-    ReturnDocument, UpdateOptions}
-import io.fsq.rogue.{FindAndModifyQuery, Iter, ModifyQuery, Query}
-import io.fsq.rogue.MongoHelpers.{MongoBuilder => LegacyMongoBuilder, MongoModify}
+import com.mongodb.bulk.BulkWriteResult
+import com.mongodb.client.model.{BulkWriteOptions, CountOptions, DeleteManyModel, DeleteOneModel,
+    FindOneAndDeleteOptions, FindOneAndUpdateOptions, IndexModel, InsertOneModel, ReplaceOneModel, ReturnDocument,
+    UpdateManyModel, UpdateOneModel, UpdateOptions, WriteModel}
+import io.fsq.rogue.{BulkInsertOne, BulkModifyQueryOperation, BulkOperation, BulkQueryOperation, BulkRemove,
+    BulkRemoveOne, BulkReplaceOne, BulkUpdateMany, BulkUpdateOne, FindAndModifyQuery, Iter, ModifyQuery, Query}
+import io.fsq.rogue.MongoHelpers.{AndCondition, MongoBuilder => LegacyMongoBuilder, MongoModify}
 import io.fsq.rogue.index.{TypedMongoIndex, UntypedMongoIndex}
 import io.fsq.rogue.util.QueryUtilities
+import java.util.{ArrayList, List => JavaList}
 import java.util.concurrent.TimeUnit
 import org.bson.{BsonDocument, BsonDocumentReader, BsonInt32, BsonString, BsonValue}
 import org.bson.codecs.DecoderContext
@@ -65,6 +69,12 @@ abstract class MongoClientAdapter[
   )(
     f: => Result[T]
   ): Result[T]
+
+  protected def createIndexesImpl(
+    collection: MongoCollection[Document]
+  )(
+    indexes: Seq[IndexModel]
+  ): Result[Seq[String]]
 
   protected def countImpl(
     collection: MongoCollection[Document]
@@ -208,6 +218,13 @@ abstract class MongoClientAdapter[
     options: FindOneAndDeleteOptions
   ): Result[Option[R]]
 
+  protected def bulkWriteImpl(
+    collection: MongoCollection[Document]
+  )(
+    requests: JavaList[WriteModel[Document]],
+    options: BulkWriteOptions
+  ): Result[Option[BulkWriteResult]]
+
   private def convertMongoIndexToBson(index: UntypedMongoIndex): Bson = {
     val indexDocument = new BsonDocument
     index.asListMap.foreach({
@@ -217,12 +234,6 @@ abstract class MongoClientAdapter[
     })
     indexDocument
   }
-
-  protected def createIndexesImpl(
-    collection: MongoCollection[Document]
-  )(
-    indexes: Seq[IndexModel]
-  ): Result[Seq[String]]
 
   def createIndexes[M <: MetaRecord](
     firstIndex: TypedMongoIndex[M],
@@ -699,6 +710,137 @@ abstract class MongoClientAdapter[
       query,
       Some(batchSize),
       readPreferenceOpt
+    )
+  }
+
+  def bulk[M <: MetaRecord, R <: Record](
+    serializer: R => Document
+  )(
+    ops: Seq[BulkOperation[M, R]],
+    ordered: Boolean = false,
+    writeConcernOpt: Option[WriteConcern]
+  ): Result[Option[BulkWriteResult]] = {
+    ops.headOption.map(firstOp => {
+      val numOps = ops.size
+      val requests = new ArrayList[WriteModel[Document]](numOps)
+      val descriptionBuilder = Vector.newBuilder[() => String]
+      descriptionBuilder.sizeHint(numOps)
+
+      ops.foreach({
+        case BulkInsertOne(_, record) => {
+          val document = serializer(record)
+          requests.add(new InsertOneModel(document))
+          descriptionBuilder += {
+            () => collectionFactory.documentToString(document)
+          }
+        }
+
+        case queryOp: BulkQueryOperation[M, R] => {
+          val queryClause = queryHelpers.transformer.transformQuery(queryOp.query)
+          queryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
+          descriptionBuilder += {
+            () => LegacyMongoBuilder.buildConditionString(
+              queryOp.getClass.getSimpleName,
+              queryOp.query.collectionName,
+              queryClause
+            )
+          }
+          // TODO(jacob): This cast will always succeed, but it should be removed once there is a
+          //    version of LegacyMongoBuilder that speaks the new CRUD api.
+          val filter = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+
+          queryOp match {
+            case _: BulkRemoveOne[M, R] => requests.add(new DeleteOneModel(filter))
+            case _: BulkRemove[M, R] => requests.add(new DeleteManyModel(filter))
+            case BulkReplaceOne(_, record, upsert) => {
+              val document = serializer(record)
+              val options = {
+                new UpdateOptions()
+                  .upsert(upsert)
+              }
+              requests.add(new ReplaceOneModel(filter, document, options))
+            }
+          }
+        }
+
+        case modifyOp: BulkModifyQueryOperation[M, R] => {
+          val modifyClause = queryHelpers.transformer.transformModify(modifyOp.modifyQuery)
+
+          if (modifyClause.mod.clauses.nonEmpty) {
+            queryHelpers.validator.validateModify(modifyClause, collectionFactory.getIndexes(modifyClause.query))
+            descriptionBuilder += {
+              () => LegacyMongoBuilder.buildModifyString(
+                modifyOp.modifyQuery.query.collectionName,
+                modifyClause,
+                upsert = modifyOp.upsert,
+                multi = modifyOp.multi
+              )
+            }
+            // TODO(jacob): These casts will always succeed, but should be removed once there is a
+            //    version of LegacyMongoBuilder that speaks the new CRUD api.
+            val filter = LegacyMongoBuilder.buildCondition(modifyClause.query.condition).asInstanceOf[Bson]
+            val update = LegacyMongoBuilder.buildModify(modifyClause.mod).asInstanceOf[Bson]
+            val options = {
+              new UpdateOptions()
+                .upsert(modifyOp.upsert)
+            }
+
+            modifyOp match {
+              case _: BulkUpdateOne[M, R] => requests.add(new UpdateOneModel(filter, update, options))
+              case _: BulkUpdateMany[M, R] => requests.add(new UpdateManyModel(filter, update, options))
+            }
+          }
+        }
+      })
+
+      val collection = firstOp match {
+        case BulkInsertOne(_, record) => collectionFactory.getMongoCollectionFromRecord(
+          record,
+          writeConcernOpt = writeConcernOpt
+        )
+
+        case BulkQueryOperation(query) => collectionFactory.getMongoCollectionFromQuery(
+          query,
+          writeConcernOpt = writeConcernOpt
+        )
+
+        case BulkModifyQueryOperation(modifyQuery, _) => collectionFactory.getMongoCollectionFromQuery(
+          modifyQuery.query,
+          writeConcernOpt = writeConcernOpt
+        )
+      }
+
+      val options = {
+        new BulkWriteOptions()
+          .ordered(ordered)
+      }
+
+      val descriptionFunc = () => {
+        descriptionBuilder.result()
+          .toIterator
+          .map(_())
+          .mkString("\n")
+      }
+
+      val fakeQueryForLogging = Query(
+        meta = firstOp.metaRecord,
+        collectionName = getCollectionNamespace(collection).getCollectionName,
+        lim = None,
+        sk = None,
+        maxScan = None,
+        comment = Some("bulk"),
+        hint = None,
+        condition = AndCondition(Nil, None),
+        order = None,
+        select = None,
+        readPreference = None
+      )
+
+      runCommand(descriptionFunc, fakeQueryForLogging) {
+        bulkWriteImpl(collection)(requests, options)
+      }
+    }).getOrElse(
+      wrapResult(None)
     )
   }
 }

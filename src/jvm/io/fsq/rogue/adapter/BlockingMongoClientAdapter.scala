@@ -3,11 +3,13 @@
 package io.fsq.rogue.adapter
 
 import com.mongodb.{Block, DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException}
+import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.client.{FindIterable, MongoCollection}
-import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, IndexModel,
-    UpdateOptions}
+import com.mongodb.client.model.{BulkWriteOptions, CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions,
+    IndexModel, UpdateOptions, WriteModel}
 import io.fsq.rogue.{Iter, Query, RogueException}
 import io.fsq.rogue.util.QueryUtilities
+import java.util.{List => JavaList}
 import java.util.concurrent.TimeUnit
 import org.bson.{BsonBoolean, BsonDocument, BsonValue}
 import org.bson.conversions.Bson
@@ -374,5 +376,14 @@ class BlockingMongoClientAdapter[
     indexes: Seq[IndexModel]
   ): BlockingResult[Seq[String]] = {
     collection.createIndexes(indexes.asJava).asScala
+  }
+
+  override protected def bulkWriteImpl(
+    collection: MongoCollection[Document]
+  )(
+    requests: JavaList[WriteModel[Document]],
+    options: BulkWriteOptions
+  ): BlockingResult[Option[BulkWriteResult]] = {
+    Some(collection.bulkWrite(requests, options))
   }
 }

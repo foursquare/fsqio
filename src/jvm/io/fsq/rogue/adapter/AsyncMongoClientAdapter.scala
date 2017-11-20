@@ -5,8 +5,9 @@ package io.fsq.rogue.adapter
 import com.mongodb.{Block, DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException}
 import com.mongodb.async.{AsyncBatchCursor, SingleResultCallback}
 import com.mongodb.async.client.{FindIterable, MongoCollection}
-import com.mongodb.client.model.{CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, IndexModel,
-    UpdateOptions}
+import com.mongodb.bulk.BulkWriteResult
+import com.mongodb.client.model.{BulkWriteOptions, CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions,
+    IndexModel, UpdateOptions, WriteModel}
 import com.mongodb.client.result.{DeleteResult, UpdateResult}
 import io.fsq.common.scala.Identity._
 import io.fsq.rogue.{Iter, Query, RogueException}
@@ -566,6 +567,20 @@ class AsyncMongoClientAdapter[
     callbackFactory.mapResult(
       commandCallback.result,
       (result: JavaList[String]) => result.asScala
+    )
+  }
+
+  override protected def bulkWriteImpl(
+    collection: MongoCollection[Document]
+  )(
+    requests: JavaList[WriteModel[Document]],
+    options: BulkWriteOptions
+  ): Result[Option[BulkWriteResult]] = {
+    val resultCallback = callbackFactory.newCallback[BulkWriteResult]
+    collection.bulkWrite(requests, options, resultCallback)
+    callbackFactory.mapResult[BulkWriteResult, Option[BulkWriteResult]](
+      resultCallback.result,
+      Some(_)
     )
   }
 }

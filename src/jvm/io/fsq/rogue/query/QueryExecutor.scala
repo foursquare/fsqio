@@ -4,8 +4,10 @@ package io.fsq.rogue.query
 
 import com.mongodb.{ReadPreference, WriteConcern}
 import io.fsq.field.Field
-import io.fsq.rogue.{!<:<, AddLimit, FindAndModifyQuery, Iter, ModifyQuery, Query, QueryOptimizer, Required,
-    RequireShardKey, Rogue, ShardingOk, Unlimited, Unselected, Unskipped}
+import io.fsq.rogue.{!<:<, AddLimit, BulkInsertOne, BulkModifyQueryOperation, BulkOperation, BulkQueryOperation,
+    FindAndModifyQuery, Iter, ModifyQuery, Query, QueryOptimizer, Required, RequireShardKey, Rogue, ShardingOk,
+    Unlimited, Unselected, Unskipped}
+import com.mongodb.bulk.BulkWriteResult
 import io.fsq.rogue.adapter.MongoClientAdapter
 import io.fsq.rogue.index.TypedMongoIndex
 import io.fsq.rogue.types.MongoDisallowed
@@ -359,6 +361,23 @@ class QueryExecutor[
     } else {
       val deserializer = serializer.readFromDocument(query.meta, query.select)(_)
       adapter.iterateBatch(query, batchSize, initialIterState, deserializer, readPreferenceOpt)(handler)
+    }
+  }
+
+  def bulk[M <: MetaRecord, R <: Record](
+    ops: Seq[BulkOperation[M, R]],
+    ordered: Boolean = false,
+    writeConcern: WriteConcern = defaultWriteConcern
+  ): Result[Option[BulkWriteResult]] = {
+    val nonEmptyOps = ops.filterNot({
+      case _: BulkInsertOne[M, R] => false
+      case BulkQueryOperation(query) => optimizer.isEmptyQuery(query)
+      case BulkModifyQueryOperation(modifyQuery, _) => optimizer.isEmptyQuery(modifyQuery)
+    })
+    if (nonEmptyOps.isEmpty) {
+      adapter.wrapResult(None)
+    } else {
+      adapter.bulk(serializer.writeToDocument[R])(nonEmptyOps, ordered, Some(writeConcern))
     }
   }
 }
