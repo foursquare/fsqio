@@ -49,18 +49,25 @@ abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]
     dbs.put(name, (client, dbName))
   }
 
+  def getClient(name: MongoIdentifier): Option[(MongoClient, String)] = dbs.get(name)
+
+  def getClientOrThrow(name: MongoIdentifier): (MongoClient, String) = {
+    dbs.get(name).getOrElse(throw new MongoException(s"Mongo not found: $name"))
+  }
+
   def getCodecRegistryOrThrow(name: MongoIdentifier): CodecRegistry = {
     getCodecRegistry(getDbOrThrow(name))
   }
 
   def getDb(name: MongoIdentifier): Option[MongoDatabase] = {
-    dbs.get(name).map({
+    getClient(name).map({
       case (client, dbName) => getDatabase(client, dbName)
     })
   }
 
   def getDbOrThrow(name: MongoIdentifier): MongoDatabase = {
-    getDb(name).getOrElse(throw new MongoException(s"Mongo not found: $name"))
+    val (client, dbName) = getClientOrThrow(name)
+    getDatabase(client, dbName)
   }
 
   /** Get a set of all connection ids handled by this client manager. */
