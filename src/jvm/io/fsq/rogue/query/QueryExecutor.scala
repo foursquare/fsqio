@@ -282,7 +282,7 @@ class QueryExecutor[
     }
   }
 
-  def findAndUpdateOne[M <: MetaRecord, R <: Record](
+  def findAndUpdateOne[M <: MetaRecord, R](
     query: FindAndModifyQuery[M, R],
     returnNew: Boolean = false,
     writeConcern: WriteConcern = defaultWriteConcern
