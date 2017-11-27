@@ -26,7 +26,6 @@ from uuid import uuid4
 
 from pants.backend.jvm.targets.jar_library import JarLibrary
 from pants.backend.jvm.tasks.classpath_products import ClasspathProducts
-from pants.base.fingerprint_strategy import TaskIdentityFingerprintStrategy
 from pants.base.specs import DescendantAddresses
 from pants.invalidation.cache_manager import VersionedTargetSet
 from pants.java.jar.jar_dependency_utils import M2Coordinate, ResolvedJar
@@ -550,11 +549,7 @@ class PomResolve(Task):
     local_override_versions = override_tuples
     fetchers = ChainedFetcher(self.get_options().maven_repos)
 
-    invalidation_context_manager = self.invalidated(
-      self.all_jar_libs,
-      invalidate_dependents=False,
-      fingerprint_strategy=TaskIdentityFingerprintStrategy(self),
-    )
+    invalidation_context_manager = self.invalidated(self.all_jar_libs, invalidate_dependents=False)
 
     with invalidation_context_manager as invalidation_check:
       # NOTE: In terms of caching this models IvyResolve in pants quite closely. We always
