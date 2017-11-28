@@ -212,6 +212,10 @@ jvm_third_party_map = {
       'conversions': 'twitter-util',
       'elephantbird': 'elephant-bird',
       'finagle': {
+        'httpx': {
+          'HttpToHttpxAdaptor': None,
+          'DEFAULT': 'finagle',
+        },
         'memcached': {
           'NoReplicationClient': None,
           'DEFAULT': 'finagle',
