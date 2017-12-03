@@ -55,7 +55,7 @@ trait LiftRogue {
     (implicit ev: ShardingOk[M with MongoMetaRecord[_], State]): ExecutableQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], R, State] = {
     ExecutableQuery(
         query.asInstanceOf[Query[M with MongoMetaRecord[_], R, State]],
-        LiftQueryExecutor
+        LiftRogue.config
     )
   }
 
@@ -64,7 +64,7 @@ trait LiftRogue {
   ): ExecutableModifyQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], State] = {
     ExecutableModifyQuery(
         query.asInstanceOf[ModifyQuery[M with MongoMetaRecord[_], State]],
-        LiftQueryExecutor
+        LiftRogue.config
     )
   }
 
@@ -73,7 +73,7 @@ trait LiftRogue {
   ): ExecutableFindAndModifyQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], R] = {
     ExecutableFindAndModifyQuery(
         query.asInstanceOf[FindAndModifyQuery[M with MongoMetaRecord[_], R]],
-        LiftQueryExecutor
+        LiftRogue.config
     )
   }
 
@@ -274,4 +274,10 @@ trait LiftRogue {
   implicit def BsonRecordIsBSONType[T <: BsonRecord[T]]: BSONType[T] = _BsonRecordIsBSONType.asInstanceOf[BSONType[T]]
 }
 
-object LiftRogue extends Rogue with LiftRogue
+object LiftRogue extends Rogue with LiftRogue {
+  var config = ExecutableQueryConfig(
+    legacyQueryExecutor = LiftQueryExecutor,
+    newQueryExecutor = null,
+    useNewQueryExecutor = () => false
+  )
+}

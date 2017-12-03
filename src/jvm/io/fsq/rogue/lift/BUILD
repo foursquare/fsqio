@@ -12,6 +12,8 @@ scala_library(
     '3rdparty:mongodb-drivers',
     'src/jvm/io/fsq/field',
     'src/jvm/io/fsq/rogue',
+    'src/jvm/io/fsq/rogue/adapter',
     'src/jvm/io/fsq/rogue/index',
+    'src/jvm/io/fsq/rogue/query',
   ],
 )

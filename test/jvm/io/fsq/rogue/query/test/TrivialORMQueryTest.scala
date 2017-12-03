@@ -5,6 +5,7 @@ package io.fsq.rogue.query.test
 import com.mongodb.{ErrorCategory, MongoBulkWriteException, MongoCommandException, MongoWriteException, WriteConcern}
 import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.{MongoCollection => AsyncMongoCollection}
+import com.mongodb.bulk.{BulkWriteResult, BulkWriteUpsert}
 import com.mongodb.client.{MongoCollection => BlockingMongoCollection}
 import com.mongodb.client.model.CountOptions
 import com.twitter.util.{Await, Future}
@@ -12,7 +13,8 @@ import io.fsq.common.concurrent.Futures
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.field.{OptionalField, RequiredField}
-import io.fsq.rogue.{InitialState, Iter, Query, QueryOptimizer, Rogue, RogueException}
+import io.fsq.rogue.{BulkInsertOne, BulkRemove, BulkRemoveOne, BulkReplaceOne, BulkUpdateMany, BulkUpdateOne,
+    InitialState, Iter, Query, QueryOptimizer, Rogue, RogueException}
 import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.adapter.{AsyncMongoClientAdapter, BlockingMongoClientAdapter, BlockingResult}
 import io.fsq.rogue.adapter.callback.twitter.{TwitterFutureMongoCallback, TwitterFutureMongoCallbackFactory}
@@ -23,9 +25,9 @@ import io.fsq.rogue.query.QueryExecutor
 import io.fsq.rogue.query.testlib.{TrivialORMMetaRecord, TrivialORMMongoCollectionFactory, TrivialORMRecord,
     TrivialORMRogueSerializer}
 import io.fsq.rogue.util.{DefaultQueryLogger, DefaultQueryUtilities, QueryLogger}
-import java.util.ArrayList
+import java.util.{ArrayList, List => JavaList}
 import java.util.concurrent.CyclicBarrier
-import org.bson.Document
+import org.bson.{BsonObjectId, Document}
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.junit.{Assert, Before, Test}
@@ -536,7 +538,7 @@ class TrivialORMQueryTest extends RogueMongoTest
 
   def testSingleAsyncDuplicateInsertAll(
     records: Seq[SimpleRecord],
-    testFuture: () => Future[Unit] = () => Future.Unit
+    testFuture: () => Future[Unit]
   ): Future[Unit] = {
     asyncQueryExecutor.insertAll(records)
       .map(_ => throw new Exception("Expected insertion failure on duplicate id"))
@@ -575,7 +577,7 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val duplicate = SimpleRecord(new ObjectId)
     val duplicateTestFutures = testFutures.flatMap(_ => Future.join(
-      testSingleAsyncDuplicateInsertAll(Seq(SimpleRecord(records(0).id))),
+      testSingleAsyncDuplicateInsertAll(Seq(SimpleRecord(records(0).id)), () => Future.Unit),
       testSingleAsyncDuplicateInsertAll(
         Seq(duplicate, duplicate),
         () => asyncQueryExecutor.count(SimpleRecord.where(_.id eqs duplicate.id)).map(_ must_== 1)
@@ -2459,5 +2461,829 @@ class TrivialORMQueryTest extends RogueMongoTest
     }
 
     Await.result(testFuture)
+  }
+
+  // TODO(jacob): There are a couple issues with these bulk operation tests:
+  //    1. Like most of tests here, there is a lot of very similar or flat out redundant
+  //      code that should be abstracted out of otherwise deduplicated.
+  //    2. We should have more thorough tests mixing different bulk operations in the same
+  //      query.
+
+  @Test
+  def testBulkOperationOrdering: Unit = {
+    val testRecord = newTestRecord(0)
+
+    try {
+      blockingQueryExecutor.bulk(
+        Vector(
+          BulkInsertOne(SimpleRecord, testRecord),
+          BulkRemove(SimpleRecord),
+          BulkInsertOne(SimpleRecord, testRecord)
+        ),
+        ordered = false
+      )
+      throw new Exception("Expected insertion failure on duplicate id")
+    } catch {
+      case rogueException: RogueException => Option(rogueException.getCause) match {
+        case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+          case Seq(ErrorCategory.DUPLICATE_KEY) => ()
+          case _ => throw mbwe
+        }
+        case _ => throw rogueException
+      }
+    }
+
+    blockingQueryExecutor.remove(testRecord)
+
+    blockingQueryExecutor.bulk(
+      Vector(
+        BulkInsertOne(SimpleRecord, testRecord),
+        BulkRemove(SimpleRecord),
+        BulkInsertOne(SimpleRecord, testRecord)
+      ),
+      ordered = true
+    ).unwrap must_== Some(
+      BulkWriteResult.acknowledged(2, 0, 1, 0, new ArrayList[BulkWriteUpsert])
+    )
+  }
+
+  def bulkInsertResult(insertedCount: Int): Option[BulkWriteResult] = {
+    Some(
+      BulkWriteResult.acknowledged(
+        insertedCount,
+        0,
+        0,
+        0,
+        new ArrayList[BulkWriteUpsert]
+      )
+    )
+  }
+
+  def testSingleAsyncBulkInsertOne(records: Seq[SimpleRecord]): Future[Unit] = {
+    for {
+      _ <- asyncQueryExecutor.bulk(records.map(BulkInsertOne(SimpleRecord, _))).map(
+          _ must_== records.headOption.flatMap(_ => bulkInsertResult(records.size))
+        )
+      found <- asyncQueryExecutor.fetch(SimpleRecord.where(_.id in records.map(_.id)))
+    } yield {
+      found must containTheSameElementsAs(records)
+    }
+  }
+
+  @Test
+  def testAsyncBulkOperationInsertOne: Unit = {
+    val duplicateId = new ObjectId
+
+    val insertFutures = Future.join(
+      testSingleAsyncBulkInsertOne(
+        Seq.empty
+      ),
+      testSingleAsyncBulkInsertOne(
+        Seq(
+          SimpleRecord()
+        )
+      ),
+      testSingleAsyncBulkInsertOne(
+        Seq(
+          SimpleRecord(),
+          SimpleRecord(duplicateId),
+          newTestRecord(1)
+        )
+      )
+    )
+
+    val duplicateTestFuture = insertFutures.flatMap(_ => {
+      asyncQueryExecutor.bulk(
+        Vector(BulkInsertOne(SimpleRecord, SimpleRecord(duplicateId)))
+      ).map(_ => throw new Exception("Expected insertion failure on duplicate id"))
+        .handle({
+          case rogueException: RogueException => Option(rogueException.getCause) match {
+            case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+              case Seq(ErrorCategory.DUPLICATE_KEY) => ()
+              case _ => throw mbwe
+            }
+            case _ => throw rogueException
+          }
+        })
+    })
+
+    Await.result(duplicateTestFuture)
+  }
+
+  def testSingleBlockingBulkInsertOne(records: Seq[SimpleRecord]): Unit = {
+    blockingQueryExecutor.bulk(
+      records.map(BulkInsertOne(SimpleRecord, _))
+    ).unwrap must_== records.headOption.flatMap(_ => bulkInsertResult(records.size))
+    blockingQueryExecutor.fetch(
+      SimpleRecord.where(_.id in records.map(_.id))
+    ).unwrap must containTheSameElementsAs(records)
+  }
+
+  @Test
+  def testBlockingBulkOperationInsertOne: Unit = {
+    val duplicateId = new ObjectId
+
+    testSingleBlockingBulkInsertOne(
+      Seq.empty
+    )
+    testSingleBlockingBulkInsertOne(
+      Seq(
+        SimpleRecord()
+      )
+    )
+    testSingleBlockingBulkInsertOne(
+      Seq(
+        SimpleRecord(),
+        SimpleRecord(duplicateId),
+        newTestRecord(1)
+      )
+    )
+
+    try {
+      blockingQueryExecutor.bulk(Vector(BulkInsertOne(SimpleRecord, SimpleRecord(duplicateId))))
+      throw new Exception("Expected insertion failure on duplicate id")
+    } catch {
+      case rogueException: RogueException => Option(rogueException.getCause) match {
+        case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+          case Seq(ErrorCategory.DUPLICATE_KEY) => ()
+          case _ => throw mbwe
+        }
+        case _ => throw rogueException
+      }
+    }
+  }
+
+  def bulkRemoveResult(removedCount: Int): Option[BulkWriteResult] = {
+    Some(
+      BulkWriteResult.acknowledged(
+        0,
+        0,
+        removedCount,
+        0,
+        new ArrayList[BulkWriteUpsert]
+      )
+    )
+  }
+
+  @Test
+  def testAsyncBulkOperationRemoveOne: Unit = {
+    val testRecords = Array(
+      newTestRecord(0),
+      newTestRecord(1),
+      newTestRecord(2)
+    )
+
+    val testFuture = for {
+      // delete with no stored records
+      _ <- asyncQueryExecutor.bulk(
+          Vector(BulkRemoveOne(SimpleRecord))
+        ).map(_ must_== bulkRemoveResult(0))
+
+      // delete single record
+      _ <- asyncQueryExecutor.insertAll(testRecords)
+      _ <- asyncQueryExecutor.bulk(
+          Vector(BulkRemoveOne(SimpleRecord.where(_.id eqs testRecords(0).id)))
+        ).map(_ must_== bulkRemoveResult(1))
+      _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs testRecords(0).id)).map(_ must_== 0)
+
+      // delete query does not match
+      _ <- asyncQueryExecutor.bulk(
+          Vector(BulkRemoveOne(SimpleRecord.where(_.id eqs testRecords(0).id)))
+        ).map(_ must_== bulkRemoveResult(0))
+      _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 2)
+
+      // match multiple records but only delete one
+      _ <- asyncQueryExecutor.bulk(
+          Vector(BulkRemoveOne(SimpleRecord))
+        ).map(_ must_== bulkRemoveResult(1))
+      _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 1)
+    } yield ()
+
+    Await.result(testFuture)
+  }
+
+  @Test
+  def testBlockingBulkOperationRemoveOne: Unit = {
+    val testRecords = Array(
+      newTestRecord(0),
+      newTestRecord(1),
+      newTestRecord(2)
+    )
+
+    // delete with no stored records
+    blockingQueryExecutor.bulk(
+      Vector(BulkRemoveOne(SimpleRecord))
+    ).unwrap must_== bulkRemoveResult(0)
+
+    // delete single record
+    blockingQueryExecutor.insertAll(testRecords)
+    blockingQueryExecutor.bulk(
+      Vector(BulkRemoveOne(SimpleRecord.where(_.id eqs testRecords(0).id)))
+    ).unwrap must_== bulkRemoveResult(1)
+    blockingQueryExecutor.count(SimpleRecord.where(_.id eqs testRecords(0).id)).unwrap must_== 0
+
+    // delete query does not match
+    blockingQueryExecutor.bulk(
+      Vector(BulkRemoveOne(SimpleRecord.where(_.id eqs testRecords(0).id)))
+    ).unwrap must_== bulkRemoveResult(0)
+    blockingQueryExecutor.count(SimpleRecord).unwrap must_== 2
+
+    // match multiple records but only delete one
+    blockingQueryExecutor.bulk(
+      Vector(BulkRemoveOne(SimpleRecord))
+    ).unwrap must_== bulkRemoveResult(1)
+    blockingQueryExecutor.count(SimpleRecord).unwrap must_== 1
+  }
+
+  @Test
+  def testAsyncBulkOperationRemove: Unit = {
+    val emptyRecord = SimpleRecord()
+    val testRecords = Seq.tabulate(5)(newTestRecord)
+    val testRecordIds = testRecords.map(_.id)
+
+    val testFutures = for {
+      // no matching records
+      _ <- asyncQueryExecutor.bulk(
+          Vector(BulkRemove(SimpleRecord))
+        ).map(_ must_== bulkRemoveResult(0))
+
+      _ <- Future.join(
+        for {
+          // empty record
+          _ <- asyncQueryExecutor.insert(emptyRecord)
+          _ <- asyncQueryExecutor.bulk(
+              Vector(BulkRemove(SimpleRecord.where(_.id eqs emptyRecord.id)))
+            ).map(_ must_== bulkRemoveResult(1))
+          _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs emptyRecord.id)).map(_ must_== 0)
+        } yield (),
+
+        for {
+          _ <- asyncQueryExecutor.insertAll(testRecords)
+
+          // remove single record
+          _ <- asyncQueryExecutor.bulk(
+              Vector(BulkRemove(SimpleRecord.where(_.id eqs testRecords(0).id)))
+            ).map(_ must_== bulkRemoveResult(1))
+          _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).map(_ must_== 4)
+
+          // remove multiple records
+          _ <- asyncQueryExecutor.bulk(
+              Vector(BulkRemove(SimpleRecord.where(_.int eqs 1)))
+            ).map(_ must_== bulkRemoveResult(2))
+          _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).map(_ must_== 2)
+
+          // re-run of previous remove shouldn't delete anything
+          _ <- asyncQueryExecutor.bulk(
+              Vector(BulkRemove(SimpleRecord.where(_.int eqs 1)))
+            ).map(_ must_== bulkRemoveResult(0))
+          _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).map(_ must_== 2)
+        } yield ()
+      )
+
+      // remove everything
+      _ <- for {
+          _ <- asyncQueryExecutor.bulk(
+              Vector(BulkRemove(SimpleRecord))
+            ).map(_ must_== bulkRemoveResult(2))
+          _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 0)
+        } yield ()
+    } yield ()
+
+    Await.result(testFutures)
+  }
+
+  @Test
+  def testBlockingBulkOperationRemove: Unit = {
+    val emptyRecord = SimpleRecord()
+    val testRecords = Seq.tabulate(5)(newTestRecord)
+    val testRecordIds = testRecords.map(_.id)
+
+    // no matching records
+    blockingQueryExecutor.bulk(
+      Vector(BulkRemove(SimpleRecord))
+    ).unwrap must_== bulkRemoveResult(0)
+
+    // empty record
+    blockingQueryExecutor.insert(emptyRecord)
+    blockingQueryExecutor.bulk(
+      Vector(BulkRemove(SimpleRecord.where(_.id eqs emptyRecord.id)))
+    ).unwrap must_== bulkRemoveResult(1)
+    blockingQueryExecutor.count(SimpleRecord.where(_.id eqs emptyRecord.id)).unwrap must_== 0
+
+    blockingQueryExecutor.insertAll(testRecords)
+
+    // remove single record
+    blockingQueryExecutor.bulk(
+      Vector(BulkRemove(SimpleRecord.where(_.id eqs testRecords(0).id)))
+    ).unwrap must_== bulkRemoveResult(1)
+    blockingQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).unwrap must_== 4
+
+    // remove multiple records
+    blockingQueryExecutor.bulk(
+      Vector(BulkRemove(SimpleRecord.where(_.int eqs 1)))
+    ).unwrap must_== bulkRemoveResult(2)
+    blockingQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).unwrap must_== 2
+
+    // re-run of previous remove shouldn't delete anything
+    blockingQueryExecutor.bulk(
+      Vector(BulkRemove(SimpleRecord.where(_.int eqs 1)))
+    ).unwrap must_== bulkRemoveResult(0)
+    blockingQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).unwrap must_== 2
+
+    // remove everything
+    blockingQueryExecutor.bulk(
+      Vector(BulkRemove(SimpleRecord))
+    ).unwrap must_== bulkRemoveResult(2)
+    blockingQueryExecutor.count(SimpleRecord).unwrap must_== 0
+  }
+
+  def bulkUpdateResult(
+    matchedCount: Int,
+    modifiedCount: Int,
+    upserts: JavaList[BulkWriteUpsert] = new ArrayList[BulkWriteUpsert]
+  ): Option[BulkWriteResult] = {
+    Some(
+      BulkWriteResult.acknowledged(
+        0,
+        matchedCount,
+        0,
+        modifiedCount: Integer,
+        upserts
+      )
+    )
+  }
+
+  @Test
+  def testAsyncBulkOperationReplaceOne: Unit = {
+    val testRecords = Seq.tabulate(4)(i => OptionalIdRecord(id = Some(new ObjectId), int = Some(i)))
+
+    val serialTestFutures = for {
+      // replace on non-existant record
+      _ <- asyncQueryExecutor.bulk(
+          Vector(
+            BulkReplaceOne(
+              OptionalIdRecord,
+              testRecords(0),
+              upsert = false
+            )
+          )
+        ).map(_ must_== bulkUpdateResult(0, 0))
+
+      // upserts
+      _ <- asyncQueryExecutor.bulk(
+          testRecords.take(3).map(record => {
+            BulkReplaceOne(
+              OptionalIdRecord.where(_.id eqs record.id.get),
+              record,
+              upsert = true
+            )
+          }),
+          ordered = true
+        ).map(_ must_== bulkUpdateResult(
+          0,
+          0,
+          testRecords.take(3).zipWithIndex.map({
+            case (record, i) => new BulkWriteUpsert(i, new BsonObjectId(record.id.get))
+          }).asJava
+        ))
+      _ <- asyncQueryExecutor.count(OptionalIdRecord).map(_ must_== 3)
+    } yield ()
+
+    val replacement = OptionalIdRecord(int = Some(9001))
+    val allTestFutures = serialTestFutures.flatMap(_ => {
+      Future.join(
+        // match one and replace one
+        asyncQueryExecutor.bulk(
+          Vector(
+            BulkReplaceOne(
+              OptionalIdRecord.where(_.id eqs testRecords(0).id.get),
+              replacement,
+              upsert = false
+            )
+          )
+        ).flatMap(bulkWriteResult => {
+          bulkWriteResult must_== bulkUpdateResult(1, 1)
+          asyncQueryExecutor.fetchOne(
+            OptionalIdRecord.where(_.id eqs testRecords(0).id.get)
+          ).map(_ must_== Some(OptionalIdRecord(id = testRecords(0).id, int = replacement.int)))
+        }),
+
+        // match multiple and replace one
+        asyncQueryExecutor.bulk(
+          Vector(
+            BulkReplaceOne(
+              OptionalIdRecord.where(_.id neqs testRecords(0).id.get),
+              OptionalIdRecord(int = Some(2048)),
+              upsert = false
+            )
+          )
+        ).map(
+          _ must_== bulkUpdateResult(1, 1)
+        )
+      )
+    })
+
+    Await.result(allTestFutures)
+  }
+
+  @Test
+  def testBlockingBulkOperationReplaceOne: Unit = {
+    val testRecords = Seq.tabulate(4)(i => OptionalIdRecord(id = Some(new ObjectId), int = Some(i)))
+
+    // replace on non-existant record
+    blockingQueryExecutor.bulk(
+      Vector(
+        BulkReplaceOne(
+          OptionalIdRecord,
+          testRecords(0),
+          upsert = false
+        )
+      )
+    ).unwrap must_== bulkUpdateResult(0, 0)
+
+    // upserts
+    blockingQueryExecutor.bulk(
+      testRecords.take(3).map(record => {
+        BulkReplaceOne(
+          OptionalIdRecord.where(_.id eqs record.id.get),
+          record,
+          upsert = true
+        )
+      }),
+      ordered = true
+    ).unwrap must_== bulkUpdateResult(
+      0,
+      0,
+      testRecords.take(3).zipWithIndex.map({
+        case (record, i) => new BulkWriteUpsert(i, new BsonObjectId(record.id.get))
+      }).asJava
+    )
+    blockingQueryExecutor.count(OptionalIdRecord).unwrap must_== 3
+
+    // match one and replace one
+    val replacement = OptionalIdRecord(int = Some(9001))
+    blockingQueryExecutor.bulk(
+      Vector(
+        BulkReplaceOne(
+          OptionalIdRecord.where(_.id eqs testRecords(0).id.get),
+          replacement,
+          upsert = false
+        )
+      )
+    ).unwrap must_== bulkUpdateResult(1, 1)
+    blockingQueryExecutor.fetchOne(
+      OptionalIdRecord.where(_.id eqs testRecords(0).id.get)
+    ).unwrap must_== Some(OptionalIdRecord(id = testRecords(0).id, int = replacement.int))
+
+    // match multiple and replace one
+    blockingQueryExecutor.bulk(
+      Vector(
+        BulkReplaceOne(
+          OptionalIdRecord.where(_.int neqs testRecords(0).int.get),
+          OptionalIdRecord(int = Some(2048)),
+          upsert = false
+        )
+      )
+    ).unwrap must_== bulkUpdateResult(1, 1)
+  }
+
+  @Test
+  def testAsyncBulkOperationUpdateOne: Unit = {
+    val testRecord = newTestRecord(0)
+    val extraRecord = newTestRecord(1)
+
+    val serialTestFutures = Future.join(
+      // upsert
+      asyncQueryExecutor.bulk(
+        Vector(
+          BulkUpdateOne(
+            SimpleRecord.where(_.id eqs extraRecord.id).modify(_.int setTo extraRecord.int),
+            upsert = true
+          )
+        )
+      ).flatMap(bulkWriteResult => {
+        val expectedUpsert = new BulkWriteUpsert(0, new BsonObjectId(extraRecord.id))
+        bulkWriteResult must_== bulkUpdateResult(0, 0, Vector(expectedUpsert).asJava)
+        asyncQueryExecutor.fetchOne(
+          SimpleRecord.where(_.id eqs extraRecord.id)
+        ).map(_ must_== Some(SimpleRecord(id = extraRecord.id, int = extraRecord.int)))
+      }),
+
+      for {
+        // update on non-existant record
+        _ <- asyncQueryExecutor.bulk(
+            Vector(
+              BulkUpdateOne(
+                SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
+                upsert = false
+              )
+            )
+          ).map(_ must_== bulkUpdateResult(0, 0))
+
+        // no-op update
+        _ <- asyncQueryExecutor.insert(testRecord)
+        _ <- asyncQueryExecutor.bulk(
+            Vector(
+              BulkUpdateOne(
+                SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
+                upsert = false
+              )
+            )
+          ).map(_ must_== bulkUpdateResult(1, 0))
+
+        // update on existing record
+        _ <- asyncQueryExecutor.bulk(
+            Vector(
+              BulkUpdateOne(
+                SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10)),
+                upsert = false
+              )
+            )
+          ).map(_ must_== bulkUpdateResult(1, 1))
+        _ <- asyncQueryExecutor.fetchOne(
+            SimpleRecord.where(_.id eqs testRecord.id)
+          ).map(_ must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10))))
+      } yield ()
+    )
+
+    val testFutures = serialTestFutures.flatMap(_ => {
+      Future.join(
+        // updates fail on modifying _id
+        asyncQueryExecutor.bulk(
+          Vector(
+            BulkUpdateOne(
+              SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId),
+              upsert = false
+            )
+          )
+        ).map(_ => throw new Exception("Expected update failure when modifying _id field"))
+          .handle({
+            case rogueException: RogueException => Option(rogueException.getCause) match {
+              case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+                case Seq(ErrorCategory.UNCATEGORIZED) => ()
+                case _ => throw rogueException
+              }
+              case _ => throw rogueException
+            }
+          }),
+
+        // match multiple records, but only modify one
+        asyncQueryExecutor.bulk(
+          Vector(BulkUpdateOne(SimpleRecord.modify(_.boolean setTo true), upsert = false))
+        ).map(_ must_== bulkUpdateResult(1, 1))
+      )
+    })
+
+    Await.result(testFutures)
+  }
+
+  @Test
+  def testBlockingBulkOperationUpdateOne: Unit = {
+    val testRecord = newTestRecord(0)
+    val extraRecord = newTestRecord(1)
+
+    // upsert
+    val expectedUpsert = new BulkWriteUpsert(0, new BsonObjectId(extraRecord.id))
+    blockingQueryExecutor.bulk(
+      Vector(
+        BulkUpdateOne(
+          SimpleRecord.where(_.id eqs extraRecord.id).modify(_.int setTo extraRecord.int),
+          upsert = true
+        )
+      )
+    ).unwrap must_== bulkUpdateResult(0, 0, Vector(expectedUpsert).asJava)
+    blockingQueryExecutor.fetchOne(
+      SimpleRecord.where(_.id eqs extraRecord.id)
+    ).unwrap must_== Some(SimpleRecord(id = extraRecord.id, int = extraRecord.int))
+
+    // update on non-existant record
+    blockingQueryExecutor.bulk(
+      Vector(
+        BulkUpdateOne(
+          SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
+          upsert = false
+        )
+      )
+    ).unwrap must_== bulkUpdateResult(0, 0)
+
+    // no-op update
+    blockingQueryExecutor.insert(testRecord)
+    blockingQueryExecutor.bulk(
+      Vector(
+        BulkUpdateOne(
+          SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
+          upsert = false
+        )
+      )
+    ).unwrap must_== bulkUpdateResult(1, 0)
+
+    // update on existing record
+    blockingQueryExecutor.bulk(
+      Vector(
+        BulkUpdateOne(
+          SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10)),
+          upsert = false
+        )
+      )
+    ).unwrap must_== bulkUpdateResult(1, 1)
+    blockingQueryExecutor.fetchOne(
+      SimpleRecord.where(_.id eqs testRecord.id)
+    ).unwrap must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10)))
+
+    // updates fail on modifying _id
+    try {
+      blockingQueryExecutor.bulk(
+        Vector(
+          BulkUpdateOne(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId),
+            upsert = false
+          )
+        )
+      )
+      throw new Exception("Expected update failure when modifying _id field")
+    } catch {
+      case rogueException: RogueException => Option(rogueException.getCause) match {
+        case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+          case Seq(ErrorCategory.UNCATEGORIZED) => ()
+          case _ => throw rogueException
+        }
+        case _ => throw rogueException
+      }
+    }
+
+    // match multiple records, but only modify one
+    blockingQueryExecutor.bulk(
+      Vector(BulkUpdateOne(SimpleRecord.modify(_.boolean setTo true), upsert = false))
+    ).unwrap must_== bulkUpdateResult(1, 1)
+  }
+
+  @Test
+  def testAsyncBulkOperationUpdateMany: Unit = {
+    val testRecord = newTestRecord(0)
+    val extraRecord = newTestRecord(1)
+
+    val serialTestFutures = Future.join(
+      // upsert
+      asyncQueryExecutor.bulk(
+        Vector(
+          BulkUpdateMany(
+            SimpleRecord.where(_.id eqs extraRecord.id).modify(_.int setTo extraRecord.int),
+            upsert = true
+          )
+        )
+      ).flatMap(bulkWriteResult => {
+        val expectedUpsert = new BulkWriteUpsert(0, new BsonObjectId(extraRecord.id))
+        bulkWriteResult must_== bulkUpdateResult(0, 0, Vector(expectedUpsert).asJava)
+        asyncQueryExecutor.fetchOne(
+          SimpleRecord.where(_.id eqs extraRecord.id)
+        ).map(_ must_== Some(SimpleRecord(id = extraRecord.id, int = extraRecord.int)))
+      }),
+
+      for {
+        // update on non-existant record
+        _ <- asyncQueryExecutor.bulk(
+            Vector(
+              BulkUpdateMany(
+                SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
+                upsert = false
+              )
+            )
+          ).map(_ must_== bulkUpdateResult(0, 0))
+
+        // no-op update
+        _ <- asyncQueryExecutor.insert(testRecord)
+        _ <- asyncQueryExecutor.bulk(
+            Vector(
+              BulkUpdateMany(
+                SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
+                upsert = false
+              )
+            )
+          ).map(_ must_== bulkUpdateResult(1, 0))
+
+        // update on existing record
+        _ <- asyncQueryExecutor.bulk(
+            Vector(
+              BulkUpdateMany(
+                SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10)),
+                upsert = false
+              )
+            )
+          ).map(_ must_== bulkUpdateResult(1, 1))
+        _ <- asyncQueryExecutor.fetchOne(
+            SimpleRecord.where(_.id eqs testRecord.id)
+          ).map(_ must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10))))
+      } yield ()
+    )
+
+    val testFutures = serialTestFutures.flatMap(_ => {
+      Future.join(
+        // updates fail on modifying _id
+        asyncQueryExecutor.bulk(
+          Vector(
+            BulkUpdateMany(
+              SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId),
+              upsert = false
+            )
+          )
+        ).map(_ => throw new Exception("Expected update failure when modifying _id field"))
+          .handle({
+            case rogueException: RogueException => Option(rogueException.getCause) match {
+              case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+                case Seq(ErrorCategory.UNCATEGORIZED) => ()
+                case _ => throw rogueException
+              }
+              case _ => throw rogueException
+            }
+          }),
+
+        // update multiple records
+        asyncQueryExecutor.bulk(
+          Vector(BulkUpdateMany(SimpleRecord.modify(_.boolean setTo true), upsert = false))
+        ).map(_ must_== bulkUpdateResult(2, 2))
+      )
+    })
+
+    Await.result(testFutures)
+  }
+
+  @Test
+  def testBlockingBulkOperationUpdateMany: Unit = {
+    val testRecord = newTestRecord(0)
+    val extraRecord = newTestRecord(1)
+
+    // upsert
+    val expectedUpsert = new BulkWriteUpsert(0, new BsonObjectId(extraRecord.id))
+    blockingQueryExecutor.bulk(
+      Vector(
+        BulkUpdateMany(
+          SimpleRecord.where(_.id eqs extraRecord.id).modify(_.int setTo extraRecord.int),
+          upsert = true
+        )
+      )
+    ).unwrap must_== bulkUpdateResult(0, 0, Vector(expectedUpsert).asJava)
+    blockingQueryExecutor.fetchOne(
+      SimpleRecord.where(_.id eqs extraRecord.id)
+    ).unwrap must_== Some(SimpleRecord(id = extraRecord.id, int = extraRecord.int))
+
+    // update on non-existant record
+    blockingQueryExecutor.bulk(
+      Vector(
+        BulkUpdateMany(
+          SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
+          upsert = false
+        )
+      )
+    ).unwrap must_== bulkUpdateResult(0, 0)
+
+    // no-op update
+    blockingQueryExecutor.insert(testRecord)
+    blockingQueryExecutor.bulk(
+      Vector(
+        BulkUpdateMany(
+          SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
+          upsert = false
+        )
+      )
+    ).unwrap must_== bulkUpdateResult(1, 0)
+
+    // update on existing record
+    blockingQueryExecutor.bulk(
+      Vector(
+        BulkUpdateMany(
+          SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10)),
+          upsert = false
+        )
+      )
+    ).unwrap must_== bulkUpdateResult(1, 1)
+    blockingQueryExecutor.fetchOne(
+      SimpleRecord.where(_.id eqs testRecord.id)
+    ).unwrap must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10)))
+
+    // updates fail on modifying _id
+    try {
+      blockingQueryExecutor.bulk(
+        Vector(
+          BulkUpdateMany(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId),
+            upsert = false
+          )
+        )
+      )
+      throw new Exception("Expected update failure when modifying _id field")
+    } catch {
+      case rogueException: RogueException => Option(rogueException.getCause) match {
+        case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+          case Seq(ErrorCategory.UNCATEGORIZED) => ()
+          case _ => throw rogueException
+        }
+        case _ => throw rogueException
+      }
+    }
+
+    // update multiple records
+    blockingQueryExecutor.bulk(
+      Vector(BulkUpdateMany(SimpleRecord.modify(_.boolean setTo true), upsert = false))
+    ).unwrap must_== bulkUpdateResult(2, 2)
   }
 }
