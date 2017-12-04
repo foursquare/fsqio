@@ -85,10 +85,10 @@ class TrivialORMMongoCollectionFactory[MongoClient, MongoDatabase, MongoCollecti
     record.meta.mongoIdentifier.toString
   }
 
-  override def getIndexes[M <: TrivialORMMetaRecord[_]](
-    query: Query[M, _, _]
+  override def getIndexes(
+    meta: TrivialORMMetaRecord[_]
   ): Option[Seq[UntypedMongoIndex]] = {
-    query.meta match {
+    meta match {
       case indexed: IndexedRecord[_] => Some(indexed.mongoIndexList)
       case _ => None
     }

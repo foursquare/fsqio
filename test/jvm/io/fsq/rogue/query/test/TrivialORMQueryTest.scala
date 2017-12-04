@@ -2433,7 +2433,7 @@ class TrivialORMQueryTest extends RogueMongoTest
   @Test
   def testBlockingCreateIndexes: Unit = {
     val coll = blockingCollectionFactory.getMongoCollectionFromMetaRecord(SimpleRecord)
-    blockingQueryExecutor.createIndexes(
+    blockingQueryExecutor.createIndexes(SimpleRecord)(
       MongoIndex.builder(SimpleRecord).index(_.int, Asc),
       MongoIndex.builder(SimpleRecord).index(_.boolean, Asc, _.long, Desc)
     )
@@ -2446,7 +2446,7 @@ class TrivialORMQueryTest extends RogueMongoTest
     val coll = asyncCollectionFactory.getMongoCollectionFromMetaRecord(SimpleRecord)
 
     val testFuture = for {
-      _ <- asyncQueryExecutor.createIndexes(
+      _ <- asyncQueryExecutor.createIndexes(SimpleRecord)(
         MongoIndex.builder(SimpleRecord).index(_.int, Asc),
         MongoIndex.builder(SimpleRecord).index(_.boolean, Asc, _.long, Desc)
       )

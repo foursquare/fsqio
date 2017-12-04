@@ -37,7 +37,7 @@ object NameIndex {
 
   def makeIndexes(executor: IndexerQueryExecutor.ExecutorT): Unit = {
     val builder = MongoIndex.builder[ThriftNameIndexMeta](ThriftNameIndex)
-    executor.createIndexes(
+    executor.createIndexes(ThriftNameIndex)(
       builder.index(_.name, Asc, _.excludeFromPrefixIndex, Asc, _.pop, Desc),
       builder.index(_.fid, Asc, _.lang, Asc, _.name, Asc)
     )

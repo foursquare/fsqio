@@ -48,5 +48,6 @@ trait MongoCollectionFactory[
 
   def getInstanceNameFromRecord[R <: Record](record: R): String
 
-  def getIndexes[M <: MetaRecord](query: Query[M, _, _]): Option[Seq[UntypedMongoIndex]]
+  // TODO(jacob): The Option here is a bit superfluous, just return a possibly empty Seq.
+  def getIndexes(meta: MetaRecord): Option[Seq[UntypedMongoIndex]]
 }

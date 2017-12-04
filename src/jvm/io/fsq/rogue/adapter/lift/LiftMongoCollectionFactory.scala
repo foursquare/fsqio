@@ -102,18 +102,10 @@ class LiftMongoCollectionFactory[
     MongoIdentifier(record.meta.connectionIdentifier.jndiName).toString
   }
 
-  /**
-   * Retrieves the list of indexes declared for the record type associated with a
-   * query. If the record type doesn't declare any indexes, then returns None.
-   * @param query the query
-   * @return the list of indexes, or an empty list.
-   */
-  override def getIndexes[
-    M <: MongoRecord[_] with MongoMetaRecord[_]
-  ](
-    query: Query[M, _, _]
+  override def getIndexes(
+    meta: MongoRecord[_] with MongoMetaRecord[_]
   ): Option[Seq[UntypedMongoIndex]] = {
-    query.meta match {
+    meta match {
       case indexed: IndexedRecord[_] => Some(indexed.mongoIndexList)
       case _ => None
     }

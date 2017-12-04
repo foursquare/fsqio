@@ -10,7 +10,7 @@ import com.mongodb.client.model.{BulkWriteOptions, CountOptions, DeleteManyModel
 import io.fsq.rogue.{BulkInsertOne, BulkModifyQueryOperation, BulkOperation, BulkQueryOperation, BulkRemove,
     BulkRemoveOne, BulkReplaceOne, BulkUpdateMany, BulkUpdateOne, FindAndModifyQuery, Iter, ModifyQuery, Query}
 import io.fsq.rogue.MongoHelpers.{AndCondition, MongoBuilder => LegacyMongoBuilder, MongoModify}
-import io.fsq.rogue.index.{TypedMongoIndex, UntypedMongoIndex}
+import io.fsq.rogue.index.UntypedMongoIndex
 import io.fsq.rogue.util.QueryUtilities
 import java.util.{ArrayList, List => JavaList}
 import java.util.concurrent.TimeUnit
@@ -236,11 +236,12 @@ abstract class MongoClientAdapter[
   }
 
   def createIndexes[M <: MetaRecord](
-    firstIndex: TypedMongoIndex[M],
-    restIndexes: TypedMongoIndex[M]*
+    metaRecord: M
+  )(
+    indexes: UntypedMongoIndex*
   ): Result[Seq[String]] = {
-    val collection = collectionFactory.getMongoCollectionFromMetaRecord(firstIndex.meta)
-    val indexModels = (firstIndex +: restIndexes.toVector).map(index => {
+    val collection = collectionFactory.getMongoCollectionFromMetaRecord(metaRecord)
+    val indexModels = indexes.map(index => {
       new IndexModel(convertMongoIndexToBson(index))
     })
     createIndexesImpl(collection)(indexModels)
@@ -263,7 +264,10 @@ abstract class MongoClientAdapter[
     readPreferenceOpt: Option[ReadPreference]
   ): Result[Long] = {
     val queryClause = queryHelpers.transformer.transformQuery(query)
-    queryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
+    queryHelpers.validator.validateQuery(
+      queryClause,
+      collectionFactory.getIndexes(queryClause.meta)
+    )
     val collection = collectionFactory.getMongoCollectionFromQuery(query, readPreferenceOpt)
     val descriptionFunc = () => LegacyMongoBuilder.buildConditionString("count", query.collectionName, queryClause)
     // TODO(jacob): This cast will always succeed, but it should be removed once there is a
@@ -289,7 +293,10 @@ abstract class MongoClientAdapter[
     readPreferenceOpt: Option[ReadPreference]
   ): Result[T] = {
     val queryClause = queryHelpers.transformer.transformQuery(query)
-    queryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
+    queryHelpers.validator.validateQuery(
+      queryClause,
+      collectionFactory.getIndexes(queryClause.meta)
+    )
     val collection = collectionFactory.getMongoCollectionFromQuery(query, readPreferenceOpt)
     val descriptionFunc = () => LegacyMongoBuilder.buildConditionString("distinct", query.collectionName, queryClause)
     // TODO(jacob): This cast will always succeed, but it should be removed once there is a
@@ -440,7 +447,10 @@ abstract class MongoClientAdapter[
     setMaxTimeMS: Boolean = false
   ): Result[T] = {
     val queryClause = queryHelpers.transformer.transformQuery(query)
-    queryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
+    queryHelpers.validator.validateQuery(
+      queryClause,
+      collectionFactory.getIndexes(queryClause.meta)
+    )
     // TODO(jacob): We should just use the read preference on the query itself.
     val queryReadPreferenceOpt = readPreferenceOpt.orElse(queryClause.readPreference)
     val collection = collectionFactory.getMongoCollectionFromQuery(query, queryReadPreferenceOpt)
@@ -514,7 +524,10 @@ abstract class MongoClientAdapter[
     writeConcernOpt: Option[WriteConcern]
   ): Result[Long] = {
     val queryClause = queryHelpers.transformer.transformQuery(query)
-    queryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
+    queryHelpers.validator.validateQuery(
+      queryClause,
+      collectionFactory.getIndexes(queryClause.meta)
+    )
     val collection = collectionFactory.getMongoCollectionFromQuery(query, writeConcernOpt = writeConcernOpt)
     val descriptionFunc = () => LegacyMongoBuilder.buildConditionString("remove", query.collectionName, queryClause)
     // TODO(jacob): This cast will always succeed, but it should be removed once there is a
@@ -538,7 +551,10 @@ abstract class MongoClientAdapter[
       wrapResult(0L)
 
     } else {
-      queryHelpers.validator.validateModify(modifyClause, collectionFactory.getIndexes(modifyClause.query))
+      queryHelpers.validator.validateModify(
+        modifyClause,
+        collectionFactory.getIndexes(modifyClause.query.meta)
+      )
       val collection = collectionFactory.getMongoCollectionFromQuery(
         modifyQuery.query,
         writeConcernOpt = writeConcernOpt
@@ -594,7 +610,7 @@ abstract class MongoClientAdapter[
     } else {
       queryHelpers.validator.validateFindAndModify(
         findAndModifyClause,
-        collectionFactory.getIndexes(findAndModifyClause.query)
+        collectionFactory.getIndexes(findAndModifyClause.query.meta)
       )
       val collection = collectionFactory.getMongoCollectionFromQuery(
         findAndModifyClause.query,
@@ -649,7 +665,10 @@ abstract class MongoClientAdapter[
     writeConcernOpt: Option[WriteConcern]
   ): Result[Option[R]] = {
     val queryClause = queryHelpers.transformer.transformQuery(query)
-    queryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
+    queryHelpers.validator.validateQuery(
+      queryClause,
+      collectionFactory.getIndexes(queryClause.meta)
+    )
 
     val collection = collectionFactory.getMongoCollectionFromQuery(query, writeConcernOpt = writeConcernOpt)
     val descriptionFunc = () => LegacyMongoBuilder.buildFindAndModifyString(
@@ -737,7 +756,10 @@ abstract class MongoClientAdapter[
 
         case queryOp: BulkQueryOperation[M, R] => {
           val queryClause = queryHelpers.transformer.transformQuery(queryOp.query)
-          queryHelpers.validator.validateQuery(queryClause, collectionFactory.getIndexes(queryClause))
+          queryHelpers.validator.validateQuery(
+            queryClause,
+            collectionFactory.getIndexes(queryClause.meta)
+          )
           descriptionBuilder += {
             () => LegacyMongoBuilder.buildConditionString(
               queryOp.getClass.getSimpleName,
@@ -767,7 +789,10 @@ abstract class MongoClientAdapter[
           val modifyClause = queryHelpers.transformer.transformModify(modifyOp.modifyQuery)
 
           if (modifyClause.mod.clauses.nonEmpty) {
-            queryHelpers.validator.validateModify(modifyClause, collectionFactory.getIndexes(modifyClause.query))
+            queryHelpers.validator.validateModify(
+              modifyClause,
+              collectionFactory.getIndexes(modifyClause.query.meta)
+            )
             descriptionBuilder += {
               () => LegacyMongoBuilder.buildModifyString(
                 modifyOp.modifyQuery.query.collectionName,

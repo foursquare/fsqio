@@ -9,7 +9,7 @@ import io.fsq.rogue.{!<:<, AddLimit, BulkInsertOne, BulkModifyQueryOperation, Bu
     Unlimited, Unselected, Unskipped}
 import com.mongodb.bulk.BulkWriteResult
 import io.fsq.rogue.adapter.MongoClientAdapter
-import io.fsq.rogue.index.TypedMongoIndex
+import io.fsq.rogue.index.UntypedMongoIndex
 import io.fsq.rogue.types.MongoDisallowed
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.ArrayBuffer
@@ -34,10 +34,11 @@ class QueryExecutor[
   def defaultWriteConcern: WriteConcern = adapter.queryHelpers.config.defaultWriteConcern
 
   def createIndexes[M <: MetaRecord](
-    firstIndex: TypedMongoIndex[M],
-    restIndexes: TypedMongoIndex[M]*
+    metaRecord: M
+  )(
+    indexes: UntypedMongoIndex*
   ): Result[Seq[String]] = {
-    adapter.createIndexes(firstIndex, restIndexes: _*)
+    adapter.createIndexes(metaRecord)(indexes: _*)
   }
 
   def explain[M <: MetaRecord](query: Query[M, _, _]): Result[String] = {

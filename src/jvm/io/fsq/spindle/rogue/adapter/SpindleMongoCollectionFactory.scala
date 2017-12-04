@@ -120,25 +120,13 @@ class SpindleMongoCollectionFactory[
     }
   }
 
-  /**
-   * Retrieves the list of indexes declared for the record type associated with a
-   * query. If the record type doesn't declare any indexes, then returns None.
-   * @param query the query
-   * @return the list of indexes, or an empty list.
-   *
-   * TODO(jacob): The Option here is a bit superfluous, just return a possibly empty Seq.
-   */
-  override def getIndexes[
-    M <: UntypedMetaRecord
-  ](
-    query: Query[M, _, _]
-  ): Option[Seq[UntypedMongoIndex]] = {
-    indexCache.getOrElseUpdate(query.meta, {
-      IndexParser.parse(query.meta.annotations).right.toOption.map(indexes => {
+  override def getIndexes(meta: UntypedMetaRecord): Option[Seq[UntypedMongoIndex]] = {
+    indexCache.getOrElseUpdate(meta, {
+      IndexParser.parse(meta.annotations).right.toOption.map(indexes => {
         for (index <- indexes) yield {
           val indexEntries = index.map(entry => {
-            val wireName = fieldNameToWireName(query.meta, entry.fieldName.split('.')).getOrElse(
-              throw new Exception(s"Struct ${query.meta} declares an index on non-existent field ${entry.fieldName}")
+            val wireName = fieldNameToWireName(meta, entry.fieldName.split('.')).getOrElse(
+              throw new Exception(s"Struct $meta declares an index on non-existent field ${entry.fieldName}")
             )
             (wireName, entry.indexType)
           })

@@ -39,7 +39,7 @@ object RevGeoIndex {
 
   def makeIndexes(executor: IndexerQueryExecutor.ExecutorT): Unit = {
     val builder = MongoIndex.builder[ThriftRevGeoIndexMeta](ThriftRevGeoIndex)
-    executor.createIndexes(
+    executor.createIndexes(ThriftRevGeoIndex)(
       builder.index(_.cellId, Desc)
     )
   }

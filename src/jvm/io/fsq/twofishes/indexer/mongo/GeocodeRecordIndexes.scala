@@ -14,7 +14,7 @@ import io.fsq.twofishes.model.gen.{ThriftGeocodeRecord, ThriftGeocodeRecordMeta}
 object GeocodeRecordIndexes {
   def makeIndexes(executor: IndexerQueryExecutor.ExecutorT): Unit = {
     val builder = MongoIndex.builder[ThriftGeocodeRecordMeta](ThriftGeocodeRecord)
-    executor.createIndexes(
+    executor.createIndexes(ThriftGeocodeRecord)(
       builder.index(_.hasPoly, Desc),
       builder.index(_.polyId, Asc)
     )
