@@ -28,7 +28,6 @@ for arg in $@; do
   case "${arg}" in
     "--help"|"help"|"-h" )
       print_help
-      exit
   esac
 done
 

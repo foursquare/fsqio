@@ -5,29 +5,27 @@
 set -eo pipefail
 set +a
 
-# BUILD_ROOT is purposfully read-only- it must be exclusively inherited from this definition.
-readonly BUILD_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export BUILD_ROOT
-export UPKEEPROOT="${BUILD_ROOT}/scripts/fsqio/upkeep"
-export DEPENDENCIES_ROOT="${BUILD_ROOT}/dependencies"
+export BUILD_ROOT="${BUILD_ROOT:-$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )}"
+export UPKEEPROOT="${BUILD_ROOT}/build-support"
+export FSQ_ENV_FILE="${BUILD_ROOT}/environ.sh"
 
-ENV_FILE_LOCATION="${BUILD_ROOT}/environ.sh"
+UPKEEP_HOME="${UPKEEPROOT}/fsqio/upkeep"
 ENV_FILE="libs/env.sh"
 
 # Symlink the proper environmental variables file.
-if [[ -e "scripts/foursquare/upkeep/${ENV_FILE}" ]]; then
-  repo_env="scripts/foursquare/upkeep/${ENV_FILE}"
+if [[ -e "${UPKEEPROOT}/foursquare/upkeep/${ENV_FILE}" ]]; then
+  repo_env="${UPKEEPROOT}/foursquare/upkeep/${ENV_FILE}"
 else
-  repo_env="${UPKEEPROOT}/${ENV_FILE}"
+  repo_env="${UPKEEP_HOME}/${ENV_FILE}"
 fi
 
-if [[ $(readlink "${ENV_FILE_LOCATION}") != "${repo_env}" ]]; then
-  rm -f "${ENV_FILE_LOCATION}"
-  ln -sf "${repo_env}" "${ENV_FILE_LOCATION}"
+if [[ $(readlink "${FSQ_ENV_FILE}") != ${repo_env} ]]; then
+  rm -f "${FSQ_ENV_FILE}"
+  ln -sf "${repo_env}" "${FSQ_ENV_FILE}"
 fi
 
-source "${ENV_FILE_LOCATION}"
-source "${UPKEEPROOT}/util.sh"
+source "${FSQ_ENV_FILE}"
+source "${UPKEEP_HOME}/util.sh"
 
 # Default to not SKIP_UPKEEP
 SKIP_UPKEEP=${SKIP_UPKEEP:-0}
@@ -55,7 +53,7 @@ for opt in $@; do
       ;;
     * )
       # Try and catch bad options - while allowing passthrough for ./upkeep run.
-      if [[ "${upkeep_args[0]}" != 'run' ]] && [[ "${opt}" != "-*help" ]] && [[ "${opt}" == -* ]]; then
+      if [[ "${upkeep_args[0]}" != 'run' ]] && [[ ${opt} != -*help ]] && [[ ${opt} == -* ]]; then
         colorized_error "Bad task name: ${opt}"
         print_help
         exit_with_failure "Bad invocation: No upkeep option: ${opt}\n"
@@ -66,9 +64,9 @@ for opt in $@; do
 done
 
 function upkeep_cmd() {
-  # ONLY_SKIP_TASKS allows callers (like the git hooks) to skip upkeep tasks but still execute scripts, like ./python.
+  # SKIP_UPKEEP_TASKS allows callers (like the git hooks) to skip upkeep tasks but still execute scripts, like ./python.
   # Essentially means "void SKIP_UPKEEP for this command."
-  if [[ ${SKIP_UPKEEP} -eq 0 ]] || [[ $ONLY_SKIP_TASKS -eq 1 ]]; then
+  if [[ ${SKIP_UPKEEP} -eq 0 ]] || [[ $SKIP_UPKEEP_TASKS -eq 1 ]]; then
     if [ ! -f "${1}" ]; then
       exit_with_failure "No upkeep file found at: ${1}"
     fi
@@ -80,28 +78,28 @@ function upkeep_cmd() {
 case "${upkeep_args[0]}" in
   "--help"|"help"|"-h" )
     print_help
-    exit
+    return
     ;;
   "force" )
     DOWNSTREAM_TASKS=${DOWNSTREAM_TASKS:-"true"}
-    action="${UPKEEPROOT}/force.sh"
+    action="${UPKEEP_HOME}/force.sh"
     args=( "${upkeep_args[@]:1}" )
     ;;
   "check"|'')
     # Check disables downstream - honestly it should probably not be surfaced as a top-level command anymore.
     DOWNSTREAM_TASKS="false"
-    action="${UPKEEPROOT}/check.sh"
+    action="${UPKEEP_HOME}/check.sh"
     args=( "${upkeep_args[@]:1}" )
     ;;
   "tasks" )
     DOWNSTREAM_TASKS=${DOWNSTREAM_TASKS:-"false"}
     print_all_tasks "${upkeep_args[@]}"
-    exit
+    return
     ;;
   "task-list" )
     DOWNSTREAM_TASKS=${DOWNSTREAM_TASKS:-"false"}
     all_task_names
-    exit
+    return
     ;;
   "run" )
     script_name="${upkeep_args[1]}"
@@ -112,10 +110,10 @@ case "${upkeep_args[0]}" in
     args=( "${upkeep_args[@]:2}" )
     # Execute `./upkeep check' in order to run any required tasks and then turn on SKIP for future upkeep calls.
     if [[ ! SKIP_UPKEEP -eq 1 ]]; then
-      ${UPKEEPROOT}/check.sh
+      ${UPKEEP_HOME}/check.sh
     fi
     # Disable task-related upkeep operations but allow others (essentially run) to continue.
-    ONLY_SKIP_TASKS=1
+    SKIP_UPKEEP_TASKS=1
     SKIP_UPKEEP=1
     ;;
   *)
@@ -123,7 +121,7 @@ case "${upkeep_args[0]}" in
     # operations and is probably not safe to automate. Until the implementation improves, the --downstream flag should
     # only be invoked from the command line, akin to a `git reset` for upkeep.
     DOWNSTREAM_TASKS=${DOWNSTREAM_TASKS:-"false"}
-    action="${UPKEEPROOT}/execute_task.sh"
+    action="${UPKEEP_HOME}/execute_task.sh"
     args=( "${upkeep_args[@]:0}" )
     ;;
 esac

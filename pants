@@ -6,7 +6,7 @@ set -ea
 
 # TODO: The empty quotes are to avoid passing args to upkeep, need a better way to handle this.
 source upkeep ''
-source "${ENV_FILE_LOCATION}"
+source "${FSQ_ENV_FILE}"
 
 # We could just execute upkeep if we were okay with pants magically knowing to source 'environ.sh' path.
 "${BUILD_ROOT}/upkeep"

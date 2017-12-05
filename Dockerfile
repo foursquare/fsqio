@@ -18,7 +18,7 @@ RUN apt-get update \
 COPY . $BUILD_DIR
 WORKDIR $BUILD_DIR
 
-RUN ./pants pom-resolve && \
+RUN ./pants resolve.ivy :: && \
     $BUILD_DIR/scripts/fsqio/docker/run-mongo.sh $TEST_DATA_DIR \
     ./pants --no-compile-zinc-use-nailgun compile test:: \
     && rm -rf $TEST_DATA_DIR

@@ -84,7 +84,7 @@ function get_task_and_downstream() {
 function all_matched_files() {
   # Glob files under upkeep subfolder. If no files match, returns empty string.
   # usage: `all_matched_files $action_type $regex`
-  echo $(find ${BUILD_ROOT}/scripts/*/upkeep/${1}/${2} -type f 2> /dev/null)
+  echo $(find ${UPKEEPROOT}/*/upkeep/${1}/${2} -type f 2> /dev/null)
 }
 
 function all_task_names() {
@@ -112,7 +112,7 @@ function find_upkeep_file() {
   case "${#found_matches[@]}" in
     0 )
       # TODO(mateo) Improve the "magic" path knowledge here. Should be extrapolated so it doesn't get stale.
-      exit_with_failure "No match registered under scripts/<foo>/upkeep/${upkeep_action}: ${file_name}"
+      exit_with_failure "No match registered under ${UPKEEPROOT}/<foo>/upkeep/${upkeep_action}: ${file_name}"
       ;;
     1 )
       echo "${found_matches[@]}"
@@ -151,5 +151,5 @@ function exit_with_failure() {
   for i in "$@"; do
     colorized_error "${i}\n"
   done
-  exit -1
+  exit 1
 }

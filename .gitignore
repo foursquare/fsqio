@@ -41,6 +41,7 @@
 .svn
 .wheelhouse
 /out/
+build-support/*/upkeep/current
 dependencies/*
 dist
 environ.sh

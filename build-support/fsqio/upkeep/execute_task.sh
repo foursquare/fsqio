@@ -19,7 +19,7 @@ function run_actual_task() {
     fi
     # Not printing the exit_with_failure message because this should come from the task.
     # But exiting with an error code to protect any misconfigured tasks from reporting inaccurate success.
-    exit -1
+    return 1
   }
   trap "clean_current_on_error" ERR INT
   "$task_file"
@@ -64,7 +64,9 @@ function run_downstream() {
   function unforce() {
     for forced in ${unique_tasks[@]}; do
       req=$(find_upkeep_file "required" "${forced}") || continue
-      git checkout "${req}"
+      [[ ! -d ${req} ]] || exit_with_failure "Expected a file and instead ${req} is a directory!"
+      # If a new task is added, or the upkeep required files are relocated for some reason, this exits with an error.
+      git checkout -q "${req}" &> /dev/null || true
 
       if [[  "${1}" == "true" ]]; then
         cur=$(get_current_path ${req} ${forced})
