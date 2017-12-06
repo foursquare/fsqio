@@ -71,12 +71,3 @@ jar_library(
     'fscommon',
   ],
 )
-
-
-jar_library(
-  name = 'avro-1.8.2',
-  jars = [
-    jar(org = 'org.apache.avro', name = 'avro', rev = '1.8.2'),
-    jar(org = 'org.apache.avro', name = 'avro-ipc', rev = '1.8.2'),
-  ],
-)
