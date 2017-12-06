@@ -36,6 +36,8 @@
 .project
 .pvenvs*
 .python
+.saplings
+.saplingsc
 .scala_dependencies
 .settings/
 .svn
