@@ -1,8 +1,9 @@
 #!/bin/bash
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
-# Allow any passed pants or fsq.io to override the default config. If unset, Pants falls back to vanilla pants.ini.
-export PANTS_CONFIG_OVERRIDE="${PANTS_CONFIG_OVERRIDE}"
+# Allow any passed pants or fsq.io to override the default config.
+export PANTS_CONFIG_OVERRIDE="${PANTS_CONFIG_OVERRIDE:-"['pants.ini']"}"
+export DEPENDENCIES_ROOT="${BUILD_ROOT}/dependencies"
 
 # JPostal defaults, used for our RPM that is currently just partially opensourced.
 #
