@@ -2,7 +2,6 @@
 
 package io.fsq.rogue.lift.test
 
-import com.mongodb.MongoClient
 import io.fsq.rogue.{LatLong, ShardKey, Sharded}
 import io.fsq.rogue.index.{Asc, Desc, IndexModifier, IndexedRecord, TwoD}
 import io.fsq.rogue.lift.{HasMongoForeignObjectId, ObjectIdKey}
@@ -21,21 +20,10 @@ import org.bson.types.ObjectId
 /////////////////////////////////////////////////
 
 object RogueTestMongo extends ConnectionIdentifier {
-
   override def jndiName = "rogue_mongo"
 
-  private var mongo: Option[MongoClient] = None
-
-  def connectToMongo = {
-    mongo = Some(TrivialORM.mongoClient)
-    MongoDB.defineDb(RogueTestMongo, mongo.get, "rogue-test")
-  }
-
-  def disconnectFromMongo = {
-    //mongo.foreach(_.close)
-    // TODO: This breaks the rest of the mongo tests in foursquare.web
-    // MongoDB.close
-    mongo = None
+  def connectToMongo(): Unit = {
+    MongoDB.defineDb(RogueTestMongo, TrivialORM.mongoClient, "rogue-test")
   }
 }
 

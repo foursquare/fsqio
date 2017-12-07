@@ -5,6 +5,7 @@ package io.fsq.rogue.lift.test
 import com.mongodb.ReadPreference
 import io.fsq.rogue.{Iter, LatLong}
 import io.fsq.rogue.Iter._
+import io.fsq.rogue.lift.LiftRogue
 import io.fsq.rogue.lift.LiftRogue._
 import java.util.Calendar
 import java.util.regex.Pattern
@@ -16,6 +17,13 @@ import org.specs2.matcher.JUnitMustMatchers
  * Contains tests that test the interaction of Rogue with a real mongo.
  */
 class EndToEndTest extends JUnitMustMatchers {
+  // HACK(jacob): These tests need to be ported to the new QueryExecutor, but in the
+  //    meantime they can fail when run alongside other tests which set a custom query
+  //    config in LiftRogue. The solution here is to run them serially (they were already
+  //    not thread safe) and simply record that global state in the test setup and reset
+  //    it after each run.
+  private var globalQueryConfig = LiftRogue.defaultConfig
+
   def baseTestVenue(): Venue = {
     Venue.createRecord
          .legacyid(123)
@@ -49,12 +57,14 @@ class EndToEndTest extends JUnitMustMatchers {
   }
 
   @Before
-  def setupMongoConnection: Unit = {
-    RogueTestMongo.connectToMongo
+  def setupMongoConnection(): Unit = {
+    globalQueryConfig = LiftRogue.config
+    LiftRogue.config = LiftRogue.defaultConfig
+    RogueTestMongo.connectToMongo()
   }
 
   @After
-  def cleanupTestData: Unit = {
+  def cleanupTestData(): Unit = {
     Venue.bulkDelete_!!!
     Venue.count must_== 0
 
@@ -63,7 +73,7 @@ class EndToEndTest extends JUnitMustMatchers {
 
     Like.allShards.bulkDelete_!!!
 
-    RogueTestMongo.disconnectFromMongo
+    LiftRogue.config = globalQueryConfig
   }
 
   @Test

@@ -275,9 +275,11 @@ trait LiftRogue {
 }
 
 object LiftRogue extends Rogue with LiftRogue {
-  var config = ExecutableQueryConfig(
+  val defaultConfig = ExecutableQueryConfig(
     legacyQueryExecutor = LiftQueryExecutor,
     newQueryExecutor = null,
     useNewQueryExecutor = () => false
   )
+
+  var config = defaultConfig
 }
