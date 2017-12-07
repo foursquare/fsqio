@@ -4,6 +4,7 @@ package io.fsq.spindle.rogue.adapter
 
 import com.mongodb.{BasicDBObject, ReadPreference, WriteConcern}
 import io.fsq.common.scala.Identity._
+import io.fsq.common.scala.TryO
 import io.fsq.rogue.Query
 import io.fsq.rogue.adapter.MongoCollectionFactory
 import io.fsq.rogue.connection.{MongoClientManager, MongoIdentifier}
@@ -128,7 +129,7 @@ class SpindleMongoCollectionFactory[
             val wireName = fieldNameToWireName(meta, entry.fieldName.split('.')).getOrElse(
               throw new Exception(s"Struct $meta declares an index on non-existent field ${entry.fieldName}")
             )
-            (wireName, entry.indexType)
+            (wireName, TryO.toInt(entry.indexType).getOrElse(entry.indexType))
           })
 
           DefaultUntypedMongoIndex(indexEntries)
