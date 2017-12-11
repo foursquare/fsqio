@@ -124,6 +124,7 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
           if len(product) == 1 and os.path.isfile(binary):
             return binary
           # In this case we know there is just one product in the spindle_binary product.
+
     raise TaskError(
       'Spindle requires a single snapshot of Spindle runtime source code in order to bootstrap.\n'
       'Found: {}\n'.format(product)
@@ -176,7 +177,6 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
     ) as invalidation_check:
       with self.context.new_workunit(name='execute', labels=[WorkUnitLabel.MULTITOOL]):
         with temporary_dir() as workdir:
-          synth_targets = []
           for vt in invalidation_check.all_vts:
             if not vt.valid:
               if self._do_validate_sources_present(vt.target):
@@ -189,9 +189,7 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
                   self.calculate_generated_sources(vt.target, ns_out), ns_out, vt.results_dir,
                 )
                 vt.update()
-            synth_targets.append(
-              self._inject_synthetic_target(vt.target, vt.results_dir)
-            )
+            self._inject_synthetic_target(vt.target, vt.results_dir)
 
   def make_json_resource(self, dirname, sources):
     """Return synthetic Resources target that provides the json annotations for a generated ScalaLibrary"""

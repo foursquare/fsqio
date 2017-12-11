@@ -11,15 +11,11 @@ from __future__ import (
   with_statement,
 )
 
-from pants.backend.jvm.targets.exportable_jvm_library import ExportableJvmLibrary
+from pants.backend.jvm.targets.jvm_target import JvmTarget
 
 
-class SpindleThriftLibrary(ExportableJvmLibrary):
+class SpindleThriftLibrary(JvmTarget):
   """Defines a target that builds scala_record stubs from a thrift IDL file."""
 
   def __init__(self, *args, **kwargs):
     super(SpindleThriftLibrary, self).__init__(*args, **kwargs)
-    self.add_labels('scala', 'codegen', 'synthetic')
-
-  def _as_jar_dependency(self):
-    return ExportableJvmLibrary._as_jar_dependency(self).withSources()

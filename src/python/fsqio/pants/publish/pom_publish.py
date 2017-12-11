@@ -173,16 +173,16 @@ class PomPublish(JarPublish, JarBuilderTask):
         url='http://www.opensource.org/licenses/Apache-2.0',
       )],
       scm=TemplateData(
-        url='git@github.com:foursquare/spindle.git',
+        url='git@github.com:foursquare/fsqio.git',
         # TODO(dan): Are these the right values?
         connection='scm:git:git@github.com:foursquare/fsqio.git',
         developer_connection='scm:git:git@github.com:foursquare/fsqio.git',
       ),
       developers=[
         TemplateData(
-          id='paperstreet',
-          name='Daniel Harrison',
-          url='https://github.com/paperstreet',
+          id='jvandew',
+          name='Jacob Van De Weert',
+          url='https://github.com/jvandew',
         ),
         TemplateData(
           id='mateor',
@@ -240,11 +240,12 @@ class PomPublish(JarPublish, JarBuilderTask):
     def gather_jarables(deps):
       jarables = set()
       for dep in deps:
-        if self.is_jarable_target(dep):
-          if dep in jarables:
+        concrete = dep.concrete_derived_from
+        if self.is_jarable_target(concrete):
+          if concrete in jarables:
             raise TaskError('A jarable dependency is listed twice in the PomPublish closure: {}\n'
-              '    * {}'.format(tgt.address.spec, dep))
-          jarables.add(dep)
+              '    * {}'.format(tgt.address.spec, concrete))
+          jarables.add(concrete)
       return jarables
 
     required_jarable_deps = gather_jarables(transitive_deps)
