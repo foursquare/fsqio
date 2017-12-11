@@ -1,5 +1,8 @@
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
+# NOTE(mateo): This doesn't actually directly use the spindle.codegen backend, it just verifies
+# that the current protocols defined in the spindle.runtime.TProtocol are properly serialized
+# post-codegen.
 junit_tests(
   name = 'test',
   sources = globs('*.scala'),

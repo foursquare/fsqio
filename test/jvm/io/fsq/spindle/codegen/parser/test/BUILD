@@ -5,8 +5,10 @@ junit_tests(
   sources = globs('*.scala'),
   dependencies = [
     '3rdparty:junit',
-    'src/jvm/io/fsq/spindle/__shaded_for_spindle_bootstrap__/descriptors',
-    'src/jvm/io/fsq/spindle/codegen/parser',
+    'src/jvm/io/fsq/spindle/codegen:binary',
     'test/thrift/io/fsq/spindle/codegen/parser/test',
+  ],
+  tags = [
+    'spindle_codegen',
   ],
 )

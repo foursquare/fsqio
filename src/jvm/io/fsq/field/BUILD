@@ -5,5 +5,6 @@ scala_library(
   sources = globs('*.scala'),
   tags = [
     'fscommon',
+    'spindle_codegen',
   ],
 )

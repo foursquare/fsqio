@@ -285,6 +285,15 @@ jvm_third_party_map = {
         'client': 'kubernetes-client-java',
       }
     },
+    'fsq': {
+      'spindle': {
+        '__shaded_for_spindle_bootstrap__': {
+          'descriptors': {
+            'java_thrift_descriptors': 'SKIP',
+          },
+        },
+      },
+    },
     'netty': 'netty4',
   },
   'java': 'SKIP',

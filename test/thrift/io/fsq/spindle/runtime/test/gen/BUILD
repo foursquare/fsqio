@@ -3,6 +3,7 @@
 spindle_thrift_library(
   name = 'gen',
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/spindle/runtime',
     'test/thrift/io/fsq/spindle/runtime/structs/gen',

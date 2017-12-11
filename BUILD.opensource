@@ -3,6 +3,8 @@
 scala_version = '2.11.8'
 
 
+# NOTE: Now that we have full use of Ivy and target scopes, this should probably be adjusted.
+# Need to do define this target and maintain tags is a leak.
 target(
   name='scala-library',
   dependencies = [
@@ -10,6 +12,7 @@ target(
   ],
   tags = [
     'opensource',
+    'spindle_codegen',
     'fscommon',
   ],
 )

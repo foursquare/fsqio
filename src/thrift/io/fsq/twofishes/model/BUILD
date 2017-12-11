@@ -3,6 +3,7 @@
 scala_record_library(
   name = 'model',
   dependencies = [
+    '3rdparty:bson',
     'src/jvm/io/fsq/spindle/runtime',
     'src/thrift/io/fsq/twofishes',
   ],

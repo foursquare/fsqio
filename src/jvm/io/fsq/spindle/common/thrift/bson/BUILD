@@ -9,4 +9,7 @@ scala_library(
     'src/jvm/io/fsq/spindle/common/thrift/base',
     'src/jvm/io/fsq/spindle/common/thrift/json',
   ],
+  tags = [
+    'spindle_codegen',
+  ],
 )

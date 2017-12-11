@@ -5,8 +5,7 @@ junit_tests(
   sources = globs('*.scala'),
   dependencies = [
     '3rdparty:junit',
-    'src/jvm/io/fsq/spindle/codegen/binary',
-    'src/jvm/io/fsq/spindle/codegen/runtime',
+    'src/jvm/io/fsq/spindle/codegen:binary',
     'src/thrift/io/fsq/common/thrift/descriptors/programs/gen',  # runtime dependency.
   ],
 )

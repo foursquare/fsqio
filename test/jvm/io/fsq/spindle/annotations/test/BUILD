@@ -8,4 +8,7 @@ junit_tests(
     'src/jvm/io/fsq/spindle/annotations',
     'src/thrift/io/fsq/common/thrift/descriptors/types/gen',  # comment to fool buildgen
   ],
+  tags = [
+    'spindle_runtime',
+  ]
 )

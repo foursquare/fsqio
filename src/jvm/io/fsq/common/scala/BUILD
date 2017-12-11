@@ -6,4 +6,7 @@ scala_library(
   dependencies = [
     '3rdparty:bson',
   ],
+   tags = [
+     'spindle_codegen',
+   ],
 )

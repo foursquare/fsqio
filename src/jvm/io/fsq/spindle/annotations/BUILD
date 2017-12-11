@@ -7,4 +7,7 @@ scala_library(
     '3rdparty:json4s',
     '3rdparty:reflections',
   ],
+  tags = [
+    'spindle_runtime',
+  ],
 )

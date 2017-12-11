@@ -155,11 +155,7 @@ pom_target(
   dependencies = [
     ':field',
     ':common',
-    'src/jvm/io/fsq/spindle/__shaded_for_spindle_bootstrap__/descriptors',
-    'src/jvm/io/fsq/spindle/__shaded_for_spindle_bootstrap__/runtime',
-    'src/jvm/io/fsq/spindle/codegen/binary',
-    'src/jvm/io/fsq/spindle/codegen/parser',
-    'src/jvm/io/fsq/spindle/codegen/runtime',
+    'src/jvm/io/fsq/spindle/codegen:binary',
     'src/jvm/io/fsq/spindle/runtime',
     'src/jvm/io/fsq/spindle/common/thrift/base:base',
     'src/jvm/io/fsq/spindle/common/thrift/bson:bson',

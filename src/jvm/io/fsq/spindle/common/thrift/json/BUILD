@@ -8,4 +8,7 @@ java_library(
     '3rdparty:jackson',
     'src/jvm/io/fsq/spindle/common/thrift/base',
   ],
+  tags = [
+    'spindle_codegen',
+  ],
 )

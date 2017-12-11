@@ -7,4 +7,7 @@ java_library(
     '3rdparty:thrift',
     '3rdparty:joda-time',
   ],
+  tags = [
+    'spindle_codegen',
+  ],
 )

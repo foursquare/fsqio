@@ -4,6 +4,7 @@ scala_record_library(
   name = 'test',
   sources = globs('*.thrift'),
   dependencies = [
+    '3rdparty:bson',
     'src/jvm/io/fsq/spindle/runtime',
     'test/thrift/io/fsq/spindle/rogue/test',
   ],

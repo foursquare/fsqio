@@ -37,8 +37,8 @@ class BuildSpindle(SpindleTask):
   frozen checkout of the binary source.
 
   This task should only be installed if you intend to modify Spindle source code or ssp files. If so, make sure your
-  build has access to the the frozen checkout at src/jvm/io/fsq/spindle/__shaded_for_spindle_bootstrap__ in addition
-  to the Spindle source code that you will be changing.
+  build has access to the the frozen checkout at src/jvm/io/fsq/spindle/codegen/__shaded_for_spindle_bootstrap__ in
+  addition to the Spindle source code that you will be changing.
   """
 
   PANTS_SCRIPT_NAME = 'pants'
