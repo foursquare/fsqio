@@ -24,7 +24,7 @@ from pants.util.memo import memoized_property
 
 from fsqio.pants.buildgen.core.buildgen_base import BuildgenBase
 from fsqio.pants.buildgen.core.third_party_map_util import check_manually_defined, merge_map
-from fsqio.pants.buildgen.jvm.third_party_map_jvm import jvm_third_party_map
+from fsqio.pants.buildgen.jvm.scala.third_party_map_jvm import jvm_third_party_map
 
 
 class UsedSymbolException(TaskError):

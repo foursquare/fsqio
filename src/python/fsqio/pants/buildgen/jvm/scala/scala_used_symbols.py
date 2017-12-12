@@ -18,7 +18,7 @@ from pants.backend.jvm.targets.scala_library import ScalaLibrary
 from pants.backend.jvm.tasks.nailgun_task import NailgunTask
 
 from fsqio.pants.buildgen.core.source_analysis_task import SourceAnalysisTask
-from fsqio.pants.buildgen.jvm.scalac_buildgen_task_mixin import ScalacBuildgenTaskMixin
+from fsqio.pants.buildgen.jvm.scala.scalac_buildgen_task_mixin import ScalacBuildgenTaskMixin
 
 
 class MapScalaUsedSymbols(ScalacBuildgenTaskMixin, SourceAnalysisTask, NailgunTask):

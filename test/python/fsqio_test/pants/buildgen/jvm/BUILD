@@ -4,6 +4,6 @@ python_tests(
   dependencies = [
     '3rdparty/python:pantsbuild.pants',
     '3rdparty/python:pantsbuild.pants.testinfra',
-    'src/python/fsqio/pants/buildgen/jvm',
+    'src/python/fsqio/pants/buildgen/jvm/core',
   ],
 )

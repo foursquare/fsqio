@@ -17,7 +17,7 @@ from pants.base.exceptions import TaskError
 from pants.util.contextutil import open_zip, temporary_dir, temporary_file
 from pants_test.jvm.jar_task_test_base import JarTaskTestBase
 
-from fsqio.pants.buildgen.jvm.map_third_party_jar_symbols import MapThirdPartyJarSymbols
+from fsqio.pants.buildgen.jvm.core.map_third_party_jar_symbols import MapThirdPartyJarSymbols
 
 
 class TestMapThirdPartyJarSymbols(JarTaskTestBase):
