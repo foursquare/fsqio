@@ -12,4 +12,9 @@ scala_library(
   tags = [
     'spindle_codegen',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='spindle-common-thrift-bson',
+    repo=oss_sonatype_repo,
+  ),
 )

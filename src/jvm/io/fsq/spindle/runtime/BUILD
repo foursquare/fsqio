@@ -11,4 +11,9 @@ scala_library(
     'src/jvm/io/fsq/spindle/common/thrift/bson',
     'src/jvm/io/fsq/spindle/common/thrift/json',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='spindle-runtime',
+    repo=oss_sonatype_repo,
+  ),
 )

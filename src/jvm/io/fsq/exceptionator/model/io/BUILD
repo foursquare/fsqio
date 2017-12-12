@@ -10,4 +10,9 @@ scala_library(
     '3rdparty:lift-json',
     'src/jvm/io/fsq/exceptionator/util',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='exceptionator-model-io',
+    repo=oss_sonatype_repo,
+  ),
 )

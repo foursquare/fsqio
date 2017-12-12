@@ -6,4 +6,9 @@ scala_library(
   dependencies = [
     'src/jvm/io/fsq/field',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='rogue-index',
+    repo=oss_sonatype_repo,
+  ),
 )

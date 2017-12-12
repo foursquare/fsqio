@@ -11,4 +11,9 @@ scala_library(
     'src/jvm/io/fsq/exceptionator/actions',
     'src/jvm/io/fsq/exceptionator/loader/service',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='exceptionator-loader-concrete',
+    repo=oss_sonatype_repo,
+  ),
 )

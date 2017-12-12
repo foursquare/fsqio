@@ -18,4 +18,9 @@ scala_library(
     'src/jvm/io/fsq/rogue/index',
     'src/jvm/io/fsq/rogue/lift',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='exceptionator-model',
+    repo=oss_sonatype_repo,
+  ),
 )

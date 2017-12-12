@@ -14,4 +14,9 @@ scala_library(
     'src/jvm/io/fsq/exceptionator/model',
     'src/jvm/io/fsq/exceptionator/model/io',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='exceptionator-actions',
+    repo=oss_sonatype_repo,
+  ),
 )

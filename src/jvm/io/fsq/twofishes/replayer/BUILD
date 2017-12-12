@@ -11,4 +11,9 @@ scala_library(
     '3rdparty:twitter-util',
     'src/thrift/io/fsq/twofishes',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='twofishes-replayer',
+    repo=oss_sonatype_repo,
+  ),
 )

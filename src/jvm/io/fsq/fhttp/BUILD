@@ -12,4 +12,12 @@ scala_library(
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/common/scala',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='field',
+    repo=oss_sonatype_repo,
+    publication_metadata=io_fsq_library("""
+      Foursquare's scala-idiomatic request building interface similar for finagle clients.
+    """),
+  ),
 )

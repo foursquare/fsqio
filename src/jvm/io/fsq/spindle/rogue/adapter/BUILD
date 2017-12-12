@@ -14,4 +14,9 @@ scala_library(
     'src/jvm/io/fsq/spindle/rogue',
     'src/jvm/io/fsq/spindle/runtime',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='spindle-rogue-adapter',
+    repo=oss_sonatype_repo,
+  ),
 )

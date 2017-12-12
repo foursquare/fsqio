@@ -6,4 +6,9 @@ scala_library(
   dependencies = [
     'src/jvm/io/fsq/twofishes/country/data',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='twofishes-countryinfo',
+    repo=oss_sonatype_repo,
+  ),
 )

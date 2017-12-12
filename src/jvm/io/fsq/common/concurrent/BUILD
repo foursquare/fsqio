@@ -9,5 +9,10 @@ scala_library(
     'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/macros',
   ],
-  sources = globs('*.scala')
+  sources = globs('*.scala'),
+  provides = scala_artifact(
+    org = 'io.fsq',
+    name = 'common-concurrent',
+    repo = oss_sonatype_repo,
+  ),
 )

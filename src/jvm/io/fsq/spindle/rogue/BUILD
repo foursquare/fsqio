@@ -14,4 +14,9 @@ scala_library(
     'src/jvm/io/fsq/spindle/common/thrift/bson',
     'src/jvm/io/fsq/spindle/runtime',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='spindle-rogue',
+    repo=oss_sonatype_repo,
+  ),
 )

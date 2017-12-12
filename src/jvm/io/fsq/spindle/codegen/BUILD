@@ -26,8 +26,12 @@ scala_library(
   tags = [
     'dependencies_cannot_have:spindle_runtime',
     'dependencies_must_have:spindle_codegen',
-    'dependencies_must_have:spindle_codegen',
   ],
+  provides = scala_artifact(
+    org = 'io.fsq',
+    name = 'spindle-codegen',
+    repo = oss_sonatype_repo,
+  ),
 )
 
 jvm_binary(

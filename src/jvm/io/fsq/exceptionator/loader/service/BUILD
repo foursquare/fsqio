@@ -6,4 +6,9 @@ scala_library(
   tags = [
     'fscommon'
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='exceptionator-loader-service',
+    repo=oss_sonatype_repo,
+  ),
 )

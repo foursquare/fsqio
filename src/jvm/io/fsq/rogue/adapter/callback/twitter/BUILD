@@ -8,4 +8,9 @@ scala_library(
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/rogue/adapter/callback',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='rogue-adapter-callback-twitter',
+    repo=oss_sonatype_repo,
+  ),
 )

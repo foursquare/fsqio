@@ -17,4 +17,9 @@ scala_library(
     'src/jvm/io/fsq/twofishes/util/data',
     'src/thrift/io/fsq/twofishes',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='twofishes-util',
+    repo=oss_sonatype_repo,
+  ),
 )

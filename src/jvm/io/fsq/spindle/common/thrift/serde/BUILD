@@ -6,4 +6,9 @@ scala_library(
   dependencies = [
     '3rdparty:thrift',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='spindle-common-thrift-serde',
+    repo=oss_sonatype_repo,
+  ),
 )

@@ -31,6 +31,11 @@ scala_library(
     'src/thrift/io/fsq/twofishes',
     'src/thrift/io/fsq/twofishes/model',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='twofishes-indexer-geonames',
+    repo=oss_sonatype_repo,
+  ),
 )
 
 jvm_binary(

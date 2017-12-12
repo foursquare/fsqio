@@ -6,7 +6,12 @@ scala_library(
   dependencies = [
     '3rdparty:bson',
   ],
-   tags = [
-     'spindle_codegen',
-   ],
+  tags = [
+    'spindle_codegen',
+  ],
+  provides = scala_artifact(
+    org = 'io.fsq',
+    name = 'common-scala',
+    repo = oss_sonatype_repo,
+  ),
 )

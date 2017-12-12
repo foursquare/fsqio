@@ -10,5 +10,10 @@ scala_library(
     'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/hfile/reader/service',
   ],
-  sources = globs('*.scala')
+  sources = globs('*.scala'),
+  provides=scala_artifact(
+    org='io.fsq',
+    name='hfile-reader-concrete-mmap',
+    repo=oss_sonatype_repo,
+  ),
 )

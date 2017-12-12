@@ -8,4 +8,9 @@ scala_library(
     '3rdparty:hadoop-common',
     '3rdparty:hbase',  # buildgen gets confused by the hacks
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='twofishes-hacks',
+    repo=oss_sonatype_repo,
+  ),
 )

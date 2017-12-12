@@ -17,4 +17,9 @@ scala_library(
     'src/jvm/io/fsq/common/logging',
     'src/resources/io/fsq/exceptionator/config',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='exceptionator-util',
+    repo=oss_sonatype_repo,
+  ),
 )

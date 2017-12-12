@@ -16,4 +16,9 @@ scala_library(
     'src/jvm/io/fsq/rogue/index',
     'src/jvm/io/fsq/rogue/query',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='rogue-lift',
+    repo=oss_sonatype_repo,
+  ),
 )

@@ -9,4 +9,9 @@ scala_library(
   tags = [
     'fscommon',
   ],
+  provides = scala_artifact(
+    org = 'io.fsq',
+    name = 'macros',
+    repo = oss_sonatype_repo,
+  ),
 )

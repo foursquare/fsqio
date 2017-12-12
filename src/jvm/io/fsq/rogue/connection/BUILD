@@ -8,4 +8,9 @@ scala_library(
     '3rdparty:mongodb-drivers',
     'src/jvm/io/fsq/common/scala',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='rogue-connection',
+    repo=oss_sonatype_repo,
+  ),
 )

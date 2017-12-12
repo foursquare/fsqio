@@ -9,5 +9,10 @@ scala_library(
   dependencies = [
     '3rdparty:twitter-util',
   ],
+  provides = scala_artifact(
+    org = 'io.fsq',
+    name = 'common-logging',
+    repo = oss_sonatype_repo,
+  ),
 )
 

@@ -7,4 +7,12 @@ scala_library(
     'fscommon',
     'spindle_codegen',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='field',
+    repo=oss_sonatype_repo,
+    publication_metadata=io_fsq_library("""
+      Foursquare's Rogue-Field is a set of interfaces for defining the fields of models.
+    """),
+  ),
 )

@@ -9,4 +9,9 @@ scala_library(
     'src/jvm/io/fsq/rogue/index',
     'src/jvm/io/fsq/rogue/indexchecker',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='rogue-util',
+    repo=oss_sonatype_repo,
+  ),
 )

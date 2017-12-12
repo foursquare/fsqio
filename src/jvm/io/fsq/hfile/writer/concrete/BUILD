@@ -7,6 +7,11 @@ scala_library(
     'src/jvm/io/fsq/hfile/common',
     'src/jvm/io/fsq/hfile/writer/service',
   ],
-  sources = globs('*.scala')
+  sources = globs('*.scala'),
+  provides=scala_artifact(
+    org='io.fsq',
+    name='hfile-writer-concrete',
+    repo=oss_sonatype_repo,
+  )
 )
 

@@ -12,4 +12,9 @@ scala_library(
     'src/jvm/io/fsq/rogue/index',
     'src/jvm/io/fsq/rogue/util',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='rogue-adapter',
+    repo=oss_sonatype_repo,
+  ),
 )

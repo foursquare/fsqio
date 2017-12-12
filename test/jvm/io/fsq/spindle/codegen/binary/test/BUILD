@@ -6,6 +6,9 @@ junit_tests(
   dependencies = [
     '3rdparty:junit',
     'src/jvm/io/fsq/spindle/codegen:binary',
-    'src/thrift/io/fsq/common/thrift/descriptors/programs/gen',  # runtime dependency.
+    'test/thrift/io/fsq/spindle/codegen/parser/test',  # runtime dependency
   ],
+  tags=[
+    'spindle_codegen',
+   ]
 )
