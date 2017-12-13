@@ -97,8 +97,8 @@ class TestThirdPartyMapUtil(unittest.TestCase):
            'DEFAULT': 'a_bird_name'
           }
         },
-        'yaml': '/elsewhere/python:PyYAML'
-      }
+      'yaml': '/elsewhere/python:PyYAML'
+    }
 
   def _map_fixture(self):
     return self._default, self._additional
