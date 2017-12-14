@@ -49,17 +49,22 @@ class RpmSpecTarget(Target):
   @staticmethod
   def _validate_remote_source(remote_source):
     return isinstance(remote_source, string_types) or \
-           (isinstance(remote_source, tuple) and len(remote_source) == 2 and
-            isinstance(remote_source[0], string_types) and isinstance(remote_source[1], string_types))
+      (
+        isinstance(remote_source, tuple) and len(remote_source) == 2 and
+        isinstance(remote_source[0], string_types) and
+        isinstance(remote_source[1], string_types)
+      )
 
-  def __init__(self,
-               address=None,
-               spec=None,
-               sources=None,
-               remote_sources=None,
-               defines=None,
-               payload=None,
-               **kwargs):
+  def __init__(
+    self,
+    address=None,
+    spec=None,
+    sources=None,
+    remote_sources=None,
+    defines=None,
+    payload=None,
+    **kwargs
+  ):
     """
     :param spec: the RPM spec file to use to build the RPMs
     :param spec: string
