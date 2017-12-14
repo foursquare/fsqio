@@ -8,4 +8,5 @@ resources(
   sources = [
     'env.sh'
   ],
+  scope='runtime',
 )
