@@ -9,8 +9,8 @@ import logging
 import re
 from xml.etree import ElementTree
 
-from fsqio.pants.pom.coordinate import Coordinate
-from fsqio.pants.pom.dependency import Dependency
+from fsqio.pants.pom_resolve.coordinate import Coordinate
+from fsqio.pants.pom_resolve.dependency import Dependency
 
 
 logger = logging.getLogger('fsqio.pants.pom')

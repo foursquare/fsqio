@@ -34,12 +34,12 @@ from pants.util.dirutil import safe_mkdir
 from pants.util.memo import memoized_property
 from requests_futures.sessions import FuturesSession
 
-from fsqio.pants.pom.coordinate import Coordinate
-from fsqio.pants.pom.dependency import Dependency
-from fsqio.pants.pom.fetcher import ChainedFetcher
-from fsqio.pants.pom.maven_dependency_graph import MavenDependencyGraph
-from fsqio.pants.pom.pom import Pom
-from fsqio.pants.pom.sort_projects import CycleException
+from fsqio.pants.pom_resolve.coordinate import Coordinate
+from fsqio.pants.pom_resolve.dependency import Dependency
+from fsqio.pants.pom_resolve.fetcher import ChainedFetcher
+from fsqio.pants.pom_resolve.maven_dependency_graph import MavenDependencyGraph
+from fsqio.pants.pom_resolve.pom import Pom
+from fsqio.pants.pom_resolve.sort_projects import CycleException
 
 
 logger = logging.getLogger(__name__)

@@ -15,7 +15,7 @@ import logging
 
 import requests
 
-from fsqio.pants.pom.coordinate import Coordinate
+from fsqio.pants.pom_resolve.coordinate import Coordinate
 
 
 logger = logging.getLogger('fsqio.pants.pom')

@@ -14,7 +14,7 @@ from __future__ import (
 from collections import defaultdict
 import logging
 
-from fsqio.pants.pom.sort_projects import sort_projects
+from fsqio.pants.pom_resolve.sort_projects import sort_projects
 
 
 logger = logging.getLogger(__name__)

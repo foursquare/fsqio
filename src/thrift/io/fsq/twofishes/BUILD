@@ -8,4 +8,9 @@ scala_record_library(
     'src/jvm/io/fsq/spindle/runtime',
   ],
   sources = globs('*.thrift'),
+  provides=scala_artifact(
+    org='io.fsq',
+    name='twofishes-records',
+    repo=oss_sonatype_repo,
+  ),
 )

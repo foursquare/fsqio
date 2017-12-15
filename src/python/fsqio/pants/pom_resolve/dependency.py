@@ -6,7 +6,7 @@ from __future__ import absolute_import
 from collections import namedtuple
 from copy import deepcopy
 
-from fsqio.pants.pom.coordinate import Coordinate
+from fsqio.pants.pom_resolve.coordinate import Coordinate
 
 
 MANAGED_DEP_ATTRS = [

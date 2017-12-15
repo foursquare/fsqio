@@ -8,4 +8,9 @@ scala_record_library(
     'src/thrift/io/fsq/twofishes',
   ],
   sources = globs('*.thrift'),
+  provides=scala_artifact(
+    org='io.fsq',
+    name='twofishes-index-models',
+    repo=oss_sonatype_repo,
+  ),
 )

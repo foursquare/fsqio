@@ -18,8 +18,6 @@ from pants.goal.goal import Goal
 from pants.goal.task_registrar import TaskRegistrar as task
 from pants.task.task import Task
 
-from fsqio.pants.publish.pom_publish import PomPublish, PomTarget
-
 
 oss_sonatype_repo = Repository(
   name='oss_sonatype_repo',
@@ -57,9 +55,6 @@ def build_file_aliases():
       'io_fsq_library': io_fsq_publication_metadata,
       'oss_sonatype_repo': oss_sonatype_repo,
     },
-    targets={
-      'pom_target': PomTarget,
-    },
   )
 
 
@@ -82,4 +77,3 @@ def register_goals():
       pass
 
   task(name='mockdoc', action=MockJavadoc).install('doc')
-  task(name='pom-publish', action=PomPublish).install()
