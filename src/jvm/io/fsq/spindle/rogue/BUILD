@@ -18,5 +18,8 @@ scala_library(
     org='io.fsq',
     name='spindle-rogue',
     repo=oss_sonatype_repo,
+    publication_metadata=io_fsq_library("""
+      Foursquare's Scala code generator for Thrift.
+    """),
   ),
 )

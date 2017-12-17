@@ -13,6 +13,9 @@ scala_library(
     org = 'io.fsq',
     name = 'common-logging',
     repo = oss_sonatype_repo,
+    publication_metadata=io_fsq_library("""
+      Fsq.io common libraries, from Foursquare.
+    """),
   ),
 )
 

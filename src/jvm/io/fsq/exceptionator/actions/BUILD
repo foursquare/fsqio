@@ -18,5 +18,8 @@ scala_library(
     org='io.fsq',
     name='exceptionator-actions',
     repo=oss_sonatype_repo,
+    publication_metadata=io_fsq_library("""
+      Foursquare's exception aggregator built on top of twitter finagle and mongodb.
+    """),
   ),
 )

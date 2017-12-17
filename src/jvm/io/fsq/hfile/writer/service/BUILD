@@ -9,5 +9,8 @@ scala_library(
     org='io.fsq',
     name='hfile-writer-service',
     repo=oss_sonatype_repo,
+    publication_metadata=io_fsq_library("""
+      Fsq.io common Hfile libraries, from Foursquare.
+    """),
   ),
 )

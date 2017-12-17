@@ -13,5 +13,8 @@ scala_library(
     org = 'io.fsq',
     name = 'macros',
     repo = oss_sonatype_repo,
+    publication_metadata=io_fsq_library("""
+      Fsq.io Scala Macros, from Foursquare.
+    """),
   ),
 )

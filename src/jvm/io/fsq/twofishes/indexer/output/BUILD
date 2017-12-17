@@ -25,5 +25,8 @@ scala_library(
     org='io.fsq',
     name='twofishes-indexer-output',
     repo=oss_sonatype_repo,
+    publication_metadata=io_fsq_library("""
+      Foursquare's coarse, splitting geocoder and reverse geocoder in Scala.
+    """),
   ),
 )

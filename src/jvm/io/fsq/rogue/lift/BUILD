@@ -20,5 +20,9 @@ scala_library(
     org='io.fsq',
     name='rogue-lift',
     repo=oss_sonatype_repo,
+    publication_metadata=io_fsq_library("""
+      Foursquare's Scala DSL for constructing and executing find and modify commands against
+      MongoDB
+    """),
   ),
 )

@@ -6,7 +6,7 @@ scala_library(
     name='hfile-common',
     repo=oss_sonatype_repo,
     publication_metadata=io_fsq_library("""
-      Foursquare's Hfile common library.
+      Fsq.io common Hfile libraries, from Foursquare.
     """),
   ),
 )
