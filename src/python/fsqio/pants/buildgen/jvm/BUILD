@@ -7,7 +7,7 @@ python_library(
     'src/python/fsqio/pants/buildgen/jvm/scala',
   ],
   provides=setup_py(
-    name='fsqio.pants.buildgen.scala',
+    name='fsqio.pants.buildgen.jvm',
     version='1.3.0',
     description='Pants buildgen for Scala projects.',
     url='https://github.com/foursquare/fsqio',
