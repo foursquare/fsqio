@@ -14,7 +14,7 @@ scala_library(
   ],
   provides=scala_artifact(
     org='io.fsq',
-    name='field',
+    name='fhttp',
     repo=oss_sonatype_repo,
     publication_metadata=io_fsq_library("""
       Foursquare's scala-idiomatic request building interface similar for finagle clients.
