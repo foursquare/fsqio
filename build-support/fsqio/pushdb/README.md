@@ -9,6 +9,9 @@ Fsq.io is generally a strict subset of our internal repo - changes only originat
 The pushdb is the only exception - these files originate in Fsq.io and are backported internally. Jars are published directly from a checkout of Fsq.io, _not_ our internal repo.
 
       cd fsqio
-      ./pants publish src/jvm/io::
+      ./pants publish \
+      --no-gen-spindle-write-annotations-json \
+      --doc-scaladoc-include-codegen \
+      src/jvm/io::
 
 This is so external consumers of an Fsq.io library can cross-reference the jars and have commits that represent the actual publish.
