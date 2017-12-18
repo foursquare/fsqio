@@ -100,9 +100,9 @@ jvm_third_party_map = {
               'clients': 'jedis281',
           },
       },
+      'kafka1': 'kafka1-clients',
       'kafka9': 'kafka9-clients',
       'kafka10': 'kafka10-clients',
-      'kafka11': 'kafka11-clients',
       'lucene550': 'lucene-550'
     },
     'github': {
