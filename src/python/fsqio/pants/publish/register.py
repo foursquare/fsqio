@@ -14,9 +14,6 @@ from pants.backend.jvm.ossrh_publication_metadata import (
 from pants.backend.jvm.repository import Repository
 from pants.base.build_environment import get_buildroot
 from pants.build_graph.build_file_aliases import BuildFileAliases
-from pants.goal.goal import Goal
-from pants.goal.task_registrar import TaskRegistrar as task
-from pants.task.task import Task
 
 
 oss_sonatype_repo = Repository(
@@ -57,23 +54,7 @@ def build_file_aliases():
     },
   )
 
-
-def register_goals():
-  # Some legacy libraries have broken javadoc - but the javadoc product is required by pom-publish and publish.jar.
-  # This mocks that product and sidesteps the javadoc generation completely. The real fix is to require working
-  # javadoc for any published lib - especially things we publish externally like Fsq.io.
-  # TODO(mateo): Fix javadoc errors for published libraries and reinstall tasks.
-  Goal.by_name('doc').uninstall_task('javadoc')
-  Goal.by_name('doc').uninstall_task('scaladoc')
-
-  class MockJavadoc(Task):
-    @classmethod
-    def product_types(cls):
-      return [
-        'javadoc', 'scaladoc'
-      ]
-
-    def execute(self):
-      pass
-
-  task(name='mockdoc', action=MockJavadoc).install('doc')
+# TODO: Upstream Pants javadoc chokes on scala_libraries with mixed *.java and
+# *.scala sources, because the javadoc task only checks for target.has_sources('*java').
+# We hack the fix by also opting out if isinstance(target, ScalaLibrary) but a bug should be
+# filed upstream.

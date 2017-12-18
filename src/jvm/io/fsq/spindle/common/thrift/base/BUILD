@@ -10,7 +10,7 @@ java_library(
   tags = [
     'spindle_codegen',
   ],
-  provides=scala_artifact(
+  provides=artifact(
     org='io.fsq',
     name='spindle-common-thrift-base',
     repo=oss_sonatype_repo,
