@@ -5,6 +5,8 @@ Buildgen lexically parses import statements and updates existing BUILD files, en
 ### Installation
 The buildgen modules are [published to Pypi](https://pypi.python.org/pypi/fsqio.pants.contrib.buildgen.core) as [Pants plugins](https://www.pantsbuild.org/howto_plugin.html).
 
+Buildgen for Scala projects requires a scalac plugin. This is also published from Fsq.io. Look at [BUILD.opensource](/BUILD.opensource) for an in-repo example on how to consume those.
+
 To install from the published plugins, you can try using the upstream Pants `plugins` to automatically consume from pypi.
 
       plugins: [
@@ -33,3 +35,14 @@ you can add the installation path to your pythonpath in pants.ini
        pythonpath: [
            "%(homedir)s/.cache/pants/setup/bootstrap/1.3.1rc1/lib/python2.7/site-packages"
           ]
+
+
+### Publishing
+
+If you update this code in Fsq.io, you may want to publish an updated module to PyPi. You can follow the [standard plugin README](/src/python/fsqio/pants/README.md), with an additional step of potentially publishing the buildgen scalac plugin as jars.
+
+**You should always be able to skip the scalac jar publish unless you have explicit reason not to!** Those jars are [already published](https://repo1.maven.org/maven2/io/fsq/) and basically never need to be updated.
+
+##### Steps
+1. Optional: Build and publish the Scala compiler plugins for JVM buildgen.
+1. [Publish the buildgen plugins to PyPi](/src/python/fsqio/pants/).
