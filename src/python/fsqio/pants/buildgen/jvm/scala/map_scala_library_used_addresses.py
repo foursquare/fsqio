@@ -60,8 +60,8 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
       advanced=True,
       type=dict,
       # See the test_third_party_map_util.py for examples.
-      help="A dict that defines additional third party mappings (may be nested). See third_party_map_jvm.py "
-        "for defaults. Mappings passed to this option will take precedence over the defaults."
+      help='A dict that defines additional third party mappings (may be nested). See third_party_map_jvm.py \
+        for defaults. Mappings passed to this option will take precedence over the defaults.'
     )
 
   def _symbols_used_by_scala_target(self, target):

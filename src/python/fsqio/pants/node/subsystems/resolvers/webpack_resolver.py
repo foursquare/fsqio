@@ -64,7 +64,7 @@ class WebPackResolver(NpmResolver):
         dependencies = package[key]
         filtered_dependencies = {
           name: spec for (name, spec) in dependencies.iteritems()
-                if not spec.startswith('file:')
+          if not spec.startswith('file:')
         }
         package[key] = filtered_dependencies
 

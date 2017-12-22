@@ -140,9 +140,11 @@ class Validate(Task):
       computed_closure = self.context.build_graph.transitive_subgraph_of_addresses([address])
       self._transitive_closure_cache[address] = [
         dep for dep in computed_closure
-        if dep.address != address and
+        if (
+          dep.address != address and
           dep.address not in self.context.build_graph.synthetic_addresses and
           'exempt' not in dep.tags
+        )
       ]
     return self._transitive_closure_cache[address]
 

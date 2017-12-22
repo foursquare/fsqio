@@ -117,6 +117,5 @@ class WebPack(NodeTask, SimpleCodegenTask):
         raise TaskError(dedent(
           """ webpack command:
           \n\t{} failed with exit code {}
-          """
-         .format(' '.join(npm_run.cmd), result)
+          """.format(' '.join(npm_run.cmd), result)
         ))

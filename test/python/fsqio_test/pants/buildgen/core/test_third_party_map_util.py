@@ -73,7 +73,7 @@ class TestThirdPartyMapUtil(unittest.TestCase):
         }
      },
      'yaml': '/elsewhere/python:PyYAML',
-  }
+    }
 
   @memoized_property
   def _expected_merge_results(self):
