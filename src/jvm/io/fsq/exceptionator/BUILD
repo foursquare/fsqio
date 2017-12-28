@@ -6,4 +6,8 @@ jvm_binary(
   dependencies = [
     'src/jvm/io/fsq/exceptionator/service',
   ],
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

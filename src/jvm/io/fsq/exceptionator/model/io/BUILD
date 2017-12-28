@@ -3,9 +3,6 @@
 scala_library(
   name = 'io',
   sources = globs('*.scala'),
-  tags = [
-    'fscommon'
-  ],
   dependencies = [
     '3rdparty:lift-json',
     'src/jvm/io/fsq/exceptionator/util',
@@ -18,4 +15,8 @@ scala_library(
       Foursquare's exception aggregator built on top of twitter finagle and mongodb.
     """),
   ),
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

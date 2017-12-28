@@ -12,4 +12,8 @@ scala_library(
     'src/jvm/io/fsq/twofishes/util',
     'src/thrift/io/fsq/twofishes',
   ],
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

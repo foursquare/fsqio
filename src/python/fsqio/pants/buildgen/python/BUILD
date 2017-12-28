@@ -7,6 +7,12 @@ python_library(
     'src/python/fsqio/pants/buildgen/core',
     'src/python/fsqio/pants/buildgen/python/source_analysis',
   ],
+  tags = [
+    'opensource',
+    'buildgen',
+    'dependencies_must_have:opensource',
+    'dependencies_must_have:buildgen',
+  ],
   provides=setup_py(
     name='fsqio.pants.buildgen.python',
     version='1.3.0',

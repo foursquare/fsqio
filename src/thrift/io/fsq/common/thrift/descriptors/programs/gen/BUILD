@@ -2,9 +2,6 @@
 scala_record_library(
   name = 'gen',
   sources = globs('*.thrift'),
-  tags = [
-    'fscommon',
-  ],
   dependencies = [
     'src/jvm/io/fsq/spindle/runtime',
     'src/thrift/io/fsq/common/thrift/descriptors/constants/gen',
@@ -13,5 +10,11 @@ scala_record_library(
     'src/thrift/io/fsq/common/thrift/descriptors/services/gen',
     'src/thrift/io/fsq/common/thrift/descriptors/structs/gen',
     'src/thrift/io/fsq/common/thrift/descriptors/types/gen',
+  ],
+  tags = [
+    'fscommon',
+    'opensource',
+    'dependencies_must_have:fscommon',
+    'dependencies_must_have:opensource',
   ],
 )

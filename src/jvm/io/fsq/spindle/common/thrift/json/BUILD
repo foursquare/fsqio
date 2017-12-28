@@ -9,7 +9,8 @@ java_library(
     'src/jvm/io/fsq/spindle/common/thrift/base',
   ],
   tags = [
-    'spindle_codegen',
+    'opensource',
+    'dependencies_must_have:opensource',
   ],
   provides=artifact(
     org='io.fsq',

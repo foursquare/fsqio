@@ -11,9 +11,7 @@ target(
     '3rdparty:scala-library',
   ],
   tags = [
-    'opensource',
-    'spindle_codegen',
-    'fscommon',
+    'exempt',
   ],
 )
 
@@ -24,8 +22,7 @@ target(
     ':ammonite',
   ],
   tags = [
-    'opensource',
-    'fscommon',
+    'exempt',
   ],
 )
 
@@ -35,8 +32,7 @@ target(name='scalac',
     '3rdparty:scalac',
   ],
   tags = [
-    'opensource',
-    'fscommon',
+    'exempt',
   ],
 )
 
@@ -47,7 +43,7 @@ jar_library(
     jar(org='com.lihaoyi', name = 'ammonite_2.11.8', rev='0.8.2')
   ],
   tags = [
-    'opensource',
+    'exempt',
   ],
 )
 
@@ -58,8 +54,7 @@ jar_library(
     scala_jar(org = 'io.fsq', name = 'buildgen-emit-exported-symbols', rev = '1.2.0'),
   ],
   tags = [
-    'opensource',
-    'fscommon',
+    'exempt',
   ],
 )
 
@@ -70,7 +65,6 @@ jar_library(
     scala_jar(org = 'io.fsq', name = 'buildgen-emit-used-symbols', rev = '1.2.0'),
   ],
   tags = [
-    'opensource',
-    'fscommon',
+    'exempt',
   ],
 )

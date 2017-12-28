@@ -3,4 +3,8 @@
 resources(
   name = 'warmup',
   sources = globs('*.txt'),
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

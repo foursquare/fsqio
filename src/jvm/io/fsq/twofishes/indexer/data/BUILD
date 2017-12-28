@@ -2,5 +2,9 @@
 
 resources(
   name = 'langdetect',
-  sources = globs('langdetect/*')
+  sources = globs('langdetect/*'),
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

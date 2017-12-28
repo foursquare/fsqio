@@ -12,6 +12,12 @@ scalac_plugin(
     """)
   ),
   sources = globs('*.scala'),
+  tags = [
+    'opensource',
+    'buildgen',
+    'dependencies_must_have:opensource',
+    'dependencies_must_have:buildgen',
+  ],
   dependencies = [
     '3rdparty:scalac',
     '3rdparty:scala-reflect',
@@ -22,7 +28,7 @@ jvm_binary(
   name = 'emit-used-symbols-binary',
   tags = [
     'opensource',
-    'fscommon',
+    'buildgen',
   ],
   dependencies = [
     ':emit_used_symbols',

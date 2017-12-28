@@ -3,9 +3,6 @@
 scala_library(
   name = 'logging',
   sources = globs('*.scala'),
-  tags = [
-    'fscommon'
-  ],
   dependencies = [
     '3rdparty:twitter-util',
   ],
@@ -17,5 +14,11 @@ scala_library(
       Fsq.io common libraries, from Foursquare.
     """),
   ),
+  tags = [
+    'opensource',
+    'fscommon',
+    'dependencies_must_have:opensource',
+    'dependencies_must_have:fscommon',
+  ],
 )
 

@@ -9,4 +9,10 @@ scala_library(
       Fsq.io common libraries, from Foursquare.
     """),
   ),
+  tags = [
+    'opensource',
+    'fscommon',
+    'dependencies_must_have:opensource',
+    'dependencies_must_have:fscommon',
+  ],
 )

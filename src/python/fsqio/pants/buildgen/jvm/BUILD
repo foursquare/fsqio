@@ -6,6 +6,12 @@ python_library(
     'src/python/fsqio/pants/buildgen/jvm/core',
     'src/python/fsqio/pants/buildgen/jvm/scala',
   ],
+  tags = [
+    'opensource',
+    'buildgen',
+    'dependencies_must_have:opensource',
+    'dependencies_must_have:buildgen',
+  ],
   provides=setup_py(
     name='fsqio.pants.buildgen.jvm',
     version='1.3.0',

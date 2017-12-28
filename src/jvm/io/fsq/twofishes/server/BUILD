@@ -39,6 +39,10 @@ scala_library(
       Foursquare's coarse, splitting geocoder and reverse geocoder in Scala.
     """),
   ),
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )
 
 jvm_binary(
@@ -46,7 +50,11 @@ jvm_binary(
   main = 'io.fsq.twofishes.server.GeocodeFinagleServer',
   dependencies = [
     ':server',
-  ]
+  ],
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )
 
 jvm_binary(
@@ -54,5 +62,9 @@ jvm_binary(
   main = 'io.fsq.twofishes.server.JsonHotfixFileBuilder',
   dependencies = [
     ':server',
-  ]
+  ],
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

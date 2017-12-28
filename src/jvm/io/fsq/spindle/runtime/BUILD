@@ -3,7 +3,6 @@
 scala_library(
   name = 'runtime',
   sources = globs('*.scala'),
-  tags = ['fscommon', 'spindle_runtime'],
   dependencies = [
     '3rdparty:joda-time',
     '3rdparty:thrift',
@@ -19,4 +18,10 @@ scala_library(
       Foursquare's Scala code generator for Thrift.
     """),
   ),
+  tags = [
+    'opensource',
+    'spindle_runtime'
+    'gobblin',
+    'dependencies_must_have:opensource',
+  ],
 )

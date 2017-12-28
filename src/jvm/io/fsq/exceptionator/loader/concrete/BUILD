@@ -3,9 +3,6 @@
 scala_library(
   name = 'concrete',
   sources = globs('*.scala'),
-  tags = [
-    'fscommon'
-  ],
   dependencies = [
     'src/jvm/io/fsq/common/logging',
     'src/jvm/io/fsq/exceptionator/actions',
@@ -19,4 +16,8 @@ scala_library(
       Foursquare's exception aggregator built on top of twitter finagle and mongodb.
     """),
   ),
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

@@ -3,9 +3,6 @@
 scala_library(
   name = 'filter',
   sources = globs('*.scala'),
-  tags = [
-    'fscommon'
-  ],
   dependencies = [
     '3rdparty:bson',
     '3rdparty:finagle',
@@ -22,4 +19,8 @@ scala_library(
       Foursquare's exception aggregator built on top of twitter finagle and mongodb.
     """),
   ),
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

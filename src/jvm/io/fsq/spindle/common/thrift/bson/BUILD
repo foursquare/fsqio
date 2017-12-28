@@ -10,7 +10,8 @@ scala_library(
     'src/jvm/io/fsq/spindle/common/thrift/json',
   ],
   tags = [
-    'spindle_codegen',
+    'opensource',
+    'dependencies_must_have:opensource',
   ],
   provides=scala_artifact(
     org='io.fsq',

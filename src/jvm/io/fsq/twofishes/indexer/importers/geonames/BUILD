@@ -39,6 +39,10 @@ scala_library(
       Foursquare's coarse, splitting geocoder and reverse geocoder in Scala.
     """),
   ),
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )
 
 jvm_binary(
@@ -47,5 +51,9 @@ jvm_binary(
   dependencies = [
     '3rdparty:logback',  # Runtime dep.
     ':geonames',
+  ],
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
   ],
 )

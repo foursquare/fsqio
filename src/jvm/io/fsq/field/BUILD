@@ -3,10 +3,6 @@
 scala_library(
   name = 'field',
   sources = globs('*.scala'),
-  tags = [
-    'fscommon',
-    'spindle_codegen',
-  ],
   provides=scala_artifact(
     org='io.fsq',
     name='field',
@@ -15,4 +11,10 @@ scala_library(
       Foursquare's Rogue-Field is a set of interfaces for defining the fields of models.
     """),
   ),
+  tags = [
+    'opensource',
+    'spindle_codegen',
+    'dependencies_must_have:fscommon',
+    'dependencies_must_have:opensource',
+  ],
 )

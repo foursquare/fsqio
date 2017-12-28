@@ -6,9 +6,6 @@ scala_library(
   dependencies = [
     '3rdparty:scala-reflect',
   ],
-  tags = [
-    'fscommon',
-  ],
   provides = scala_artifact(
     org = 'io.fsq',
     name = 'macros',
@@ -17,4 +14,10 @@ scala_library(
       Fsq.io Scala Macros, from Foursquare.
     """),
   ),
+  tags = [
+    'fscommon',
+    'opensource',
+    'dependencies_must_have:fscommon',
+    'dependencies_must_have:opensource',
+  ],
 )

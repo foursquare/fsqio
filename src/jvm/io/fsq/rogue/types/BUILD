@@ -12,4 +12,10 @@ scala_library(
       MongoDB
     """),
   ),
+  tags = [
+    'opensource',
+    'rogue',
+    'dependencies_must_have:rogue',
+    'dependencies_must_have:opensource',
+  ],
 )

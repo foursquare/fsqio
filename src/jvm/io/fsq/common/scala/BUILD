@@ -6,9 +6,6 @@ scala_library(
   dependencies = [
     '3rdparty:bson',
   ],
-  tags = [
-    'spindle_codegen',
-  ],
   provides = scala_artifact(
     org = 'io.fsq',
     name = 'common-scala',
@@ -17,4 +14,11 @@ scala_library(
       Fsq.io common libraries, from Foursquare.
     """),
   ),
+  tags = [
+    'opensource',
+    'fscommon',
+    'spindle_codegen',
+    'dependencies_must_have:opensource',
+    'dependencies_must_have:fscommon',
+  ],
 )

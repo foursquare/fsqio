@@ -13,4 +13,8 @@ scala_library(
       Fsq.io common Hfile libraries, from Foursquare.
     """),
   ),
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

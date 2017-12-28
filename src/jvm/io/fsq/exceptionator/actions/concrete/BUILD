@@ -3,9 +3,6 @@
 scala_library(
   name = 'concrete',
   sources = globs('*.scala'),
-  tags = [
-    'fscommon'
-  ],
   dependencies = [
     '3rdparty:bson',
     '3rdparty:finagle',
@@ -23,6 +20,10 @@ scala_library(
     'src/jvm/io/fsq/exceptionator/model/io',
     'src/jvm/io/fsq/exceptionator/util',
     'src/jvm/io/fsq/rogue/lift',
+  ],
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
   ],
   provides=scala_artifact(
     org='io.fsq',

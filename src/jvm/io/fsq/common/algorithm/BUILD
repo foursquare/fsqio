@@ -4,11 +4,14 @@
 scala_library(
   name = 'algorithm',
   sources = globs('*.scala'),
-  tags = [
-    'fscommon'
-  ],
   dependencies = [
     'src/jvm/io/fsq/common/scala',
+  ],
+  tags = [
+    'opensource',
+    'fscommon',
+    'dependencies_must_have:opensource',
+    'dependencies_must_have:fscommon',
   ],
   provides = scala_artifact(
     org = 'io.fsq',

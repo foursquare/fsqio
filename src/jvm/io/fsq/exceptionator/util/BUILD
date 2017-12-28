@@ -3,9 +3,6 @@
 scala_library(
   name = 'util',
   sources = globs('*.scala'),
-  tags = [
-    'fscommon'
-  ],
   dependencies = [
     '3rdparty:concurrentlinkedhashmap',
     '3rdparty:joda-time',
@@ -25,4 +22,8 @@ scala_library(
       Foursquare's exception aggregator built on top of twitter finagle and mongodb.
     """),
   ),
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

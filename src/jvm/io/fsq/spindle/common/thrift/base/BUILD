@@ -8,7 +8,8 @@ java_library(
     '3rdparty:joda-time',
   ],
   tags = [
-    'spindle_codegen',
+    'opensource',
+    'dependencies_must_have:opensource',
   ],
   provides=artifact(
     org='io.fsq',

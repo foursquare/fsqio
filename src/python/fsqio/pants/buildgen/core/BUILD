@@ -7,6 +7,12 @@ python_library(
     '3rdparty/python:pantsbuild.pants',
     'src/python/fsqio/pants/buildgen/core/subsystems',
   ],
+  tags = [
+    'opensource',
+    'buildgen',
+    'dependencies_must_have:opensource',
+    'dependencies_must_have:buildgen',
+  ],
   provides=setup_py(
     name='fsqio.pants.buildgen.core',
     version='1.3.0',

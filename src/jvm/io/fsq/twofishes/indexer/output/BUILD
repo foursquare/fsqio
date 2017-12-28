@@ -29,4 +29,8 @@ scala_library(
       Foursquare's coarse, splitting geocoder and reverse geocoder in Scala.
     """),
   ),
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

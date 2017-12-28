@@ -20,4 +20,8 @@ scala_library(
       Foursquare's scala-idiomatic request building interface similar for finagle clients.
     """),
   ),
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

@@ -7,4 +7,8 @@ scala_library(
     '3rdparty:s2',
     'src/jvm/io/fsq/rogue',
   ],
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

@@ -14,4 +14,8 @@ scala_library(
       Foursquare's Scala code generator for Thrift.
     """),
   ),
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )

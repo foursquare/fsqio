@@ -8,6 +8,7 @@ scala_library(
     '3rdparty:reflections',
   ],
   tags = [
-    'spindle_runtime',
+    'opensource',
+    'dependencies_must_have:opensource',
   ],
 )

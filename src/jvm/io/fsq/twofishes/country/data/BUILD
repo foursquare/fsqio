@@ -2,5 +2,9 @@
 
 resources(
   name = 'data',
-  sources = globs('*.txt')
+  sources = globs('*.txt'),
+  tags = [
+    'opensource',
+    'dependencies_must_have:opensource',
+  ],
 )
