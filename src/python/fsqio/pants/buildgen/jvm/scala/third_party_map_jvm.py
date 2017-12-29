@@ -151,6 +151,7 @@ jvm_third_party_map = {
         'util': 'guava',
       },
       'gdata': 'gdata',
+      'gson': 'gson',
       'i18n': {
         'phonenumbers': {
           'geocoding': 'phonenumbers-geocoder',
@@ -279,11 +280,12 @@ jvm_third_party_map = {
   'gnu': {
     'trove': 'trove4j',
   },
+  'gobblin': 'gobblin',
   'io': {
     'fabric8': {
       'kubernetes': {
         'client': 'kubernetes-client-java',
-      }
+      },
     },
     'fsq': {
       'spindle': {
@@ -356,6 +358,7 @@ jvm_third_party_map = {
   'opennlp': 'opennlp',
   'org': {
     'apache': {
+      'avro': 'avro',
       'axis2': 'axis2',
       'commons': {
         'cli': 'commons-cli',

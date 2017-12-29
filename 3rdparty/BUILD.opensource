@@ -24,8 +24,8 @@ managed_jar_dependencies(
     ':commons-net',
     ':curator',
     ':curator-test',
+    ':gson',
     ':guava',
-    jar(org = 'com.google.code.gson', name = 'gson', rev = '2.2.4'),
     ':hamcrest-core',
     ':jackson',
     ':jackson-scala',
@@ -379,6 +379,15 @@ jar_library(
         exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
+  ],
+)
+
+# NOTE(mateo): This is also consumed by an internal jar publish which should prefer to stay in sync.
+# Please look at scripts/gobblin and include stefano/mateo on the review when changing this dependency.
+jar_library(
+  name = 'gson',
+  jars = [
+    jar(org = 'com.google.code.gson', name = 'gson', rev = '2.2.4'),
   ],
 )
 
