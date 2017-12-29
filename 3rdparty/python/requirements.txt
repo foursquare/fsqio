@@ -2,6 +2,9 @@ ansicolors==1.0.2
 jaeger-client==3.5.0
 mock==1.0.1
 opentracing==1.2.2
+
+# The pantsbuild libs can stay as a loose constraint - the version invoked at build time is set in
+# the pants.ini, so this range is only used for the Fsq.io contrib modules published to PyPi.
 pantsbuild.pants.contrib.go>=1.2.0
 pantsbuild.pants.contrib.node>=1.2.0
 pantsbuild.pants>=1.2.0
@@ -11,7 +14,7 @@ pymongo==2.8
 py_zipkin==0.9.0
 pytz>=2016.6.1
 requests<2.6,>=2.5.0
-requests-futures==0.9.4
+requests_futures>=0.9.4,<0.10
 setuptools==30.0.0
 six==1.10.0
 twitter.common.collections==0.3.9

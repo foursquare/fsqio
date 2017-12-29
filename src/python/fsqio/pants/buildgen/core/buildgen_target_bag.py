@@ -13,16 +13,22 @@ from __future__ import (
 
 import re
 
-from pants.build_graph.target import Target
+from pants.build_graph.resources import Resources
 
 
-class BuildgenTargetBag(Target):
+class BuildgenTargetBag(Resources):
   """Aggregate all targets under a source tree directory that match the configured target type.
 
   BuildgenTargetBags targets have their dependencies managed by buildgen. Each target minimally defines a
   source directory and a target_alias type (e.g. 'python_library'). Buildgen will add a dependency to the implementing
   buildgen_target_bag BUILD definition for every matching target under that source dir.
   """
+  # NOTE(mateo): BuildgenTargetBag is a Resources subclass to get past type checks in the Python backend and potentially
+  # similar checks in the future, ie `isinstance(target, PythonTarget)`. These checks generally special case
+  # Resource targets as passthrough, and we use that property here.
+  # https://github.com/pantsbuild/pants/issues/4938
+  #
+  # Potentially we could use the expanded export system to properly declare the targets freighted by these bags. TBD
 
   def __init__(self,
                target_type_alias=None,
