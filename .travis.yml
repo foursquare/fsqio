@@ -5,8 +5,8 @@ before_cache:
 - rm -rf $HOME/.cache/pants/stats
 cache:
   directories:
-  - ".local_artifact_cache/fsqio_pants_pom_pom_resolve_PomResolve"
-  - ".local_artifact_cache/fsqio_pants_spindle_tasks_build_spindle_BuildSpindle"
+  - ".local_artifact_cache/"
+  - .pants.bootstrap/bin
   - "$HOME/.pom2"
   - "$HOME/.cache/pip"
   - "$HOME/.ivy2/pants"

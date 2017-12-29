@@ -148,9 +148,6 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
         continue
       for address in addresses:
         dep = self.context.build_graph.get_target(address)
-
-        # NOTE(mateo): This cannot happen when using pom-resolve, but OSS consumers have been bitten when dep is None.
-        # I was unable to repro using Ivy, but this check is cheap enough to be worth it no matter the resolver.
         if not dep:
           raise UsedSymbolException("An address was used that was not injected into the build graph! Make sure that "
             "there is a matching BUILD definition for this used address: {}".format(address))

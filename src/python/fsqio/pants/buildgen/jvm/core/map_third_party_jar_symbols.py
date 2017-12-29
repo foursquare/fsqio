@@ -36,9 +36,6 @@ class MapThirdPartyJarSymbols(Task):
   @classmethod
   def prepare(cls, options, round_manager):
     super(MapThirdPartyJarSymbols, cls).prepare(options, round_manager)
-
-    # NOTE(mateo): This is a deprecated concept upstream - everything is in the classpath now. So it will take some
-    # fiddling to get the jar symbols for anyone not using pom-resolve.
     round_manager.require_data('compile_classpath')
     round_manager.require_data('java')
     round_manager.require_data('scala')
@@ -116,7 +113,5 @@ class MapThirdPartyJarSymbols(Task):
       products.safe_create_data('third_party_jar_symbols', lambda: third_party_jar_symbols)
 
   def check_artifact_cache_for(self, invalidation_check):
-    # Pom-resolve is an output dependent on the entire target set, and is not divisible
-    # by target. So we can only cache it keyed by the entire target set.
     global_vts = VersionedTargetSet.from_versioned_targets(invalidation_check.all_vts)
     return [global_vts]

@@ -19,8 +19,6 @@ internally, all of the tools can be built just as we use them, directly from HEA
 An exception aggregator using mongodb.
 * [Fhttp](https://github.com/foursquare/fsqio/tree/master/src/jvm/io/fsq/fhttp):
 A request building interface similar to scalaj-http for Finagle http clients.
-* [Pants pom-resolve](https://github.com/foursquare/fsqio/tree/master/src/python/fsqio/pants/pom):
-A drop-in Python replacement for the Pants ivy resolver.
 * [Rogue](https://github.com/foursquare/fsqio/tree/master/src/jvm/io/fsq/rogue): A Scala DSL for MongoDB
 * [Spindle](https://github.com/foursquare/fsqio/tree/master/src/jvm/io/fsq/spindle): A Scala code generator for Thrift
 * [Twofishes](https://github.com/foursquare/fsqio/tree/master/src/jvm/io/fsq/twofishes):
@@ -58,12 +56,9 @@ in this README we will just touch on how to compile and test the code.
 
 ## Compiling and Testing
 #### First Run
-The first run will take a long time as
-[pom-resolve](https://github.com/foursquare/fsqio/tree/master/src/python/fsqio/pants/pom)
-(our custom resolver for 3rdparty dependencies) computes the project graph and downloads the dependencies.
-Maybe as long as 15-20 mins! A good first run is to get this out of the way:
+A good first run is to compile the repo and run every test.
 
-     ./pants pom-resolve
+     ./pants compile test src:: test::
 
 #### Targets and BUILD files
 Targets are adressable project or dependency level modules that can be built by Pants. `BUILD` files are
