@@ -78,7 +78,7 @@ function upkeep_cmd() {
 case "${upkeep_args[0]}" in
   "--help"|"help"|"-h" )
     print_help
-    return
+    exit 0
     ;;
   "force" )
     DOWNSTREAM_TASKS=${DOWNSTREAM_TASKS:-"true"}
@@ -94,12 +94,12 @@ case "${upkeep_args[0]}" in
   "tasks" )
     DOWNSTREAM_TASKS=${DOWNSTREAM_TASKS:-"false"}
     print_all_tasks "${upkeep_args[@]}"
-    return
+    exit 0
     ;;
   "task-list" )
     DOWNSTREAM_TASKS=${DOWNSTREAM_TASKS:-"false"}
     all_task_names
-    return
+    exit 0
     ;;
   "run" )
     script_name="${upkeep_args[1]}"

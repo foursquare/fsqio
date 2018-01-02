@@ -4,6 +4,7 @@
 # Allow any passed pants or fsq.io to override the default config.
 export PANTS_CONFIG_OVERRIDE="${PANTS_CONFIG_OVERRIDE:-"['pants.ini']"}"
 export DEPENDENCIES_ROOT="${BUILD_ROOT}/dependencies"
+export CURRENT_UNAME=$(uname -s)
 
 # JPostal defaults, used for our RPM that is currently just partially opensourced.
 #
