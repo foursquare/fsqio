@@ -53,7 +53,7 @@ class TestMapThirdPartyJarSymbols(JarTaskTestBase):
   def test_dump_jar_contents(self):
     with temporary_dir() as temp:
       jarfile = self.create_a_jarfile(temp, 'test.jar')
-      self.assertEquals(self.task._dump_jar_contents(jarfile), self.default_files)
+      self.assertEqual(self.task._dump_jar_contents(jarfile), self.default_files)
 
   def test_dump_jar_contents_bad_zip(self):
     with temporary_file() as corrupted:
@@ -64,7 +64,7 @@ class TestMapThirdPartyJarSymbols(JarTaskTestBase):
     with temporary_dir() as temp:
       jarfile = self.create_a_jarfile(temp, 'test.jar')
       importables = self._calculate_importable(self.default_files)
-      self.assertEquals(self.task.fully_qualified_classes_from_jar(jarfile), importables)
+      self.assertEqual(self.task.fully_qualified_classes_from_jar(jarfile), importables)
 
   def test_fully_qualified_class_names_filters_nonimportable_classnames(self):
     with temporary_dir() as temp:
@@ -77,7 +77,7 @@ class TestMapThirdPartyJarSymbols(JarTaskTestBase):
       should_not_match = self._calculate_importable(nonimportable_source)
 
       matched_classes = self.task.fully_qualified_classes_from_jar(jarfile)
-      self.assertEquals(should_match, matched_classes)
+      self.assertEqual(should_match, matched_classes)
       self.assertNotIn(should_not_match.pop(), matched_classes)
 
   def test_fully_qualified_class_names_filters_resources(self):
