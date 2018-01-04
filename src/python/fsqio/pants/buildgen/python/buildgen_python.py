@@ -147,23 +147,6 @@ class BuildgenPython(BuildgenTask):
     return tuple(self.get_options().ignored_prefixes + ['__future__'])
 
   @memoized_property
-  def third_party_deps_addresses(self):
-    name_to_address_map = defaultdict(lambda: None)
-    address_mapper = self.context.address_mapper
-    source_dirs = self.get_options().third_party_dirs
-
-    for source_dir in source_dirs:
-      for address in address_mapper.scan_addresses(os.path.join(get_buildroot(), source_dir)):
-        _, addressable = address_mapper.resolve(address)
-        # TODO(mateo): Break this into a property of BuildgenTask that returns a tuple of accepted dependency types.
-        if addressable.addressed_alias in self.third_party_target_aliases:
-          # Use light heuristics here: transform it to a valid identifier and convert to lowercase.
-          dep_name = addressable.addressed_name.replace('-', '_')
-          name_to_address_map[dep_name] = address.spec
-
-    return name_to_address_map
-
-  @memoized_property
   def map_python_deps(self):
     address_mapper = self.context.address_mapper
     source_dirs = self.get_options().third_party_dirs

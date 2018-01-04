@@ -34,15 +34,13 @@ from fsqio.pants.ivy.global_classpath_task_mixin import GlobalClasspathTaskMixin
 
 
 class JarDependencyGlobalManagementSetup(GlobalClasspathTaskMixin, JarDependencyManagementSetup):
-  @memoized_property
-  def bag_target_closure(self):
-    return self.context.build_graph.get_target(self.get_synthetic_address()).closure()
 
   # NOTE(mateo): The GlobalClasspathMixin finds 'jar_library' definitions and inserts them into the build graph
   # as JarLibrary targets. If a jar_library defines a `managed_dependencies` attribute, this ensure the corresponding
   # ManagedJarDependency target is validated by the conflict manager.
   def execute(self):
     self._resolve_default_target()
+
     all_targets = set(self.context.targets() | self.bag_target_closure)
     jar_libs = [t for t in all_targets if isinstance(t, JarLibrary)]
     targets = set(g.managed_dependencies for g in jar_libs if g.managed_dependencies is not None)
@@ -68,7 +66,7 @@ class IvyResolveWithGlobalExcludesStep(IvyResolveStep):
                           hash_name, self.pinned_artifacts)
 
 
-class IvyGlobalResolve(JarDependencyGlobalManagementSetup, IvyResolve):
+class IvyGlobalResolve(GlobalClasspathTaskMixin, IvyResolve):
   @classmethod
   def register_options(cls, register):
     super(IvyGlobalResolve, cls).register_options(register)
