@@ -6,8 +6,15 @@ import com.twitter.logging.{ConsoleHandler, Level, LoggerFactory}
 
 object Logger {
   lazy val configured = {
-    com.twitter.logging.Logger.get("").clearHandlers
-    LoggerFactory(level = Some(Level.INFO), handlers = List(ConsoleHandler())).apply()
+    val defaultLogger = com.twitter.logging.Logger.get("")
+    val currentHandlers = defaultLogger.getHandlers().map(_.getClass.getName)
+    /* Hack: Presto's logging configuration (which redirects stdout/err to its log) causes a stackoverflow  because
+     * ConsoleHandler explicitly logs to stderr. The class is not public, and so cannot be referenced via classOf here.
+     */
+    if (!currentHandlers.contains("io.airlift.log.OutputStreamHandler")) {
+      defaultLogger.clearHandlers
+      LoggerFactory(level = Some(Level.INFO), handlers = List(ConsoleHandler())).apply()
+    }
   }
 }
 
