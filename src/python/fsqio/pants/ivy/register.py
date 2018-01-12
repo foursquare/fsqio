@@ -112,13 +112,17 @@ class IvyGlobalResolve(GlobalClasspathTaskMixin, IvyResolve):
   def execute(self):
     executor = self.create_java_executor()
     targets = sorted(set(self.context.targets()) | self.bag_target_closure)
-    compile_classpath = self.context.products.get_data('compile_classpath',
-      init_func=ClasspathProducts.init_func(self.get_options().pants_workdir))
-    results = self.resolve(executor=executor,
-                           targets=targets,
-                           classpath_products=compile_classpath,
-                           confs=self.get_options().confs,
-                           extra_args=self._args)
+    compile_classpath = self.context.products.get_data(
+      'compile_classpath',
+      init_func=ClasspathProducts.init_func(self.get_options().pants_workdir)
+    )
+    results = self.resolve(
+      executor=executor,
+      targets=targets,
+      classpath_products=compile_classpath,
+      confs=self.get_options().confs,
+      extra_args=self._args,
+    )
 
     if self._report:
       results_with_resolved_artifacts = filter(lambda r: r.has_resolved_artifacts, results)

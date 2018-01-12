@@ -149,8 +149,10 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
       for address in addresses:
         dep = self.context.build_graph.get_target(address)
         if not dep:
-          raise UsedSymbolException("An address was used that was not injected into the build graph! Make sure that "
-            "there is a matching BUILD definition for this used address: {}".format(address))
+          raise UsedSymbolException(
+            "An address was used that was not injected into the build graph! Make sure that "
+            "there is a matching BUILD definition for this used address: {}".format(address),
+          )
         if address == target.address:
           pass
         elif self._is_test(dep) and not self._is_test(target):
