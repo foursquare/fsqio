@@ -932,20 +932,6 @@ class FSSeq[CC[X] <: Seq[X], T, Repr <: SeqLike[T, Repr] with GenericTraversable
   final def nth(target: Int)(implicit ord: Ordering[T]): Option[T] = Lists.nth(xs.toVector, target)
 
   /**
-   * Finds the median value in an unsorted list in O(n) expected time.
-   * Will throw if the list is empty.
-   */
-  def median(implicit ord: Ordering[T]): T = medianOpt.get
-
-
-  /**
-   * Finds the median value in an unsorted list in O(n) expected time.
-   * Does not throw if the list is empty as you probably don't want that.
-   */
-  def medianOpt(implicit ord: Ordering[T]): Option[T] = nth(xs.length / 2)
-
-
-  /**
    * Finds the item at the target cumulative weight in an unsorted weighted list in O(n) time.
    */
   final def pth[S](target: Double)(implicit ev: T => (S, Double), ord: Ordering[S]): Option[S] =
@@ -1103,4 +1089,4 @@ class FSOption[T](val opt: Option[T]) extends AnyVal {
 object Rand {
   lazy val rand = new scala.util.Random
 }
- 
+
