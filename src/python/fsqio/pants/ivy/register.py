@@ -125,6 +125,7 @@ class IvyGlobalResolve(GlobalClasspathTaskMixin, IvyResolve):
     )
 
     if self._report:
+
       results_with_resolved_artifacts = filter(lambda r: r.has_resolved_artifacts, results)
 
       if not results_with_resolved_artifacts:
@@ -199,8 +200,6 @@ class IvyGlobalResolve(GlobalClasspathTaskMixin, IvyResolve):
       resolve_hash_name = resolve_vts.cache_key.hash
       global_ivy_workdir = os.path.join(self.context.options.for_global_scope().pants_workdir,
                                         'ivy')
-      targets = resolve_vts.targets
-
       fetch = self._create_ivy_fetch_step(confs,
                                           resolve_hash_name,
                                           pinned_artifacts,
@@ -216,23 +215,25 @@ class IvyGlobalResolve(GlobalClasspathTaskMixin, IvyResolve):
                                               global_ivy_workdir,
                                               self.global_excludes)
       result = self._perform_resolution(
-        fetch, resolve, executor, extra_args, invalidation_check, resolve_vts, targets, workunit_name,
+        fetch, resolve, executor, extra_args, invalidation_check, resolve_vts, resolve_vts.targets, workunit_name,
       )
+
       # NOTE(mateo): Wiring up our own reports, the full ivy report is too heavy weight for our purposes.
-      if result.has_resolved_artifacts and self.resolution_report_outdir and not self.get_options().disable_reports:
+      if result.resolved_artifact_paths and self.resolution_report_outdir and not self.get_options().disable_reports:
         # This is added to get a reasonable handle for managed_dependencies target sets.
         # If there is more than one VT it defaults to the VTS.id, which is a non-human-readable cache key.
         # If we wanted to be more performant than rigorous, we could bail after the first query.
         managed_dependencies = set(
           j.target.managed_dependencies
           for j in invalidation_check.all_vts
-          if isinstance(j, JarLibrary) and
+          if isinstance(j.target, JarLibrary) and
           j.target.managed_dependencies is not None
         )
+
         if managed_dependencies and len(managed_dependencies) > 1:
           raise TaskError(
             'Each partition should be mapped to a single managed_dependencies target: (was: {})\n Targets: {}'
-            .format(managed_dependencies, targets)
+            .format(managed_dependencies, resolve_vts.targets)
           )
         default_target_name = JarDependencyManagement.global_instance()._default_target.name
         partition_name = list(managed_dependencies)[0].name if managed_dependencies else default_target_name
