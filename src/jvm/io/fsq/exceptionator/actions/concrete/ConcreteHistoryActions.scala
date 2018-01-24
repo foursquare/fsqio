@@ -6,6 +6,7 @@ import com.twitter.conversions.time._
 import com.twitter.ostrich.stats.Stats
 import com.twitter.util.ScheduledThreadPoolTimer
 import io.fsq.common.logging.Logger
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.exceptionator.actions.{HasBucketActions, HistoryActions, IndexActions}
 import io.fsq.exceptionator.model.{BucketRecord, HistoryRecord, MongoOutgoing, NoticeRecord}
 import io.fsq.exceptionator.model.io.{BucketId, Outgoing}
@@ -158,6 +159,33 @@ class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions 
       val noticeBucketRecordHistograms = histograms.filter(h => nbSet(h.bucket))
       MongoOutgoing(n).addBuckets(noticeBuckets, noticeBucketRecordHistograms, time)
     })
+  }
+
+  def removeExpiredNotices(expiredNotices: Seq[NoticeRecord]): Unit = {
+    val historyNoticeBuckets = {
+      expiredNotices
+        .groupBy(notice => HistoryRecord.idForTime(notice.createDateTime))
+        .mappedValues(_.toSetBy(_.id.value))
+    }
+
+    // NOTE(jacob): The number of these returned is dependent upon a few factors, but we
+    //    will fetch a max of incoming.maintenanceWindow / history.flushPeriod records.
+    val historyRecords = HistoryRecord.where(_.id in historyNoticeBuckets.keySet).fetch()
+
+    // TODO(jacob): Once exceptionator is ported to the new mongo client this should be a
+    //    single bulk update.
+    for (record <- historyRecords) {
+      val noticeIdsToRemove = historyNoticeBuckets(record.id.dateTimeValue)
+      val validNotices = record.notices.value.filterNot(notice => {
+        noticeIdsToRemove.has(notice.id.value)
+      })
+      val updatedBuckets = validNotices.flatMap(_.buckets.value).distinct
+
+      record
+        .notices(validNotices)
+        .buckets(updatedBuckets)
+        .save()
+    }
   }
 
   // Save a notice to its HistoryRecord, using reservoir sampling

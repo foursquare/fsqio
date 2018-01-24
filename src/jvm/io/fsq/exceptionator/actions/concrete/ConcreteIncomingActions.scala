@@ -12,6 +12,7 @@ import io.fsq.exceptionator.filter.concrete.FreshBucketFilter
 import io.fsq.exceptionator.model.io.BucketId
 import io.fsq.exceptionator.util.{Config, PluginLoader}
 import java.util.concurrent.Executors
+import org.joda.time.DateTime
 import scala.collection.JavaConverters._
 
 
@@ -36,8 +37,11 @@ class ConcreteIncomingActions(services: HasBucketActions with HasHistoryActions 
   val bucketSpecs = scala.collection.mutable.Map[String, BucketSpec]()
   val incomingFilters = Config.opt(_.getConfigList("incoming.filters").asScala.toList).toList.flatten
 
-  var currentTime: Long = 0
-  var lastHistogramTrim: Long = 0
+  // By default we trim histograms and expire stale data about every hour.
+  val maintenanceWindow = Config.opt(_.getInt("incoming.maintenanceWindow")).getOrElse(3600)
+
+  var currentTime = new DateTime(0L)
+  var lastMaintenance = new DateTime(0L)
 
   def registerBucket(spec: BucketSpec) {
     bucketSpecs += spec.name -> spec
@@ -53,8 +57,8 @@ class ConcreteIncomingActions(services: HasBucketActions with HasHistoryActions 
     })
   }
 
-  def doMaintenance(now: Long) {
-    val histogramOldTime = services.historyActions.oldestId.map(_.getMillis).getOrElse(now)
+  def doMaintenance(now: DateTime): Unit = {
+    val histogramOldTime = services.historyActions.oldestId.getOrElse(now)
     services.bucketActions.deleteOldHistograms(histogramOldTime, true)
 
     // Find really stale buckets that haven't been updated for 60 days. And delete them
@@ -63,6 +67,13 @@ class ConcreteIncomingActions(services: HasBucketActions with HasHistoryActions 
       toRemove.foreach(tr => tr.noticesToRemove.foreach(n =>
         services.noticeActions.removeBucket(n, tr.bucket)
       ))
+    }
+
+    // Clean up expired notices
+    Stats.time("incomingActions.expireNotices") {
+      val expiredNotices = services.noticeActions.removeExpiredNotices(now)
+      services.bucketActions.removeExpiredNotices(expiredNotices)
+      services.historyActions.removeExpiredNotices(expiredNotices)
     }
   }
 
@@ -75,7 +86,7 @@ class ConcreteIncomingActions(services: HasBucketActions with HasHistoryActions 
     val notice = services.noticeActions.save(incoming.incoming, tags, kw, buckets)
     val incomingId = notice.id.value
 
-    val historyId = services.historyActions.save(notice)
+    services.historyActions.save(notice)
 
     // Increment /create buckets
     val results = buckets.map(bucket => {
@@ -113,13 +124,12 @@ class ConcreteIncomingActions(services: HasBucketActions with HasHistoryActions 
       remove.foreach(bucketRemoval => services.noticeActions.removeBucket(bucketRemoval._1, bucketRemoval._2))
     }
 
-    // A bit racy, but only approximation is needed.  Want to trim histograms
-    // about every hour
-    val now = incomingId.getTimestamp * 1000L
-    if (now > currentTime) {
+    // A bit racy, but only approximation is needed.
+    val now = notice.createDateTime
+    if (now.isAfter(currentTime)) {
       currentTime = now
-      if (currentTime - lastHistogramTrim > (60L/*mins*/ * 60/*secs*/ * 1000)) {
-        lastHistogramTrim = now
+      if (currentTime.isAfter(lastMaintenance.plusSeconds(maintenanceWindow))) {
+        lastMaintenance = now
         doMaintenance(now)
       }
     }

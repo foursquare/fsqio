@@ -2,6 +2,7 @@
 
 package io.fsq.exceptionator.actions.concrete
 
+import com.mongodb.WriteConcern
 import com.twitter.ostrich.stats.Stats
 import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{IndexActions, NoticeActions}
@@ -10,6 +11,7 @@ import io.fsq.exceptionator.model.io.{BucketId, Incoming, Outgoing}
 import io.fsq.rogue.lift.LiftRogue._
 import net.liftweb.json._
 import org.bson.types.ObjectId
+import org.joda.time.DateTime
 import scala.collection.JavaConverters._
 
 class ConcreteNoticeActions extends NoticeActions with IndexActions with Logger {
@@ -61,5 +63,11 @@ class ConcreteNoticeActions extends NoticeActions with IndexActions with Logger 
         NoticeRecord.delete("_id", id)
       }
     }
+  }
+
+  override def removeExpiredNotices(now: DateTime): Seq[NoticeRecord] = {
+    val expiredNotices = NoticeRecord.where(_.expireAt before now).fetch()
+    NoticeRecord.where(_.id in expiredNotices.map(_.id.value)).bulkDelete_!!(WriteConcern.W1)
+    expiredNotices
   }
 }

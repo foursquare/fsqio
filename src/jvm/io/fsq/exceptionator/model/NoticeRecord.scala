@@ -9,7 +9,7 @@ import java.util.Date
 import net.liftweb.common.Box
 import net.liftweb.json._
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
-import net.liftweb.mongodb.record.field.{MongoCaseClassField, MongoListField, ObjectIdPk}
+import net.liftweb.mongodb.record.field.{MongoCaseClassField, MongoListField, ObjectIdPk, OptionalDateField}
 import net.liftweb.record.field._
 import org.bson.types.ObjectId
 import org.joda.time.{DateTime, DateTimeZone}
@@ -39,19 +39,32 @@ class NoticeRecord extends MongoRecord[NoticeRecord] with ObjectIdPk[NoticeRecor
   object buckets extends MongoListField[NoticeRecord, String](this) {
     override def name = "b"
   }
+
+  object expireAt extends OptionalDateField[NoticeRecord](this) {
+    override def name = "e"
+  }
 }
 
 object NoticeRecord extends NoticeRecord with MongoMetaRecord[NoticeRecord] with IndexedRecord[NoticeRecord] {
   override def collectionName = "notices"
 
   val keywordIndex = NoticeRecord.index(_.keywords, Asc)
+  val expirationIndex = NoticeRecord.index(_.expireAt, Asc)
+
   override val mongoIndexList = Vector(
     NoticeRecord.index(_.id, Asc),
-    keywordIndex)
+    keywordIndex,
+    expirationIndex
+  )
 
   def createRecordFrom(incoming: Incoming): NoticeRecord = {
     val rec = createRecord.notice(incoming)
     incoming.d.foreach(epoch => rec.id(new ObjectId(new Date(epoch))))
+    incoming.ttl.foreach(seconds => {
+      val epoch = incoming.d.map(new DateTime(_)).getOrElse(DateTime.now)
+      val expireTime = epoch.plusSeconds(seconds).toDate
+      rec.expireAt(epoch.plusSeconds(seconds).toDate)
+    })
     rec
   }
 }

@@ -16,7 +16,7 @@ case class BacktraceLine(method: String, fileName: String, number:Int) {
   def isValid = number > 0
 }
 
-case class Incoming (
+case class Incoming(
   msgs: List[String], // messages
   excs: List[String], // exception classes
   bt: List[String], // exception stack
@@ -27,6 +27,7 @@ case class Incoming (
   n: Option[Int], // count
   d: Option[Long], //date
   tags: Option[List[String]],
+  ttl: Option[Int] = None, // expire this notice after `ttl` seconds
   id: Option[Int] = None // optional data useful for debugging with tester.py
 ) {
   def structuredBacktrace: List[List[BacktraceLine]] = bt.map(_.split("\n").map(BacktraceLine(_)).toList)

@@ -17,7 +17,6 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable.NumericRange
 
 
-
 class ConcreteBucketActions extends BucketActions with IndexActions with Logger {
   var currentTime: Long = 0
   var lastHistogramTrim: Long = 0
@@ -182,11 +181,10 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
       noticesToRemove)
   }
 
-  def deleteOldHistograms(time: Long, doIt: Boolean = true): Unit = {
-    val dateTime = new DateTime(time)
-    val oldMonth = dateTime.minusMonths(2)
-    val oldDay = dateTime.minusDays(2)
-    val oldHour = dateTime.minusHours(2)
+  override def deleteOldHistograms(time: DateTime, doIt: Boolean = true): Unit = {
+    val oldMonth = time.minusMonths(2)
+    val oldDay = time.minusDays(2)
+    val oldHour = time.minusHours(2)
 
     val oldMonthField = Hash.fieldNameEncode(oldMonth.getMonthOfYear)
 
@@ -214,9 +212,8 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
     })
   }
 
-  def deleteOldBuckets(time: Long, batchSize: Int = 500, doIt: Boolean = true): List[SaveResult] = {
-    val dateTime = new DateTime(time)
-    val staleDateTime = dateTime.minusMonths(2).minusDays(1)
+  override def deleteOldBuckets(time: DateTime, batchSize: Int = 500, doIt: Boolean = true): List[SaveResult] = {
+    val staleDateTime = time.minusMonths(2).minusDays(1)
     val staleTime = staleDateTime.getMillis
     val oldBuckets = BucketRecord.where(_.lastSeen lte staleTime).limit(batchSize).fetch()
 
@@ -235,5 +232,11 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
     } else {
       Nil
     }
+  }
+
+  override def removeExpiredNotices(notices: Seq[NoticeRecord]): Unit = {
+    val bucketIds = notices.flatMap(_.buckets.value)
+    val noticeIds = notices.map(_.id.value)
+    BucketRecord.where(_._id in bucketIds).modify(_.notices pullAll noticeIds).updateMulti()
   }
 }

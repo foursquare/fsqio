@@ -2,7 +2,7 @@
 
 package io.fsq.exceptionator.actions
 
-import io.fsq.exceptionator.model.BucketRecordHistogram
+import io.fsq.exceptionator.model.{BucketRecordHistogram, NoticeRecord}
 import io.fsq.exceptionator.model.io.{BucketId, Incoming, Outgoing}
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
@@ -25,6 +25,7 @@ trait BucketActions extends IndexActions {
   def recentKeys(name: String, limit: Option[Int]): List[String]
   def lastHourHistogram(id: BucketId, now: DateTime): List[Int]
   def save(incomingId: ObjectId, incoming: Incoming, bucket: BucketId, maxRecent: Int): SaveResult
-  def deleteOldHistograms(time: Long, doIt: Boolean = true): Unit
-  def deleteOldBuckets(lastUpdatedTime: Long, batchSize: Int = 500, doIt: Boolean = true): List[SaveResult]
+  def deleteOldHistograms(time: DateTime, doIt: Boolean = true): Unit
+  def deleteOldBuckets(lastUpdatedTime: DateTime, batchSize: Int = 500, doIt: Boolean = true): List[SaveResult]
+  def removeExpiredNotices(notices: Seq[NoticeRecord]): Unit
 }
