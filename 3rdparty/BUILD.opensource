@@ -95,6 +95,17 @@ jar_library(
 )
 
 jar_library(
+  name = 'bijection',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'com.twitter', name = 'bijection-core', rev = '0.9.5'),
+  ],
+)
+
+jar_library(
   name = 'apache-httpclient',
   tags = [
     'opensource',

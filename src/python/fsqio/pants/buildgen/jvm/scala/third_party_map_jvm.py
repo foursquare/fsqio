@@ -32,7 +32,7 @@ jvm_third_party_map = {
         'clustering': 'hierarchical-clustering'
       }
     },
-    'beeswax': 'beeswaxrtb',
+    'beeswax': 'beeswax-api',
     'clearspring': {
       'analytics': {
         'stream': 'stream-lib',
@@ -207,6 +207,7 @@ jvm_third_party_map = {
     },
     'twitter': {
       'algebird': 'algebird',
+      'bijection': 'bijection',
       'chill': 'chill',
       'common': 'zookeeper-lock',
       'concurrent': 'twitter-util',
