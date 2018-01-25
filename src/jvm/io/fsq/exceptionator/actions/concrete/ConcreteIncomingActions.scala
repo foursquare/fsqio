@@ -73,7 +73,7 @@ class ConcreteIncomingActions(services: HasBucketActions with HasHistoryActions 
     Stats.time("incomingActions.expireNotices") {
       val expiredNotices = services.noticeActions.removeExpiredNotices(now)
       services.bucketActions.removeExpiredNotices(expiredNotices)
-      services.historyActions.removeExpiredNotices(expiredNotices)
+      services.historyActions.removeExpiredNotices(now)
     }
   }
 

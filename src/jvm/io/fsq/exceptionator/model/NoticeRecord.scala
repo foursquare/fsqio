@@ -42,6 +42,8 @@ class NoticeRecord extends MongoRecord[NoticeRecord] with ObjectIdPk[NoticeRecor
 
   object expireAt extends OptionalDateField[NoticeRecord](this) {
     override def name = "e"
+
+    def dateTimeValue: Option[DateTime] = value.map(new DateTime(_))
   }
 }
 

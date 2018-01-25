@@ -59,10 +59,13 @@ class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions 
             val state = merged.state
             val sorted = state.samples.sortBy(_.id.value).reverse
             val buckets = sorted.flatMap(_.buckets.value).distinct
+            val earliestExpirationOpt = sorted.flatMap(_.expireAt.value).minByOption(_.getTime)
+
             existing
               .notices(sorted.toList)
               .buckets(buckets.toList)
               .totalSampled(state.sampled)
+              .earliestExpiration(earliestExpirationOpt)
               .save(true)
           }
         }).getOrElse {
@@ -71,12 +74,15 @@ class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions 
             val state = sampler.state
             val sorted = state.samples.sortBy(_.id.value).reverse
             val buckets = sorted.flatMap(_.buckets.value).distinct
+            val earliestExpirationOpt = sorted.flatMap(_.expireAt.value).minByOption(_.getTime)
+
             HistoryRecord.createRecord
               .id(historyId)
               .notices(sorted.toList)
               .buckets(buckets.toList)
               .sampleRate(sampleRate)
               .totalSampled(state.sampled)
+              .earliestExpiration(earliestExpirationOpt)
               .save(true)
           }
         }
@@ -161,29 +167,24 @@ class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions 
     })
   }
 
-  def removeExpiredNotices(expiredNotices: Seq[NoticeRecord]): Unit = {
-    val historyNoticeBuckets = {
-      expiredNotices
-        .groupBy(notice => HistoryRecord.idForTime(notice.createDateTime))
-        .mappedValues(_.toSetBy(_.id.value))
-    }
-
+  def removeExpiredNotices(now: DateTime): Unit = {
     // NOTE(jacob): The number of these returned is dependent upon a few factors, but we
     //    will fetch a max of incoming.maintenanceWindow / history.flushPeriod records.
-    val historyRecords = HistoryRecord.where(_.id in historyNoticeBuckets.keySet).fetch()
+    val historyRecords = HistoryRecord.where(_.earliestExpiration before now).fetch()
 
     // TODO(jacob): Once exceptionator is ported to the new mongo client this should be a
     //    single bulk update.
     for (record <- historyRecords) {
-      val noticeIdsToRemove = historyNoticeBuckets(record.id.dateTimeValue)
-      val validNotices = record.notices.value.filterNot(notice => {
-        noticeIdsToRemove.has(notice.id.value)
+      val validNotices = record.notices.value.filter(notice => {
+        notice.expireAt.dateTimeValue.map(_.isAfter(now)).getOrElse(true)
       })
       val updatedBuckets = validNotices.flatMap(_.buckets.value).distinct
+      val newEarliestExpirationOpt = validNotices.flatMap(_.expireAt.value).minByOption(_.getTime)
 
       record
         .notices(validNotices)
         .buckets(updatedBuckets)
+        .earliestExpiration(newEarliestExpirationOpt)
         .save()
     }
   }

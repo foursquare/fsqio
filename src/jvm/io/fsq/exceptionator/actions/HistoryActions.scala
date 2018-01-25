@@ -18,6 +18,6 @@ trait HistoryActions extends IndexActions {
   def getGroupNotices(name: String, time: DateTime, limit: Int): List[NoticeRecord]
   def getNotices(buckets: List[String], time: DateTime, limit: Int): List[NoticeRecord]
   def oldestId: Option[DateTime]
-  def removeExpiredNotices(expiredNotices: Seq[NoticeRecord]): Unit
+  def removeExpiredNotices(now: DateTime): Unit
   def save(notice: NoticeRecord): DateTime
 }

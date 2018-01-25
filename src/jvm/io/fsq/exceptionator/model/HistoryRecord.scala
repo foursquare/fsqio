@@ -7,7 +7,7 @@ import _root_.io.fsq.rogue.index.{Asc, Desc, IndexedRecord}
 import _root_.io.fsq.rogue.lift.LiftRogue._
 import net.liftweb.common.Box
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
-import net.liftweb.mongodb.record.field.{BsonRecordListField, DateField, MongoListField}
+import net.liftweb.mongodb.record.field.{BsonRecordListField, DateField, MongoListField, OptionalDateField}
 import net.liftweb.record.field._
 import org.joda.time.DateTime
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
@@ -47,6 +47,10 @@ class HistoryRecord extends MongoRecord[HistoryRecord] {
   object totalSampled extends IntField(this) {
     override def name = "s"
   }
+
+  object earliestExpiration extends OptionalDateField[HistoryRecord](this) {
+    override def name = "e"
+  }
 }
 
 object HistoryRecord extends HistoryRecord with MongoMetaRecord[HistoryRecord] with IndexedRecord[HistoryRecord] {
@@ -60,8 +64,11 @@ object HistoryRecord extends HistoryRecord with MongoMetaRecord[HistoryRecord] w
   def idForTime(date: DateTime): DateTime = new DateTime(roundMod(date.getMillis, windowMillis))
 
   val bucketIdIndex = HistoryRecord.index(_.buckets, Asc, _.id, Desc)
+  val expirationIndex = HistoryRecord.index(_.earliestExpiration, Asc)
 
   override val mongoIndexList = Vector(
     HistoryRecord.index(_.id, Asc),
-    bucketIdIndex)
+    bucketIdIndex,
+    expirationIndex
+  )
 }
