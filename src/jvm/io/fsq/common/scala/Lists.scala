@@ -191,7 +191,7 @@ object Lists {
     implicit def seq2FSTraversable[CC[X] <: Traversable[X], T, Repr <: TraversableLike[T, Repr]](xs: TraversableLike[T, Repr] with GenericTraversableTemplate[T, CC]): FSTraversable[CC, T, Repr] = new FSTraversable[CC, T, Repr](xs)
     implicit def seq2FSIterable[CC[X] <: Iterable[X], T, Repr <: IterableLike[T, Repr] with GenericTraversableTemplate[T, CC]](xs: IterableLike[T, Repr] with GenericTraversableTemplate[T, CC]): FSIterable[CC, T, Repr] = new FSIterable[CC, T, Repr](xs)
     implicit def seq2FSSeq[CC[X] <: Seq[X], T, Repr <: SeqLike[T, Repr] with GenericTraversableTemplate[T, CC]](xs: SeqLike[T, Repr] with GenericTraversableTemplate[T, CC]): FSSeq[CC, T, Repr] = new FSSeq[CC, T, Repr](xs)
-    implicit def seq2FSTraversableOnce[T, CC[X] <: TraversableOnce[X]](xs: CC[T])(implicit bf: CanBuildFrom[CC[T], T, CC[T]]): FSTraversableOnce[T, CC] = new FSTraversableOnce[T, CC](xs)
+    implicit def seq2FSTraversableOnce[T, CC[X] <: TraversableOnce[X]](xs: CC[T]): FSTraversableOnce[T, CC] = new FSTraversableOnce[T, CC](xs)
     implicit def array2FSSeq[T <: AnyRef](xs: Array[T]): FSSeq[ArraySeq, T, ArraySeq[T]] = new FSSeq[ArraySeq, T, ArraySeq[T]](new ArraySeq[T](xs.size) { override val array: Array[AnyRef] = xs.asInstanceOf[Array[AnyRef]] })
 
     implicit def opt2FSOpt[T](o: Option[T]): FSOption[T] = new FSOption(o)
@@ -260,6 +260,132 @@ class FSTraversableOnce[T, CC[X] <: TraversableOnce[X]](val xs: CC[T]) extends A
       sum = num.plus(sum, f(x))
     }
     sum
+  }
+
+  /** Applies `f` to each item in the collection and returns a List
+    */
+  def toListBy[U](f: T => U): List[U] = {
+    val builder = List.newBuilder[U]
+
+    xs.foreach(x => {
+      builder += f(x)
+    })
+
+    builder.result()
+  }
+
+  /** Applies `f` to each item in the collection and returns a List
+    */
+  def flatToListBy[U](f: T => TraversableOnce[U]): List[U] = {
+    val builder = List.newBuilder[U]
+
+    xs.foreach(x => {
+      f(x).foreach(y => builder += y)
+    })
+
+    builder.result()
+  }
+
+
+  /** Applies `f` to each item in the collection and returns a Vector
+    */
+  def toVectorBy[U](f: T => U): Vector[U] = {
+    val builder = Vector.newBuilder[U]
+
+    xs.foreach(x => {
+      builder += f(x)
+    })
+
+    builder.result()
+  }
+
+  /** Applies `f` to each item in the collection and returns a Vector
+    */
+  def flatToVectorBy[U](f: T => TraversableOnce[U]): Vector[U] = {
+    val builder = Vector.newBuilder[U]
+
+    xs.foreach(x => {
+      f(x).foreach(y => builder += y)
+    })
+
+    builder.result()
+  }
+
+  /** Applies `f` to each item in the collection and returns a Set
+   */
+  def toSetBy[U](f: T => U): Set[U] = {
+    val builder = Set.newBuilder[U]
+
+    xs.foreach(x => {
+      builder += f(x)
+    })
+
+    builder.result()
+  }
+
+  /** Applies `f` to each item in the collection and returns a Map, discarding
+   *  duplicates.
+   */
+  def toMapBy[K, V](f: T => (K, V)): Map[K, V] = {
+    val builder = Map.newBuilder[K, V]
+
+    xs.foreach(x => {
+      builder += f(x)
+    })
+
+    builder.result()
+  }
+
+  /** Applies `f` to each item in the collection and returns a mutable Map,
+   *  discarding duplicates.
+   */
+  def toMutableMapBy[K, V](f: T => (K, V)): MutableMap[K, V] = {
+    val builder = MutableMap.newBuilder[K, V]
+
+    xs.foreach(x => {
+      builder += f(x)
+    })
+
+    builder.result()
+  }
+
+  /** Applies `f` to each item in the collection and returns a Set
+   */
+  def flatToSetBy[U](f: T => TraversableOnce[U]): Set[U] = {
+    val builder = Set.newBuilder[U]
+
+    xs.foreach(x => {
+      f(x).foreach(y => builder += y)
+    })
+
+    builder.result()
+  }
+
+  /** Applies `f` to each item in the collection and returns a Map, discarding
+   *  duplicates.
+   */
+  def flatToMapBy[K, V](f: T => Option[(K, V)]): Map[K, V] = {
+    val builder = Map.newBuilder[K, V]
+
+    xs.foreach(x => {
+      f(x).foreach(v => builder += v)
+    })
+
+    builder.result()
+  }
+
+  /** Creates a map from a sequence, mapping each element in the sequence by a given key.
+   *  If keys are duplicated, values will be discarded.
+   */
+  def toMapByKey[K](f: T => K): Map[K, T] = {
+    toMapBy(elem => (f(elem), elem))
+  }
+
+  /** Creates a map from a sequence, mapping each element in the sequence by a given Option[key].
+    *  If keys are duplicated or None, values will be discarded.
+    */
+  def flatToMapByKey[K](f: T => Option[K]): Map[K, T] = {
+    flatToMapBy(elem => f(elem).map((_, elem)))
   }
 }
 
@@ -587,83 +713,6 @@ class FSIterable[CC[X] <: Iterable[X], T, Repr <: IterableLike[T, Repr] with Gen
     builder.result()
   }
 
-  /** Applies `f` to each item in the collection and returns a Set
-   */
-  def toSetBy[U](f: T => U): Set[U] = {
-    val builder = Set.newBuilder[U]
-
-    xs.foreach(x => {
-      builder += f(x)
-    })
-
-    builder.result()
-  }
-
-  /** Applies `f` to each item in the collection and returns a Map, discarding
-   *  duplicates.
-   */
-  def toMapBy[K, V](f: T => (K, V)): Map[K, V] = {
-    val builder = Map.newBuilder[K, V]
-
-    xs.foreach(x => {
-      builder += f(x)
-    })
-
-    builder.result()
-  }
-
-  /** Applies `f` to each item in the collection and returns a mutable Map,
-   *  discarding duplicates.
-   */
-  def toMutableMapBy[K, V](f: T => (K, V)): MutableMap[K, V] = {
-    val builder = MutableMap.newBuilder[K, V]
-
-    xs.foreach(x => {
-      builder += f(x)
-    })
-
-    builder.result()
-  }
-
-  /** Applies `f` to each item in the collection and returns a Set
-   */
-  def flatToSetBy[U](f: T => TraversableOnce[U]): Set[U] = {
-    val builder = Set.newBuilder[U]
-
-    xs.foreach(x => {
-      f(x).foreach(y => builder += y)
-    })
-
-    builder.result()
-  }
-
-  /** Applies `f` to each item in the collection and returns a Map, discarding
-   *  duplicates.
-   */
-  def flatToMapBy[K, V](f: T => Option[(K, V)]): Map[K, V] = {
-    val builder = Map.newBuilder[K, V]
-
-    xs.foreach(x => {
-      f(x).foreach(v => builder += v)
-    })
-
-    builder.result()
-  }
-
-  /** Creates a map from a sequence, mapping each element in the sequence by a given key.
-   *  If keys are duplicated, values will be discarded.
-   */
-  def toMapByKey[K](f: T => K): Map[K, T] = {
-    toMapBy(elem => (f(elem), elem))
-  }
-
-  /** Creates a map from a sequence, mapping each element in the sequence by a given Option[key].
-    *  If keys are duplicated or None, values will be discarded.
-    */
-  def flatToMapByKey[K](f: T => Option[K]): Map[K, T] = {
-    flatToMapBy(elem => f(elem).map((_, elem)))
-  }
-
   /** Groups the given sequence by a function that transforms the sequence into keys and values.
     * For example. `Seq(1 -> "a", 2 -> "a", "1" -> "b").groupByKeyValue(x => x)` will return
     * `Map(1 -> List(a, b), 2 -> List(a))`
@@ -739,55 +788,6 @@ class FSIterable[CC[X] <: Iterable[X], T, Repr <: IterableLike[T, Repr] with Gen
     builderBottom ++= pqBottom.result()
 
     (builderTop.result(), builderBottom.result())
-  }
-
-  /** Applies `f` to each item in the collection and returns a List
-    */
-  def toListBy[U](f: T => U): List[U] = {
-    val builder = List.newBuilder[U]
-
-    xs.foreach(x => {
-      builder += f(x)
-    })
-
-    builder.result()
-  }
-
-  /** Applies `f` to each item in the collection and returns a List
-    */
-  def flatToListBy[U](f: T => TraversableOnce[U]): List[U] = {
-    val builder = List.newBuilder[U]
-
-    xs.foreach(x => {
-      f(x).foreach(y => builder += y)
-    })
-
-    builder.result()
-  }
-
-
-  /** Applies `f` to each item in the collection and returns a Vector
-    */
-  def toVectorBy[U](f: T => U): Vector[U] = {
-    val builder = Vector.newBuilder[U]
-
-    xs.foreach(x => {
-      builder += f(x)
-    })
-
-    builder.result()
-  }
-
-  /** Applies `f` to each item in the collection and returns a Vector
-    */
-  def flatToVectorBy[U](f: T => TraversableOnce[U]): Vector[U] = {
-    val builder = Vector.newBuilder[U]
-
-    xs.foreach(x => {
-      f(x).foreach(y => builder += y)
-    })
-
-    builder.result()
   }
 
   /** Applies `f` to each item in the collection until the first Some[U] is found and return it, or None otherwise
