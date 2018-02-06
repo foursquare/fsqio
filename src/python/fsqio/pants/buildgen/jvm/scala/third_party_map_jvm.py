@@ -38,6 +38,9 @@ jvm_third_party_map = {
         'stream': 'stream-lib',
        }
     },
+    'bettercloud': {
+      'vault': 'vault-java-driver',
+    },
     'codahale': {
       'jerkson': 'jerkson',
     },
