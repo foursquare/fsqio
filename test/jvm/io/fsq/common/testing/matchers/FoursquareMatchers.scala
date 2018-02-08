@@ -6,6 +6,7 @@ import io.fsq.common.scala.Identity._
 import org.hamcrest.{BaseMatcher, Description, Matcher}
 import scala.collection.TraversableLike
 import scala.math.max
+import scala.reflect.runtime.universe.TypeTag
 
 
 object FoursquareMatchers {
@@ -16,6 +17,28 @@ object FoursquareMatchers {
   }
 
   def isNone[T]: Matcher[Option[T]] = new IsNone[T]()
+
+  private class Exists[T: TypeTag](
+    predicate: T => Boolean,
+    predicateAsString: String
+  ) extends BaseMatcher[Option[T]] {
+
+    override def describeTo(d: Description): Unit = {
+      d.appendText(s"Some[${implicitly[TypeTag[T]].tpe}] matching predicate: $predicateAsString")
+    }
+
+    override def matches(other: Object): Boolean = other match {
+      case optionT: Option[T] => optionT.exists(predicate)
+      case _ => false
+    }
+  }
+
+  def exists[T: TypeTag](
+    predicate: T => Boolean,
+    predicateAsString: String = "omitted"
+  ): Matcher[Option[T]] = {
+    new Exists(predicate, predicateAsString)
+  }
 
   private[matchers] class EqualsCollection[A](expected: Iterable[A]) extends BaseMatcher[Iterable[A]] {
     private val MaxElementsToDisplay = 10

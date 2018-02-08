@@ -6,6 +6,7 @@ scala_library(
   sources = globs('*.scala'),
   dependencies = [
     '3rdparty:hamcrest-core',
+    '3rdparty:scala-reflect',
     'src/jvm/io/fsq/common/scala',
   ],
 )
