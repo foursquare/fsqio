@@ -3,7 +3,7 @@
 Buildgen lexically parses import statements and updates existing BUILD files, ensuring correctness and removing human error.
 
 ### Installation
-Buildgen for Scala projects requires a scalac plugin. This is also published from Fsq.io. Look at [BUILD.opensource](/BUILD.opensource) for an in-repo example on how to consume those.
+Buildgen for Scala projects requires a scalac plugin.This is also published from Fsq.io. Look at [BUILD.opensource](/BUILD.opensource) for an in-repo example on how to consume those.
 
 The buildgen modules are [published to Pypi](https://pypi.python.org/pypi/fsqio.pants.buildgen.core) as [Pants plugins](https://www.pantsbuild.org/howto_plugin.html).
 =======
@@ -31,6 +31,36 @@ Assuming you use the standard location for your bootstrapped Pants install:
         ~/.cache/pants/setup/bootstrap/${pants_version}/bin/pip install fsqio.pants.buildgen.core fsqio.pants.buildgen.jvm fsqio.pants.buildgen.python
 
 That should be it!
+
+
+
+
+#### Submodule Installation
+
+##### Scala
+Add a `BUILD.tools` to the root of your repo with the following to bootstrap a required scalac plugin:
+```
+jar_library(
+  name = 'buildgen-emit-exported-symbols',
+  jars = [
+    scala_jar(org = 'io.fsq', name = 'buildgen-emit-exported-symbols', rev = '1.2.0'),
+  ],
+)
+
+
+jar_library(
+  name = 'buildgen-emit-used-symbols',
+  jars = [
+    scala_jar(org = 'io.fsq', name = 'buildgen-emit-used-symbols', rev = '1.2.0'),
+  ],
+)
+```
+
+The versions in this code should work with any version of the PyPi module and no updates are expected.
+
+##### Spindle
+We now also publish a buildgen module for Spindle support.
+Just follow the above pattern for `fsqio.pants.buildgen.spindle`
 
 
 #### Troubleshooting

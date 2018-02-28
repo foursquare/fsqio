@@ -1,11 +1,10 @@
 
 python_library(
-  name = 'python',
+  name = 'spindle',
   sources = globs('*.py'),
   dependencies = [
     '3rdparty/python:pantsbuild.pants',
-    'src/python/fsqio/pants/buildgen/core',
-    'src/python/fsqio/pants/buildgen/python/source_analysis',
+    'src/python/fsqio/pants/buildgen/jvm/scala',
   ],
   tags = [
     'opensource',
@@ -14,7 +13,7 @@ python_library(
     'dependencies_must_have:buildgen',
   ],
   provides=setup_py(
-    name='fsqio.pants.buildgen.python',
+    name='fsqio.pants.buildgen.spindle',
     version='1.3.1',
     description='Pants buildgen for Python projects.',
     url='https://github.com/foursquare/fsqio',

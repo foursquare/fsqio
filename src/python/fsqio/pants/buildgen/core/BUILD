@@ -15,7 +15,7 @@ python_library(
   ],
   provides=setup_py(
     name='fsqio.pants.buildgen.core',
-    version='1.3.0',
+    version='1.3.1',
     description='Core libraries supporting Pants buildgen.',
     url='https://github.com/foursquare/fsqio',
     license='Apache License, Version 2.0',
