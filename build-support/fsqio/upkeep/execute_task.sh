@@ -19,17 +19,17 @@ function run_actual_task() {
     fi
     # Not printing the exit_with_failure message because this should come from the task.
     # But exiting with an error code to protect any misconfigured tasks from reporting inaccurate success.
-    return 1
+    exit 1
   }
   trap "clean_current_on_error" ERR INT
-  "$task_file"
+  "$task_file" || exit_with_failure "Task Failed: ${task_file}"
 }
 
 function run_required() {
   local task_name=$(basename "$1")
   local task_file=$(find_upkeep_file "tasks" "${task_name}.sh")
   local required_path=$(find_upkeep_file "required" "${task_name}")
-  local current_path="$(get_current_path ${required_path} ${task_name})"
+  local current_path="$(get_current_path ${task_name})"
   colorized_warn "\nRunning ${task_name} upkeep...\n"
 
   if [ -f "${task_file}" ]; then
@@ -69,7 +69,7 @@ function run_downstream() {
       git checkout -q "${req}" &> /dev/null || true
 
       if [[  "${1}" == "true" ]]; then
-        cur=$(get_current_path ${req} ${forced})
+        cur=$(get_current_path ${forced})
 
         mkdir -p $(dirname ${cur})
         cp "${req}" "${cur}"

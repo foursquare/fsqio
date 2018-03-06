@@ -21,7 +21,7 @@ function check() {
   required_file=$(find_upkeep_file "required" "${task_name}") || continue
   required=$(cat "${required_file}")
 
-  current_file=$(get_current_path ${required_file} ${task_name})
+  current_file=$(get_current_path ${task_name})
 
   # The way of constructing and checking the current file is everywhere. A fix would be allow error catch from util.sh.
   if [[ -f "${current_file}" ]]; then

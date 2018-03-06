@@ -19,13 +19,13 @@ else
   repo_env="${UPKEEP_HOME}/${ENV_FILE}"
 fi
 
-if [[ $(readlink "${FSQ_ENV_FILE}") != ${repo_env} ]]; then
+if [[ $(readlink "${FSQ_ENV_FILE}") != "${repo_env}" ]]; then
   rm -f "${FSQ_ENV_FILE}"
   ln -sf "${repo_env}" "${FSQ_ENV_FILE}"
 fi
 
 source "${FSQ_ENV_FILE}"
-source "${UPKEEP_HOME}/util.sh"
+source "${UPKEEP_HOME}/libs/util.sh" && source "${UPKEEP_HOME}/libs/fetcher.sh"
 
 # Default to not SKIP_UPKEEP
 SKIP_UPKEEP=${SKIP_UPKEEP:-0}
@@ -50,6 +50,13 @@ for opt in $@; do
       ;;
     "--no-skip-tasks" )
       SKIP_UPKEEP=0
+      ;;
+    "--no-cache" )
+      # This could and probably should be per-task but the delete would have to happen in the check.sh
+      DELETE_UPKEEP_CACHE=1
+      colorized_warn "Deleting the upkeep cache...\n"
+      (rm -rf "${DEPENDENCIES_ROOT}" "${FS_DOWNLOAD_CACHE}")
+      # TODO: Don't include clean task by default.
       ;;
     * )
       # Try and catch bad options - while allowing passthrough for ./upkeep run.

@@ -24,6 +24,7 @@ function print_help() {
   echo -e " --[no]-downstream\n\t When enabled, upkeep will operate over a task and all of its downstream tasks."
   echo -e " --all\n\t Operates over all tasks. This implies downstream tasks ordering."
   echo -e " --[no]-skip-tasks\n\t When enabled, upkeep will seed environment and route args, but will not run tasks."
+  echo -e " --no-cache\n\t Delete all upkeep files and download cache."
   echo ""
   echo -e "Advanced"
   echo -e " - ./upkeep check [<tasks>...]\n\tCheck given tasks and run if required. Will not follow downstream tasks."
@@ -124,13 +125,16 @@ function find_upkeep_file() {
 }
 
 function tempdir {
-  mktemp -d "$1"/upkeep.XXXXXX
+  # usage: tempdir ROOT [OPTIONAL_NAMESPACING]
+  mkdir -p "${1}"
+  mktemp -d "${1}/${2}.upkeep.XXXXXX"
 }
 
 function get_current_path() {
-  req_dir=$(dirname "${1}")
-  current_dir="${req_dir}/../current"
-  echo "${current_dir}/${2}"
+  task_name="${1}"
+  current_dir="${DEPENDENCIES_ROOT}/${task_name}/current"
+  mkdir -p "${current_dir}"
+  echo "${current_dir}/${task_name}"
 }
 
 function colorized_error() {

@@ -13,14 +13,19 @@ set -e
 #     * upload the tarball to bodega preserving the namespacing here.
 #       -  for internal usage, at bodega at /data/appdata/bodega/4sq-dev/pants/fs-bootstrap/bin/jpostal_blobs/<etc>
 
-
 # There is no official release for libpostal 1.0.0 that compiles on our devbox's gcc.
-# This release is current upstream master. Please unfork by using an upstream release and then remove this check.
+# This release is a Foursquare fork of pure upstream master.
+# Please unfork by using an upstream release and then remove this check.
 if [[ ! "${LIBPOSTAL_VERSION}" == "1.0.0.fs1a" ]]; then
+  # In the fetch-sources call below, swap "foursquare" for "libpostal" when you change the version number.
   exit_with_failure "Please try and consume the upstream libpostal release from openvenues: $0"
 fi
 
-"${BUILD_ROOT}/upkeep" run fetch-sources.sh
+jpostal_tar=$(fetch_github_release "openvenues jpostal ${JPOSTAL_VERSION} tar.gz")
+[[ -e "${jpostal_tar}" ]] || exit_with_failure "${jpostal_tar}"
+
+libpostal_tar=$(fetch_github_release "foursquare libpostal ${LIBPOSTAL_VERSION} tar.gz")
+[[ -e "${libpostal_tar}" ]] || exit_with_failure "${libpostal_tar}"
 
 # Any environmental variables not defined here are being defined in env.sh.
 DIST_DIR="${BUILD_ROOT}/dist/jpostal_blobs/${OS_NAMESPACE}/x86_64/${JPOSTAL_BLOBS_VERSION}"
@@ -53,8 +58,8 @@ workdir=$(tempdir $WORKROOT)
 output_dir="${workdir}/output"
 mkdir -p "${output_dir}"
 
-tar xzf "${DEPENDENCIES_ROOT}/bin/jpostal/linux/x86_64/${JPOSTAL_VERSION}/jpostal.tar.gz" -C "${workdir}/"
-tar xzf "${DEPENDENCIES_ROOT}/bin/libpostal/linux/x86_64/${LIBPOSTAL_VERSION}/libpostal.tar.gz" -C "${workdir}/"
+tar xzf "${jpostal_tar}" -C "${workdir}/"
+tar xzf "${libpostal_tar}" -C "${workdir}/"
 
 # Allow the workdir to be version-agnostic, done this way b/c libpostal flip-flops a bit between 1.0.0 and v1.0.0.
 mv "${workdir}/libpostal"* "${workdir}/libpostal"
@@ -77,7 +82,7 @@ export LD_CONFIG_PATH="${output_dir}"
 "${MAKE}"
 "${MAKE}" install
 
-# pkg-config packages output to FWICT is a uncofigurable output. Moving them to a joint output and removing the rest.
+# pkg-config packages output to FWICT is a unconfigurable output. Moving them to a joint output and removing the rest.
 mv "${output_dir}/pkgconfig/"* "${output_dir}/"
 rm -rf "${output_dir}/lib" "${output_dir}/bin" "${output_dir}/include" "${output_dir}/pkgconfig"
 
