@@ -7,6 +7,10 @@ include "io/fsq/spindle/runtime/structs/gen/structs.thrift"
 typedef binary MyBinary
 typedef binary (enhanced_types="bson:ObjectId") ObjectId
 
+// A UTC datetime, stored as millis since the epoch.
+typedef i64 (enhanced_types="bson:DateTime") DateTime
+
+
 // A struct with a field of each type.
 
 struct TestStruct {
@@ -24,9 +28,17 @@ struct TestStruct {
   12: optional map<string, structs.InnerStruct> aMap
   13: optional MyBinary aMyBinary
   14: optional list<structs.InnerStruct> aStructList
+  15: optional EnumType anEnum
+  16: optional DateTime aDate
+  17: optional ObjectId anObjectId (wire_name="ano")
 } (
   preserve_unknown_fields="1"
 )
+
+enum EnumType {
+     ONE = 1
+     TWO = 2
+}
 
 
 // Identical structs, with one field missing. Useful for testing forwards wire compatibility, that is that you can
