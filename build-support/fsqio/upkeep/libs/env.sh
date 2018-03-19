@@ -6,7 +6,7 @@ export PANTS_CONFIG_OVERRIDE="${PANTS_CONFIG_OVERRIDE:-"['pants.ini']"}"
 export DEPENDENCIES_ROOT="${BUILD_ROOT}/dependencies"
 export CURRENT_UNAME=$(uname -s)
 
-export FS_DOWNLOAD_CACHE="${FS_DOWNLOAD_CACHE:-"${DEPENDENCIES_ROOT/package_cache"}"
+export FS_DOWNLOAD_CACHE="${FS_DOWNLOAD_CACHE:-${DEPENDENCIES_ROOT/package_cache}}"
 
 # Stand-in that is used to set CI-only flags, gate console output, and toggle for unit tests.
 export FSQ_RUN_AS_CI="${FSQ_RUN_AS_CI:-$JENKINS_HOME}"
