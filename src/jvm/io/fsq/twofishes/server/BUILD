@@ -6,7 +6,6 @@ scala_library(
   sources = globs('*.scala'),
   dependencies = [
     '3rdparty:bson',
-    '3rdparty:country-revgeo',
     '3rdparty:finagle',
     '3rdparty:gt-geojson',
     '3rdparty:hadoop-common',
@@ -21,6 +20,7 @@ scala_library(
     '3rdparty:thrift',
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/common/scala',
+    'src/jvm/io/fsq/geo/quadtree',
     'src/jvm/io/fsq/spindle/common/thrift/json',
     'src/jvm/io/fsq/spindle/runtime',
     'src/jvm/io/fsq/twofishes/core',

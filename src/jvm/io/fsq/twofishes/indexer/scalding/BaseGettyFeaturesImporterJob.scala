@@ -1,10 +1,10 @@
 // Copyright 2014 Foursquare Labs Inc. All Rights Reserved.
 package io.fsq.twofishes.indexer.scalding
 
-import com.foursquare.geo.quadtree.CountryRevGeo
 import com.twitter.scalding._
 import com.twitter.scalding.typed.TypedSink
 import com.vividsolutions.jts.geom.Geometry
+import io.fsq.geo.quadtree.CountryRevGeo
 import io.fsq.twofishes.gen.{YahooWoeType, _}
 import io.fsq.twofishes.indexer.util.{DisplayName, GeocodeRecord, SpindleSequenceFileSource}
 import io.fsq.twofishes.util.{GettyId, StoredFeatureId}

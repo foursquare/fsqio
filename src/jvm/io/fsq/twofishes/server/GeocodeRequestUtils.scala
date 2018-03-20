@@ -1,11 +1,11 @@
 //  Copyright 2012 Foursquare Labs Inc. All Rights Reserved
 package io.fsq.twofishes.server
 
-import com.foursquare.geo.quadtree.CountryRevGeo
 import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.Geometry
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
+import io.fsq.geo.quadtree.CountryRevGeo
 import io.fsq.twofishes.gen.{CommonGeocodeRequestParams, GeocodePoint, GeocodeRequest, ResponseIncludes}
 import io.fsq.twofishes.util.GeoTools
 import scala.collection.JavaConverters._

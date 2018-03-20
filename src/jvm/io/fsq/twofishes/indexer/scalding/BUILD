@@ -6,7 +6,6 @@ scala_library(
   dependencies = [
     '3rdparty:cascading',
     '3rdparty:commons-net',
-    '3rdparty:country-revgeo',
     '3rdparty:gt-geojson',
     '3rdparty:hadoop-common',
     '3rdparty:icu4j',
@@ -15,6 +14,7 @@ scala_library(
     '3rdparty:rockymadden',
     '3rdparty:scalding',
     'src/jvm/io/fsq/common/scala',
+    'src/jvm/io/fsq/geo/quadtree',
     'src/jvm/io/fsq/twofishes/indexer/importers/geonames',
     'src/jvm/io/fsq/twofishes/indexer/output',
     'src/jvm/io/fsq/twofishes/indexer/util',

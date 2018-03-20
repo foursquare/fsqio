@@ -13,6 +13,7 @@ from __future__ import (
 
 import os
 
+from pants.backend.jvm.tasks.classpath_products import ClasspathProducts
 from pants.task.task import Task
 from pants.util.dirutil import relative_symlink, safe_mkdir, safe_rmtree
 
@@ -38,6 +39,10 @@ class RemoteSourceTask(Task):
   def product_types(cls):
     return ['remote_files', 'runtime_classpath']
 
+  @classmethod
+  def implementation_version(cls):
+    return super(RemoteSourceTask, cls).implementation_version() + [('RemoteSourceTask', 3)]
+
   @property
   def create_target_dirs(self):
     # Creates the results_dirs but will not cache them.
@@ -55,6 +60,9 @@ class RemoteSourceTask(Task):
   # to clear all that up.
   def execute(self):
     targets = self.context.targets(self._is_remote)
+    runtime_classpath_product = self.context.products.get_data(
+      'runtime_classpath', init_func=ClasspathProducts.init_func(self.get_options().pants_workdir)
+    )
     with self.invalidated(targets, invalidate_dependents=True, topological_order=True) as invalidation_check:
       # The fetches are idempotent operations from the subsystem, invalidation only controls recreating the symlinks.
       for vt in invalidation_check.all_vts:
@@ -69,17 +77,12 @@ class RemoteSourceTask(Task):
         filenames = os.listdir(fetched) if remote_source.extracted else [os.path.basename(fetched)]
         stable_outpath = vt.target.namespace + '-{}'.format('extracted') if vt.target.extract else ''
 
-        stable_target_root = self.stable_root(stable_outpath)
-        safe_mkdir(stable_target_root)
-
         for filename in filenames:
           symlink_file = os.path.join(vt.results_dir, filename)
-          # This will be false if the symlink or the downloaded blob is missing.
           if not vt.valid or not os.path.isfile(symlink_file):
             safe_rmtree(symlink_file)
             relative_symlink(os.path.join(fetch_dir, filename), symlink_file)
+          self.context.products.get('remote_files').add(vt.target, vt.results_dir).append(filename)
 
-          stable_sym = os.path.join(stable_target_root, filename)
-          if not os.path.exists(stable_sym):
-            relative_symlink(symlink_file, stable_sym)
-          self.context.products.get('remote_files').add(vt.target, stable_target_root).append(filename)
+        # The runtime_classpath product is a constructed object that is rooted in the results_dir.
+        runtime_classpath_product.add_for_target(vt.target, [('default', vt.results_dir)])

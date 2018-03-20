@@ -2,13 +2,13 @@
 package io.fsq.twofishes.indexer.importers.geonames
 
 import akka.actor.{ActorSystem, Props}
-import com.foursquare.geo.quadtree.CountryRevGeo
 import com.twitter.ostrich.admin.{AdminServiceFactory, RuntimeEnvironment}
 import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBWriter, WKTReader}
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
+import io.fsq.geo.quadtree.CountryRevGeo
 import io.fsq.twofishes.gen._
 import io.fsq.twofishes.indexer.mongo.{GeocodeRecordIndexes, IndexerQueryExecutor, NameIndex, RevGeoIndex,
     RogueMongoGeocodeStorageService}
@@ -43,7 +43,7 @@ object GeonamesParser extends DurationUtils {
   val runtime = new RuntimeEnvironment(this)
   val admin = AdminServiceFactory(httpPort = 7655)
     .apply(runtime)
-  
+
   lazy val naturalEarthPopulatedPlacesMap: Map[StoredFeatureId, SimpleFeature] = {
     new ShapefileIterator("src/jvm/io/fsq/twofishes/indexer/data/downloaded/ne_10m_populated_places_simple.shp").flatMap(f => {
       f.propMap.get("geonameid").map(id => {

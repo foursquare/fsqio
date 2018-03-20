@@ -2,7 +2,6 @@
 package io.fsq.twofishes.indexer.importers.geonames
 
 import com.cybozu.labs.langdetect.DetectorFactory
-import com.foursquare.geo.quadtree.CountryRevGeo
 import com.ibm.icu.text.Transliterator
 import com.mongodb.MongoException
 import com.rockymadden.stringmetric.similarity.JaroWinklerMetric
@@ -12,6 +11,7 @@ import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBReader, WKBWriter}
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
+import io.fsq.geo.quadtree.CountryRevGeo
 import io.fsq.rogue.Iter
 import io.fsq.twofishes.country.CountryInfo
 import io.fsq.twofishes.gen._
