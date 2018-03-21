@@ -20,7 +20,7 @@ from textwrap import dedent
 
 from pants.base.build_environment import get_buildroot
 from pants.base.exceptions import TaskError
-from pants.base.payload_field import stable_json_sha1
+from pants.base.hash_utils import stable_json_hash
 from pants.build_graph.address import Address
 from pants.util.dirutil import safe_mkdir
 from pants.util.memo import memoized_property
@@ -217,7 +217,7 @@ class BuildgenPython(BuildgenTask):
 
   def analysis_hash(self, reqs):
     hasher = sha1()
-    reqs_hash = stable_json_sha1([sorted(list(reqs))])
+    reqs_hash = stable_json_hash([sorted(list(reqs))])
     hasher.update(reqs_hash)
 
     # This adds the python version to the hash.

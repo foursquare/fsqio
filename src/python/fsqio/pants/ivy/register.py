@@ -257,4 +257,8 @@ class IvyGlobalResolve(GlobalClasspathTaskMixin, IvyResolve):
 def register_goals():
   Goal.by_name('bootstrap').uninstall_task('jar-dependency-management')
   task(name='global-jar-dependency-management', action=JarDependencyGlobalManagementSetup).install('bootstrap')
+  Goal.by_name('resolve').uninstall_task('ivy')
   task(name='ivy', action=IvyGlobalResolve).install('resolve', first=True)
+
+  # Goal.by_name('pyprep').uninstall_task('requirements')
+  # task(name='requirements', action=GlobalResolvePythonRequirements).install('pyprep')

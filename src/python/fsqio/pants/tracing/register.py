@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function
 import functools
 import logging
 
-from pants.bin.exiter import Exiter
+from pants.base.exiter import Exiter
 from pants.goal.run_tracker import RunTracker
 from pants.option.options import Options
 from pants.reporting.reporter import Reporter

@@ -2,7 +2,7 @@
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
 # Allow any passed pants or fsq.io to override the default config.
-export PANTS_CONFIG_OVERRIDE="${PANTS_CONFIG_OVERRIDE:-"['pants.ini']"}"
+export PANTS_CONFIG_FILES="${PANTS_CONFIG_FILES:-"['pants.ini']"}"
 export DEPENDENCIES_ROOT="${BUILD_ROOT}/dependencies"
 export CURRENT_UNAME=$(uname -s)
 

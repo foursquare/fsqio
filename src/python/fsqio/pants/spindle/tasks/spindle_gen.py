@@ -188,8 +188,8 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
                 self.cache_generated_files(
                   self.calculate_generated_sources(vt.target, ns_out), ns_out, vt.results_dir,
                 )
-                vt.update()
-            self._inject_synthetic_target(vt.target, vt.results_dir)
+            vt.update()
+            self._inject_synthetic_target(vt.target, vt.results_dir, vt.cache_key)
 
   def make_json_resource(self, dirname, sources):
     """Return synthetic Resources target that provides the json annotations for a generated ScalaLibrary"""

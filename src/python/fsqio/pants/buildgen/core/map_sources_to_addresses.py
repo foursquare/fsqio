@@ -33,6 +33,10 @@ class MapSourcesToAddresses(Task):
     round_manager.require_data('java')
     round_manager.require_data('scala')
 
+  @classmethod
+  def implementation_version(cls):
+    return super(MapSourcesToAddresses, cls).implementation_version() + [('MapSourcesToAddresses', 3)]
+
   def execute(self):
     products = self.context.products
     source_to_addresses_mapper = LazySourceMapper(

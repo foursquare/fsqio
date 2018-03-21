@@ -15,7 +15,7 @@ python:
 - '2.7'
 env:
   global:
-  - PANTS_CONFIG_OVERRIDE="['pants.ini', 'pants-travis-ci.ini']"
+  - PANTS_CONFIG_FILES="['pants.ini', 'pants-travis-ci.ini']"
 addons:
   apt:
     packages:
@@ -29,7 +29,7 @@ script: |
   uname -a
   ./pants buildgen
   git diff --exit-code || exit "$?"
-  echo "Running under PANTS_CONFIG_OVERRIDE: ${PANTS_CONFIG_OVERRIDE}"
+  echo "Running under PANTS_CONFIG_FILES: ${PANTS_CONFIG_FILES}"
   ./pants compile src::
   ./pants test test::
 notifications:

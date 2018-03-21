@@ -36,7 +36,7 @@ function print_help() {
 
 function join_array() {
   # usage: `join_array ${SEP} ${ARR}`
-  #    e.g. `ARR=( 1 2 aa. b ) && join_by , ${ARR}` will print "1,2, aa., b"
+  #    e.g. `ARR=( 1 2 aa. b ) && join_array , ${ARR}` will print "1,2, aa., b"
   sep="${1}" && shift
   echo -n ${1}
   if [[ $# -gt 1 ]]; then

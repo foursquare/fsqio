@@ -31,6 +31,10 @@ class MapJvmSymbolToSourceTree(Task):
     round_manager.require_data('java_source_to_exported_symbols')
     round_manager.require_data('scala_source_to_exported_symbols')
 
+  @classmethod
+  def implementation_version(cls):
+    return super(MapJvmSymbolToSourceTree, cls).implementation_version() + [('MapJvmSymbolToSourceTree', 2)]
+
   def execute(self):
     products = self.context.products
     scala_source_to_exported_symbols = products.get_data('scala_source_to_exported_symbols')

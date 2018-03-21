@@ -20,7 +20,6 @@ The `Fsq.io` packages are registered to PyPi under the `opensource@foursquare.co
     - `./pants setup-py src/python/fsqio::`
     - Look for the output tar.gz files in `dist/`
 1. Optionally verify that the new tarballs work.
-      - This is a good idea - but out  of scope for this document. The upshot is to find a Pants repo w/o buildgen and manually pip install into the pantsenv.
 
 ### 2. Publish to PyPI
 Now that you have built the packages, we can upload them to PyPi. I use `twine` to handle the sign/upload.

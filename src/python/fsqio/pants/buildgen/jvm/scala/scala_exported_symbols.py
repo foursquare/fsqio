@@ -27,6 +27,10 @@ class MapScalaExportedSymbols(NailgunTask, SourceAnalysisTask, ScalacBuildgenTas
   def analysis_product_name(cls):
     return 'scala_source_to_exported_symbols'
 
+  @classmethod
+  def implementation_version(cls):
+    return super(MapScalaExportedSymbols, cls).implementation_version() + [('MapScalaExportedSymbols', 2)]
+
   @property
   def claimed_target_types(self):
     return (ScalaLibrary, JUnitTests)

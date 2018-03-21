@@ -45,6 +45,10 @@ class MapThirdPartyJarSymbols(Task):
                             r'\.class')
   CLASS_NAME_RE = re.compile(r'[a-zA-Z]\w*')
 
+  @classmethod
+  def implementation_version(cls):
+    return super(MapThirdPartyJarSymbols, cls).implementation_version() + [('MapThirdPartyJarSymbols', 2)]
+
   def fully_qualified_classes_from_jar(self, jar_abspath):
     jar_contents = self._dump_jar_contents(jar_abspath)
     classlist = set()

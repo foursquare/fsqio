@@ -26,15 +26,20 @@ class RemoteSourceUtil(BinaryUtil):
   class RemoteSourceNotFound(BinaryUtil.BinaryNotFound):
     """No file or bundle found at any registered baseurl."""
 
-  class Factory(Subsystem):
+  class Factory(BinaryUtil.Factory):
 
-    options_scope = 'binaries'
+    @classmethod
+    def subsystem_dependencies(cls):
+      return super(RemoteSourceUtil.Factory, cls).subsystem_dependencies()
 
     @classmethod
     def create(cls):
       options = cls.global_instance().get_options()
       return RemoteSourceUtil(
-        options.baseurls, options.fetch_timeout_secs, options.pants_bootstrapdir, options.path_by_id
+        options.binaries_baseurls,
+        options.binaries_fetch_timeout_secs,
+        options.pants_bootstrapdir,
+        options.binaries_path_by_id,
       )
 
   @staticmethod
@@ -66,8 +71,7 @@ class RemoteSourceFetcher(object):
         '--supportdir',
         advanced=True,
         default='bin',
-        help='Find sources under this dir.'
-        'Used as part of the path to lookup the tool with --binary-util-baseurls and --pants-bootstrapdir',
+        help='Find sources under this dir. Path under URLS from --binary-baseurls and --pants-bootstrapdir.',
       )
 
     def create(self, remote_target):

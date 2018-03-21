@@ -38,6 +38,10 @@ class MapJavaExportedSymbols(Task):
   def prepare(cls, options, round_manager):
     round_manager.require_data('java')
 
+  @classmethod
+  def implementation_version(cls):
+    return super(MapJavaExportedSymbols, cls).implementation_version() + [('MapJavaExportedSymbols', 2)]
+
   def execute(self):
     java_source_to_exported_symbols = defaultdict(set)
 

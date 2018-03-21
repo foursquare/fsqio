@@ -14,7 +14,6 @@ from __future__ import (
 from collections import defaultdict
 from copy import deepcopy
 from itertools import chain
-import sys
 
 from pants.backend.jvm.targets.junit_tests import JUnitTests
 from pants.backend.jvm.targets.scala_library import ScalaLibrary
@@ -63,6 +62,10 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
       help='A dict that defines additional third party mappings (may be nested). See third_party_map_jvm.py \
         for defaults. Mappings passed to this option will take precedence over the defaults.'
     )
+
+  @classmethod
+  def implementation_version(cls):
+    return super(MapScalaLibraryUsedAddresses, cls).implementation_version() + [('MapScalaLibraryUsedAddresses', 2)]
 
   def _symbols_used_by_scala_target(self, target):
     """Consults the analysis products and returns a set of all symbols used by a scala target."""
@@ -164,15 +167,12 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
           used_addresses.add(dep.address)
 
     if errors:
-      print(self._internal_symbol_tree.render())
-      print('ERROR: Failed to map these symbols used by the following target to a providing'
-            ' target:', file=sys.stderr)
       err_msg = []
       for spec, symbol in errors:
         err_msg.append("")
         err_msg.append("Symbol: " + symbol)
         err_msg.append("Target: " + spec)
-      err_msg.append('Failed to map scala libraries to used symbols.  See error output above.')
+      err_msg.append('Failed to map scala libraries to used symbols.')
       raise Exception('\n'.join(err_msg))
     return used_addresses
 

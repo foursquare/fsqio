@@ -68,7 +68,7 @@ class RemoteSourceTask(Task):
       for vt in invalidation_check.all_vts:
         remote_source = RemoteSourceFetcher.Factory.scoped_instance(self).create(vt.target)
         fetched = remote_source.path
-        self.context.log.info("Found fetched file at {}".format(fetched))
+        self.context.log.debug("Found fetched file at {}".format(fetched))
         safe_mkdir(fetched)
 
         # Some unfortunate rigamorole to cover for the case where different targets want the same fetched file

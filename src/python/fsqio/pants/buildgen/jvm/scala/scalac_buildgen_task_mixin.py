@@ -32,6 +32,10 @@ class ScalacBuildgenTaskMixin(JvmToolTaskMixin):
       classpath_spec='//:buildgen-emit-exported-symbols',
     )
 
+  @classmethod
+  def implementation_version(cls):
+    return super(ScalacBuildgenTaskMixin, cls).implementation_version() + [('ScalacBuildgenTaskMixin', 2)]
+
   @property
   def _compiler_jars(self):
     return ScalaPlatform.global_instance().compiler_classpath(self.context.products)

@@ -26,7 +26,7 @@ class SourceAnalysisTask(Task):
 
   @classmethod
   def implementation_version(cls):
-    return super(SourceAnalysisTask, cls).implementation_version() + [('SourceAnalysisTask', 3)]
+    return super(SourceAnalysisTask, cls).implementation_version() + [('SourceAnalysisTask', 4)]
 
   @classmethod
   def product_types(cls):

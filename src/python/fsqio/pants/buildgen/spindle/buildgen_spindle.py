@@ -93,8 +93,10 @@ class BuildgenSpindle(BuildgenScala):
       if isinstance(t, ScalaLibrary)
     )
     if len(synthetic_scala_targets) != 1:
-      raise ValueError('Could not find synthetic scala codegen target while attempting'
-                       ' to buildgen spindle target {0}'.format(spindle_target.address.spec))
+      raise ValueError(
+        'Could not find synthetic scala codegen target while attempting'
+        ' to buildgen spindle target {0}'.format(spindle_target.address.spec),
+      )
     synthetic_scala_target = synthetic_scala_targets[0]
     addresses_used_by_generated_code = set(
       self.context.build_graph.get_target(addr).concrete_derived_from.address

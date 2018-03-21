@@ -26,7 +26,7 @@ class BuildgenBase(Task):
 
   @classmethod
   def implementation_version(cls):
-    return super(BuildgenBase, cls).implementation_version() + [('BuildgenBase', 1)]
+    return super(BuildgenBase, cls).implementation_version() + [('BuildgenBase', 2)]
 
   @memoized_property
   def buildgen_subsystem(self):

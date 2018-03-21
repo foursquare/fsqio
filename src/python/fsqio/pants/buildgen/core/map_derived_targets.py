@@ -32,8 +32,13 @@ class MapDerivedTargets(Task):
     round_manager.require_data('python')
     round_manager.require_data('scala')
 
+  @classmethod
+  def implementation_version(cls):
+    return super(MapDerivedTargets, cls).implementation_version() + [('MapDerivedTargets', 2)]
+
   def execute(self):
     concrete_target_to_derivatives = defaultdict(set)
+
     for target in self.context.build_graph.targets():
       if target.is_synthetic and target.derived_from is not None:
         concrete_target_to_derivatives[target.concrete_derived_from].add(target)
