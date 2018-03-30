@@ -122,16 +122,22 @@ function download_and_extract() {
   local libname="${1}"
   local libversion="${2}"
   local ext="${3}"
-  # If the archive has undesirable directory padding, copy starting after this basedir.
-  local archive_basedir="${4}"
 
-  SCRATCH="${destination}/scratch_space/${libname}"
+  # If the archive has undesirable directory padding, copy starting after this basedir.
+  if [[ "${4}" != linux ]] && [[ "${4}" != mac ]]; then
+    # This API has been broken, this proves it. Break out the relocate into a separate function.
+    local archive_basedir="${4}"
+    shift
+  fi
+  local os_namespace="${4:-$OS_NAMESPACE}"
+  local arch="${5:-$OS_ARCH}"
+  SCRATCH="${FS_TEMP_FETCHROOT}/scratch_space/${libname}"
   mkdir -p "${SCRATCH}"
 
   # Find the corresponding archive, which may be cached.
   # If the fetcher exits non-zero, the attempted URL is returned.
-  local fetch_args=( "${libname}" "${libversion}" "${ext}" )
-  local fetched=$(fetch_remote_binary "${FS_REMOTE_SOURCES_URL}" ${fetch_args[@]}) || (echo "${fetched}" && exit 2)
+  local fetch_args=( "${libname}" "${libversion}" "${ext}" "${os_namespace}" "${arch}" )
+  local fetched=$(fetch_remote_source "${FS_REMOTE_SOURCES_URL}" ${fetch_args[@]}) || (echo "${fetched}" && exit 2)
   local extractdir=$(tempdir "${SCRATCH}" "${libname}.extracted")
 
   # Sanity check that we do have the archive and then unpack.
