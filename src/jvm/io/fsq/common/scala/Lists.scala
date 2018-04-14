@@ -717,6 +717,35 @@ class FSIterable[CC[X] <: Iterable[X], T, Repr <: IterableLike[T, Repr] with Gen
     * For example. `Seq(1 -> "a", 2 -> "a", "1" -> "b").groupByKeyValue(x => x)` will return
     * `Map(1 -> List(a, b), 2 -> List(a))`
     */
+  def groupByKeyValueSet[K, V](f: T => (K, V)): Map[K, Set[V]] = {
+    val m = new HashMap[K, Builder[V, Set[V]]]()
+
+    for (x <- xs) {
+      val (k, v) = f(x)
+      val bldr = m.getOrElseUpdate(k, Set.newBuilder)
+      bldr += v
+    }
+
+    val retval = Map.newBuilder[K, Set[V]]
+    for ((k, v) <- m) {
+      retval += (k -> v.result)
+    }
+
+    retval.result()
+  }
+
+  /** Like `toMap`, but accumulates the values into a Set, rather than
+    * discarding the values of duplicated keys.
+    */
+  def toMapAccumValueSet[K, V](implicit ev: T <:< (K, V)): Map[K, Set[V]] = {
+    groupByKeyValueSet(x => x)
+  }
+
+
+  /** Groups the given sequence by a function that transforms the sequence into keys and values.
+    * For example. `Seq(1 -> "a", 2 -> "a", "1" -> "b").groupByKeyValue(x => x)` will return
+    * `Map(1 -> List(a, b), 2 -> List(a))`
+    */
   def groupByKeyValue[K, V](f: T => (K, V)): Map[K, Seq[V]] = {
     val m = new HashMap[K, Builder[V, Seq[V]]]()
 
