@@ -301,6 +301,7 @@ jvm_third_party_map = {
       },
     },
     'netty': 'netty4',
+    'sentry': 'sentry-java',
   },
   'java': 'SKIP',
   'javax': {
