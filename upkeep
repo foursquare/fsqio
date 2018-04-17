@@ -2,12 +2,10 @@
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
 # Pass variables to children
-set -eo pipefail
-set +a
+set -eao pipefail
 
 export BUILD_ROOT="${BUILD_ROOT:-$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )}"
 export UPKEEPROOT="${BUILD_ROOT}/build-support"
-export FSQ_ENV_FILE="${BUILD_ROOT}/environ.sh"
 
 UPKEEP_HOME="${UPKEEPROOT}/fsqio/upkeep"
 ENV_FILE="libs/env.sh"
@@ -19,13 +17,13 @@ else
   repo_env="${UPKEEP_HOME}/${ENV_FILE}"
 fi
 
-if [[ $(readlink "${FSQ_ENV_FILE}") != "${repo_env}" ]]; then
-  rm -f "${FSQ_ENV_FILE}"
-  ln -sf "${repo_env}" "${FSQ_ENV_FILE}"
-fi
-
-source "${FSQ_ENV_FILE}"
+source "${repo_env}"
 source "${UPKEEP_HOME}/libs/util.sh" && source "${UPKEEP_HOME}/libs/fetcher.sh"
+
+if [[ -z "${FSQWORKING_XCODE}" ]]; then
+  # If XCode is validated, set a env to disable future checks that invocation.
+  validate_xcode && export FSQ_WORKING_XCODE="True"
+fi
 
 # Default to not SKIP_UPKEEP
 SKIP_UPKEEP=${SKIP_UPKEEP:-0}

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
-set -ea
+set -a
 
 # Ensure this is only called through top-level upkeep wrapper so tasks can rely on the required environment variables.
 if [ -z "${BUILD_ROOT+x}" ]; then
@@ -10,19 +10,22 @@ fi
 
 mkdir -p "${DEPENDENCIES_ROOT}"
 
+function clean_on_error() {
+  if [[ -f "${1}" ]]; then
+    rm "${1}"
+  fi
+  colorized_warn "\t Removing the current file for: ${1}"
+  exit_with_failure "${2}"
+  # Not printing the exit_with_failure message because this should come from the task.
+  # But exiting with an error code to protect any misconfigured tasks from reporting inaccurate success.
+}
+
 function run_actual_task() {
   local task_file="$1"
   local current_path="$2"
-  function clean_current_on_error() {
-    if [ -f "${current_path}" ]; then
-      rm ${current_path}
-    fi
-    # Not printing the exit_with_failure message because this should come from the task.
-    # But exiting with an error code to protect any misconfigured tasks from reporting inaccurate success.
-    exit 1
-  }
-  trap "clean_current_on_error" ERR INT
-  "$task_file" || exit_with_failure "Task Failed: ${task_file}"
+
+  trap "clean_on_error ${current_path} ${task_file}" ERR INT
+  "$task_file"
 }
 
 function run_required() {
@@ -32,7 +35,7 @@ function run_required() {
   local current_path="$(get_current_path ${task_name})"
   colorized_warn "\nRunning ${task_name} upkeep...\n"
 
-  if [ -f "${task_file}" ]; then
+  if [[ -f "${task_file}" ]]; then
     run_actual_task "$task_file" "${current_path}"
   else
    print_all_tasks
@@ -64,11 +67,10 @@ function run_downstream() {
   function unforce() {
     for forced in ${unique_tasks[@]}; do
       req=$(find_upkeep_file "required" "${forced}") || continue
-      [[ ! -d ${req} ]] || exit_with_failure "Expected a file and instead ${req} is a directory!"
       # If a new task is added, or the upkeep required files are relocated for some reason, this exits with an error.
       git checkout -q "${req}" &> /dev/null || true
 
-      if [[  "${1}" == "true" ]]; then
+      if [[  "${1}" == true ]]; then
         cur=$(get_current_path ${forced})
 
         mkdir -p $(dirname ${cur})

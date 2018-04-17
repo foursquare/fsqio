@@ -4,7 +4,12 @@
 # Library of functions that are useful across the upkeep pipeline.
 
 set -ea
-set -o pipefail
+
+
+if [[ -z "${DEPENDENCIES_ROOT+x}" ]]; then
+  echo "DEPENDENCIES_ROOT undefined! This can only be sourced by a top-level file like 'pants' or 'upkeep'!"
+  exit 1
+fi
 
 function print_help() {
   echo ""
@@ -119,15 +124,36 @@ function find_upkeep_file() {
       echo "${found_matches[@]}"
       ;;
     * )
-      exit_with_failure "Exactly one upkeep file may be registered under a given name!"
+      exit_with_failure "Exactly one upkeep file may be registered under a given name: ${found_matches[@]}"
       ;;
   esac
+}
+
+function validate_xcode() {
+  if [[ ${OS_NAMESPACE} == mac ]] && [[ -z ${FSQ_WORKING_XCODE} ]]; then
+    clang --help 2>/dev/null 1>/dev/null || xcode_help
+  fi
+  export FSQ_WORKING_XCODE="True"
+}
+
+function xcode_help() {
+  # NOTE(mateo): Decided not to exit_with_failure here - let's just output the error and hope they run it on
+  # actual failure. May promote to a fatal check as needed.
+  colorized_error "WARNING: XCode is out of date!\n\n"
+  colorized_error "\t Run 'sudo clang --help' and follow the directions\n"
+  colorized_error "\t or go straight to the App Store and install/upgrade XCode + XCode CommandLine Tools."
 }
 
 function tempdir {
   # usage: tempdir ROOT [OPTIONAL_NAMESPACING]
   mkdir -p "${1}"
   mktemp -d "${1}/${2}.upkeep.XXXXXX"
+}
+
+function wipe_workspace() {
+  # Wipe dirs and provide exit code.
+  ([[ -e "${1}" ]] && rm -rf "${1}")
+  exit "${2}"
 }
 
 function get_current_path() {

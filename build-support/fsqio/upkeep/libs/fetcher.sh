@@ -1,15 +1,9 @@
 #!/bin/bash
 # Copyright 2018 Foursquare Labs Inc. All Rights Reserved.
 
-set -ea
+set -eao pipefail
 
 # Bootstrap tooling that is hosted in a programmatically contstructable pattern.
-
-function wipe_workspace() {
-  # Wipe dirs and provide exit code.
-  rm -rf "${1}"
-  exit "${2}"
-}
 
 function cached_download() {
   # usage: cached_download FILE_URL EXPECTED_FILE CACHE_FILE_PATH
@@ -19,34 +13,35 @@ function cached_download() {
   local cache_path="${3}"
   local cachedir=$(dirname "${cache_path}")
 
-  mkdir -p "${FS_TEMP_FETCHROOT}"
+  mkdir -p "${FS_TEMP_EXTRACTDIR}"
   mkdir -p "${cachedir}"
 
   # Download to a tmpdir and move to cache only upon success.
-  local fetchdir=$(tempdir "${FS_TEMP_FETCHROOT}" "fetch.${expected_filename}")
+  local fetchdir=$(tempdir "${FS_TEMP_EXTRACTDIR}" "fetch.${expected_filename}")
   local download_path="${fetchdir}/${expected_filename}"
 
-  trap "wipe_workspace ${FS_TEMP_FETCHROOT} 3" ERR INT
+  trap "wipe_workspace ${FS_TEMP_EXTRACTDIR} 3" ERR INT
 
   # Disable progress on CI runs since running under 'set -x' streams the progress as spam 2x per second.
   # [ -z "${FSQ_RUN_AS_CI}" ] && progress=" --progress "
-  if [ ! -e "${cache_path}" ]; then
-        curl "-fL${FSQ_CURL_PROGRESS}"  "${url}" > "${download_path}"  \
-        && [ -e "${download_path}" ] \
-        && mv "${download_path}" "${cache_path}"
+  if [[ ! -e "${cache_path}" ]]; then
+        (
+          curl "-fL${FSQ_CURL_PROGRESS}"  "${url}" > "${download_path}" \
+          && [[ -e "${download_path}" ]] \
+          && mv "${download_path}" "${cache_path}" \
+        ) || (echo "${url}" && exit -9)
   fi
-
-  if [ -e "${cache_path}" ]; then
+  if [[ -e "${cache_path}" ]]; then
     echo "${cache_path}"
   else
     echo "${url}"
   fi
-  rm -rf "${FS_TEMP_FETCHROOT}"
+  rm -rf "${FS_TEMP_EXTRACTDIR}"
 }
 
 function fetch_github_release() {
   # usage: `fetch_github_release ${ORG} ${REPO} ${VERSION} ${PACKAGE_EXTENSION}`
-  #    e.g. `fetch_github-release pantsbuild pants release_1.3.0 tar.gz"
+  #    e.g. `fetch_github_release pantsbuild pants release_1.3.0 tar.gz"
   #
   # This will download https://github.com/pantsbuild/pants/archive/release_1.3.0.tar.gz
   # This fetch is treated as cached once the expected file exists - so it must be deleted before it will redownload!
@@ -57,9 +52,9 @@ function fetch_github_release() {
   local org="${args[0]}"
   local repo="${args[1]}"
   local version="${args[2]}"
-  local ext="${args[3]}"
+  local ext="${args[3]:+.${args[3]}}"
 
-  local filename="${repo}-${version}.${ext}"
+  local filename="${repo}-${version}${ext}"
   # Github pattern is very hard to grok - seems priority was saving characters.
   # The artifact url points to "version.ext" but the downloaded file is repo-version.ext.
   local fetch_url="${GITHUB}/${org}/${repo}/archive/${version}${ext}"
@@ -102,8 +97,7 @@ function fetch_remote_binary() {
 function relocate() {
   src="$1"
   dest="$2"
-  [[ ! $# -eq 2 ]] && exit 2
-  mv -f "${src}"/* "${dest}/"
+  [[ $# -eq 2 ]] && [[ -e "${src}" ]] && [[ -e "${dest}" ]] &&  mv -f "${src}"/* "${dest}/"
 }
 
 function download_and_extract() {
@@ -111,8 +105,12 @@ function download_and_extract() {
 
   # local destdir=$(dirname "$1")
   # local namespace=$(basename "$1")
+
   local destination="${1}"
   shift
+
+  # Always wipe the extractoin directory.
+  rm -rf "${destination}"
   mkdir -p "${destination}"
 
   # Catch errors and wipe destination dir (already a tempdir but just in case)
@@ -141,12 +139,12 @@ function download_and_extract() {
   local extractdir=$(tempdir "${SCRATCH}" "${libname}.extracted")
 
   # Sanity check that we do have the archive and then unpack.
-  if [ -e "${fetched}" ]; then
+  if [[ -e "${fetched}" ]]; then
     tar xf "${fetched}" -C "${extractdir}"
   else
     echo "${fetched}"
     exit 2
   fi
-  relocate "${extractdir}/${archive_basedir}" "${destination}" || (echo "${fetched}" && exit 2)
+  relocate "${extractdir}/${archive_basedir}" "${destination}"
   echo "${destination}"
 }

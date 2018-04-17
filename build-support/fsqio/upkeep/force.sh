@@ -9,7 +9,6 @@ set -a
 
 stamp=$(date +%s)
 
-
 function force() {
   forced_name="$1"
   task_script=$(find_upkeep_file "tasks" "${forced_name}.sh") || exit_with_failure "No task found for: ${forced_name}!"
