@@ -30,6 +30,7 @@ managed_jar_dependencies(
     ':jackson',
     ':jackson-scala',
     ':joda-time',
+    ':json4s',
     ':logback',
     ':mockito',
     ':mongodb-core',
@@ -616,8 +617,9 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'org.json4s', name = 'json4s-native', rev = '3.2.10'),
-    scala_jar(org = 'org.json4s', name = 'json4s-jackson', rev = '3.2.10'),
+    scala_jar(org = 'org.json4s', name = 'json4s-native', rev = '3.2.11'),
+    scala_jar(org = 'org.json4s', name = 'json4s-jackson', rev = '3.2.11'),
+    scala_jar(org = 'org.json4s', name = 'json4s-core', rev = '3.2.11'),
   ]
 )
 
