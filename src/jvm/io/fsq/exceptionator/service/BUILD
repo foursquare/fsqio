@@ -5,8 +5,8 @@ scala_library(
   sources = globs('*.scala'),
   dependencies = [
     '3rdparty:finagle',
-    '3rdparty:jerkson',
     '3rdparty:joda-time',
+    '3rdparty:json4s',
     '3rdparty:lift-mongo',
     '3rdparty:lift-util',
     '3rdparty:mongodb-drivers',

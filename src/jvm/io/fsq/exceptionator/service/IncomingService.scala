@@ -2,7 +2,6 @@
 
 package io.fsq.exceptionator.service
 
-import com.codahale.jerkson.Json
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.Response
 import com.twitter.ostrich.stats.Stats
@@ -12,29 +11,36 @@ import io.fsq.exceptionator.actions.{BackgroundActions, IncomingActions}
 import io.fsq.exceptionator.filter.FilteredIncoming
 import io.fsq.exceptionator.model.io.Incoming
 import io.fsq.exceptionator.util.Config
-import java.io.{BufferedWriter, FileWriter}
+import java.io.{BufferedWriter, FileWriter, InputStreamReader}
 import org.jboss.netty.buffer.ChannelBufferInputStream
 import org.jboss.netty.handler.codec.http._
-import scala.collection.JavaConverters._
+import org.json4s.{DefaultFormats, Formats}
+import org.json4s.jackson.Serialization
 
 class IncomingHttpService(incomingActions: IncomingActions, backgroundActions: BackgroundActions)
     extends Service[ExceptionatorRequest, Response] with Logger {
 
-  val incomingLog = Config.opt(_.getString("log.incoming")).map(fn => new BufferedWriter(new FileWriter(fn, true)))
+  val incomingLog = Config.opt(_.getString("log.incoming"))
+    .map(fn => new BufferedWriter(new FileWriter(fn, true)))
+  implicit val formats: Formats = DefaultFormats
 
   def apply(request: ExceptionatorRequest) = {
     request.method match {
       case HttpMethod.POST =>
         request.path match {
           case "/api/notice" =>
-            val incoming = Json.parse[Incoming](new ChannelBufferInputStream(request.getContent))
+            val incoming = Serialization.read[Incoming](
+              new InputStreamReader(new ChannelBufferInputStream(request.getContent))
+            )
             process(incoming).map(res => {
               val response = Response(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
               response.contentString = res
               response
             })
           case "/api/multi-notice" =>
-            val incomingSeq = Json.stream[Incoming](new ChannelBufferInputStream(request.getContent)).toSeq
+            val incomingSeq = Serialization.read[List[Incoming]](
+              new InputStreamReader(new ChannelBufferInputStream(request.getContent))
+            )
             Future.collect(incomingSeq.map(incoming => process(incoming))).map(res => {
               val response = Response(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
               response.contentString = res.mkString(",")
@@ -51,7 +57,7 @@ class IncomingHttpService(incomingActions: IncomingActions, backgroundActions: B
 
   def process(incoming: Incoming) = {
     incomingLog.foreach(log => {
-      log.write(Json.generate(incoming))
+      log.write(Serialization.write(incoming))
       log.write("\n")
     })
 

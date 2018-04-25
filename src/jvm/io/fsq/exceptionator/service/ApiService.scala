@@ -2,7 +2,6 @@
 
 package io.fsq.exceptionator.service
 
-import com.codahale.jerkson.Json
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.util.{Future, FuturePool}
@@ -14,6 +13,8 @@ import java.net.URLDecoder
 import java.util.concurrent.Executors
 import org.jboss.netty.handler.codec.http._
 import org.joda.time.DateTime
+import org.json4s.{DefaultFormats, Formats}
+import org.json4s.jackson.Serialization
 import scala.collection.JavaConverters._
 
 object ApiHttpService {
@@ -23,13 +24,15 @@ object ApiHttpService {
 }
 
 object InternalResponse {
+  implicit val formats: Formats = DefaultFormats
+
   def notFound: Future[InternalResponse] = {
     Future.value(InternalResponse("", HttpResponseStatus.NOT_FOUND))
   }
 
   def notAuthorized(msgOpt: Option[String] = None): Future[InternalResponse] = {
     Future.value(InternalResponse(msgOpt.map(msg =>
-      Json.generate(Map("error" -> msg))).getOrElse(""), HttpResponseStatus.UNAUTHORIZED))
+      Serialization.write(Map("error" -> msg))).getOrElse(""), HttpResponseStatus.UNAUTHORIZED))
   }
 
   def apply(content: String): Future[InternalResponse] = {
@@ -54,6 +57,7 @@ class ApiHttpService(
   services: HasBucketActions with HasHistoryActions with HasNoticeActions with HasUserFilterActions,
   bucketFriendlyNames: Map[String, String]) extends Service[ExceptionatorRequest, Response] with Logger {
 
+  implicit val formats: Formats = DefaultFormats
   val apiFuturePool = FuturePool(Executors.newFixedThreadPool(10))
 
   def apply(request: ExceptionatorRequest) = {
@@ -161,7 +165,7 @@ class ApiHttpService(
   def config(request: ExceptionatorRequest): Future[InternalResponse] = {
     val values = Map(
       "friendlyNames" -> bucketFriendlyNames,
-      "homepage" -> Config.renderJson("web.homepage").map(Json.parse[List[_]](_)).getOrElse(
+      "homepage" -> Config.renderJson("web.homepage").map(Serialization.read[List[_]](_)).getOrElse(
         List(
           Map("list" -> Map("bucketName" -> "all"), "view" -> Map("showList" -> false)),
           Map("list" -> Map("bucketName" -> "s")
@@ -169,7 +173,7 @@ class ApiHttpService(
       request.userId.map("userId" -> _).toMap ++
       Config.opt(_.getInt("http.port")).map("apiPort" -> _).toMap ++
       Config.opt(_.getString("http.hostname")).map("apiHost" -> _).toMap
-    InternalResponse(Json.generate(values))
+    InternalResponse(Serialization.write(values))
   }
 
   def bucketHistory(
