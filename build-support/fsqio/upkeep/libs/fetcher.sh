@@ -108,9 +108,6 @@ function download_and_extract() {
 
   local destination="${1}"
   shift
-
-  # Always wipe the extractoin directory.
-  rm -rf "${destination}"
   mkdir -p "${destination}"
 
   # Catch errors and wipe destination dir (already a tempdir but just in case)
