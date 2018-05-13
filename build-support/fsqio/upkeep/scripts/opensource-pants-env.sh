@@ -42,7 +42,7 @@ function bootstrap_venv {
       mkdir -p "${PANTS_BOOTSTRAP}" && \
       staging_dir=$(tempdir "${PANTS_BOOTSTRAP}") && \
       cd ${staging_dir} && \
-      curl -O https://pypi.python.org/packages/source/v/virtualenv/${VENV_TARBALL} && \
+      curl -LO https://pypi.python.org/packages/source/v/virtualenv/${VENV_TARBALL} && \
       tar -xzf ${VENV_TARBALL} && \
       ln -s "${staging_dir}/${VENV_PACKAGE}" "${staging_dir}/latest" && \
       mv "${staging_dir}/latest" "${PANTS_BOOTSTRAP}/${VENV_PACKAGE}"
