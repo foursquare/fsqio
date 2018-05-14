@@ -6,6 +6,9 @@ export PANTS_CONFIG_FILES="${PANTS_CONFIG_FILES:-"['pants.ini']"}"
 export DEPENDENCIES_ROOT="${BUILD_ROOT}/dependencies"
 export CURRENT_UNAME=$(uname -s)
 
+CACHEDIR="${XDG_CACHE_HOME:-${HOME}/.cache}"
+export PANTS_BOOTSTRAPDIR="${PANTS_BOOTSTRAPDIR:-$CACHEDIR/fsqio}"
+
 export FS_DOWNLOAD_CACHE="${FS_DOWNLOAD_CACHE:-${DEPENDENCIES_ROOT/package_cache}}"
 
 # Stand-in that is used to set CI-only flags, gate console output, and toggle for unit tests.
