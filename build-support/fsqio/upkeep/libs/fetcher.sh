@@ -28,7 +28,7 @@ function cached_download() {
         (
           curl "-fL${FSQ_CURL_PROGRESS}"  "${url}" > "${download_path}" \
           && [[ -e "${download_path}" ]] \
-          && mv "${download_path}" "${cache_path}" \
+          && mv -f "${download_path}" "${cache_path}" \
         ) || (echo "${url}" && exit -9)
   fi
   if [[ -e "${cache_path}" ]]; then
