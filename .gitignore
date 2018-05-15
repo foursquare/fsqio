@@ -35,6 +35,7 @@
 .pids
 .project
 .pvenvs*
+.pytest_cache
 .python
 .saplings
 .saplingsc
