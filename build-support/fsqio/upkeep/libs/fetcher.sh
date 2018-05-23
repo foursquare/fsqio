@@ -94,25 +94,49 @@ function fetch_remote_binary() {
   echo $(fetch_remote_source $@ "${OS_NAMESPACE}" "${OS_ARCH}")
 }
 
+function extract() {
+  # usage: extract NAME ARCHIVE [EXTRACT_ROOT]
+  [[ $# -lt 2 ]] && exit 2
+  libname=$1
+  fetched=$2
+  scratch="${3:-$FS_TEMP_FETCHROOT/scratch_space/$libname}"
+
+  mkdir -p "${scratch}"
+  local extractdir=$(tempdir "${scratch}" "${libname}.extracted")
+
+  # Sanity check that we do have the archive and then unpack.
+  if [[ -e "${fetched}" ]]; then
+    tar xf "${fetched}" -C "${extractdir}"
+  else
+    echo "${fetched}"
+    exit 2
+  fi
+  echo "${extractdir}"
+}
+
+
 function relocate() {
   src="$1"
   dest="$2"
   [[ $# -eq 2 ]] && [[ -e "${src}" ]] && [[ -e "${dest}" ]] &&  mv -f "${src}"/* "${dest}/"
 }
 
+
 function download_and_extract() {
   # tarball-specific atomic extractor.
 
-  # local destdir=$(dirname "$1")
-  # local namespace=$(basename "$1")
-
+  # usage: download_and_extract DESTINATION_DIR LIBNAME VERSION EXTENSION [BASEDIR]
+  # The optional basedir are paths to prune off the top of the unpacked archive.
+  # e.g. "native_libs" as the BASEDIR would
+  #    - unpack the archive to DESTINATION_DIR
+  #    - relocate all files under the 'native_libs' path directly under DESTINATION_DIR
+  [[ $# -lt 2 ]] && exit 2
   local destination="${1}"
   shift
   mkdir -p "${destination}"
 
   # Catch errors and wipe destination dir (already a tempdir but just in case)
   trap "wipe_workspace ${destination} 2" ERR INT
-
 
   local libname="${1}"
   local libversion="${2}"
@@ -126,22 +150,14 @@ function download_and_extract() {
   fi
   local os_namespace="${4:-$OS_NAMESPACE}"
   local arch="${5:-$OS_ARCH}"
-  SCRATCH="${FS_TEMP_FETCHROOT}/scratch_space/${libname}"
-  mkdir -p "${SCRATCH}"
 
   # Find the corresponding archive, which may be cached.
   # If the fetcher exits non-zero, the attempted URL is returned.
   local fetch_args=( "${libname}" "${libversion}" "${ext}" "${os_namespace}" "${arch}" )
   local fetched=$(fetch_remote_source "${FS_REMOTE_SOURCES_URL}" ${fetch_args[@]}) || (echo "${fetched}" && exit 2)
-  local extractdir=$(tempdir "${SCRATCH}" "${libname}.extracted")
 
-  # Sanity check that we do have the archive and then unpack.
-  if [[ -e "${fetched}" ]]; then
-    tar xf "${fetched}" -C "${extractdir}"
-  else
-    echo "${fetched}"
-    exit 2
-  fi
+  local extractdir=$(extract "${libname}" "${fetched}")
+  [[ -e "${extractdir}" ]] || exit 6
   relocate "${extractdir}/${archive_basedir}" "${destination}"
   echo "${destination}"
 }
