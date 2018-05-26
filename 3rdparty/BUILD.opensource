@@ -10,6 +10,8 @@ scala_version = '2.11.8'
 #
 # The jar_library defs in this section are not direct dependencies in our repo - we are using these defs to pin them.
 
+# TODO(mateo): Lets move the managed_dependencies targets to a subfolder and document
+# why a jar is being pinned.
 managed_jar_dependencies(
   name='fsqio-management',
   artifacts=[
