@@ -6,7 +6,6 @@ junit_tests(
   dependencies = [
     '3rdparty:junit',
     '3rdparty:mongodb-drivers',
-    '3rdparty:specs2',
     'src/jvm/io/fsq/rogue/connection',
     'test/jvm/io/fsq/rogue/connection/testlib',
   ],

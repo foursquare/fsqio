@@ -5,8 +5,7 @@ package io.fsq.rogue.connection.testlib.test
 import io.fsq.rogue.connection.MongoIdentifier
 import io.fsq.rogue.connection.testlib.RogueMongoTest
 import java.util.concurrent.atomic.AtomicReference
-import org.junit.{Before, Test}
-import org.specs2.matcher.JUnitMustMatchers
+import org.junit.{Assert, Before, Test}
 
 
 object HarnessTest {
@@ -17,7 +16,7 @@ object HarnessTest {
 }
 
 /** Tests ensuring the thread safety of the MongoTest harness. */
-class HarnessTest extends RogueMongoTest with JUnitMustMatchers {
+class HarnessTest extends RogueMongoTest {
 
   @Before
   override def initClientManagers(): Unit = {
@@ -38,7 +37,7 @@ class HarnessTest extends RogueMongoTest with JUnitMustMatchers {
   def clientConsistencyTest(): Unit = {
     val asyncDbName = asyncClientManager.use(HarnessTest.mongoIdentifier)(_.getName)
     val blockingDbName = blockingClientManager.use(HarnessTest.mongoIdentifier)(_.getName)
-    asyncDbName must_== blockingDbName
+    Assert.assertEquals(asyncDbName, blockingDbName)
   }
 
   /* Ensure expected database name format, foo-<counter>, and that all databases for a
@@ -69,7 +68,18 @@ class HarnessTest extends RogueMongoTest with JUnitMustMatchers {
       )
     }
 
-    asyncClientManager.use(otherMongoIdentifier)(_.getName) must_== s"$otherDbName-$dbId"
+    Assert.assertEquals(
+      s"$otherDbName-$dbId",
+      asyncClientManager.use(otherMongoIdentifier)(_.getName)
+    )
+  }
+
+  /** getClient and getDatabase must return the same db name. */
+  @Test
+  def getClientAndGetDatabaseConsistencyTest(): Unit = {
+    val (_, getClientDbName) = asyncClientManager.getClientOrThrow(HarnessTest.mongoIdentifier)
+    val getDatabaseDbName = asyncClientManager.use(HarnessTest.mongoIdentifier)(_.getName)
+    Assert.assertEquals(getClientDbName, getDatabaseDbName)
   }
 
   /* The way this works is a bit subtle. Essentially, we run two test methods which each
@@ -81,7 +91,7 @@ class HarnessTest extends RogueMongoTest with JUnitMustMatchers {
    */
   private def unusedDbNameCheck(): Unit = {
     asyncClientManager.use(HarnessTest.mongoIdentifier)(db => {
-      HarnessTest.dbNameCache.getAndSet(db.getName) must_!= db.getName
+      Assert.assertNotEquals(HarnessTest.dbNameCache.getAndSet(db.getName), db.getName)
     })
   }
 

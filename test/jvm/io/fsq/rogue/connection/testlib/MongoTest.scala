@@ -4,9 +4,8 @@ package io.fsq.rogue.connection.testlib
 
 import com.mongodb.{MongoClient => BlockingMongoClient}
 import com.mongodb.async.SingleResultCallback
-import com.mongodb.async.client.{MongoClient => AsyncMongoClient, MongoDatabase => AsyncMongoDatabase}
-import com.mongodb.client.{MongoDatabase => BlockingMongoDatabase}
-import io.fsq.rogue.connection.{AsyncMongoClientManager, BlockingMongoClientManager}
+import com.mongodb.async.client.{MongoClient => AsyncMongoClient}
+import io.fsq.rogue.connection.{AsyncMongoClientManager, BlockingMongoClientManager, MongoIdentifier}
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 import org.junit.{After, Before}
@@ -19,16 +18,25 @@ object MongoTest {
 trait MongoTest {
 
   private val dbId = MongoTest.dbIdCounter.incrementAndGet()
+  private def getDbName(dbName: String): String = s"$dbName-$dbId"
 
   val asyncClientManager = new AsyncMongoClientManager {
-    override protected def getDatabase(client: AsyncMongoClient, name: String): AsyncMongoDatabase = {
-      client.getDatabase(s"$name-$dbId")
+    override def defineDb(
+      name: MongoIdentifier,
+      client: AsyncMongoClient,
+      dbName: String
+    ): Option[(AsyncMongoClient, String)] = {
+      super.defineDb(name, client, getDbName(dbName))
     }
   }
 
   val blockingClientManager = new BlockingMongoClientManager {
-    override protected def getDatabase(client: BlockingMongoClient, name: String): BlockingMongoDatabase = {
-      client.getDatabase(s"$name-$dbId")
+    override def defineDb(
+      name: MongoIdentifier,
+      client: BlockingMongoClient,
+      dbName: String
+    ): Option[(BlockingMongoClient, String)] = {
+      super.defineDb(name, client, getDbName(dbName))
     }
   }
 
@@ -55,4 +63,3 @@ trait MongoTest {
     asyncDropLatch.await()
   }
 }
-
