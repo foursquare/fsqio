@@ -1,0 +1,24 @@
+align.tokens = [
+  # Align single line case
+  { code = "=>", owner = Case },
+  # Align named method/constructor call
+  # { code = "=", owner = Term.Assign },
+  # Align parameter types in definition
+  # { code = ":", owner = Term.Param },
+]
+align.arrowEnumeratorGenerator = false
+align.openParenCallSite = false
+align.openParenDefnSite = false
+binPack.literalArgumentLists = true
+binPack.parentConstructors = false
+continuationIndent.callSite = 2
+continuationIndent.defnSite = 2
+continuationIndent.extendSite = 2
+danglingParentheses = true
+docstrings = ScalaDoc
+maxColumn = 120
+spaces.afterTripleEquals = true
+spaces.inImportCurlyBraces = false
+newlines.alwaysBeforeMultilineDef = false
+newlines.penalizeSingleSelectMultiArgList = true
+rewrite.rules = [sortimports, prefercurlyfors]
