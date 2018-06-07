@@ -9,7 +9,6 @@ import java.util.concurrent.Executors
 import javax.mail._
 import javax.mail.internet._
 
-
 trait MailSender {
   def send(to: List[String], cc: List[String], subject: String, message: String): Future[Unit]
 }
@@ -29,12 +28,14 @@ class ConcreteMailSender extends MailSender with Logger {
 
 class LogMailSender extends MailSender with Logger {
   def send(to: List[String], cc: List[String], subject: String, message: String): Future[Unit] = {
-    logger.info("To:\n%s\nCC:\n%s\nSubject:\n%s\n\n%s".format(
-      to.mkString("\n"),
-      cc.mkString("\n"),
-      subject,
-      message
-    ))
+    logger.info(
+      "To:\n%s\nCC:\n%s\nSubject:\n%s\n\n%s".format(
+        to.mkString("\n"),
+        cc.mkString("\n"),
+        subject,
+        message
+      )
+    )
     Future.Unit
   }
 }
@@ -51,12 +52,15 @@ class JavaxMailSender extends MailSender {
   props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory")
   props.put("mail.smtp.socketFactory.fallback", "false")
   props.setProperty("mail.smtp.quitwait", "false")
-  val session = Session.getDefaultInstance(props, new Authenticator() {
-    override def getPasswordAuthentication = new PasswordAuthentication(
-      Config.opt(_.getString("email.user")).getOrElse(""),
-      Config.opt(_.getString("email.password")).orElse(Config.opt(_.getString("email.pass"))).getOrElse("")
-    )
-  })
+  val session = Session.getDefaultInstance(
+    props,
+    new Authenticator() {
+      override def getPasswordAuthentication = new PasswordAuthentication(
+        Config.opt(_.getString("email.user")).getOrElse(""),
+        Config.opt(_.getString("email.password")).orElse(Config.opt(_.getString("email.pass"))).getOrElse("")
+      )
+    }
+  )
 
   def send(to: List[String], cc: List[String], subject: String, message: String): Future[Unit] = {
     val mail = new MimeMessage(session)
@@ -68,7 +72,6 @@ class JavaxMailSender extends MailSender {
     mailFuturePool(Transport.send(mail))
   }
 }
-
 
 class MailAndLogSender extends MailSender {
   val logMailSender = new LogMailSender

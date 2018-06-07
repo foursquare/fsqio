@@ -38,4 +38,3 @@ object Config extends Logger {
   }
   def renderJson(path: String): Option[String] = renderJson(root, path)
 }
-

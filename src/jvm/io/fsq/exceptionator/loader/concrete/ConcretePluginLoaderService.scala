@@ -6,10 +6,9 @@ import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{HasBucketActions, HasNoticeActions, HasUserFilterActions}
 import io.fsq.exceptionator.loader.service.PluginLoaderService
 
-class ConcretePluginLoaderService (
-  services: HasBucketActions
-    with HasNoticeActions
-    with HasUserFilterActions) extends PluginLoaderService with Logger {
+class ConcretePluginLoaderService(services: HasBucketActions with HasNoticeActions with HasUserFilterActions)
+  extends PluginLoaderService
+  with Logger {
 
   def defaultConstruct[T](classNames: Seq[String])(implicit man: Manifest[T]): Seq[T] = {
     val classLoader = getClass.getClassLoader
@@ -23,12 +22,17 @@ class ConcretePluginLoaderService (
     val classLoader = getClass.getClassLoader
     classNames.flatMap(className => {
       logger.info("Loading %s: %s".format(man.runtimeClass.getSimpleName, className))
-      classLoader.loadClass(className).getConstructors.toList.find(_.getParameterTypes match {
-        case Array(t1) => {
-          t1.isInstance(services)
-        }
-        case _ => false
-      }).map(_.newInstance(services).asInstanceOf[T])
+      classLoader
+        .loadClass(className)
+        .getConstructors
+        .toList
+        .find(_.getParameterTypes match {
+          case Array(t1) => {
+            t1.isInstance(services)
+          }
+          case _ => false
+        })
+        .map(_.newInstance(services).asInstanceOf[T])
     })
   }
 }

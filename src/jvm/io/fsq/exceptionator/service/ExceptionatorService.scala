@@ -29,14 +29,12 @@ import org.jboss.netty.handler.codec.http._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
-
 object ServiceUtil {
   def errorResponse(status: HttpResponseStatus) = {
     val response = Response(HttpVersion.HTTP_1_1, status)
     Future.value(response)
   }
 }
-
 
 class StaticFileService(prefix: String) extends Service[ExceptionatorRequest, Response] with Logger {
 
@@ -46,12 +44,11 @@ class StaticFileService(prefix: String) extends Service[ExceptionatorRequest, Re
     val buf = ListBuffer[Byte]()
     var b = is.read()
     while (b != -1) {
-        buf.append(b.byteValue)
-        b = is.read()
+      buf.append(b.byteValue)
+      b = is.read()
     }
     buf.toArray
   }
-
 
   def apply(request: ExceptionatorRequest) = {
     val path = if (request.path.matches("^/(?:css|html|js)/.*")) {
@@ -64,24 +61,29 @@ class StaticFileService(prefix: String) extends Service[ExceptionatorRequest, Re
     logger.info("GET %s from %s".format(path, resourcePath))
     val stream = Option(getClass.getResourceAsStream(resourcePath))
 
-    stream.map(s => staticFileFuturePool(inputStreamToByteArray(s)).map(data => {
-      val response = Response(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
-        response.setContent(ChannelBuffers.copiedBuffer(data))
-        if (path.endsWith(".js")) {
-          response.headerMap.add(HttpHeaders.Names.CONTENT_TYPE, "application/x-javascript")
-        }
-        if (path.endsWith(".css")) {
-          response.headerMap.add(HttpHeaders.Names.CONTENT_TYPE, "text/css")
-        }
-        response
-    })).getOrElse(ServiceUtil.errorResponse(HttpResponseStatus.NOT_FOUND))
+    stream
+      .map(s => {
+        staticFileFuturePool(inputStreamToByteArray(s)).map(data => {
+          val response = Response(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
+          response.setContent(ChannelBuffers.copiedBuffer(data))
+          if (path.endsWith(".js")) {
+            response.headerMap.add(HttpHeaders.Names.CONTENT_TYPE, "application/x-javascript")
+          }
+          if (path.endsWith(".css")) {
+            response.headerMap.add(HttpHeaders.Names.CONTENT_TYPE, "text/css")
+          }
+          response
+        })
+      })
+      .getOrElse(ServiceUtil.errorResponse(HttpResponseStatus.NOT_FOUND))
   }
 }
 
 class ExceptionatorHttpService(
-    fileService: Service[ExceptionatorRequest, Response],
-    apiService: Service[ExceptionatorRequest, Response],
-    incomingService: Service[ExceptionatorRequest, Response]) extends Service[ExceptionatorRequest, Response] {
+  fileService: Service[ExceptionatorRequest, Response],
+  apiService: Service[ExceptionatorRequest, Response],
+  incomingService: Service[ExceptionatorRequest, Response]
+) extends Service[ExceptionatorRequest, Response] {
 
   def apply(request: ExceptionatorRequest) = {
     if (!request.path.startsWith("/api/")) {
@@ -89,8 +91,8 @@ class ExceptionatorHttpService(
     } else {
       // TODO why did i make this hard on myself?
       if (request.method == HttpMethod.POST &&
-          ( request.path.startsWith("/api/notice") ||
-            request.path.startsWith("/api/multi-notice"))) {
+          (request.path.startsWith("/api/notice") ||
+          request.path.startsWith("/api/multi-notice"))) {
         incomingService(request)
       } else {
         apiService(request)
@@ -98,7 +100,6 @@ class ExceptionatorHttpService(
     }
   }
 }
-
 
 object ExceptionatorServer extends Logger {
   val defaultPort = 8080
@@ -110,10 +111,15 @@ object ExceptionatorServer extends Logger {
   def bootMongo(indexesToEnsure: List[IndexActions] = Nil) {
     // Mongo
     val dbServerConfig = Config.opt(_.getString("db.host")).getOrElse(defaultDbHost)
-    val dbServers = dbServerConfig.split(",").toList.map(a => a.split(":") match {
-      case Array(h,p) => new ServerAddress(h, p.toInt)
-      case _ => throw new Exception("didn't understand host " + a)
-    })
+    val dbServers = dbServerConfig
+      .split(",")
+      .toList
+      .map(a => {
+        a.split(":") match {
+          case Array(h, p) => new ServerAddress(h, p.toInt)
+          case _ => throw new Exception("didn't understand host " + a)
+        }
+      })
     val mongoOptions = MongoClientOptions.builder
       .socketTimeout(defaultDbSocketTimeout)
       .build
@@ -124,8 +130,11 @@ object ExceptionatorServer extends Logger {
       indexesToEnsure.foreach(_.ensureIndexes)
     } catch {
       case e: MongoException =>
-        logger.error(e, "Failed ensure indexes on %s because: %s.  Is mongo running?"
-          .format(dbServerConfig, e.getMessage))
+        logger.error(
+          e,
+          "Failed ensure indexes on %s because: %s.  Is mongo running?"
+            .format(dbServerConfig, e.getMessage)
+        )
         throw e
     }
 
@@ -136,16 +145,12 @@ object ExceptionatorServer extends Logger {
     }
   }
 
-
   def main(args: Array[String]) {
     logger.info("Starting ExceptionatorServer")
     Config.defaultInit()
 
-    val services = new HasBucketActions
-        with HasHistoryActions
-        with HasNoticeActions
-        with HasPluginLoaderService
-        with HasUserFilterActions {
+    val services = new HasBucketActions with HasHistoryActions with HasNoticeActions with HasPluginLoaderService
+    with HasUserFilterActions {
       lazy val bucketActions = new ConcreteBucketActions
       lazy val historyActions = new ConcreteHistoryActions(this)
       lazy val noticeActions = new ConcreteNoticeActions
@@ -154,16 +159,13 @@ object ExceptionatorServer extends Logger {
     }
 
     // Create services
-    val incomingActions = new FilteredConcreteIncomingActions(
-      new ConcreteIncomingActions(services))
+    val incomingActions = new FilteredConcreteIncomingActions(new ConcreteIncomingActions(services))
 
     // Start mongo
     try {
-      bootMongo(List(
-        services.bucketActions,
-        services.historyActions,
-        services.noticeActions,
-        services.userFilterActions))
+      bootMongo(
+        List(services.bucketActions, services.historyActions, services.noticeActions, services.userFilterActions)
+      )
     } catch {
       case e: IOException => {
         logger.error(e, "Failed to connect to mongo")
@@ -176,8 +178,7 @@ object ExceptionatorServer extends Logger {
     // Start ostrich
     val runtime = new RuntimeEnvironment(this)
 
-    AdminServiceFactory(
-      httpPort = (Config.opt(_.getInt("stats.port")).getOrElse(defaultStatsPort)))
+    AdminServiceFactory(httpPort = (Config.opt(_.getInt("stats.port")).getOrElse(defaultStatsPort)))
       .addStatsFactory(StatsFactory(reporters = List(TimeSeriesCollectorFactory())))
       .apply(runtime)
 
@@ -185,19 +186,19 @@ object ExceptionatorServer extends Logger {
     val pathPrefix = Config.opt(_.getString("web.pathPrefix")).getOrElse("")
     logger.info("Starting ExceptionatorHttpService on port %d".format(httpPort))
 
-
     // Start Http Service
     val service = ExceptionFilter andThen new DefaultRequestEnricher andThen
       new ExceptionatorHttpService(
         new StaticFileService(pathPrefix),
         new ApiHttpService(services, incomingActions.bucketFriendlyNames),
-        new IncomingHttpService(incomingActions, backgroundActions))
+        new IncomingHttpService(incomingActions, backgroundActions)
+      )
 
     val server: Server = ServerBuilder()
-        .bindTo(new InetSocketAddress(httpPort))
-        .codec(new RichHttp[Request](Http.get))
-        .name("exceptionator-http")
-        .reportTo(new OstrichStatsReceiver)
-        .build(service)
+      .bindTo(new InetSocketAddress(httpPort))
+      .codec(new RichHttp[Request](Http.get))
+      .name("exceptionator-http")
+      .reportTo(new OstrichStatsReceiver)
+      .build(service)
   }
 }

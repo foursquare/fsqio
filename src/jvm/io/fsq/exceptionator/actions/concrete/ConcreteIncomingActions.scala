@@ -15,9 +15,9 @@ import java.util.concurrent.Executors
 import org.joda.time.DateTime
 import scala.collection.JavaConverters._
 
-
 class FilteredConcreteIncomingActions(service: Service[FilteredIncoming, ProcessedIncoming] with IncomingActions)
-  extends Service[FilteredIncoming, ProcessedIncoming] with IncomingActions {
+  extends Service[FilteredIncoming, ProcessedIncoming]
+  with IncomingActions {
 
   def bucketFriendlyNames = service.bucketFriendlyNames
   def registerBucket(spec: BucketSpec) {
@@ -31,7 +31,9 @@ class FilteredConcreteIncomingActions(service: Service[FilteredIncoming, Process
 }
 
 class ConcreteIncomingActions(services: HasBucketActions with HasHistoryActions with HasNoticeActions)
-    extends Service[FilteredIncoming, ProcessedIncoming] with IncomingActions with Logger {
+  extends Service[FilteredIncoming, ProcessedIncoming]
+  with IncomingActions
+  with Logger {
 
   val saveFuturePool = FuturePool(Executors.newFixedThreadPool(10))
   val bucketSpecs = scala.collection.mutable.Map[String, BucketSpec]()
@@ -64,9 +66,7 @@ class ConcreteIncomingActions(services: HasBucketActions with HasHistoryActions 
     // Find really stale buckets that haven't been updated for 60 days. And delete them
     Stats.time("incomingActions.deleteOldBuckets") {
       val toRemove = services.bucketActions.deleteOldBuckets(now)
-      toRemove.foreach(tr => tr.noticesToRemove.foreach(n =>
-        services.noticeActions.removeBucket(n, tr.bucket)
-      ))
+      toRemove.foreach(tr => tr.noticesToRemove.foreach(n => services.noticeActions.removeBucket(n, tr.bucket)))
     }
 
     // Clean up expired notices
@@ -96,16 +96,14 @@ class ConcreteIncomingActions(services: HasBucketActions with HasHistoryActions 
 
     // As long as nothing that already exists invalidates freshness, we call it fresh
     val finalBuckets = {
-      if (!results.exists(r => r.oldResult.isDefined &&
-          bucketSpecs(r.bucket.name).invalidatesFreshness)) {
+      if (!results.exists(r => {
+            r.oldResult.isDefined &&
+              bucketSpecs(r.bucket.name).invalidatesFreshness
+          })) {
 
         val freshKey = BucketId(FreshBucketFilter.name, FreshBucketFilter.key(incoming).get)
 
-        val res = services.bucketActions.save(
-          incomingId,
-          incoming.incoming,
-          freshKey,
-          FreshBucketFilter.maxRecent)
+        val res = services.bucketActions.save(incomingId, incoming.incoming, freshKey, FreshBucketFilter.maxRecent)
 
         Stats.time("incomingActions.add") {
           services.noticeActions.addBucket(incomingId, freshKey)
@@ -117,7 +115,6 @@ class ConcreteIncomingActions(services: HasBucketActions with HasHistoryActions 
     }
 
     val remove = results.flatMap(r => r.noticesToRemove.map(_ -> r.bucket)).toList
-
 
     // Fix up old notices that have been kicked out
     Stats.time("incomingActions.remove") {

@@ -14,22 +14,16 @@ object RollingRank {
       Config.opt(_.getString("rollingRank.tokenizers")).getOrElse("\\s+"),
       Config.opt(_.getString("rollingRank.filter")).map(new Regex(_)),
       Config.opt(_.getString("rollingRank.filterNot")).map(new Regex(_)),
-      Config.opt(_.getInt("rollingRank.windowSize")).getOrElse(1000))
+      Config.opt(_.getInt("rollingRank.windowSize")).getOrElse(1000)
+    )
 }
 
-
-class RollingRank (
-    name: String,
-    tokenizers: String,
-    filter: Option[Regex],
-    filterNot: Option[Regex],
-    windowSize: Int) {
+class RollingRank(name: String, tokenizers: String, filter: Option[Regex], filterNot: Option[Regex], windowSize: Int) {
 
   val seenDocs = new AtomicInteger
   val docFrequency = new ConcurrentHashMap[String, AtomicInteger]()
   val window = Array.fill(windowSize)(Iterable[String]())
   Stats.addGauge("ir.%s.docFrequency.size".format(name)) { docFrequency.size() }
-
 
   def prune(old: Iterable[String]) {
     old.foreach(term => {
@@ -43,9 +37,11 @@ class RollingRank (
   def rank(doc: String): List[(String, Double)] = {
     Stats.incr("ir.%s.seenDocs".format(name))
     //TODO: per-field tokenizers?
-    val terms = doc.split(tokenizers)
+    val terms = doc
+      .split(tokenizers)
       .filterNot(t => filterNot.map(_.pattern.matcher(t).matches).getOrElse(false))
-      .filter(t => filter.map(_.pattern.matcher(t).matches).getOrElse(true)).map(_.toLowerCase)
+      .filter(t => filter.map(_.pattern.matcher(t).matches).getOrElse(true))
+      .map(_.toLowerCase)
     val termCounts: Map[String, Int] = terms.toList.groupBy(term => term).map { case (k, v) => k -> v.length }
 
     val nSeen = seenDocs.getAndIncrement
@@ -54,13 +50,15 @@ class RollingRank (
     prune(window(windowPos))
     window(windowPos) = termCounts.keys
 
-    val res = termCounts.toList.map { case (term, count) => {
-      val currDf = Option(docFrequency.putIfAbsent(term, new AtomicInteger(1))).map(_.incrementAndGet).getOrElse(1)
-      val tf = count.toDouble / terms.length
-      val idf = math.log(nCorpus.toDouble / currDf)
-      val tfidf: Double = tf * idf
-      term -> tfidf
-    }}
+    val res = termCounts.toList.map {
+      case (term, count) => {
+        val currDf = Option(docFrequency.putIfAbsent(term, new AtomicInteger(1))).map(_.incrementAndGet).getOrElse(1)
+        val tf = count.toDouble / terms.length
+        val idf = math.log(nCorpus.toDouble / currDf)
+        val tfidf: Double = tf * idf
+        term -> tfidf
+      }
+    }
     res.sortBy(-_._2)
   }
 }

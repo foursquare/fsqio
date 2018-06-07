@@ -11,18 +11,15 @@ object FilteredIncoming {
   def apply(incoming: Incoming): FilteredIncoming = FilteredIncoming(incoming, Set.empty, Set.empty, Set.empty)
 }
 
-case class FilteredIncoming(
-  incoming: Incoming,
-  tags: Set[String],
-  keywords: Set[String],
-  buckets: Set[BucketId])
+case class FilteredIncoming(incoming: Incoming, tags: Set[String], keywords: Set[String], buckets: Set[BucketId])
 
 case class ProcessedIncoming(
   id: Option[ObjectId],
   incoming: Incoming,
   tags: Set[String],
   keywords: Set[String],
-  buckets: Set[BucketId])
+  buckets: Set[BucketId]
+)
 
 trait BucketSpec {
   def name: String
@@ -43,10 +40,10 @@ abstract class PreSaveFilter extends SimpleFilter[FilteredIncoming, ProcessedInc
  * yields a new service
  */
 class FilteredSaveService(
-    service: Service[FilteredIncoming, ProcessedIncoming],
-    filters: List[PreSaveFilter],
-    registry: Registry)
-    extends Service[FilteredIncoming, ProcessedIncoming] {
+  service: Service[FilteredIncoming, ProcessedIncoming],
+  filters: List[PreSaveFilter],
+  registry: Registry
+) extends Service[FilteredIncoming, ProcessedIncoming] {
 
   val filteredService = filters.foldRight(service)((filter, service) => {
     filter.register(registry)
@@ -55,4 +52,3 @@ class FilteredSaveService(
 
   def apply(incoming: FilteredIncoming): Future[ProcessedIncoming] = filteredService(incoming)
 }
-

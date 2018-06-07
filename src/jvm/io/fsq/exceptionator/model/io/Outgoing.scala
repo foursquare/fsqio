@@ -14,7 +14,6 @@ object Outgoing {
   }
 }
 
-
 trait Outgoing {
   def doc: JValue
   def pretty = net.liftweb.json.pretty(render(doc))

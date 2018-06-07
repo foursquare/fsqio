@@ -12,7 +12,6 @@ import net.liftweb.record.field._
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 
-
 class BucketRecord extends MongoRecord[BucketRecord] {
   def meta = BucketRecord
   override def id = this._id.value
@@ -53,9 +52,7 @@ object BucketRecord extends BucketRecord with MongoMetaRecord[BucketRecord] with
 
   val idIndex = BucketRecord.index(_._id, Asc)
 
-  override val mongoIndexList = Vector(
-    idIndex,
-    BucketRecord.index(_.lastSeen, Asc)) // finding old buckets
+  override val mongoIndexList = Vector(idIndex, BucketRecord.index(_.lastSeen, Asc)) // finding old buckets
 }
 
 object HistogramType {
@@ -113,14 +110,14 @@ class BucketRecordHistogram extends MongoRecord[BucketRecordHistogram] {
 
   def toEpochMap(now: DateTime): Map[String, Int] = {
     val start = startTime(now).getMillis
-    histogram.value.map{ case (k, v) => (start + Hash.fieldNameDecode(k) * histogramType.step).toString -> v }.toMap
+    histogram.value.map { case (k, v) => (start + Hash.fieldNameDecode(k) * histogramType.step).toString -> v }.toMap
   }
 }
 
 object BucketRecordHistogram
-    extends BucketRecordHistogram
-    with MongoMetaRecord[BucketRecordHistogram]
-    with IndexedRecord[BucketRecordHistogram] {
+  extends BucketRecordHistogram
+  with MongoMetaRecord[BucketRecordHistogram]
+  with IndexedRecord[BucketRecordHistogram] {
   override def collectionName = "bucket_histograms"
 
   override val mongoIndexList = Vector(

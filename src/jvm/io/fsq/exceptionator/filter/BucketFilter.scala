@@ -17,7 +17,7 @@ abstract class BucketFilter extends PreSaveFilter with BucketSpec {
 
   def apply(incoming: FilteredIncoming, service: Service[FilteredIncoming, ProcessedIncoming]) = {
     val newIncoming = key(incoming) match {
-      case Some(k) => incoming.copy(buckets=(incoming.buckets + BucketId(name, k)))
+      case Some(k) => incoming.copy(buckets = (incoming.buckets + BucketId(name, k)))
       case _ => incoming
     }
     service(newIncoming)

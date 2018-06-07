@@ -18,12 +18,11 @@ import org.joda.time.DateTime
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.language.postfixOps
 
-
 class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions with IndexActions with Logger {
   val flushPeriod = Config.opt(_.getInt("history.flushPeriod")).getOrElse(60)
   val sampleRate = Config.opt(_.getInt("history.sampleRate")).getOrElse(50)
   val samplers = (new ConcurrentHashMap[DateTime, ReservoirSampler[NoticeRecord]]).asScala
-  val timer = new ScheduledThreadPoolTimer(makeDaemons=true)
+  val timer = new ScheduledThreadPoolTimer(makeDaemons = true)
 
   timer.schedule(flushPeriod seconds, flushPeriod seconds) {
     try {
@@ -37,8 +36,9 @@ class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions 
 
   def ensureIndexes {
     Vector(HistoryRecord).foreach(metaRecord => {
-      metaRecord.mongoIndexList.foreach(i =>
-        metaRecord.createIndex(JObject(i.asListMap.map(fld => JField(fld._1, JInt(fld._2.toString.toInt))).toList)))
+      metaRecord.mongoIndexList.foreach(
+        i => metaRecord.createIndex(JObject(i.asListMap.map(fld => JField(fld._1, JInt(fld._2.toString.toInt))).toList))
+      )
     })
   }
 
@@ -48,7 +48,9 @@ class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions 
       historyId <- samplers.keys
       sampler <- samplers.remove(historyId)
     } {
-      val saved = HistoryRecord.where(_.id eqs historyId).get()
+      val saved = HistoryRecord
+        .where(_.id eqs historyId)
+        .get()
         .filter(_.sampleRate.value == sampler.size)
         .map(existing => {
           logger.debug(s"Merging histories for ${historyId}")
@@ -68,7 +70,8 @@ class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions 
               .earliestExpiration(earliestExpirationOpt)
               .save(true)
           }
-        }).getOrElse {
+        })
+        .getOrElse {
           logger.debug(s"Writing new history for ${historyId}")
           Stats.time("historyActions.flushNew") {
             val state = sampler.state
@@ -113,20 +116,22 @@ class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions 
       .hint(HistoryRecord.bucketIdIndex)
       .get()
 
-    historyOpt.map { history =>
-      // use a view to avoid creating an intermediate collection at each step
-      val notices = history.notices.value.view
-        .dropWhile(_.createDateTime.isAfter(time))
-        .filter(_.buckets.value.exists(buckets.contains(_)))
-        .take(limit)
-        .toList
-      if (notices.size < limit) {
-        // recurse and look at previous records to flush out our list
-        notices ++ getNotices(buckets, history.id.dateTimeValue.minusMillis(1), limit - notices.size)
-      } else {
-        notices
+    historyOpt
+      .map { history =>
+        // use a view to avoid creating an intermediate collection at each step
+        val notices = history.notices.value.view
+          .dropWhile(_.createDateTime.isAfter(time))
+          .filter(_.buckets.value.exists(buckets.contains(_)))
+          .take(limit)
+          .toList
+        if (notices.size < limit) {
+          // recurse and look at previous records to flush out our list
+          notices ++ getNotices(buckets, history.id.dateTimeValue.minusMillis(1), limit - notices.size)
+        } else {
+          notices
+        }
       }
-    }.getOrElse(Nil)
+      .getOrElse(Nil)
   }
 
   def getGroupNotices(name: String, time: DateTime, limit: Int): List[NoticeRecord] = {
@@ -138,20 +143,22 @@ class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions 
       .hint(HistoryRecord.bucketIdIndex)
       .get()
 
-    historyOpt.map { history =>
-      // use a view to avoid creating an intermediate collection at each step
-      val notices = history.notices.value.view
-        .dropWhile(_.createDateTime.isAfter(time))
-        .filter(_.buckets.value.exists(_.startsWith(name + ":")))
-        .take(limit)
-        .toList
-      if (notices.size < limit) {
-        // recurse and look at previous records to flush out our list
-        notices ++ getGroupNotices(name, history.id.dateTimeValue.minusMillis(1), limit - notices.size)
-      } else {
-        notices
+    historyOpt
+      .map { history =>
+        // use a view to avoid creating an intermediate collection at each step
+        val notices = history.notices.value.view
+          .dropWhile(_.createDateTime.isAfter(time))
+          .filter(_.buckets.value.exists(_.startsWith(name + ":")))
+          .take(limit)
+          .toList
+        if (notices.size < limit) {
+          // recurse and look at previous records to flush out our list
+          notices ++ getGroupNotices(name, history.id.dateTimeValue.minusMillis(1), limit - notices.size)
+        } else {
+          notices
+        }
       }
-    }.getOrElse(Nil)
+      .getOrElse(Nil)
   }
 
   def oldestId: Option[DateTime] = HistoryRecord.select(_.id).orderAsc(_.id).get().map(new DateTime(_))

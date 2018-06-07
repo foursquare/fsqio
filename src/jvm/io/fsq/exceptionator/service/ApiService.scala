@@ -18,9 +18,9 @@ import org.json4s.jackson.Serialization
 import scala.collection.JavaConverters._
 
 object ApiHttpService {
-   val Notices = """/api/notices(?:/([^/]+)(?:/([^/?&=]+))?)?""".r
-   val Filters = """/api/filters(?:/([^/]+))?""".r
-   val History = """/api/history/([^/]+)(?:/([^/]+))?/(\d+)""".r
+  val Notices = """/api/notices(?:/([^/]+)(?:/([^/?&=]+))?)?""".r
+  val Filters = """/api/filters(?:/([^/]+))?""".r
+  val History = """/api/history/([^/]+)(?:/([^/]+))?/(\d+)""".r
 }
 
 object InternalResponse {
@@ -31,8 +31,12 @@ object InternalResponse {
   }
 
   def notAuthorized(msgOpt: Option[String] = None): Future[InternalResponse] = {
-    Future.value(InternalResponse(msgOpt.map(msg =>
-      Serialization.write(Map("error" -> msg))).getOrElse(""), HttpResponseStatus.UNAUTHORIZED))
+    Future.value(
+      InternalResponse(
+        msgOpt.map(msg => Serialization.write(Map("error" -> msg))).getOrElse(""),
+        HttpResponseStatus.UNAUTHORIZED
+      )
+    )
   }
 
   def apply(content: String): Future[InternalResponse] = {
@@ -55,7 +59,9 @@ case class InternalResponse(content: String, status: HttpResponseStatus) {
 
 class ApiHttpService(
   services: HasBucketActions with HasHistoryActions with HasNoticeActions with HasUserFilterActions,
-  bucketFriendlyNames: Map[String, String]) extends Service[ExceptionatorRequest, Response] with Logger {
+  bucketFriendlyNames: Map[String, String]
+) extends Service[ExceptionatorRequest, Response]
+  with Logger {
 
   implicit val formats: Formats = DefaultFormats
   val apiFuturePool = FuturePool(Executors.newFixedThreadPool(10))
@@ -104,17 +110,14 @@ class ApiHttpService(
   def recent(bucketName: String, request: Request): Future[InternalResponse] = {
     InternalResponse(apiFuturePool({
       val limit = limitParam(request)
-      val outgoingElems = services.bucketActions.get(
-        services.bucketActions.recentKeys(bucketName, Some(limit)), Some(1), DateTime.now)
+      val outgoingElems =
+        services.bucketActions.get(services.bucketActions.recentKeys(bucketName, Some(limit)), Some(1), DateTime.now)
       val outgoing = Outgoing.compact(outgoingElems.take(limit))
       outgoing
     }))
   }
 
-  def notices(
-    bucketName: Option[String],
-    bucketId: Option[String],
-    request: Request): Future[InternalResponse] = {
+  def notices(bucketName: Option[String], bucketId: Option[String], request: Request): Future[InternalResponse] = {
 
     (bucketName, bucketId) match {
       case (None, None) => recent("s", request)
@@ -134,21 +137,24 @@ class ApiHttpService(
   }
 
   def deleteFilter(keyOpt: Option[String], request: ExceptionatorRequest) = {
-    keyOpt.map(key =>
-      InternalResponse(apiFuturePool({services.userFilterActions.remove(key, request.userId); ""})))
+    keyOpt
+      .map(key => InternalResponse(apiFuturePool({ services.userFilterActions.remove(key, request.userId); "" })))
       .getOrElse(InternalResponse.notFound)
   }
 
   def filters(keyOpt: Option[String], request: ExceptionatorRequest): Future[InternalResponse] = {
-    keyOpt.map(key => {
-      apiFuturePool(services.userFilterActions.get(key)).flatMap(
-        _.map(view => InternalResponse(view.compact))
-          .getOrElse(InternalResponse.notFound))
-    }).getOrElse(
-      InternalResponse(apiFuturePool({
-        UserFilterView.compact(services.userFilterActions.getAll(request.userId))
-      }))
-    )
+    keyOpt
+      .map(key => {
+        apiFuturePool(services.userFilterActions.get(key)).flatMap(
+          _.map(view => InternalResponse(view.compact))
+            .getOrElse(InternalResponse.notFound)
+        )
+      })
+      .getOrElse(
+        InternalResponse(apiFuturePool({
+          UserFilterView.compact(services.userFilterActions.getAll(request.userId))
+        }))
+      )
   }
 
   def saveFilter(request: ExceptionatorRequest): Future[InternalResponse] = {
@@ -158,18 +164,24 @@ class ApiHttpService(
       logger.info("saving filter: %s".format(request.contentString))
       apiFuturePool(services.userFilterActions.save(request.contentString, request.userId.get)).flatMap(
         _.map(view => InternalResponse(view.compact))
-        .getOrElse(InternalResponse.notAuthorized()))
+          .getOrElse(InternalResponse.notAuthorized())
+      )
     }
   }
 
   def config(request: ExceptionatorRequest): Future[InternalResponse] = {
     val values = Map(
       "friendlyNames" -> bucketFriendlyNames,
-      "homepage" -> Config.renderJson("web.homepage").map(Serialization.read[List[_]](_)).getOrElse(
-        List(
-          Map("list" -> Map("bucketName" -> "all"), "view" -> Map("showList" -> false)),
-          Map("list" -> Map("bucketName" -> "s")
-        )))) ++
+      "homepage" -> Config
+        .renderJson("web.homepage")
+        .map(Serialization.read[List[_]](_))
+        .getOrElse(
+          List(
+            Map("list" -> Map("bucketName" -> "all"), "view" -> Map("showList" -> false)),
+            Map("list" -> Map("bucketName" -> "s"))
+          )
+        )
+    ) ++
       request.userId.map("userId" -> _).toMap ++
       Config.opt(_.getInt("http.port")).map("apiPort" -> _).toMap ++
       Config.opt(_.getString("http.hostname")).map("apiHost" -> _).toMap
@@ -183,11 +195,8 @@ class ApiHttpService(
     request: Request
   ): Future[InternalResponse] = {
     InternalResponse(apiFuturePool({
-      val outgoingElems = services.historyActions.get(
-        bucketName,
-        bucketKey,
-        new DateTime(timestamp),
-        limitParam(request))
+      val outgoingElems =
+        services.historyActions.get(bucketName, bucketKey, new DateTime(timestamp), limitParam(request))
       Outgoing.compact(outgoingElems)
     }))
   }

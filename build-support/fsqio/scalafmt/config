@@ -1,6 +1,6 @@
 align.tokens = [
   # Align single line case
-  { code = "=>", owner = Case },
+  # { code = "=>", owner = Case },
   # Align named method/constructor call
   # { code = "=", owner = Term.Assign },
   # Align parameter types in definition

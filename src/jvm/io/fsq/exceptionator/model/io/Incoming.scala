@@ -12,7 +12,7 @@ object BacktraceLine {
   }
 }
 
-case class BacktraceLine(method: String, fileName: String, number:Int) {
+case class BacktraceLine(method: String, fileName: String, number: Int) {
   def isValid = number > 0
 }
 
@@ -37,7 +37,7 @@ case class Incoming(
   def firstInteresting: Option[BacktraceLine] =
     flatBacktrace.find(l => isInteresting(l)).map(l => BacktraceLine(l))
   def firstNInteresting(n: Int): List[BacktraceLine] =
-    flatBacktrace.filter(l => isInteresting(l)).slice(0,n).map(l => BacktraceLine(l))
+    flatBacktrace.filter(l => isInteresting(l)).slice(0, n).map(l => BacktraceLine(l))
   def isInteresting(l: String): Boolean = {
     RegexUtil.matchesNoPatterns(l, "backtrace.interesting.filterNot") &&
     RegexUtil.matchesAPattern(l, "backtrace.interesting.filter")

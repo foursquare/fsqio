@@ -12,7 +12,6 @@ import net.liftweb.record.field._
 import org.joda.time.DateTime
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 
-
 /** Stores one minute of sampled history. Uses the starting timestamp as its _id. */
 class HistoryRecord extends MongoRecord[HistoryRecord] {
   def meta = HistoryRecord
@@ -60,7 +59,7 @@ object HistoryRecord extends HistoryRecord with MongoMetaRecord[HistoryRecord] w
   val windowMillis = windowSecs * 1000L
 
   // round <base> down to 0 mod <mod>
-  def roundMod(base: Long, mod: Long): Long = (base/mod) * mod
+  def roundMod(base: Long, mod: Long): Long = (base / mod) * mod
   def idForTime(date: DateTime): DateTime = new DateTime(roundMod(date.getMillis, windowMillis))
 
   val bucketIdIndex = HistoryRecord.index(_.buckets, Asc, _.id, Desc)

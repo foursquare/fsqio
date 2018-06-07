@@ -9,13 +9,12 @@ import io.fsq.exceptionator.loader.service.HasPluginLoaderService
 import io.fsq.exceptionator.util.Config
 import scala.collection.JavaConverters._
 
+class ConcreteBackgroundActions(services: HasPluginLoaderService) extends BackgroundActions {
 
-class ConcreteBackgroundActions(
-  services: HasPluginLoaderService) extends BackgroundActions {
-
-  val actions = services.pluginLoader.serviceConstruct[BackgroundAction](
-    Config.root.getStringList("incoming.postSaveActions").asScala)
+  val actions = services.pluginLoader
+    .serviceConstruct[BackgroundAction](Config.root.getStringList("incoming.postSaveActions").asScala)
 
   def postSave(processedIncoming: ProcessedIncoming): List[Future[Unit]] = {
     actions.map(_.postSave(processedIncoming)).toList
-  }}
+  }
+}

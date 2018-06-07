@@ -39,20 +39,23 @@ object Process {
 
     val out = Process.processFuturePool(readerIterator(outStream).toList)
     val err = Process.processFuturePool(readerIterator(errStream).toList)
-    Future.collect(List(out, err)).flatMap(s => {
-      outStream.close()
-      errStream.close()
-      Process.processFuturePool(p.waitFor).map(_ match {
-        case 0 => ProcessResult(0, s(0), s(1))
-        case code => throw new IOException("Process failed: %s in %s returned %d with:\n%s".format(
-          command.mkString(" "),
-          wd.toString,
-          code,
-          s(1).mkString))
+    Future
+      .collect(List(out, err))
+      .flatMap(s => {
+        outStream.close()
+        errStream.close()
+        Process
+          .processFuturePool(p.waitFor)
+          .map(_ match {
+            case 0 => ProcessResult(0, s(0), s(1))
+            case code =>
+              throw new IOException(
+                "Process failed: %s in %s returned %d with:\n%s"
+                  .format(command.mkString(" "), wd.toString, code, s(1).mkString)
+              )
+          })
       })
-    })
   }
 }
-
 
 case class ProcessResult(code: Int, out: List[String], err: List[String])

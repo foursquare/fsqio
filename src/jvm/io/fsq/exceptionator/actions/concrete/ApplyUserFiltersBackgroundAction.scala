@@ -14,10 +14,8 @@ import org.joda.time.DateTime
 import scala.collection.GenSet
 import scala.collection.JavaConverters._
 
-class ApplyUserFiltersBackgroundAction (
-  services: HasBucketActions
-    with HasNoticeActions
-    with HasUserFilterActions) extends EmailExceptionBackgroundAction {
+class ApplyUserFiltersBackgroundAction(services: HasBucketActions with HasNoticeActions with HasUserFilterActions)
+  extends EmailExceptionBackgroundAction {
 
   val mongoCmdFuturePool = FuturePool(Executors.newFixedThreadPool(10))
 
@@ -29,7 +27,8 @@ class ApplyUserFiltersBackgroundAction (
   def hasAll(
     filterType: FilterType.Value,
     criteriaOpt: Option[List[String]],
-    processedIncoming: ProcessedIncoming): Boolean = {
+    processedIncoming: ProcessedIncoming
+  ): Boolean = {
 
     import FilterType._
     val valuesOpt: Option[GenSet[String]] = filterType match {
@@ -48,7 +47,7 @@ class ApplyUserFiltersBackgroundAction (
 
   def applyFilters(processedIncoming: ProcessedIncoming): Future[Seq[(UserFilterRecord, BucketId)]] = {
     val applicable = filters.get
-      // has criteria
+    // has criteria
       .filter(f => hasAll(f.filterType.value, f.criteria.valueBox, processedIncoming))
 
       // success!
@@ -70,16 +69,12 @@ class ApplyUserFiltersBackgroundAction (
             services.noticeActions.addBucket(id, bucket)
           })
 
-
           val res: Future[(UserFilterRecord, BucketId)] = mongoCmdFuturePool({
-            val saveRes = services.bucketActions.save(
-              id,
-              processedIncoming.incoming,
-              bucket,
-              60)
+            val saveRes = services.bucketActions.save(id, processedIncoming.incoming, bucket, 60)
             // Delete old notifications
-            saveRes.noticesToRemove.map(_ -> saveRes.bucket).foreach(bucketRemoval =>
-              services.noticeActions.removeBucket(bucketRemoval._1, bucketRemoval._2))
+            saveRes.noticesToRemove
+              .map(_ -> saveRes.bucket)
+              .foreach(bucketRemoval => services.noticeActions.removeBucket(bucketRemoval._1, bucketRemoval._2))
 
             (f, saveRes.bucket)
           })
@@ -87,14 +82,15 @@ class ApplyUserFiltersBackgroundAction (
           res
         })
       })
-      Future.collect(applicable)
+    Future.collect(applicable)
 
   }
 
   def meetsTriggerCriteria(
     processedIncoming: ProcessedIncoming,
     filter: UserFilterRecord,
-    filterBucket: BucketId): Future[Boolean] = {
+    filterBucket: BucketId
+  ): Future[Boolean] = {
 
     logger.info("trigger %s %s".format(filter, filterBucket))
 
@@ -107,18 +103,22 @@ class ApplyUserFiltersBackgroundAction (
       case NeverTrigger => Future.value(false)
       case PowerOfTwoTrigger => Future.value(filterBucket.count.exists(c => (c & (c - 1)) == 0))
       case PeriodicTrigger =>
-        Future.value(filter.triggerPeriod.valueBox.map((triggerPeriod: Int) => {
-          processedIncoming.id.exists(_.getTimestamp * 1000L > filter.lastMatched.value + triggerPeriod * 60L * 1000L)
-        }).getOrElse({
-          logger.error("Expected a triggerPeriod on %s".format(filter))
-          false
-        }))
+        Future.value(
+          filter.triggerPeriod.valueBox
+            .map((triggerPeriod: Int) => {
+              processedIncoming.id
+                .exists(_.getTimestamp * 1000L > filter.lastMatched.value + triggerPeriod * 60L * 1000L)
+            })
+            .getOrElse({
+              logger.error("Expected a triggerPeriod on %s".format(filter))
+              false
+            })
+        )
       case ThresholdTrigger =>
         // Get a list of 60 ints (past hour) head is 60 mins ago, tail is now
         mongoCmdFuturePool(
-          services.bucketActions.lastHourHistogram(
-            filterBucket,
-            new DateTime(processedIncoming.id.get.getTimestamp * 1000L))
+          services.bucketActions
+            .lastHourHistogram(filterBucket, new DateTime(processedIncoming.id.get.getTimestamp * 1000L))
         ).map(h => {
           (for {
             triggerPeriod <- filter.triggerPeriod.valueBox
@@ -150,7 +150,7 @@ class ApplyUserFiltersBackgroundAction (
 
   def triggerMute(filter: UserFilterRecord, until: Long) {
     // If there isn't a mute further into the future, then set
-    if (! filter.muteUntil.valueBox.exists(_ > until)) {
+    if (!filter.muteUntil.valueBox.exists(_ > until)) {
       logger.info("automated mute: %s until %s".format(filter.id.toString, new DateTime(until).toString()))
       filter.muteUntil(until)
       mongoCmdFuturePool({
@@ -161,47 +161,47 @@ class ApplyUserFiltersBackgroundAction (
 
   def shouldEmail(processedIncoming: ProcessedIncoming): Future[Option[SendInfo]] = {
     applyFilters(processedIncoming).flatMap(applied => {
-      Future.collect(applied
-        // filter mute
-        .filter { case (f, b) =>
-           f.muteUntil.valueBox.map(m => processedIncoming.id.exists(_.getTimestamp * 1000L > m)).getOrElse(true)
-        }.map {
-        case (f, b) => meetsTriggerCriteria(processedIncoming, f, b).map((isTriggered: Boolean) => {
-          logger.info("isTriggered: %s %s".format(isTriggered, f))
-          if (isTriggered) {
-            Some(f, b)
-          } else {
-            None
+      Future
+        .collect(
+          applied
+          // filter mute
+            .filter {
+              case (f, b) =>
+                f.muteUntil.valueBox.map(m => processedIncoming.id.exists(_.getTimestamp * 1000L > m)).getOrElse(true)
+            }
+            .map {
+              case (f, b) =>
+                meetsTriggerCriteria(processedIncoming, f, b).map((isTriggered: Boolean) => {
+                  logger.info("isTriggered: %s %s".format(isTriggered, f))
+                  if (isTriggered) {
+                    Some(f, b)
+                  } else {
+                    None
+                  }
+                })
+            }
+        )
+        .map(_.flatten.unzip3 {
+          case (filter, filterBucket) => {
+            val filterLinkMessage = "Generated by filter:  http://%s/filters/%s (owner: %s)"
+              .format(prettyHost, filter.id, filter.userId.value)
+
+            val filterBucketMessage = "Matched exceptions: http://%s/notices/uf/%s %s"
+              .format(prettyHost, filter.id, filterBucket.count.map("now at %d".format(_)).getOrElse(""))
+
+            val res = (
+              "%s\n%s".format(filterLinkMessage, filterBucketMessage),
+              filter.userId.value,
+              filter.cc.value
+            )
+            res
           }
         })
-      }).map(_.flatten.unzip3 {
-        case (filter, filterBucket) => {
-          val filterLinkMessage = "Generated by filter:  http://%s/filters/%s (owner: %s)".format(
-            prettyHost,
-            filter.id,
-            filter.userId.value)
-
-
-          val filterBucketMessage = "Matched exceptions: http://%s/notices/uf/%s %s".format(
-            prettyHost,
-            filter.id,
-            filterBucket.count.map("now at %d".format(_)).getOrElse(""))
-
-          val res = (
-            "%s\n%s".format(filterLinkMessage, filterBucketMessage),
-            filter.userId.value,
-            filter.cc.value
-          )
-          res
-        }
-      }).map(_ match {
-        case (Nil, Nil, Nil) => None
-        case (infoList, toList, ccList) =>
-          Some(SendInfo(
-            infoList.mkString("\n"),
-            toList.toSet.toList,
-            ccList.flatten.toSet.toList))
-      })
+        .map(_ match {
+          case (Nil, Nil, Nil) => None
+          case (infoList, toList, ccList) =>
+            Some(SendInfo(infoList.mkString("\n"), toList.toSet.toList, ccList.flatten.toSet.toList))
+        })
     })
   }
 }

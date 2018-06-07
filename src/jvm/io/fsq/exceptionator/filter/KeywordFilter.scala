@@ -8,10 +8,9 @@ abstract class KeywordFilter extends PreSaveFilter {
   def register(registry: Registry) {}
 
   def apply(incoming: FilteredIncoming, service: Service[FilteredIncoming, ProcessedIncoming]) = {
-    val newIncoming = incoming.copy(keywords=(incoming.keywords ++ keywords(incoming)))
+    val newIncoming = incoming.copy(keywords = (incoming.keywords ++ keywords(incoming)))
     service(newIncoming)
   }
 
   def keywords(incoming: FilteredIncoming): Set[String]
 }
-

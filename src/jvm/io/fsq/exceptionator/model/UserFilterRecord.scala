@@ -11,7 +11,6 @@ import net.liftweb.mongodb.record.field.{MongoListField, ObjectIdPk}
 import net.liftweb.record.field._
 import org.joda.time.{DateTime, DateTimeZone}
 
-
 // TODO make a bucket for the filter to keep track of rate?
 // A bit hard because we have to loop back and add it.
 
@@ -107,7 +106,5 @@ object UserFilterRecord
   with IndexedRecord[UserFilterRecord] {
   override def collectionName = "user_filters"
 
-  override val mongoIndexList = Vector(
-    UserFilterRecord.index(_.id, Asc),
-    UserFilterRecord.index(_.userId, Asc))
+  override val mongoIndexList = Vector(UserFilterRecord.index(_.id, Asc), UserFilterRecord.index(_.userId, Asc))
 }

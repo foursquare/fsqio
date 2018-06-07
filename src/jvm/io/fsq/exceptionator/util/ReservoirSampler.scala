@@ -6,7 +6,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 import scala.util.Random
 
-
 /**
   * Samples size objects of type T uniformly
   * See: http://en.wikipedia.org/wiki/Reservoir_sampling
@@ -70,7 +69,7 @@ object ReservoirSampler {
 
     if (r1Sampled >= size && r2Sampled >= size) {
       val (fromR1, fromR2) = {
-        val r1Ratio = r1Sampled.toDouble / (r1Sampled+r2Sampled)
+        val r1Ratio = r1Sampled.toDouble / (r1Sampled + r2Sampled)
         val r1ExactNum = r1Ratio * size
         val r1Remainder = r1ExactNum - r1ExactNum.toInt
         val r1Extra = if (Random.nextDouble < r1Remainder) 1 else 0
@@ -79,7 +78,7 @@ object ReservoirSampler {
       }
       val r1Take = Random.shuffle(r1Samples.iterator).take(fromR1)
       val r2Take = Random.shuffle(r2Samples.iterator).take(fromR2)
-      val mergedState = State((r1Take++r2Take).toSeq, r1Sampled+r2Sampled)
+      val mergedState = State((r1Take ++ r2Take).toSeq, r1Sampled + r2Sampled)
       ReservoirSampler(size, mergedState)
     } else if (r1Sampled >= size) {
       mergeNotFull(r1, r2)

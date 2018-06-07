@@ -21,7 +21,8 @@ trait BucketActions extends IndexActions {
     now: DateTime,
     includeMonth: Boolean,
     includeDay: Boolean,
-    includeHour: Boolean): List[BucketRecordHistogram]
+    includeHour: Boolean
+  ): List[BucketRecordHistogram]
   def recentKeys(name: String, limit: Option[Int]): List[String]
   def lastHourHistogram(id: BucketId, now: DateTime): List[Int]
   def save(incomingId: ObjectId, incoming: Incoming, bucket: BucketId, maxRecent: Int): SaveResult

@@ -16,16 +16,15 @@ import org.joda.time.DateTime
 import scala.collection.JavaConverters._
 import scala.collection.immutable.NumericRange
 
-
 class ConcreteBucketActions extends BucketActions with IndexActions with Logger {
   var currentTime: Long = 0
   var lastHistogramTrim: Long = 0
 
-
   def ensureIndexes {
     Vector(BucketRecord, BucketRecordHistogram).foreach(metaRecord => {
-        metaRecord.mongoIndexList.foreach(i =>
-          metaRecord.createIndex(JObject(i.asListMap.map(fld => JField(fld._1, JInt(fld._2.toString.toInt))).toList)))
+      metaRecord.mongoIndexList.foreach(
+        i => metaRecord.createIndex(JObject(i.asListMap.map(fld => JField(fld._1, JInt(fld._2.toString.toInt))).toList))
+      )
     })
   }
 
@@ -34,14 +33,15 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
     now: DateTime,
     includeMonth: Boolean,
     includeDay: Boolean,
-    includeHour: Boolean): List[BucketRecordHistogram] = {
+    includeHour: Boolean
+  ): List[BucketRecordHistogram] = {
 
     def monthFmt(t: DateTime) = Hash.fieldNameEncode(t.getMonthOfYear)
     def dayFmt(t: DateTime) = Hash.fieldNameEncode(t.getMonthOfYear) + Hash.fieldNameEncode(t.getDayOfMonth)
     def hourFmt(t: DateTime) = {
       Hash.fieldNameEncode(t.getMonthOfYear) +
-      Hash.fieldNameEncode(t.getDayOfMonth) +
-      Hash.fieldNameEncode(t.getHourOfDay)
+        Hash.fieldNameEncode(t.getDayOfMonth) +
+        Hash.fieldNameEncode(t.getHourOfDay)
     }
 
     // We want to show the last hour, last day, last month, but that will always span
@@ -49,64 +49,75 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
     val bucketHistogramIds: Set[String] = (
       // Last 2 months
       (if (includeMonth) {
-        Set(now.minusMonths(1), now).map(monthFmt _)
-        .flatMap(month => ids.map("%s:%s".format(month, _)))
-      } else {
-        Set.empty
-      })
+         Set(now.minusMonths(1), now)
+           .map(monthFmt _)
+           .flatMap(month => ids.map("%s:%s".format(month, _)))
+       } else {
+         Set.empty
+       })
 
-      ++
+        ++
 
-      // Last 2 days
-      (if (includeDay) {
-      Set(now.minusDays(1), now).map(dayFmt _)
-        .flatMap(day => ids.map("%s:%s".format(day, _)))
-      } else {
-        Set.empty
-      })
+          // Last 2 days
+          (if (includeDay) {
+             Set(now.minusDays(1), now)
+               .map(dayFmt _)
+               .flatMap(day => ids.map("%s:%s".format(day, _)))
+           } else {
+             Set.empty
+           })
 
-      ++
+        ++
 
-      // Last 2 hours
-      (if (includeHour) {
-        Set(now.minusHours(1), now).map(hourFmt _)
-        .flatMap(hour => ids.map("%s:%s".format(hour, _)))
-      } else {
-        Set.empty
-      })
+          // Last 2 hours
+          (if (includeHour) {
+             Set(now.minusHours(1), now)
+               .map(hourFmt _)
+               .flatMap(hour => ids.map("%s:%s".format(hour, _)))
+           } else {
+             Set.empty
+           })
     )
     BucketRecordHistogram.where(_._id in bucketHistogramIds).fetch
   }
 
   def get(ids: List[String], noticesPerBucketLimit: Option[Int], now: DateTime): List[Outgoing] = {
     val buckets = BucketRecord.where(_._id in ids).fetch
-    val noticeIds = buckets.flatMap(bucket => {
-      noticesPerBucketLimit match {
-        case Some(limit) => bucket.notices.value.takeRight(limit)
-        case None => bucket.notices.value
-      }
-    }).toSet
+    val noticeIds = buckets
+      .flatMap(bucket => {
+        noticesPerBucketLimit match {
+          case Some(limit) => bucket.notices.value.takeRight(limit)
+          case None => bucket.notices.value
+        }
+      })
+      .toSet
 
     val histograms = getHistograms(ids, now, true, true, true)
     val notices = NoticeRecord.where(_.id in noticeIds).fetch
-    notices.sortBy(_.id.value).reverse.map(n => {
-      val nbSet = n.buckets.value.toSet
-      val noticeBuckets = buckets.filter(b => nbSet(b.id))
-      val noticeBucketRecordHistograms = histograms.filter(h => nbSet(h.bucket))
-      MongoOutgoing(n).addBuckets(noticeBuckets, noticeBucketRecordHistograms, now)
-    })
+    notices
+      .sortBy(_.id.value)
+      .reverse
+      .map(n => {
+        val nbSet = n.buckets.value.toSet
+        val noticeBuckets = buckets.filter(b => nbSet(b.id))
+        val noticeBucketRecordHistograms = histograms.filter(h => nbSet(h.bucket))
+        MongoOutgoing(n).addBuckets(noticeBuckets, noticeBucketRecordHistograms, now)
+      })
   }
 
   def lastHourHistogram(id: BucketId, now: DateTime): List[Int] = {
     val fullMap = getHistograms(List(id.toString), now, false, false, true)
       .map(_.toEpochMap(now))
-      .foldLeft(Map[String,Int]()){_ ++ _}
-    val oneHourAgo = now.minusHours(1)
+      .foldLeft(Map[String, Int]()) { _ ++ _ }
+    val oneHourAgo = now
+      .minusHours(1)
       .withSecondOfMinute(0)
       .withMillisOfSecond(0)
-    NumericRange[Long](oneHourAgo.getMillis, oneHourAgo.plusHours(1).getMillis, 60 * 1000L).map(t => {
-      fullMap.get(t.toString).getOrElse(0)
-    }).toList
+    NumericRange[Long](oneHourAgo.getMillis, oneHourAgo.plusHours(1).getMillis, 60 * 1000L)
+      .map(t => {
+        fullMap.get(t.toString).getOrElse(0)
+      })
+      .toList
   }
 
   def get(name: String, key: String, now: DateTime) = {
@@ -114,15 +125,14 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
   }
 
   def recentKeys(name: String, limit: Option[Int]): List[String] = {
-    BucketRecord.where(_._id startsWith name + ":")
+    BucketRecord
+      .where(_._id startsWith name + ":")
       .select(_._id)
       .orderDesc(_.lastSeen)
       .limitOpt(limit)
       .hint(BucketRecord.idIndex)
       .fetch
   }
-
-
 
   def save(incomingId: ObjectId, incoming: Incoming, bucket: BucketId, maxRecent: Int): SaveResult = {
     val n = incoming.n.getOrElse(1)
@@ -135,18 +145,22 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
     val bucketKey = bucket.toString
 
     val existing = Stats.time("bucketActions.save.updateBucket") {
-      BucketRecord.where(_._id eqs bucketKey)
+      BucketRecord
+        .where(_._id eqs bucketKey)
         .findAndModify(_.noticeCount inc n)
         .and(_.lastSeen setTo incomingId.getTimestamp * 1000L)
         .and(_.lastVersion setTo incoming.v)
-        .and(_.notices push incomingId).upsertOne()
+        .and(_.notices push incomingId)
+        .upsertOne()
     }
 
     if (!existing.isDefined) {
       Stats.time("bucketActions.save.upsertBucket") {
-        BucketRecord.where(_._id eqs bucketKey)
-         .modify(_.firstSeen setTo incomingId.getTimestamp * 1000L)
-         .modify(_.firstVersion setTo incoming.v).upsertOne()
+        BucketRecord
+          .where(_._id eqs bucketKey)
+          .modify(_.firstSeen setTo incomingId.getTimestamp * 1000L)
+          .modify(_.firstVersion setTo incoming.v)
+          .upsertOne()
       }
     }
 
@@ -175,10 +189,7 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
 
     val oldNoticeCount = existing.map(_.noticeCount.value).getOrElse(0)
 
-    SaveResult(
-      bucket.count(oldNoticeCount + 1),
-      existing.map(b => BucketId(b.id, oldNoticeCount)),
-      noticesToRemove)
+    SaveResult(bucket.count(oldNoticeCount + 1), existing.map(b => BucketId(b.id, oldNoticeCount)), noticesToRemove)
   }
 
   override def deleteOldHistograms(time: DateTime, doIt: Boolean = true): Unit = {
@@ -188,19 +199,26 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
 
     val oldMonthField = Hash.fieldNameEncode(oldMonth.getMonthOfYear)
 
-    val oldDaysPattern = Pattern.compile("^%s[%s]".format(
-      Hash.fieldNameEncode(oldDay.getMonthOfYear),
-      (0 to oldDay.getDayOfMonth).map(Hash.fieldNameEncode _).mkString("")))
+    val oldDaysPattern = Pattern.compile(
+      "^%s[%s]".format(
+        Hash.fieldNameEncode(oldDay.getMonthOfYear),
+        (0 to oldDay.getDayOfMonth).map(Hash.fieldNameEncode _).mkString("")
+      )
+    )
 
-    val oldHoursPattern = Pattern.compile("^%s%s[%s]".format(
-      Hash.fieldNameEncode(oldHour.getMonthOfYear),
-      Hash.fieldNameEncode(oldHour.getDayOfMonth),
-      (0 to oldHour.getHourOfDay).map(Hash.fieldNameEncode _).mkString("")))
+    val oldHoursPattern = Pattern.compile(
+      "^%s%s[%s]".format(
+        Hash.fieldNameEncode(oldHour.getMonthOfYear),
+        Hash.fieldNameEncode(oldHour.getDayOfMonth),
+        (0 to oldHour.getHourOfDay).map(Hash.fieldNameEncode _).mkString("")
+      )
+    )
 
     val deleteQueries = List(
       BucketRecordHistogram.where(_._id startsWith oldMonthField),
       BucketRecordHistogram.where(_._id matches oldDaysPattern),
-      BucketRecordHistogram.where(_._id matches oldHoursPattern))
+      BucketRecordHistogram.where(_._id matches oldHoursPattern)
+    )
 
     deleteQueries.foreach(q => {
       logger.debug("deleting: %s".format(q))

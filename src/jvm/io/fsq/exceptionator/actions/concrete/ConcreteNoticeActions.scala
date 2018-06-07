@@ -31,13 +31,15 @@ class ConcreteNoticeActions extends NoticeActions with IndexActions with Logger 
 
   def ensureIndexes {
     Vector(NoticeRecord).foreach(metaRecord => {
-      metaRecord.mongoIndexList.foreach(i =>
-        metaRecord.createIndex(JObject(i.asListMap.map(fld => JField(fld._1, JInt(fld._2.toString.toInt))).toList)))
+      metaRecord.mongoIndexList.foreach(
+        i => metaRecord.createIndex(JObject(i.asListMap.map(fld => JField(fld._1, JInt(fld._2.toString.toInt))).toList))
+      )
     })
   }
 
   def save(incoming: Incoming, tags: Set[String], keywords: Set[String], buckets: Set[BucketId]): NoticeRecord = {
-    NoticeRecord.createRecordFrom(incoming)
+    NoticeRecord
+      .createRecordFrom(incoming)
       .keywords(keywords.toList)
       .tags(tags.toList)
       .buckets(buckets.toList.map(_.toString))
@@ -52,9 +54,11 @@ class ConcreteNoticeActions extends NoticeActions with IndexActions with Logger 
 
   def removeBucket(id: ObjectId, bucketId: BucketId) {
     val result = Stats.time("noticeActions.removeBucket") {
-      NoticeRecord.where(_.id eqs id)
-      .select(_.buckets)
-      .findAndModify(_.buckets pull bucketId.toString).updateOne(true)
+      NoticeRecord
+        .where(_.id eqs id)
+        .select(_.buckets)
+        .findAndModify(_.buckets pull bucketId.toString)
+        .updateOne(true)
     }
 
     if (result.exists(_.isEmpty)) {

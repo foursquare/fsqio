@@ -48,7 +48,7 @@ object FreshBucketFilter extends BucketFilter {
   def friendlyName = "fresh"
   override def maxRecent = 100
   override def invalidatesFreshness = false
-  def key(incoming: FilteredIncoming)  = Some("fresh")
+  def key(incoming: FilteredIncoming) = Some("fresh")
 }
 
 class IncomingTagsFilter extends TagFilter {

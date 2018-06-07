@@ -16,4 +16,3 @@ trait BackgroundAction {
 trait BackgroundActions {
   def postSave(processedIncoming: ProcessedIncoming): List[Future[Unit]]
 }
-

@@ -18,4 +18,3 @@ trait UserFilterView {
   def pretty = net.liftweb.json.pretty(render(doc))
   def compact = net.liftweb.json.compact(render(doc))
 }
-

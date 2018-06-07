@@ -6,7 +6,6 @@ import io.fsq.exceptionator.model.NoticeRecord
 import io.fsq.exceptionator.model.io.Outgoing
 import org.joda.time.DateTime
 
-
 trait HasHistoryActions {
   def historyActions: HistoryActions
 }

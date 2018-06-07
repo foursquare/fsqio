@@ -19,7 +19,7 @@ class ConfiguredIncomingFilter extends PreSaveFilter {
     if (filterRes.exists(_.allowed == Some(false))) {
       Future.value(ProcessedIncoming(None, incoming.incoming, incoming.tags, incoming.keywords, incoming.buckets))
     } else {
-      service.apply(incoming.copy(incoming=filteredIncoming))
+      service.apply(incoming.copy(incoming = filteredIncoming))
     }
   }
 }
