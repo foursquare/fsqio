@@ -31,4 +31,5 @@ project.excludeFilters = [
   "/repl/"
   # This file crashes Scalafmt beyond recovery :(
   "/RequestBaseTest.scala"
+  "/gen/"
 ]
