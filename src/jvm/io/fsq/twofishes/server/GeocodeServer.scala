@@ -14,10 +14,25 @@ import com.vividsolutions.jts.io.WKTWriter
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.spindle.common.thrift.json.TReadableJSONProtocol
 import io.fsq.spindle.runtime.{MetaRecord, Record}
-import io.fsq.twofishes.gen.{AutocompleteBias, BulkReverseGeocodeRequest, BulkReverseGeocodeResponse,
-    BulkSlugLookupRequest, BulkSlugLookupResponse, CommonGeocodeRequestParams, GeocodePoint, GeocodeRequest,
-    GeocodeResponse, Geocoder, RefreshStoreRequest, RefreshStoreResponse, ResponseIncludes, S2CellIdInfo,
-    S2CellInfoRequest, S2CellInfoResponse, YahooWoeType}
+import io.fsq.twofishes.gen.{
+  AutocompleteBias,
+  BulkReverseGeocodeRequest,
+  BulkReverseGeocodeResponse,
+  BulkSlugLookupRequest,
+  BulkSlugLookupResponse,
+  CommonGeocodeRequestParams,
+  GeocodePoint,
+  GeocodeRequest,
+  GeocodeResponse,
+  Geocoder,
+  RefreshStoreRequest,
+  RefreshStoreResponse,
+  ResponseIncludes,
+  S2CellIdInfo,
+  S2CellInfoRequest,
+  S2CellInfoResponse,
+  YahooWoeType
+}
 import io.fsq.twofishes.util.{Helpers, RingBuffer, ShapefileS2Util}
 import java.io.{ByteArrayOutputStream, InputStream}
 import java.net.InetSocketAddress
@@ -45,28 +60,39 @@ class QueryLogHttpHandler(
     val response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
     val currentTime = System.currentTimeMillis()
 
-    val content = (queryMap.asScala.map({case (k, v) => {
-      "Request has taken %dms so far\n%s".format(currentTime - v._2, v._1)
-    }}).mkString("\n") +
-    "\n-----------------------------------------\n" + "SLOW QUERIES\n"
-      + slowQueries.reverse.map({case ((req, start, end)) => {
-        "Query took %d ms --  started at %s, ended at %s\n%s".format(
-          (end - start),
-          new Date(start),
-          new Date(end),
-          req
-        )
-      }}).mkString("\n") +
+    val content = (queryMap.asScala
+      .map({
+        case (k, v) => {
+          "Request has taken %dms so far\n%s".format(currentTime - v._2, v._1)
+        }
+      })
+      .mkString("\n") +
+      "\n-----------------------------------------\n" + "SLOW QUERIES\n"
+      + slowQueries.reverse
+        .map({
+          case ((req, start, end)) => {
+            "Query took %d ms --  started at %s, ended at %s\n%s".format(
+              (end - start),
+              new Date(start),
+              new Date(end),
+              req
+            )
+          }
+        })
+        .mkString("\n") +
       "\n-----------------------------------------\n" + "RECENT QUERIES\n"
-      + recentQueries.reverse.map({case ((req, start, end)) => {
-        "Query took %d ms --  started at %s, ended at %s\n%s".format(
-          (end - start),
-          new Date(start),
-          new Date(end),
-          req
-        )
-      }}).mkString("\n")
-    )
+      + recentQueries.reverse
+        .map({
+          case ((req, start, end)) => {
+            "Query took %d ms --  started at %s, ended at %s\n%s".format(
+              (end - start),
+              new Date(start),
+              new Date(end),
+              req
+            )
+          }
+        })
+        .mkString("\n"))
 
     response.headers.set("Content-Type", "text/plain")
     response.setContent(ChannelBuffers.copiedBuffer(content, CharsetUtil.UTF_8))
@@ -78,9 +104,8 @@ class QueryLogHttpHandler(
 class QueryLoggingGeocodeServerImpl(service: Geocoder.ServiceIface) extends Geocoder.ServiceIface with Logging {
   if (Charset.defaultCharset() != Charset.forName("UTF-8")) {
     throw new Exception(
-      "Default charset (%s) is not UTF-8, which can cause problems.\n".format(
-        Charset.defaultCharset().name()) +
-      "See: http://perlgeek.de/en/article/set-up-a-clean-utf8-environment"
+      "Default charset (%s) is not UTF-8, which can cause problems.\n".format(Charset.defaultCharset().name()) +
+        "See: http://perlgeek.de/en/article/set-up-a-clean-utf8-environment"
     )
   }
 
@@ -146,13 +171,14 @@ class GeocodeServerImpl(
   doWarmup: Boolean,
   enablePrivateEndpoints: Boolean = false,
   queryFuturePool: FuturePool = FuturePool(StatsWrappedExecutors.create(24, 100, "geocoder"))
-) extends Geocoder.ServiceIface with Logging {
+) extends Geocoder.ServiceIface
+  with Logging {
 
   if (doWarmup) {
     warmup()
     val labels = Stats.getLabels()
     Stats.clearAll()
-    labels.foreach({case (k, v) => Stats.setLabel(k, v)})
+    labels.foreach({ case (k, v) => Stats.setLabel(k, v) })
     System.gc()
   }
 
@@ -163,51 +189,74 @@ class GeocodeServerImpl(
     } {
       val batchSize = 50 // FIXME: magic
 
-      var lines = new BufferedSource(getClass.getResourceAsStream("/io/fsq/twofishes/server/resources/warmup/geocodes.txt")).getLines.take(10000).grouped(batchSize).toVector
+      var lines = new BufferedSource(
+        getClass.getResourceAsStream("/io/fsq/twofishes/server/resources/warmup/geocodes.txt")
+      ).getLines.take(10000).grouped(batchSize).toVector
 
       log.info("Warming up by geocoding %d queries".format(lines.size * batchSize))
-      lines.zipWithIndex.foreach { case (batch, index) =>
-        if (index % 20 == 0) {
-          log.info("finished %d queries".format(index * batchSize))
-        }
-        val work = Future.collect(batch.map { line => queryFuturePool {
-          new GeocodeRequestDispatcher(store).geocode(
-            GeocodeRequest.newBuilder.responseIncludes(
-              Vector(ResponseIncludes.S2_COVERING, ResponseIncludes.S2_INTERIOR, ResponseIncludes.WKB_GEOMETRY)
-            ).query(line).result
-          )
-          new GeocodeRequestDispatcher(store).geocode(GeocodeRequest.newBuilder.query(line).autocomplete(true).result)
-        }})
-        Await.result(work)
+      lines.zipWithIndex.foreach {
+        case (batch, index) =>
+          if (index % 20 == 0) {
+            log.info("finished %d queries".format(index * batchSize))
+          }
+          val work = Future.collect(batch.map { line =>
+            queryFuturePool {
+              new GeocodeRequestDispatcher(store).geocode(
+                GeocodeRequest.newBuilder
+                  .responseIncludes(
+                    Vector(ResponseIncludes.S2_COVERING, ResponseIncludes.S2_INTERIOR, ResponseIncludes.WKB_GEOMETRY)
+                  )
+                  .query(line)
+                  .result
+              )
+              new GeocodeRequestDispatcher(store)
+                .geocode(GeocodeRequest.newBuilder.query(line).autocomplete(true).result)
+            }
+          })
+          Await.result(work)
       }
       log.info("done")
 
-      val revgeoLines = new BufferedSource(getClass.getResourceAsStream("/io/fsq/twofishes/server/resources/warmup/revgeo.txt")).getLines.take(10000).grouped(batchSize).toVector
+      val revgeoLines = new BufferedSource(
+        getClass.getResourceAsStream("/io/fsq/twofishes/server/resources/warmup/revgeo.txt")
+      ).getLines.take(10000).grouped(batchSize).toVector
 
       log.info("Warming up by reverse geocoding %d queries".format(revgeoLines.size * batchSize))
-      revgeoLines.zipWithIndex.foreach { case (batch, index) =>
-        if (index % 20 == 0) {
-          log.info("finished %d queries".format(index * batchSize))
-        }
-        val work = Future.collect(batch.map { line => queryFuturePool {
-          val parts = line.split(",")
-          new ReverseGeocoderImpl(store, GeocodeRequest.newBuilder.ll(GeocodePoint(parts(0).toDouble, parts(1).toDouble)).result).doGeocode()
-          new ReverseGeocoderImpl(store, GeocodeRequest.newBuilder.ll(GeocodePoint(parts(0).toDouble, parts(1).toDouble)).radius(300).result).doGeocode()
-        }})
-        Await.result(work)
+      revgeoLines.zipWithIndex.foreach {
+        case (batch, index) =>
+          if (index % 20 == 0) {
+            log.info("finished %d queries".format(index * batchSize))
+          }
+          val work = Future.collect(batch.map { line =>
+            queryFuturePool {
+              val parts = line.split(",")
+              new ReverseGeocoderImpl(
+                store,
+                GeocodeRequest.newBuilder.ll(GeocodePoint(parts(0).toDouble, parts(1).toDouble)).result
+              ).doGeocode()
+              new ReverseGeocoderImpl(
+                store,
+                GeocodeRequest.newBuilder.ll(GeocodePoint(parts(0).toDouble, parts(1).toDouble)).radius(300).result
+              ).doGeocode()
+            }
+          })
+          Await.result(work)
       }
       log.info("done")
 
       val slugLines = 1.to(10000).map(id => "geonameid:%d".format(id)).grouped(batchSize)
       log.info("Warming up by geocoding %d slugs".format(slugLines.size * batchSize))
-      slugLines.zipWithIndex.foreach { case (batch, index) =>
-        if (index % 20 == 0) {
-          log.info("finished %d queries".format(index * batchSize))
-        }
-        val work = Future.collect(batch.map { line => queryFuturePool {
-          new GeocodeRequestDispatcher(store).geocode(GeocodeRequest.newBuilder.slug(line).result)
-        }})
-        Await.result(work)
+      slugLines.zipWithIndex.foreach {
+        case (batch, index) =>
+          if (index % 20 == 0) {
+            log.info("finished %d queries".format(index * batchSize))
+          }
+          val work = Future.collect(batch.map { line =>
+            queryFuturePool {
+              new GeocodeRequestDispatcher(store).geocode(GeocodeRequest.newBuilder.slug(line).result)
+            }
+          })
+          Await.result(work)
       }
       log.info("done")
     }
@@ -271,9 +320,7 @@ class HandleExceptions extends SimpleFilter[HttpRequest, HttpResponse] with Logg
         val statusCode = HttpResponseStatus.INTERNAL_SERVER_ERROR
         val errorResponse = new DefaultHttpResponse(HttpVersion.HTTP_1_1, statusCode)
         errorResponse.headers.set("Content-Type", "application/json; charset=utf-8")
-        val errorMap = Map(
-          "exception" -> error.toString,
-          "stacktrace" -> error.getStackTrace.mkString("", "\n", "\n"))
+        val errorMap = Map("exception" -> error.toString, "stacktrace" -> error.getStackTrace.mkString("", "\n", "\n"))
         val jsonBytes = {
           val baos = new ByteArrayOutputStream
           val generator = jsonFactory.createJsonGenerator(baos)
@@ -324,13 +371,15 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
 
   def fixLongArray(key: String, input: String): String = {
     val re = "\"%s\":\\[([^\\]]+)\\]".format(key).r
-    re.replaceAllIn(input, m => { "\"%s\":[%s]".format(key, m.group(1).split(",").map(l => "\"%s\"".format(l)).mkString(","))})
+    re.replaceAllIn(input, m => {
+      "\"%s\":[%s]".format(key, m.group(1).split(",").map(l => "\"%s\"".format(l)).mkString(","))
+    })
   }
 
   def handleQuery[T, TType <: TBase[_ <: TBase[_ <: AnyRef, _ <: TFieldIdEnum], _ <: TFieldIdEnum]](
-      request: T,
-      queryProcessor: T => Future[TType],
-      callback: Option[String]
+    request: T,
+    queryProcessor: T => Future[TType],
+    callback: Option[String]
   ): Future[DefaultHttpResponse] = {
     val response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
 
@@ -348,14 +397,16 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
         fixedJson = fixLongArray("s2Interior", fixedJson)
         fixedJson = fixLongArray("relatedLongIds", fixedJson)
 
-        callback.map(cb => {
-          val sb = new StringBuilder(fixedJson.size + cb.size + 10)
-          sb ++= cb
-          sb += '('
-          sb ++= fixedJson
-          sb += ')'
-          sb.toString
-        }).getOrElse(fixedJson)
+        callback
+          .map(cb => {
+            val sb = new StringBuilder(fixedJson.size + cb.size + 10)
+            sb ++= cb
+            sb += '('
+            sb ++= fixedJson
+            sb += ')'
+            sb.toString
+          })
+          .getOrElse(fixedJson)
       }
 
       response.headers.set("Content-Type", "application/json; charset=utf-8")
@@ -369,8 +420,8 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
     val buf = ListBuffer[Byte]()
     var b = is.read()
     while (b != -1) {
-        buf.append(b.byteValue)
-        b = is.read()
+      buf.append(b.byteValue)
+      b = is.read()
     }
     buf.toArray
   }
@@ -384,37 +435,48 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
     })
 
     val woeHint = getOpt("woeHint").toList.flatMap(hintStr => {
-      hintStr.split(",").map(i =>
-        if (Helpers.TryO(i.toInt).isDefined) {
-          YahooWoeType.findByIdOrNull(i.toInt)
-        } else {
-          YahooWoeType.findByNameOrNull(i)
-        }
-      )
+      hintStr
+        .split(",")
+        .map(
+          i =>
+            if (Helpers.TryO(i.toInt).isDefined) {
+              YahooWoeType.findByIdOrNull(i.toInt)
+            } else {
+              YahooWoeType.findByNameOrNull(i)
+            }
+        )
     })
 
     val woeRestrict = getOpt("woeRestrict").toList.flatMap(hintStr => {
-      hintStr.split(",").map(i =>
-        if (Helpers.TryO(i.toInt).isDefined) {
-          YahooWoeType.findByIdOrNull(i.toInt)
-        } else {
-          YahooWoeType.findByNameOrNull(i)
-        }
-      )
+      hintStr
+        .split(",")
+        .map(
+          i =>
+            if (Helpers.TryO(i.toInt).isDefined) {
+              YahooWoeType.findByIdOrNull(i.toInt)
+            } else {
+              YahooWoeType.findByNameOrNull(i)
+            }
+        )
     })
 
     val responseIncludes = getOpt("responseIncludes").toList.flatMap(str => {
-      str.split(",").toList.map(i => {
-        if (Helpers.TryO(i.toInt).isDefined) {
-          ResponseIncludes.findByIdOrNull(i.toInt)
-        } else {
-          ResponseIncludes.findByNameOrNull(i)
-        }
-      })
+      str
+        .split(",")
+        .toList
+        .map(i => {
+          if (Helpers.TryO(i.toInt).isDefined) {
+            ResponseIncludes.findByIdOrNull(i.toInt)
+          } else {
+            ResponseIncludes.findByNameOrNull(i)
+          }
+        })
     })
 
     val autocompleteBias: Option[AutocompleteBias] = getOpt("autocompleteBias").flatMap(i => {
-      Helpers.TryO(i.toInt).flatMap(AutocompleteBias.findById _)
+      Helpers
+        .TryO(i.toInt)
+        .flatMap(AutocompleteBias.findById _)
         .orElse(AutocompleteBias.findByName(i))
     })
 
@@ -488,10 +550,16 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
 
       val commonParams = GeocodeRequestUtils.geocodeRequestToCommonRequestParams(request)
       if (params.getOrElse("method", Nil).has("bulkrevgeo")) {
-        handleBulkReverseGeocodeQuery(commonParams, params.getOrElse("ll", Nil).map(v => {
-          val ll = v.split(",").toList
-          (ll(0).toDouble, ll(1).toDouble)
-        }), callback)
+        handleBulkReverseGeocodeQuery(
+          commonParams,
+          params
+            .getOrElse("ll", Nil)
+            .map(v => {
+              val ll = v.split(",").toList
+              (ll(0).toDouble, ll(1).toDouble)
+            }),
+          callback
+        )
       } else if (params.getOrElse("method", Nil).has("bulksluglookup")) {
         handleBulkSlugLookupQuery(commonParams, params.getOrElse("slug", Nil), callback)
       } else if (request.queryOption.isEmpty && request.slugOption.isEmpty) {
@@ -501,7 +569,9 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
       }
     } else {
       val response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND)
-      val msg = new BufferedSource(getClass.getResourceAsStream("/io/fsq/twofishes/server/resources/twofishes-static/index.html")).getLines.mkString("\n")
+      val msg = new BufferedSource(
+        getClass.getResourceAsStream("/io/fsq/twofishes/server/resources/twofishes-static/index.html")
+      ).getLines.mkString("\n")
       response.setContent(ChannelBuffers.copiedBuffer(msg, CharsetUtil.UTF_8))
       response.headers.add("Content-Length", response.getContent.readableBytes.toString)
       Future.value(response)
@@ -522,9 +592,7 @@ object ServerStore {
       new EmptyHotfixSource
     }
 
-    new HotfixableGeocodeStorageService(
-      underlying,
-      new ConcreteHotfixStorageService(hotfixSource, underlying))
+    new HotfixableGeocodeStorageService(underlying, new ConcreteHotfixStorageService(hotfixSource, underlying))
   }
 }
 
@@ -541,7 +609,9 @@ object GeocodeFinagleServer extends Logging {
     val config: GeocodeServerConfig = GeocodeServerConfigSingleton.init(args)
 
     // Implement the Thrift Interface
-    val processor = new QueryLoggingGeocodeServerImpl(new GeocodeServerImpl(ServerStore.getStore(config), config.shouldWarmup, config.enablePrivateEndpoints))
+    val processor = new QueryLoggingGeocodeServerImpl(
+      new GeocodeServerImpl(ServerStore.getStore(config), config.shouldWarmup, config.enablePrivateEndpoints)
+    )
 
     // Convert the Thrift Processor to a Finagle Service
     val service = new Geocoder.Service(processor, new TBinaryProtocol.Factory())

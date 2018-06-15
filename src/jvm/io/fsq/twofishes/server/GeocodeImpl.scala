@@ -26,7 +26,8 @@ class GeocoderImpl(
   store: GeocodeStorageReadService,
   val req: GeocodeRequest,
   logger: MemoryLogger
-) extends AbstractGeocoderImpl[GeocodeResponse] with GeocoderUtils {
+) extends AbstractGeocoderImpl[GeocodeResponse]
+  with GeocoderUtils {
   override val implName = "geocode"
 
   // ACK!!! MUTABLE STATE!!!!
@@ -68,15 +69,17 @@ class GeocoderImpl(
     val cache = new ParseCache
     cache.put(0, List(NullParse))
 
-    (tokens.size - 1).to(0, -1).foreach(offset => {
-      val subTokens = tokens.drop(offset)
-      val validParses = generateParsesHelper(subTokens, offset, cache)
-      val cacheKey = subTokens.size
-      if (req.debug > 1) {
-        logger.ifDebug("setting %d to %s", cacheKey, validParses)
-      }
-      cache.put(cacheKey, validParses)
-    })
+    (tokens.size - 1)
+      .to(0, -1)
+      .foreach(offset => {
+        val subTokens = tokens.drop(offset)
+        val validParses = generateParsesHelper(subTokens, offset, cache)
+        val cacheKey = subTokens.size
+        if (req.debug > 1) {
+          logger.ifDebug("setting %d to %s", cacheKey, validParses)
+        }
+        cache.put(cacheKey, validParses)
+      })
     cache
   }
 
@@ -86,16 +89,18 @@ class GeocoderImpl(
     val cache = new ParseCache
 
     // stop short of dropping all tokens
-    (tokens.size - 1).to(1, -1).foreach(offset => {
-      val subTokens = tokens.take(offset)
-      val cacheKey = subTokens.size
-      if (req.debug > 1) {
-        logger.ifDebug("attempting where-before-what parse of length %s", cacheKey)
-      }
-      val innerCache = generateParses(subTokens)
-      // save only the full length parse
-      cache.put(cacheKey, innerCache.get(cacheKey))
-    })
+    (tokens.size - 1)
+      .to(1, -1)
+      .foreach(offset => {
+        val subTokens = tokens.take(offset)
+        val cacheKey = subTokens.size
+        if (req.debug > 1) {
+          logger.ifDebug("attempting where-before-what parse of length %s", cacheKey)
+        }
+        val innerCache = generateParses(subTokens)
+        // save only the full length parse
+        cache.put(cacheKey, innerCache.get(cacheKey))
+      })
     cache
   }
 
@@ -109,67 +114,76 @@ class GeocoderImpl(
   }
 
   def generateParsesHelper(tokens: List[String], offset: Int, cache: ParseCache): SortedParseSeq = {
-    1.to(tokens.size).flatMap(i => {
-      val searchStr = tokens.take(i).mkString(" ")
-      val featureMatches = logger.logDuration("get-by-name", "get-by-name for %s".format(searchStr)) {
-        store.getByName(searchStr)
-          .filter(servingFeature => isAcceptableFeature(req, servingFeature))
-          .map((f: GeocodeServingFeature) =>
-            FeatureMatch(offset, offset + i, searchStr, f, f.feature.names.filter(n => NameNormalizer.normalize(n.name) =? searchStr))
-          )
-      }
-      logger.ifDebug("got %d features for %s", featureMatches.size, searchStr)
-
-      featureMatches.foreach(fm => {
-        logger.ifLevelDebug(2, fm.toString)
-      })
-
-      if ((tokens.size - i) =? 0) {
-        featureMatches.flatMap(f => buildParse(f, NullParse))
-      } else {
-        val subParses = cache.get(tokens.size - i)
-
-        val subParsesByCountry: Map[String, SortedParseSeq] = subParses.groupBy(_.countryCode)
-        val featuresByCountry: Map[String, Seq[FeatureMatch]] = featureMatches.groupBy(_.fmatch.feature.ccOrThrow)
-
-        /*
-         * augment with duplicate subparses for dependent countries
-         * only duplicate subparse for a dependent country code if there is a feature match but no
-         * existing subparse with the same country code
-         */
-        val augmentedSubParsesByCountry = logger.logDuration("augmentedSubParsesByCountry", "augmentedSubParsesByCountry") (for {
-            (cc, parses) <- subParsesByCountry
-            dcc <- DependentCountryInfo.getDependentCountryCodesForCountry(cc)
-            if (featuresByCountry.contains(dcc) && !subParsesByCountry.contains(dcc))
-          } yield {
-            (dcc -> parses)
-          }).toMap ++ subParsesByCountry
-
-        logger.logDuration("buildParses", "buildParses for %s".format(searchStr)) {
-          val lb = new ListBuffer[Parse[Sorted]]()
-          lb.sizeHint(augmentedSubParsesByCountry.size * augmentedSubParsesByCountry.size)
-
-          var parsesBuilt = 0
-          for {
-            cc <- augmentedSubParsesByCountry.keys
-            f <- featuresByCountry.getOrElse(cc, Nil)
-            p <- augmentedSubParsesByCountry.getOrElse(cc, Nil)
-            diffentWoeTypes = p.mostSpecificFeature.fmatch.feature.woeType !=? f.fmatch.feature.woeType
-            sameFeatureId = p.mostSpecificFeature.fmatch.feature.longId =? f.fmatch.feature.longId
-            if (diffentWoeTypes || sameFeatureId)
-          } {
-            parsesBuilt += 1
-            buildParse(f, p).foreach(parse => lb += parse)
-          }
-
-          logger.ifDebug("built and checked %d parses, saved %d for %s",
-            parsesBuilt, lb.size, searchStr
-          )
-
-          lb.toVector
+    1.to(tokens.size)
+      .flatMap(i => {
+        val searchStr = tokens.take(i).mkString(" ")
+        val featureMatches = logger.logDuration("get-by-name", "get-by-name for %s".format(searchStr)) {
+          store
+            .getByName(searchStr)
+            .filter(servingFeature => isAcceptableFeature(req, servingFeature))
+            .map(
+              (f: GeocodeServingFeature) =>
+                FeatureMatch(
+                  offset,
+                  offset + i,
+                  searchStr,
+                  f,
+                  f.feature.names.filter(n => NameNormalizer.normalize(n.name) =? searchStr)
+                )
+            )
         }
-      }
-    })
+        logger.ifDebug("got %d features for %s", featureMatches.size, searchStr)
+
+        featureMatches.foreach(fm => {
+          logger.ifLevelDebug(2, fm.toString)
+        })
+
+        if ((tokens.size - i) =? 0) {
+          featureMatches.flatMap(f => buildParse(f, NullParse))
+        } else {
+          val subParses = cache.get(tokens.size - i)
+
+          val subParsesByCountry: Map[String, SortedParseSeq] = subParses.groupBy(_.countryCode)
+          val featuresByCountry: Map[String, Seq[FeatureMatch]] = featureMatches.groupBy(_.fmatch.feature.ccOrThrow)
+
+          /*
+           * augment with duplicate subparses for dependent countries
+           * only duplicate subparse for a dependent country code if there is a feature match but no
+           * existing subparse with the same country code
+           */
+          val augmentedSubParsesByCountry = logger
+            .logDuration("augmentedSubParsesByCountry", "augmentedSubParsesByCountry")(for {
+              (cc, parses) <- subParsesByCountry
+              dcc <- DependentCountryInfo.getDependentCountryCodesForCountry(cc)
+              if (featuresByCountry.contains(dcc) && !subParsesByCountry.contains(dcc))
+            } yield {
+              (dcc -> parses)
+            })
+            .toMap ++ subParsesByCountry
+
+          logger.logDuration("buildParses", "buildParses for %s".format(searchStr)) {
+            val lb = new ListBuffer[Parse[Sorted]]()
+            lb.sizeHint(augmentedSubParsesByCountry.size * augmentedSubParsesByCountry.size)
+
+            var parsesBuilt = 0
+            for {
+              cc <- augmentedSubParsesByCountry.keys
+              f <- featuresByCountry.getOrElse(cc, Nil)
+              p <- augmentedSubParsesByCountry.getOrElse(cc, Nil)
+              diffentWoeTypes = p.mostSpecificFeature.fmatch.feature.woeType !=? f.fmatch.feature.woeType
+              sameFeatureId = p.mostSpecificFeature.fmatch.feature.longId =? f.fmatch.feature.longId
+              if (diffentWoeTypes || sameFeatureId)
+            } {
+              parsesBuilt += 1
+              buildParse(f, p).foreach(parse => lb += parse)
+            }
+
+            logger.ifDebug("built and checked %d parses, saved %d for %s", parsesBuilt, lb.size, searchStr)
+
+            lb.toVector
+          }
+        }
+      })
   }
 
   def isValidParse(parse: Parse[Sorted]): Boolean = {
@@ -195,7 +209,8 @@ class GeocoderImpl(
           second.fmatch.feature.geometryOrThrow.center.lat,
           second.fmatch.feature.geometryOrThrow.center.lng,
           first.fmatch.feature.geometryOrThrow.center.lat,
-          first.fmatch.feature.geometryOrThrow.center.lng) < 200000
+          first.fmatch.feature.geometryOrThrow.center.lng
+        ) < 200000
       }).getOrElse(false)
     } else {
       false
@@ -218,9 +233,14 @@ class GeocoderImpl(
       // reject any parse where this happens
       if (!countriesWhereAdmin1MayPrecedeTown.has(mostSpecific.fmatch.feature.ccOrThrow)) {
         for {
-          stateTokenPos: Int <- parse.filter(_.fmatch.feature.woeType =? YahooWoeType.ADMIN1).minByOption(_.tokenStart).map(_.tokenStart)
-          cityOrNeighborhoodTokenPos: Int <- parse.filter(f =>
-            GeocoderImplConstants.betterThanAdmin1.has(f.fmatch.feature.woeType)).minByOption(_.tokenStart).map(_.tokenStart)
+          stateTokenPos: Int <- parse
+            .filter(_.fmatch.feature.woeType =? YahooWoeType.ADMIN1)
+            .minByOption(_.tokenStart)
+            .map(_.tokenStart)
+          cityOrNeighborhoodTokenPos: Int <- parse
+            .filter(f => GeocoderImplConstants.betterThanAdmin1.has(f.fmatch.feature.woeType))
+            .minByOption(_.tokenStart)
+            .map(_.tokenStart)
         } {
           if (stateTokenPos < cityOrNeighborhoodTokenPos) {
             return false
@@ -231,18 +251,37 @@ class GeocoderImpl(
       rest.forall(f => {
         //logger.ifDebug("checking if %s in parents".format(f.fmatch.id))
         f.fmatch.longId =? mostSpecific.fmatch.longId ||
-        mostSpecific.fmatch.scoringFeatures.parentIds.has(f.fmatch.longId) ||
-        mostSpecific.fmatch.scoringFeatures.extraRelationIds.has(f.fmatch.longId) ||
-        (f.fmatch.feature.woeType =? YahooWoeType.COUNTRY &&
-          DependentCountryInfo.isCountryDependentOnCountry(mostSpecific.fmatch.feature.ccOrThrow, f.fmatch.feature.ccOrThrow))
+          mostSpecific.fmatch.scoringFeatures.parentIds.has(f.fmatch.longId) ||
+          mostSpecific.fmatch.scoringFeatures.extraRelationIds.has(f.fmatch.longId) ||
+          (f.fmatch.feature.woeType =? YahooWoeType.COUNTRY &&
+            DependentCountryInfo
+              .isCountryDependentOnCountry(mostSpecific.fmatch.feature.ccOrThrow, f.fmatch.feature.ccOrThrow))
       })
     }
   }
 
   def deleteCommonWords(tokens: List[String], parsedPhrases: Set[String]): List[String] = {
     val commonWords = Set(
-      "city", "gemeinde", "canton", "of", "county", "gmina", "stadtteil", "district", "kommune", "prefecture", "contrada",
-      "stazione", "di", "oblast", "Δήμος", "д", "м", "neighborhood", "neighbourhood", "the"
+      "city",
+      "gemeinde",
+      "canton",
+      "of",
+      "county",
+      "gmina",
+      "stadtteil",
+      "district",
+      "kommune",
+      "prefecture",
+      "contrada",
+      "stazione",
+      "di",
+      "oblast",
+      "Δήμος",
+      "д",
+      "м",
+      "neighborhood",
+      "neighbourhood",
+      "the"
     ).map(_.toLowerCase)
 
     // do not drop common word if it is *part of* an already matched parse phrase
@@ -272,16 +311,12 @@ class GeocoderImpl(
       logger.ifDebug("RESTARTING common words query: %s", modifiedTokens)
       doGeocodeForQuery(new QueryParser(logger).parseQueryTokens(modifiedTokens))
     } else {
-      responseProcessor.buildFinalParses(
-        parses, parseParams, getMaxInterpretations, requestGeom)
+      responseProcessor.buildFinalParses(parses, parseParams, getMaxInterpretations, requestGeom)
     }
   }
 
   val commonParams = GeocodeRequestUtils.geocodeRequestToCommonRequestParams(req)
-  val responseProcessor = new ResponseProcessor(
-    commonParams,
-    store,
-    logger)
+  val responseProcessor = new ResponseProcessor(commonParams, store, logger)
 
   def doGeocodeImpl() = {
     val query = req.queryOption.getOrElse("")
@@ -303,7 +338,7 @@ class GeocoderImpl(
 
     val validParseCaches: Iterable[(Int, SortedParseSeq)] =
       cache.asScala.filter(_._2.nonEmpty) ++
-      whereBeforeWhatCache.asScala.filter(_._2.nonEmpty)
+        whereBeforeWhatCache.asScala.filter(_._2.nonEmpty)
 
     if (validParseCaches.size > 0) {
       val longest = validParseCaches.map(_._1).max
@@ -327,7 +362,9 @@ class GeocoderImpl(
           (size, parses) <- validParseCaches.filter(_._1 =? length)
         } {
           parsesToConsider.appendAll(
-            parses.sorted(new GeocodeParseOrdering(commonParams, logger, GeocodeParseOrdering.scorersForGeocode, "default"))
+            parses.sorted(
+              new GeocodeParseOrdering(commonParams, logger, GeocodeParseOrdering.scorersForGeocode, "default")
+            )
           )
         }
 
@@ -335,7 +372,11 @@ class GeocoderImpl(
           maybeRetryParsing(parsesToConsider, parseParams)
         } else {
           responseProcessor.buildFinalParses(
-            GeocodeParseOrdering.maybeReplaceTopResultWithRelatedCity(parsesToConsider), parseParams, getMaxInterpretations, requestGeom)
+            GeocodeParseOrdering.maybeReplaceTopResultWithRelatedCity(parsesToConsider),
+            parseParams,
+            getMaxInterpretations,
+            requestGeom
+          )
         }
       }
     } else {

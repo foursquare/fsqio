@@ -46,7 +46,8 @@ class BaseRevGeoIndexBuildIntermediateJob(
       RevGeoConstants.minS2LevelForRevGeo,
       RevGeoConstants.maxS2LevelForRevGeo,
       levelMod = Some(RevGeoConstants.defaultLevelModForRevGeo),
-      maxCellsHintWhichMightBeIgnored = Some(RevGeoConstants.defaultMaxCellsHintForRevGeo))
+      maxCellsHintWhichMightBeIgnored = Some(RevGeoConstants.defaultMaxCellsHintForRevGeo)
+    )
     cell <- cells
     cellId = cell.id
   } yield {
@@ -91,11 +92,15 @@ class BaseRevGeoIndexBuildIntermediateJob(
     }
 
     (new LongWritable(cellId) -> cellGeometry)
-  }).groupBy({case (k: LongWritable, c: CellGeometry) => k})(S2CellIdOrdering)
+  }).groupBy({ case (k: LongWritable, c: CellGeometry) => k })(S2CellIdOrdering)
     .withReducers(1)
     .toList
-    .mapValues({keyValuePairs: List[(LongWritable, CellGeometry)] => {
-      CellGeometries(keyValuePairs.map(_._2))
-    }})
-    .write(TypedSink[(LongWritable, CellGeometries)](SpindleSequenceFileSource[LongWritable, CellGeometries](outputPath)))
+    .mapValues({ keyValuePairs: List[(LongWritable, CellGeometry)] =>
+      {
+        CellGeometries(keyValuePairs.map(_._2))
+      }
+    })
+    .write(
+      TypedSink[(LongWritable, CellGeometries)](SpindleSequenceFileSource[LongWritable, CellGeometries](outputPath))
+    )
 }

@@ -1,4 +1,3 @@
-
 // Copyright 2011 Foursquare Labs Inc. All Rights Reserved.
 
 package io.fsq.buildgen.plugin.emit_exported_symbols
@@ -6,7 +5,6 @@ package io.fsq.buildgen.plugin.emit_exported_symbols
 import scala.reflect.internal.Flags
 import scala.tools.nsc.{Global, Phase}
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
-
 
 class EmitExportedSymbolsPlugin(val global: Global) extends Plugin {
   import global._
@@ -101,4 +99,3 @@ class EmitExportedSymbolsPlugin(val global: Global) extends Plugin {
     }
   }
 }
-

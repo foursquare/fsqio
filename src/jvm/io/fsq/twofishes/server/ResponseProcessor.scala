@@ -8,9 +8,18 @@ import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.core.YahooWoeTypes
-import io.fsq.twofishes.gen.{CommonGeocodeRequestParams, FeatureName, FeatureNameFlags, GeocodeFeature,
-    GeocodeInterpretation, GeocodeResponse, GeocodeServingFeature, MutableGeocodeFeature, ResponseIncludes,
-    YahooWoeType}
+import io.fsq.twofishes.gen.{
+  CommonGeocodeRequestParams,
+  FeatureName,
+  FeatureNameFlags,
+  GeocodeFeature,
+  GeocodeInterpretation,
+  GeocodeResponse,
+  GeocodeServingFeature,
+  MutableGeocodeFeature,
+  ResponseIncludes,
+  YahooWoeType
+}
 import io.fsq.twofishes.util.{NameUtils, StoredFeatureId}
 import io.fsq.twofishes.util.NameUtils.BestNameMatch
 import java.nio.ByteBuffer
@@ -36,31 +45,36 @@ class ResponseProcessor(
 
   def dedupeParses(parses: SortedParseSeq): SortedParseSeq = {
     val parseIndexToNameMatch: Map[Int, Option[BestNameMatch]] =
-      parses.zipWithIndex.map({case (parse, index) => {
-        (index,
-          parse.headOption.flatMap(f => {
-            // en is cheating, sorry
-            bestNameWithMatch(f.fmatch.feature, Some("en"), false, Some(f.phrase))
-          })
-        )
-      }}).toMap
+      parses.zipWithIndex
+        .map({
+          case (parse, index) => {
+            (index, parse.headOption.flatMap(f => {
+              // en is cheating, sorry
+              bestNameWithMatch(f.fmatch.feature, Some("en"), false, Some(f.phrase))
+            }))
+          }
+        })
+        .toMap
 
-    val parseMap: Map[String, Seq[(Parse[Sorted], Int)]] = parses.zipWithIndex.groupBy({case (parse, index) => {
-      parseIndexToNameMatch(index).map(_._1.name).getOrElse("").toLowerCase()
-    }})
+    val parseMap: Map[String, Seq[(Parse[Sorted], Int)]] = parses.zipWithIndex.groupBy({
+      case (parse, index) => {
+        parseIndexToNameMatch(index).map(_._1.name).getOrElse("").toLowerCase()
+      }
+    })
 
     if (req.debug > 0) {
-      parseMap.foreach({case(name, parseSeq) => {
-        logger.ifDebug("have %d parses for %s", parseSeq.size, name)
-        parseSeq.foreach(p => {
-          logger.ifDebug("%s: %s", name, p._1)
-        })
-      }})
+      parseMap.foreach({
+        case (name, parseSeq) => {
+          logger.ifDebug("have %d parses for %s", parseSeq.size, name)
+          parseSeq.foreach(p => {
+            logger.ifDebug("%s: %s", name, p._1)
+          })
+        }
+      })
     }
 
     def isAliasName(index: Int): Boolean = {
-      parseIndexToNameMatch(index).exists(_._1.flags.contains(
-        FeatureNameFlags.ALIAS))
+      parseIndexToNameMatch(index).exists(_._1.flags.contains(FeatureNameFlags.ALIAS))
     }
 
     type ParsePair = (Parse[Sorted], Int)
@@ -74,8 +88,11 @@ class ResponseProcessor(
           val matchesWoeHintA = woeTypeOptA.exists(req.woeHint.has)
           val matchesWoeHintB = woeTypeOptB.exists(req.woeHint.has)
           if (matchesWoeHintA != matchesWoeHintB) {
-            if (matchesWoeHintA) { return A_BETTER }
-            else { return B_BETTER }
+            if (matchesWoeHintA) {
+              return A_BETTER
+            } else {
+              return B_BETTER
+            }
           }
         }
 
@@ -83,16 +100,22 @@ class ResponseProcessor(
         val isAliasA = isAliasName(a._2)
         val isAliasB = isAliasName(b._2)
         if (isAliasA != isAliasB) {
-          if (isAliasA) { return B_BETTER }
-          else { return A_BETTER }
+          if (isAliasA) {
+            return B_BETTER
+          } else {
+            return A_BETTER
+          }
         }
 
         val hasPolyA = a._1.headOption.exists(_.fmatch.scoringFeatures.hasPoly)
         val hasPolyB = b._1.headOption.exists(_.fmatch.scoringFeatures.hasPoly)
 
         if (hasPolyA != hasPolyB) {
-          if (hasPolyA) { return A_BETTER }
-          else { return B_BETTER }
+          if (hasPolyA) {
+            return A_BETTER
+          } else {
+            return B_BETTER
+          }
         }
 
         // val namespaceQualityA = a._1.featureId.getOrdering
@@ -103,7 +126,7 @@ class ResponseProcessor(
 
         val woeTypeOptA = a._1.headOption.flatMap(_.fmatch.feature.woeTypeOption).getOrElse(YahooWoeType.UNKNOWN)
         val woeTypeOptB = b._1.headOption.flatMap(_.fmatch.feature.woeTypeOption).getOrElse(YahooWoeType.UNKNOWN)
-        YahooWoeTypes.compare(woeTypeOptA,woeTypeOptB) match {
+        YahooWoeTypes.compare(woeTypeOptA, woeTypeOptB) match {
           case 0 => b._2.compare(a._2)
           case i => -1 * i
         }
@@ -144,11 +167,13 @@ class ResponseProcessor(
     val dedupedMap: Seq[(Parse[Sorted], Int)] = for {
       (textKey, parsePairs) <- parseMap.toSeq
       // bucket into 0.1 degree buckets (= 11km)
-      geoBuckets = parsePairs.groupBy({case (parse, index) => findBucket(parse) })
+      geoBuckets = parsePairs.groupBy({ case (parse, index) => findBucket(parse) })
       (geoKey, parses) <- geoBuckets
     } yield {
-      logger.ifDebug("for %s, have %d parses in bucket %s: %s".format(textKey, parses.size, geoKey,
-        parses.map(_._1.featureId).mkString(", ")))
+      logger.ifDebug(
+        "for %s, have %d parses in bucket %s: %s"
+          .format(textKey, parses.size, geoKey, parses.map(_._1.featureId).mkString(", "))
+      )
       val bestParse = parses.sorted(DuplicateGeocodeParseOrdering).lastOption.get
       bestParse._1.allLongIds = parses.map(_._1.featureId.longId)
       bestParse
@@ -158,28 +183,36 @@ class ResponseProcessor(
     dedupedMap.toList.sortBy(_._2).map(_._1)
   }
 
-   // Modifies a GeocodeFeature that is about to be returned
+  // Modifies a GeocodeFeature that is about to be returned
   // --set 'name' to the feature's best name in the request context
   // --set 'displayName' to a string that includes names of parents in the request context
   // --filter out the total set of names to a more managable number
   // --add in parent features if needed
   def fixFeature(
-      f: GeocodeFeature,
-      parents: Seq[GeocodeServingFeature],
-      parse: Option[Parse[Sorted]],
-      polygonMap: Map[StoredFeatureId, Geometry],
-      s2CoveringMap: Map[StoredFeatureId, Seq[Long]],
-      s2InteriorMap: Map[StoredFeatureId, Seq[Long]],
-      numExtraParentsRequired: Int = 0,
-      fillHighlightedName: Boolean = false,
-      includeAllNames: Boolean,
-      parentIds: Seq[Long] = Nil
-    ): MutableGeocodeFeature = {
+    f: GeocodeFeature,
+    parents: Seq[GeocodeServingFeature],
+    parse: Option[Parse[Sorted]],
+    polygonMap: Map[StoredFeatureId, Geometry],
+    s2CoveringMap: Map[StoredFeatureId, Seq[Long]],
+    s2InteriorMap: Map[StoredFeatureId, Seq[Long]],
+    numExtraParentsRequired: Int = 0,
+    fillHighlightedName: Boolean = false,
+    includeAllNames: Boolean,
+    parentIds: Seq[Long] = Nil
+  ): MutableGeocodeFeature = {
     // set name
     val mutableFeature = f.mutableCopy
     fixFeatureMutable(
-      mutableFeature, parents, parse, polygonMap, s2CoveringMap, s2InteriorMap, numExtraParentsRequired,
-      fillHighlightedName, includeAllNames, parentIds
+      mutableFeature,
+      parents,
+      parse,
+      polygonMap,
+      s2CoveringMap,
+      s2InteriorMap,
+      numExtraParentsRequired,
+      fillHighlightedName,
+      includeAllNames,
+      parentIds
     )
   }
 
@@ -213,24 +246,23 @@ class ResponseProcessor(
     // if you need an extra parent, use it
 
     val parentsToUse = new ListBuffer[GeocodeServingFeature]
-    parentsToUse.appendAll(
-      parents.filter(p => p.feature.woeType == YahooWoeType.TOWN))
+    parentsToUse.appendAll(parents.filter(p => p.feature.woeType == YahooWoeType.TOWN))
 
     if (NameUtils.countryUsesState(f.ccOrThrow)) {
-      parentsToUse.appendAll(
-        parents.filter(p => {
-          !NameUtils.isFeatureBlacklistedforParent(f.longId) &&
-            (if (NameUtils.countryUsesCountyAsState(f.ccOrThrow)) {
-              p.feature.woeType =? YahooWoeType.ADMIN2
-            } else {
-              p.feature.woeType =? YahooWoeType.ADMIN1
-            })
-        }))
+      parentsToUse.appendAll(parents.filter(p => {
+        !NameUtils.isFeatureBlacklistedforParent(f.longId) &&
+          (if (NameUtils.countryUsesCountyAsState(f.ccOrThrow)) {
+             p.feature.woeType =? YahooWoeType.ADMIN2
+           } else {
+             p.feature.woeType =? YahooWoeType.ADMIN1
+           })
+      }))
     }
 
     val countryName =
-      parents.find(_.feature.woeType == YahooWoeType.COUNTRY).flatMap(f =>
-        NameUtils.bestName(f.feature, Some(req.lang), false).map(_.name))
+      parents
+        .find(_.feature.woeType == YahooWoeType.COUNTRY)
+        .flatMap(f => NameUtils.bestName(f.feature, Some(req.lang), false).map(_.name))
 
     var namesToUse: Seq[(FeatureName, Option[String])] = Nil
 
@@ -241,49 +273,63 @@ class ResponseProcessor(
           p.map(fmatch => (Some(fmatch), fmatch.fmatch))
 
         val partsFromParents: Seq[(Option[FeatureMatch], GeocodeServingFeature)] =
-          parentsToUse.filterNot((f: GeocodeServingFeature) => {
-            partsFromParse.exists(_._2.longId =? f.longId)
-          })
-          .map(f => (None, f))
+          parentsToUse
+            .filterNot((f: GeocodeServingFeature) => {
+              partsFromParse.exists(_._2.longId =? f.longId)
+            })
+            .map(f => (None, f))
 
         val extraParents: Seq[(Option[FeatureMatch], GeocodeServingFeature)] =
           parents
-            .filterNot(f =>
+            .filterNot(
+              f =>
                 partsFromParse.exists(_._2.longId =? f.longId) ||
-                partsFromParents.exists(_._2.longId =? f.longId) ||
-                f.feature.woeType == YahooWoeType.COUNTRY)
+                  partsFromParents.exists(_._2.longId =? f.longId) ||
+                  f.feature.woeType == YahooWoeType.COUNTRY
+            )
             .takeRight(numExtraParentsRequired)
             .map(f => (None, f))
 
-        val partsToUse = (partsFromParse ++ partsFromParents ++ extraParents).sortBy(_._2)(GeocodeServingFeatureOrdering)
+        val partsToUse =
+          (partsFromParse ++ partsFromParents ++ extraParents).sortBy(_._2)(GeocodeServingFeatureOrdering)
 
         var i = 0
-        namesToUse = partsToUse.flatMap({case(fmatchOpt, servingFeature) => {
-          // awful hack because most states outside the US don't actually
-          // use their abbrev names
-          val name = bestNameWithMatch(servingFeature.feature, Some(req.lang),
-            preferAbbrev = (i != 0 && NameUtils.countryUsesStateAbbrev(servingFeature.feature.ccOrThrow)),
-            fmatchOpt.map(_.phrase))
-          i += 1
-          name
-        }})
+        namesToUse = partsToUse.flatMap({
+          case (fmatchOpt, servingFeature) => {
+            // awful hack because most states outside the US don't actually
+            // use their abbrev names
+            val name = bestNameWithMatch(
+              servingFeature.feature,
+              Some(req.lang),
+              preferAbbrev = (i != 0 && NameUtils.countryUsesStateAbbrev(servingFeature.feature.ccOrThrow)),
+              fmatchOpt.map(_.phrase)
+            )
+            i += 1
+            name
+          }
+        })
 
         // strip dupe un-matched parts, so we don't have "Istanbul, Istanbul, TR"
         // don't strip out matched parts (that's the isempty check)
         // don't strip out the main feature name (index != 0)
-        namesToUse = namesToUse.zipWithIndex.filterNot({case (nameMatch, index) => {
-          index != 0 && nameMatch._2.isEmpty && nameMatch._1.name == namesToUse(0)._1.name
-        }}).map(_._1)
+        namesToUse = namesToUse.zipWithIndex
+          .filterNot({
+            case (nameMatch, index) => {
+              index != 0 && nameMatch._2.isEmpty && nameMatch._1.name == namesToUse(0)._1.name
+            }
+          })
+          .map(_._1)
 
         var (matchedNameParts, highlightedNameParts) =
-          (namesToUse.map(_._1.name),
-           namesToUse.map({case(fname, highlightedName) => {
-            highlightedName.getOrElse(fname.name)
-          }}))
+          (namesToUse.map(_._1.name), namesToUse.map({
+            case (fname, highlightedName) => {
+              highlightedName.getOrElse(fname.name)
+            }
+          }))
 
-       if (f.woeType != YahooWoeType.COUNTRY
-          && req.ccOrNull != f.ccOrThrow
-          && !partsToUse.exists(_._2.feature.woeType == YahooWoeType.COUNTRY)) {
+        if (f.woeType != YahooWoeType.COUNTRY
+            && req.ccOrNull != f.ccOrThrow
+            && !partsToUse.exists(_._2.feature.woeType == YahooWoeType.COUNTRY)) {
           matchedNameParts ++= countryName.toList
           highlightedNameParts ++= countryName.toList
         }
@@ -293,13 +339,16 @@ class ResponseProcessor(
     }
 
     // possibly clear names
-    mutableFeature.names_=(f.names.filter(n =>
-      Option(n.flags).exists(_.contains(FeatureNameFlags.ABBREVIATION)) ||
-      n.lang == req.lang ||
-      n.lang == "en" ||
-      namesToUse.contains(n) ||
-      includeAllNames
-    ))
+    mutableFeature.names_=(
+      f.names.filter(
+        n =>
+          Option(n.flags).exists(_.contains(FeatureNameFlags.ABBREVIATION)) ||
+            n.lang == req.lang ||
+            n.lang == "en" ||
+            namesToUse.contains(n) ||
+            includeAllNames
+      )
+    )
 
     // now pull in extra parents
     parentsToUse.appendAll(
@@ -308,12 +357,10 @@ class ResponseProcessor(
         .takeRight(numExtraParentsRequired)
     )
 
-    val parentNames = parentsToUse
-      .distinct
+    val parentNames = parentsToUse.distinct
       .sorted(GeocodeServingFeatureOrdering)
-      .map(p =>
-        NameUtils.bestName(p.feature, Some(req.lang), true).map(_.name).getOrElse(""))
-       .filterNot(parentName => name == parentName)
+      .map(p => NameUtils.bestName(p.feature, Some(req.lang), true).map(_.name).getOrElse(""))
+      .filterNot(parentName => name == parentName)
       .distinct
 
     var displayNameParts = Vector(name) ++ parentNames
@@ -334,8 +381,9 @@ class ResponseProcessor(
         val mutableGeometry = mutableFeature.geometryOrThrow.mutableCopy
         if (req.responseIncludes.has(ResponseIncludes.WKB_GEOMETRY_SIMPLIFIED)) {
           val wkbWriter = new WKBWriter()
-          mutableGeometry.wkbGeometrySimplified_=(ByteBuffer.wrap(wkbWriter.write(
-            DouglasPeuckerSimplifier.simplify(geom, 0.0001)))) // 11m tolerance
+          mutableGeometry.wkbGeometrySimplified_=(
+            ByteBuffer.wrap(wkbWriter.write(DouglasPeuckerSimplifier.simplify(geom, 0.0001)))
+          ) // 11m tolerance
         }
         if (responseIncludes(ResponseIncludes.WKB_GEOMETRY) &&
             !req.responseIncludes.has(ResponseIncludes.WKB_GEOMETRY_SIMPLIFIED)) {
@@ -345,12 +393,11 @@ class ResponseProcessor(
 
         if (req.responseIncludes.has(ResponseIncludes.WKT_GEOMETRY_SIMPLIFIED)) {
           val wktWriter = new WKTWriter()
-          mutableGeometry.wktGeometrySimplified_=(wktWriter.write(
-            DouglasPeuckerSimplifier.simplify(geom, 0.0001))) // 11m tolerance
+          mutableGeometry.wktGeometrySimplified_=(wktWriter.write(DouglasPeuckerSimplifier.simplify(geom, 0.0001))) // 11m tolerance
         }
 
         if (responseIncludes(ResponseIncludes.WKT_GEOMETRY) &&
-          !req.responseIncludes.has(ResponseIncludes.WKT_GEOMETRY_SIMPLIFIED)) {
+            !req.responseIncludes.has(ResponseIncludes.WKT_GEOMETRY_SIMPLIFIED)) {
           val wktWriter = new WKTWriter()
           mutableGeometry.wktGeometry_=(wktWriter.write(geom))
         }
@@ -418,16 +465,15 @@ class ResponseProcessor(
       })
     }
 
-    val parentIdsAll: Seq[Long] = sortedParses.flatMap(
-      _.headOption.toList.flatMap(_.fmatch.scoringFeatures.parentIds))
+    val parentIdsAll: Seq[Long] = sortedParses.flatMap(_.headOption.toList.flatMap(_.fmatch.scoringFeatures.parentIds))
     val parentIds = parentIdsAll.distinct
     val parentFids: Seq[StoredFeatureId] = parentIds.flatMap(StoredFeatureId.fromLong _)
     logger.ifDebug("parent ids: %s", parentFids)
 
     // possible optimization here: add in features we already have in our parses and don't refetch them
     val existingFeatures: Seq[GeocodeServingFeature] = sortedParses.flatMap(_.fmatches.map(_.fmatch))
-    val existingFeatureMap = existingFeatures.flatMap(f => StoredFeatureId.fromLong(f.longId).map(lid =>
-      (lid, f))).toMap
+    val existingFeatureMap =
+      existingFeatures.flatMap(f => StoredFeatureId.fromLong(f.longId).map(lid => (lid, f))).toMap
     val missingParentIds = (parentFids.toSet -- existingFeatureMap.keys.toSet).toSeq
     val parentMap = store.getByFeatureIds(missingParentIds) ++ existingFeatureMap
     logger.ifLevelDebug(4, "parentMap: %s", parentMap)
@@ -445,10 +491,10 @@ class ResponseProcessor(
           originalTokens.take(originalTokens.size - parseLength)
         }
         (if (whatTokens.lastOption.has("in")) {
-          whatTokens.dropRight(1)
-        } else {
-          whatTokens
-        }).mkString(" ")
+           whatTokens.dropRight(1)
+         } else {
+           whatTokens
+         }).mkString(" ")
       }
       val where = if (isWhereBeforeWhatParse) {
         tokens.take(parseLength).mkString(" ")
@@ -463,23 +509,30 @@ class ResponseProcessor(
 
       val shouldFetchParents =
         responseIncludes(ResponseIncludes.PARENTS) ||
-        responseIncludes(ResponseIncludes.DISPLAY_NAME)
+          responseIncludes(ResponseIncludes.DISPLAY_NAME)
 
       val sortedParents = if (shouldFetchParents) {
         // we've seen dupe parents, not sure why, the toSet.toSeq fixes
         // TODO: why dupe US parents on new york state?
         p(0).fmatch.scoringFeatures.parentIds.toSet.toSeq
           .flatMap(StoredFeatureId.fromLong _)
-          .flatMap(fid => parentMap.get(fid)).sorted(GeocodeServingFeatureOrdering)
+          .flatMap(fid => parentMap.get(fid))
+          .sorted(GeocodeServingFeatureOrdering)
       } else {
         Nil
       }
 
-      val fixedFeature = fixFeature(feature, sortedParents, Some(p), polygonMap,
-        s2CoveringMap, s2InteriorMap,
-        fillHighlightedName=parseParams.tokens.size > 0,
-        includeAllNames=responseIncludes(ResponseIncludes.ALL_NAMES),
-        parentIds=p(0).fmatch.scoringFeatures.parentIds)
+      val fixedFeature = fixFeature(
+        feature,
+        sortedParents,
+        Some(p),
+        polygonMap,
+        s2CoveringMap,
+        s2InteriorMap,
+        fillHighlightedName = parseParams.tokens.size > 0,
+        includeAllNames = responseIncludes(ResponseIncludes.ALL_NAMES),
+        parentIds = p(0).fmatch.scoringFeatures.parentIds
+      )
 
       val interpBuilder = GeocodeInterpretation.newBuilder
         .what(what)
@@ -493,20 +546,32 @@ class ResponseProcessor(
 
       val fixedParentMap = new scala.collection.mutable.HashMap[Long, GeocodeFeature]
       def getFixedParent(parentFeature: GeocodeServingFeature): GeocodeFeature = {
-        fixedParentMap.getOrElseUpdate(parentFeature.longId, {
-          val sortedParentParents = parentFeature.scoringFeatures.parentIds
-            .flatMap(StoredFeatureId.fromLong _)
-            .flatMap(parentFid => parentMap.get(parentFid)).sorted
-          // parents don't need polygons, what is wrong with me?
-          fixFeature(parentFeature.feature, sortedParentParents, None, Map.empty, Map.empty, Map.empty,
-            fillHighlightedName=parseParams.tokens.size > 0,
-            includeAllNames=responseIncludes(ResponseIncludes.PARENT_ALL_NAMES),
-            parentIds=parentFeature.scoringFeatures.parentIds)
-        })
+        fixedParentMap.getOrElseUpdate(
+          parentFeature.longId, {
+            val sortedParentParents = parentFeature.scoringFeatures.parentIds
+              .flatMap(StoredFeatureId.fromLong _)
+              .flatMap(parentFid => parentMap.get(parentFid))
+              .sorted
+            // parents don't need polygons, what is wrong with me?
+            fixFeature(
+              parentFeature.feature,
+              sortedParentParents,
+              None,
+              Map.empty,
+              Map.empty,
+              Map.empty,
+              fillHighlightedName = parseParams.tokens.size > 0,
+              includeAllNames = responseIncludes(ResponseIncludes.PARENT_ALL_NAMES),
+              parentIds = parentFeature.scoringFeatures.parentIds
+            )
+          }
+        )
       }
 
       if (responseIncludes(ResponseIncludes.PARENTS)) {
-        interpBuilder.parents(sortedParents.map((parentFeature: GeocodeServingFeature) => getFixedParent(parentFeature)))
+        interpBuilder.parents(
+          sortedParents.map((parentFeature: GeocodeServingFeature) => getFixedParent(parentFeature))
+        )
       }
       interpBuilder.result
     })
@@ -518,13 +583,15 @@ class ResponseProcessor(
       // are the names we get if we only take one parent component from each.
       // Find ambiguous geocodes, tell them to take more name component
       val ambiguousInterpretationsMap: Map[String, Seq[GeocodeInterpretation]] =
-        interpretations.groupBy(interp => {
-          if (dedupByMatchedName) {
-            interp.feature.matchedNameOption.getOrElse("")
-          } else {
-            interp.feature.displayNameOption.getOrElse("")
-          }
-        }).filter(_._2.size > 1)
+        interpretations
+          .groupBy(interp => {
+            if (dedupByMatchedName) {
+              interp.feature.matchedNameOption.getOrElse("")
+            } else {
+              interp.feature.displayNameOption.getOrElse("")
+            }
+          })
+          .filter(_._2.size > 1)
       val ambiguousInterpretations: Iterable[GeocodeInterpretation] =
         ambiguousInterpretationsMap.flatMap(_._2).toList
       val ambiguousIdMap: Map[String, Iterable[GeocodeInterpretation]] =
@@ -532,20 +599,31 @@ class ResponseProcessor(
 
       if (ambiguousInterpretations.size > 0) {
         logger.ifDebug("had ambiguous interpretations")
-        ambiguousInterpretationsMap.foreach({case (k, v) =>
-          logger.ifDebug("have %d of %s", v.size, k)
+        ambiguousInterpretationsMap.foreach({
+          case (k, v) =>
+            logger.ifDebug("have %d of %s", v.size, k)
         })
         sortedParses.foreach(p => {
           val fmatch = p(0).fmatch
           val feature = p(0).fmatch.feature
-          ambiguousIdMap.getOrElse(feature.ids.toString, Nil).foreach(interp => {
-            val sortedParents = p(0).fmatch.scoringFeatures.parentIds
-              .flatMap(id => StoredFeatureId.fromLong(id).flatMap(parentMap.get))
-              .sorted(GeocodeServingFeatureOrdering)
-            fixFeatureMutable(interp.feature.mutable, sortedParents, Some(p), polygonMap, s2CoveringMap,
-              s2InteriorMap, numExtraParentsRequired=1, fillHighlightedName=parseParams.tokens.size > 0,
-              includeAllNames=responseIncludes(ResponseIncludes.PARENT_ALL_NAMES))
-          })
+          ambiguousIdMap
+            .getOrElse(feature.ids.toString, Nil)
+            .foreach(interp => {
+              val sortedParents = p(0).fmatch.scoringFeatures.parentIds
+                .flatMap(id => StoredFeatureId.fromLong(id).flatMap(parentMap.get))
+                .sorted(GeocodeServingFeatureOrdering)
+              fixFeatureMutable(
+                interp.feature.mutable,
+                sortedParents,
+                Some(p),
+                polygonMap,
+                s2CoveringMap,
+                s2InteriorMap,
+                numExtraParentsRequired = 1,
+                fillHighlightedName = parseParams.tokens.size > 0,
+                includeAllNames = responseIncludes(ResponseIncludes.PARENT_ALL_NAMES)
+              )
+            })
         })
       }
     }
@@ -568,9 +646,7 @@ class ResponseProcessor(
     }
 
     var goodParses = if (req.woeRestrict.size > 0) {
-      parses.filter(p =>
-        p.headOption.exists(f => f.fmatch.feature.woeTypeOption.exists(req.woeRestrict.has))
-      )
+      parses.filter(p => p.headOption.exists(f => f.fmatch.feature.woeTypeOption.exists(req.woeRestrict.has)))
     } else {
       parses
     }
@@ -578,23 +654,25 @@ class ResponseProcessor(
 
     goodParses = goodParses.filter(p => {
       val parseLength = p.tokenLength
-        parseLength == parseParams.tokens.size || parseLength != 1 ||
-          p.headOption.exists(m => {
-            m.fmatch.scoringFeatures.population > 0 || p.length > 1
-          })
+      parseLength == parseParams.tokens.size || parseLength != 1 ||
+      p.headOption.exists(m => {
+        m.fmatch.scoringFeatures.population > 0 || p.length > 1
+      })
     })
     logger.ifDebug("have %d parses after removeLowRankingParses", goodParses.size)
 
-    goodParses = goodParses.filter(p => p.headOption.exists(m => {
-      !m.fmatch.scoringFeatures.canGeocodeIsSet || m.fmatch.scoringFeatures.canGeocode
-    }))
+    goodParses = goodParses.filter(
+      p =>
+        p.headOption.exists(m => {
+          !m.fmatch.scoringFeatures.canGeocodeIsSet || m.fmatch.scoringFeatures.canGeocode
+        })
+    )
     logger.ifDebug("have %d parses after filtering out canGeocode", goodParses.size)
 
     if (req.allowedSourcesIsSet && req.allowedSources.size > 0) {
       val allowedSources = req.allowedSources
-      goodParses = goodParses.filter(p =>
-        p.headOption.exists(_.fmatch.feature.ids.exists(i => allowedSources.has(i.source)))
-      )
+      goodParses =
+        goodParses.filter(p => p.headOption.exists(_.fmatch.feature.ids.exists(i => allowedSources.has(i.source))))
       logger.ifDebug("have %d parses after filtering out allowedSources", goodParses.size)
     }
 
@@ -613,26 +691,37 @@ class ResponseProcessor(
 
     // build a map from
     // primary feature id -> list of parses containing that id, sorted by
-    val parsesByMainId: Map[Long, Seq[SortedParseWithPosition]] = parses.zipWithIndex.map({
-      case (parse, index) => SortedParseWithPosition(parse, index)
-    }).groupBy(_.parse.headOption.map(_.fmatch.longId).getOrElse(-1L)).mappedValues(parses => {
-      parses.sortBy(p => {
-        // prefer interpretations that are shorter and don't have reused features
-        val dupeWeight = if (p.parse.hasDupeFeature) { 10 } else { 0 }
-        p.parse.size + dupeWeight - p.parse.tokenLength*1000
+    val parsesByMainId: Map[Long, Seq[SortedParseWithPosition]] = parses.zipWithIndex
+      .map({
+        case (parse, index) => SortedParseWithPosition(parse, index)
       })
-    })
+      .groupBy(_.parse.headOption.map(_.fmatch.longId).getOrElse(-1L))
+      .mappedValues(parses => {
+        parses.sortBy(p => {
+          // prefer interpretations that are shorter and don't have reused features
+          val dupeWeight = if (p.parse.hasDupeFeature) {
+            10
+          } else {
+            0
+          }
+          p.parse.size + dupeWeight - p.parse.tokenLength * 1000
+        })
+      })
 
     val actualParses =
-      parses.zipWithIndex.filter({case (p, index) => {
-        (for {
-          primaryFeature <- p.headOption
-          parses: Seq[SortedParseWithPosition] <- parsesByMainId.get(primaryFeature.fmatch.longId)
-          bestParse <- parses.headOption
-        } yield {
-          bestParse.position == index
-        }).getOrElse(false)
-      }}).map(_._1)
+      parses.zipWithIndex
+        .filter({
+          case (p, index) => {
+            (for {
+              primaryFeature <- p.headOption
+              parses: Seq[SortedParseWithPosition] <- parsesByMainId.get(primaryFeature.fmatch.longId)
+              bestParse <- parses.headOption
+            } yield {
+              bestParse.position == index
+            }).getOrElse(false)
+          }
+        })
+        .map(_._1)
 
     val filteredParses = filterParses(actualParses, parseParams)
 
@@ -646,9 +735,14 @@ class ResponseProcessor(
       val dedupedParses = dedupeParses(filteredParses.take(maxInterpretations * 2))
       if (req.debug > 0) {
         logger.ifDebug("%d parses after deduping", dedupedParses.size)
-        dedupedParses.zipWithIndex.foreach({case (parse, index) =>
-          logger.ifDebug("%d: deduped parse ids: %s (score: %d)", index, parse.map(f =>
-            StoredFeatureId.fromLong(f.fmatch.longId).get), parse.finalScore)
+        dedupedParses.zipWithIndex.foreach({
+          case (parse, index) =>
+            logger.ifDebug(
+              "%d: deduped parse ids: %s (score: %d)",
+              index,
+              parse.map(f => StoredFeatureId.fromLong(f.fmatch.longId).get),
+              parse.finalScore
+            )
         })
       }
       dedupedParses.take(maxInterpretations)
@@ -660,30 +754,32 @@ class ResponseProcessor(
     // val sortedDedupedParses: SortedParseSeq = dedupedParses.sorted(new ParseOrdering).take(3)
     val sortedDedupedParses: SortedParseSeq = dedupedParses.take(maxInterpretations)
     val polygonMap: Map[StoredFeatureId, Geometry] = if (GeocodeRequestUtils.shouldFetchPolygon(req)) {
-      store.getPolygonByFeatureIds(sortedDedupedParses.flatMap(p =>
-        StoredFeatureId.fromLong(p(0).fmatch.longId)))
+      store.getPolygonByFeatureIds(sortedDedupedParses.flatMap(p => StoredFeatureId.fromLong(p(0).fmatch.longId)))
     } else {
       Map.empty
     }
-    val s2CoveringMap: Map[StoredFeatureId, Seq[Long]] = if (
-      GeocodeRequestUtils.responseIncludes(req, ResponseIncludes.S2_COVERING)
-    ) {
-      store.getS2CoveringByFeatureIds(sortedDedupedParses.flatMap(p =>
-        StoredFeatureId.fromLong(p(0).fmatch.longId)))
-    } else {
-      Map.empty
-    }
-    val s2InteriorMap: Map[StoredFeatureId, Seq[Long]] = if (
-      GeocodeRequestUtils.responseIncludes(req, ResponseIncludes.S2_INTERIOR)
-    ) {
-      store.getS2InteriorByFeatureIds(sortedDedupedParses.flatMap(p =>
-        StoredFeatureId.fromLong(p(0).fmatch.longId)))
-    } else {
-      Map.empty
-    }
-    generateResponse(hydrateParses(
-      sortedDedupedParses, parseParams, polygonMap, s2CoveringMap, s2InteriorMap, fixAmbiguousNames = true,
-      dedupByMatchedName = dedupByMatchedName),
+    val s2CoveringMap: Map[StoredFeatureId, Seq[Long]] =
+      if (GeocodeRequestUtils.responseIncludes(req, ResponseIncludes.S2_COVERING)) {
+        store.getS2CoveringByFeatureIds(sortedDedupedParses.flatMap(p => StoredFeatureId.fromLong(p(0).fmatch.longId)))
+      } else {
+        Map.empty
+      }
+    val s2InteriorMap: Map[StoredFeatureId, Seq[Long]] =
+      if (GeocodeRequestUtils.responseIncludes(req, ResponseIncludes.S2_INTERIOR)) {
+        store.getS2InteriorByFeatureIds(sortedDedupedParses.flatMap(p => StoredFeatureId.fromLong(p(0).fmatch.longId)))
+      } else {
+        Map.empty
+      }
+    generateResponse(
+      hydrateParses(
+        sortedDedupedParses,
+        parseParams,
+        polygonMap,
+        s2CoveringMap,
+        s2InteriorMap,
+        fixAmbiguousNames = true,
+        dedupByMatchedName = dedupByMatchedName
+      ),
       requestGeom
     )
   }

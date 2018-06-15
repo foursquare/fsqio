@@ -22,7 +22,6 @@ import scala.collection.JavaConverters._
   * for example, GI40_2_2_2 divides the world up into (40 x 40)
   * At the top level, then (2 x 2), then (2 x 2), then (2 x 2).
   * At the last level, the actual shapes are preserved. */
-
 object ShapefileGeo {
   val geometryFactory = JTSFactoryFinder.getGeometryFactory(null);
   val indexAttributePrefix = "GI"
@@ -34,7 +33,7 @@ object ShapefileGeo {
     def shape: Geometry
   }
 
-  class ShapeLeafNode (value: String, geom: Geometry) extends KeyShape {
+  class ShapeLeafNode(value: String, geom: Geometry) extends KeyShape {
     override def keyValue = Some(value)
     override def shape = geom
   }
@@ -48,8 +47,9 @@ object ShapefileGeo {
     * queried.*/
   class ShapeTrieNode(level: Int, bounds: GeoBounds, alwaysCheckGeometry: Boolean) extends KeyShape {
     def shape =
-      geometryFactory.toGeometry(new Envelope(
-        bounds.minLong, bounds.minLong + bounds.width, bounds.minLat, bounds.minLat + bounds.height))
+      geometryFactory.toGeometry(
+        new Envelope(bounds.minLong, bounds.minLong + bounds.width, bounds.minLat, bounds.minLat + bounds.height)
+      )
 
     def nodeBounds = bounds
 
@@ -65,11 +65,12 @@ object ShapefileGeo {
 
     /** Some if there are deeper levels */
     var subGrid: Option[Array[Array[ShapeTrieNode]]] = None
+
     /** Some if the deepest level reached, but muliple keyValues
         point-in-plane called on each element */
     var subList: List[ShapeLeafNode] = Nil
 
-    def subGridSize: (Int,Int) = subGrid.map(v => (v.length, v(0).length)).getOrElse(0,0)
+    def subGridSize: (Int, Int) = subGrid.map(v => (v.length, v(0).length)).getOrElse(0, 0)
 
     // NOTE: order here is lat, long to comply with other interfaces,
     // Whereas GeoTools is mostly long, lat
@@ -78,60 +79,66 @@ object ShapefileGeo {
 
     def getNearestList(geoLat: Double, geoLong: Double, fudger: Option[Fudger] = None): List[String] = keyValue match {
       case Some(keyValue) => List(keyValue)
-      case None => subGrid match {
-        case Some(grid) => {
-          val longIdx = math.max(0, math.min(subGridSize._1 - 1,
-            math.floor((geoLong - bounds.minLong)/(bounds.width /subGridSize._1)).toInt))
-          val latIdx  = math.max(0, math.min(subGridSize._2 - 1,
-            math.floor((geoLat  - bounds.minLat )/(bounds.height/subGridSize._2)).toInt))
+      case None =>
+        subGrid match {
+          case Some(grid) => {
+            val longIdx = math.max(
+              0,
+              math
+                .min(subGridSize._1 - 1, math.floor((geoLong - bounds.minLong) / (bounds.width / subGridSize._1)).toInt)
+            )
+            val latIdx = math.max(
+              0,
+              math
+                .min(subGridSize._2 - 1, math.floor((geoLat - bounds.minLat) / (bounds.height / subGridSize._2)).toInt)
+            )
 
-          // RECURSE
-          grid(longIdx)(latIdx).getNearestList(geoLat, geoLong, fudger)// Note: Lat, Long
-        }
-        case None => {
-          val point = geometryFactory.createPoint(new Coordinate(geoLong, geoLat))
-          val ret = subList.filter(keyShape => keyShape.shape.covers(point)).map(_.keyValue.get)
-          if (ret.isEmpty) {
-            // fudgers might want to start returning lists
-            fudger.flatMap(_.fudge(geoLat, geoLong, this)).toList
-          } else {
-            ret
+            // RECURSE
+            grid(longIdx)(latIdx).getNearestList(geoLat, geoLong, fudger) // Note: Lat, Long
+          }
+          case None => {
+            val point = geometryFactory.createPoint(new Coordinate(geoLong, geoLat))
+            val ret = subList.filter(keyShape => keyShape.shape.covers(point)).map(_.keyValue.get)
+            if (ret.isEmpty) {
+              // fudgers might want to start returning lists
+              fudger.flatMap(_.fudge(geoLat, geoLong, this)).toList
+            } else {
+              ret
+            }
           }
         }
-      }
     }
 
     def makeSubGrid(levelSizes: Array[Int]): Unit = {
       if (subGrid.isEmpty) {
         val nLongs = levelSizes(level)
         val nLats = levelSizes(level)
-        val longChunk = bounds.width/nLongs
-        val latChunk = bounds.height/nLats
+        val longChunk = bounds.width / nLongs
+        val latChunk = bounds.height / nLats
 
-        val grid = Array.tabulate(nLongs, nLats)((iLong, iLat) =>
-          new ShapeTrieNode(level+1, GeoBounds( bounds.minLong + longChunk * iLong,
-                                               bounds.minLat + latChunk * iLat,
-                                               longChunk,
-                                               latChunk), alwaysCheckGeometry))
+        val grid = Array.tabulate(nLongs, nLats)(
+          (iLong, iLat) =>
+            new ShapeTrieNode(
+              level + 1,
+              GeoBounds(bounds.minLong + longChunk * iLong, bounds.minLat + latChunk * iLat, longChunk, latChunk),
+              alwaysCheckGeometry
+            )
+        )
         subGrid = Some(grid)
       }
     }
 
-
-    def addFeature(path: List[(Int, Int)],
-                    keyVal: String,
-                    geometry: Geometry,
-                    levelSizes: Array[Int]): Unit = path match {
-      case Nil => subList ::= new ShapeLeafNode(keyVal, geometry)
-      case head :: tail => {
-        if (subGrid.isEmpty){
-          makeSubGrid(levelSizes)
+    def addFeature(path: List[(Int, Int)], keyVal: String, geometry: Geometry, levelSizes: Array[Int]): Unit =
+      path match {
+        case Nil => subList ::= new ShapeLeafNode(keyVal, geometry)
+        case head :: tail => {
+          if (subGrid.isEmpty) {
+            makeSubGrid(levelSizes)
+          }
+          subGrid.get(head._1)(head._2).addFeature(tail, keyVal, geometry, levelSizes)
         }
-        subGrid.get(head._1)(head._2).addFeature(tail, keyVal, geometry, levelSizes)
       }
-    }
   } // end of ShapeTrieNode
-
 
   // Loads in a shape file, simplifying if necessary
   def load(
@@ -139,16 +146,17 @@ object ShapefileGeo {
     keyAttribute: String,
     validValues: Option[Set[String]],
     defaultValue: String,
-    alwaysCheckGeometry: Boolean): ShapeTrieNode = {
+    alwaysCheckGeometry: Boolean
+  ): ShapeTrieNode = {
 
-   // Converts "12,13;20,22;" into (12,13) :: (20,22)
-   def parseIndex(path: String): List[(Int,Int)] = {
-      path.split(";").foldRight(
-        Nil: List[(Int,Int)])((elem, list) => {
-          val elemArr = elem.split(",",2).map(e => e.toInt)
+    // Converts "12,13;20,22;" into (12,13) :: (20,22)
+    def parseIndex(path: String): List[(Int, Int)] = {
+      path
+        .split(";")
+        .foldRight(Nil: List[(Int, Int)])((elem, list) => {
+          val elemArr = elem.split(",", 2).map(e => e.toInt)
           (elemArr(0), elemArr(1)) :: list
-        }
-      )
+        })
     }
 
     val dataStoreParams: java.util.Map[String, Serializable] = new java.util.HashMap[String, Serializable]()
@@ -161,35 +169,40 @@ object ShapefileGeo {
 
     // determine the key, index, attribute names, and the number and size of the index levels
     if (featureSource.getSchema.getDescriptor(keyAttribute) == null)
-      throw new IllegalArgumentException("Schema has no attribute named \""+keyAttribute+"\"")
+      throw new IllegalArgumentException("Schema has no attribute named \"" + keyAttribute + "\"")
 
-    val indexAttribute: String = featureSource.getSchema.getDescriptors.asScala.find(d =>
-      d.getName.toString.startsWith(indexAttributePrefix)) match {
+    val indexAttribute: String = featureSource.getSchema.getDescriptors.asScala
+      .find(d => d.getName.toString.startsWith(indexAttributePrefix)) match {
       case None =>
-        throw new IllegalArgumentException("Schema has no attribute starting with \""+indexAttributePrefix+"\"")
+        throw new IllegalArgumentException("Schema has no attribute starting with \"" + indexAttributePrefix + "\"")
       case Some(descriptor) => descriptor.getName.toString
     }
     val sourceLevelSizes = indexAttribute.substring(indexAttributePrefix.length).split("_").map(_.toInt)
 
     // build the world
     val bounds = featureSource.getInfo.getBounds
-    val world = new ShapeTrieNode( 0,
-                              GeoBounds(bounds.getMinX,
-                                        bounds.getMinY,
-                                        bounds.getWidth,
-                                        bounds.getHeight), alwaysCheckGeometry)
-
+    val world = new ShapeTrieNode(
+      0,
+      GeoBounds(bounds.getMinX, bounds.getMinY, bounds.getWidth, bounds.getHeight),
+      alwaysCheckGeometry
+    )
 
     // would love to do toScala here, but though it looks like an iterator
     // and quacks like an iterator, it is not a java iterator.
     val iterator: SimpleFeatureIterator = featureSource.getFeatures.features
 
-    try{
+    try {
       while (iterator.hasNext) {
         val feature = iterator.next()
         val sourceGeometry = feature.getDefaultGeometry().asInstanceOf[Geometry]
         val keyValueCopy = feature.getAttribute(keyAttribute).toString
-        val keyValue = if (validValues.map{vv => vv(keyValueCopy)}.getOrElse(true)) keyValueCopy else defaultValue
+        val keyValue =
+          if (validValues
+                .map { vv =>
+                  vv(keyValueCopy)
+                }
+                .getOrElse(true)) keyValueCopy
+          else defaultValue
         val index = parseIndex(feature.getAttribute(indexAttribute).toString)
         world.addFeature(index, keyValue, sourceGeometry, sourceLevelSizes)
       }
@@ -199,7 +212,6 @@ object ShapefileGeo {
 
     world
   }
-
 
   /** A fudger is used when no map shapes contain the point.
     *
@@ -213,46 +225,52 @@ object ShapefileGeo {
     *
     * We are just straight up in the middle of some serious body of water.
     * No land in sight*/
-  trait Fudger{
+  trait Fudger {
     def fudge(lat: Double, long: Double, node: ShapeTrieNode): Option[String]
   }
 
   /** Determines centroid of each shape, calculates euclid dist to coord*/
-  class CentroidDistanceFudger extends Fudger{
+  class CentroidDistanceFudger extends Fudger {
     def fudge(lat: Double, long: Double, node: ShapeTrieNode): Option[String] = {
-      if (node.subList.isEmpty){
+      if (node.subList.isEmpty) {
         None
       } else {
         val point = geometryFactory.createPoint(new Coordinate(long, lat))
-        Some(node.subList.
-             map(keyShape => (keyShape, keyShape.shape.getCentroid.distance(point))). //(keyShape, centroid)
-             reduceLeft((ksd1, ksd2) => if (ksd1._2 < ksd2._2) ksd1 else ksd2)._1.keyValue.get)
+        Some(
+          node.subList
+            .map(keyShape => (keyShape, keyShape.shape.getCentroid.distance(point)))
+            . //(keyShape, centroid)
+            reduceLeft((ksd1, ksd2) => if (ksd1._2 < ksd2._2) ksd1 else ksd2)
+            ._1
+            .keyValue
+            .get
+        )
       }
     }
   }
 
   /** Tries to fudge by drawing a bounding rectangle around each shape.
     *
-     * Whoever contains the point wins, ties are broken by smallest area wins*/
-  class BoxBoundaryFudger extends Fudger{
+    * Whoever contains the point wins, ties are broken by smallest area wins*/
+  class BoxBoundaryFudger extends Fudger {
     def fudge(lat: Double, long: Double, node: ShapeTrieNode): Option[String] = {
       if (node.subList.isEmpty) {
         None
       } else {
         val point = geometryFactory.createPoint(new Coordinate(long, lat))
         (node.subList
-         .map(keyShape => (keyShape, keyShape.shape.getEnvelope))
-         .filter(_._2.covers(point))
-         .reduceLeftOption((kse1, kse2) => if (kse1._2.getArea < kse2._2.getArea) kse1 else kse2)// Ordering On?
-         .map(_._1.keyValue.get))
+          .map(keyShape => (keyShape, keyShape.shape.getEnvelope))
+          .filter(_._2.covers(point))
+          .reduceLeftOption((kse1, kse2) => if (kse1._2.getArea < kse2._2.getArea) kse1 else kse2) // Ordering On?
+          .map(_._1.keyValue.get))
       }
     }
   }
 
-  class OpenOceanMeridianFudgerTZ extends Fudger{
+  class OpenOceanMeridianFudgerTZ extends Fudger {
     def fudge(lat: Double, long: Double, node: ShapeTrieNode): Option[String] = {
       // Not in the ocean if there are shapes in the node
-      if (!node.subList.isEmpty){
+      if (!node.subList.isEmpty) {
         None
       } else {
         // Okay, so Etc/GMT+1 means one hour _WEST_ of GMT, also known to normal people as GMT-01:00 (GMT-1)
@@ -260,54 +278,55 @@ object ShapefileGeo {
         // ones that actually make any sense.
         // See http://twiki.org/cgi-bin/xtra/tzdate?tz=Etc/GMT+5 and
         // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4813746
-        val closestMeridian = -math.round(long/15.0).toInt
-        if (closestMeridian > 0){
-          Some("Etc/GMT+"+closestMeridian) // Etc/GMT+1
-        }
-        else {
-          Some("Etc/GMT"+closestMeridian) // Etc/GMT0, Etc/GMT-10
+        val closestMeridian = -math.round(long / 15.0).toInt
+        if (closestMeridian > 0) {
+          Some("Etc/GMT+" + closestMeridian) // Etc/GMT+1
+        } else {
+          Some("Etc/GMT" + closestMeridian) // Etc/GMT0, Etc/GMT-10
         }
       }
     }
   }
 
-  class OpenOceanDefaultFudger(default: String) extends Fudger{
+  class OpenOceanDefaultFudger(default: String) extends Fudger {
     def fudge(lat: Double, long: Double, node: ShapeTrieNode): Option[String] = {
       // Not in the ocean if there are shapes in the node
-      if (!node.subList.isEmpty){
+      if (!node.subList.isEmpty) {
         None
-      }
-      else{
+      } else {
         Some(default)
       }
     }
   }
 
-  class MultiFudger (fudgers: List[Fudger]) extends Fudger{
+  class MultiFudger(fudgers: List[Fudger]) extends Fudger {
     def fudge(lat: Double, long: Double, node: ShapeTrieNode): Option[String] = {
 
-        // preferable to mapping because centroid calculation can be expensive.  Don't want to instantiate
-        // it if not used.   Maybe lazy?
-        def fudgeList(lat: Double, long: Double, node: ShapeTrieNode, fudgers: List[Fudger]): Option[String] = {
-          fudgers match {
-            case Nil => None
-            case head :: tail => head.fudge(lat, long, node) orElse fudgeList(lat, long, node, tail)
-          }
+      // preferable to mapping because centroid calculation can be expensive.  Don't want to instantiate
+      // it if not used.   Maybe lazy?
+      def fudgeList(lat: Double, long: Double, node: ShapeTrieNode, fudgers: List[Fudger]): Option[String] = {
+        fudgers match {
+          case Nil => None
+          case head :: tail => head.fudge(lat, long, node) orElse fudgeList(lat, long, node, tail)
         }
-        fudgeList(lat, long, node, fudgers)
+      }
+      fudgeList(lat, long, node, fudgers)
     }
   }
 
-  class MultiFudgerTZ extends MultiFudger(new OpenOceanMeridianFudgerTZ ::
-                                          new BoxBoundaryFudger ::
-                                          new CentroidDistanceFudger ::
-                                          Nil)
+  class MultiFudgerTZ
+    extends MultiFudger(
+      new OpenOceanMeridianFudgerTZ ::
+        new BoxBoundaryFudger ::
+        new CentroidDistanceFudger ::
+        Nil
+    )
 
   class MultiFudgerCC(default: String)
-    extends MultiFudger(new OpenOceanDefaultFudger(default) ::
-                        new BoxBoundaryFudger ::
-                        new CentroidDistanceFudger ::
-                        Nil)
+    extends MultiFudger(
+      new OpenOceanDefaultFudger(default) ::
+        new BoxBoundaryFudger ::
+        new CentroidDistanceFudger ::
+        Nil
+    )
 }
-
-

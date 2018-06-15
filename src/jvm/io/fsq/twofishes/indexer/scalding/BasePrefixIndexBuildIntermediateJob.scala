@@ -46,8 +46,6 @@ class BasePrefixIndexBuildIntermediateJob(
     woeType == YahooWoeType.POSTAL_CODE && isAllDigits(name.name)
   }
 
-
-
   def joinAndSortLists(lists: List[PrefixEntry]*): List[PrefixEntry] = {
     lists.toList.flatMap(l => {
       l.sortBy(_.score)
@@ -55,12 +53,14 @@ class BasePrefixIndexBuildIntermediateJob(
   }
 
   def sortRecordsByNames(entries: List[PrefixEntry]) = {
-    val (prefPureNames, nonPrefPureNames) = entries.partition(e =>
+    val (prefPureNames, nonPrefPureNames) = entries.partition(
+      e =>
         e.name.flags.exists(flag => flag == FeatureNameFlags.PREFERRED || flag == FeatureNameFlags.ALT_NAME) &&
-        (e.name.lang == "en" || e.name.flags.contains(FeatureNameFlags.LOCAL_LANG)))
+          (e.name.lang == "en" || e.name.flags.contains(FeatureNameFlags.LOCAL_LANG))
+    )
 
-    val (secondBestNames, worstNames) = nonPrefPureNames.partition(e =>
-        e.name.lang == "en" || e.name.flags.contains(FeatureNameFlags.LOCAL_LANG))
+    val (secondBestNames, worstNames) =
+      nonPrefPureNames.partition(e => e.name.lang == "en" || e.name.flags.contains(FeatureNameFlags.LOCAL_LANG))
 
     (joinAndSortLists(prefPureNames), joinAndSortLists(secondBestNames, worstNames))
   }
@@ -70,11 +70,15 @@ class BasePrefixIndexBuildIntermediateJob(
     // and then pick the top from each group by turn and cycle through
     // input: a (US), b (US), c (CN), d (US), e (AU), f (AU), g (CN)
     // desired output: a (US), c (CN), e (AU), b (US), g (CN), f (AU), d (US)
-    entries.groupBy(_.cc)                   // (US -> a, b, d), (CN -> c, g), (AU -> e, f)
-      .values.toList                        // (a, b, d), (c, g), (e, f)
-      .flatMap(_.zipWithIndex)              // (a, 0), (b, 1), (d, 2), (c, 0), (g, 1), (e, 0), (f, 1)
-      .groupBy(_._2).toList                 // (0 -> a, c, e), (1 -> b, g, f), (2 -> d)
-      .sortBy(_._1).flatMap(_._2.map(_._1)) // a, c, e, b, g, f, d
+    entries
+      .groupBy(_.cc) // (US -> a, b, d), (CN -> c, g), (AU -> e, f)
+      .values
+      .toList // (a, b, d), (c, g), (e, f)
+      .flatMap(_.zipWithIndex) // (a, 0), (b, 1), (d, 2), (c, 0), (g, 1), (e, 0), (f, 1)
+      .groupBy(_._2)
+      .toList // (0 -> a, c, e), (1 -> b, g, f), (2 -> d)
+      .sortBy(_._1)
+      .flatMap(_._2.map(_._1)) // a, c, e, b, g, f, d
   }
 
   (for {
@@ -94,7 +98,11 @@ class BasePrefixIndexBuildIntermediateJob(
     // filter out any name that must be excluded unless it's short enough to make it into the prefix index
     // as a full name match, in which case, let it through for now and don't generate prefixes for it
     if (!shouldExclude || normalizedName.length <= PrefixIndexer.MaxPrefixLength)
-    fromLength = if (!shouldExclude) { 1 } else { normalizedName.length }
+    fromLength = if (!shouldExclude) {
+      1
+    } else {
+      normalizedName.length
+    }
     toLength = math.min(PrefixIndexer.MaxPrefixLength, normalizedName.length)
     length <- fromLength to toLength
     prefix = normalizedName.substring(0, length)
@@ -107,26 +115,33 @@ class BasePrefixIndexBuildIntermediateJob(
   }).group
     .withReducers(1)
     .toList
-    .mapValues({values: List[PrefixEntry] => {
-      val filtered = values
-        .sortBy({case entry: PrefixEntry => (entry.isFull, entry.score, entry.id)})
-        .take(PrefixIndexer.MaxNamesToConsider)
+    .mapValues({ values: List[PrefixEntry] =>
+      {
+        val filtered = values
+          .sortBy({ case entry: PrefixEntry => (entry.isFull, entry.score, entry.id) })
+          .take(PrefixIndexer.MaxNamesToConsider)
 
-      val woeMatches = filtered.filter({case entry: PrefixEntry => entry.isAllowedWoeType})
+        val woeMatches = filtered.filter({ case entry: PrefixEntry => entry.isAllowedWoeType })
 
-      val (prefSortedRecords, unprefSortedRecords) = sortRecordsByNames(woeMatches)
+        val (prefSortedRecords, unprefSortedRecords) = sortRecordsByNames(woeMatches)
 
-      //val preferredIds = roundRobinByCountryCode(prefSortedRecords).map(_.id).distinct.take(PrefixIndexer.MaxFidsToStorePerPrefix)
-      val preferredIds = prefSortedRecords.map(_.id).distinct.take(PrefixIndexer.MaxFidsToStorePerPrefix)
-      val nonPreferredIds = if (preferredIds.size < PrefixIndexer.MaxFidsWithPreferredNamesBeforeConsideringNonPreferred) {
-        //roundRobinByCountryCode(unprefSortedRecords).map(_.id).distinct.take(PrefixIndexer.MaxFidsToStorePerPrefix - preferredIds.size)
-        unprefSortedRecords.map(_.id).distinct.take(PrefixIndexer.MaxFidsToStorePerPrefix - preferredIds.size)
-      } else {
-        Nil
+        //val preferredIds = roundRobinByCountryCode(prefSortedRecords).map(_.id).distinct.take(PrefixIndexer.MaxFidsToStorePerPrefix)
+        val preferredIds = prefSortedRecords.map(_.id).distinct.take(PrefixIndexer.MaxFidsToStorePerPrefix)
+        val nonPreferredIds =
+          if (preferredIds.size < PrefixIndexer.MaxFidsWithPreferredNamesBeforeConsideringNonPreferred) {
+            //roundRobinByCountryCode(unprefSortedRecords).map(_.id).distinct.take(PrefixIndexer.MaxFidsToStorePerPrefix - preferredIds.size)
+            unprefSortedRecords.map(_.id).distinct.take(PrefixIndexer.MaxFidsToStorePerPrefix - preferredIds.size)
+          } else {
+            Nil
+          }
+
+        IntermediateDataContainer.newBuilder.longList(preferredIds ++ nonPreferredIds).result
       }
-
-      IntermediateDataContainer.newBuilder.longList(preferredIds ++ nonPreferredIds).result
-    }})
-    .filter({case (k: Text, v: IntermediateDataContainer) => v.longList.nonEmpty})
-    .write(TypedSink[(Text, IntermediateDataContainer)](SpindleSequenceFileSource[Text, IntermediateDataContainer](outputPath)))
+    })
+    .filter({ case (k: Text, v: IntermediateDataContainer) => v.longList.nonEmpty })
+    .write(
+      TypedSink[(Text, IntermediateDataContainer)](
+        SpindleSequenceFileSource[Text, IntermediateDataContainer](outputPath)
+      )
+    )
 }

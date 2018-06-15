@@ -1,4 +1,3 @@
-
 package io.fsq.twofishes.indexer.output
 
 import io.fsq.common.scala.Identity._
@@ -13,7 +12,8 @@ import org.bson.types.ObjectId
 class S2InteriorIndexer(
   override val basepath: String,
   override val fidMap: FidMap
-) extends Indexer with S2CoveringConstants {
+) extends Indexer
+  with S2CoveringConstants {
   val index = Indexes.S2InteriorIndex
   override val outputs = Seq(index)
 
@@ -44,16 +44,21 @@ class S2InteriorIndexer(
         case Iter.Item(unwrappedGroup) => {
           val group = unwrappedGroup.map(new GeocodeRecord(_))
           val toFindCovers: Map[Long, ObjectId] = group.filter(f => f.hasPoly).map(r => (r.id, r.polyIdOrThrow)).toMap
-          val coverMap: Map[ObjectId, ThriftS2InteriorIndex] = executor.fetch(
-            Q(ThriftS2InteriorIndex).where(_.id in toFindCovers.values)
-          ).groupBy(_.id).map({case (k, v) => (k, v(0))})
+          val coverMap: Map[ObjectId, ThriftS2InteriorIndex] = executor
+            .fetch(
+              Q(ThriftS2InteriorIndex).where(_.id in toFindCovers.values)
+            )
+            .groupBy(_.id)
+            .map({ case (k, v) => (k, v(0)) })
           for {
             (f, coverIndex) <- group.zipWithIndex
             covering <- coverMap.get(f.polyIdOrThrow)
           } {
             if (coverIndex =? 0) {
-              log.info("S2InteriorIndexer: outputted %d of %d used polys, %d of %d total polys seen".format(
-                numUsedPolygon, usedPolygonSize, polygonSize, groupIndex*groupSize))
+              log.info(
+                "S2InteriorIndexer: outputted %d of %d used polys, %d of %d total polys seen"
+                  .format(numUsedPolygon, usedPolygonSize, polygonSize, groupIndex * groupSize)
+              )
             }
             numUsedPolygon += 1
             writer.append(f.featureId, covering.cellIds)
@@ -70,4 +75,3 @@ class S2InteriorIndexer(
     log.info("done")
   }
 }
-

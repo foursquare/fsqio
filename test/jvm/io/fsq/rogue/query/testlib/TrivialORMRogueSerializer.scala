@@ -6,9 +6,7 @@ import io.fsq.rogue.MongoHelpers.MongoSelect
 import io.fsq.rogue.query.RogueSerializer
 import org.bson.Document
 
-
-class TrivialORMRogueSerializer
-extends RogueSerializer[TrivialORMMetaRecord[_], TrivialORMRecord, Document] {
+class TrivialORMRogueSerializer extends RogueSerializer[TrivialORMMetaRecord[_], TrivialORMRecord, Document] {
 
   override def readFromDocument[M <: TrivialORMMetaRecord[_], R](
     meta: M,

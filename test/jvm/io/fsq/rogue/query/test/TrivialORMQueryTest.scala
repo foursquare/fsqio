@@ -13,8 +13,20 @@ import io.fsq.common.concurrent.Futures
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.field.{OptionalField, RequiredField}
-import io.fsq.rogue.{BulkInsertOne, BulkRemove, BulkRemoveOne, BulkReplaceOne, BulkUpdateMany, BulkUpdateOne,
-    InitialState, Iter, Query, QueryOptimizer, Rogue, RogueException}
+import io.fsq.rogue.{
+  BulkInsertOne,
+  BulkRemove,
+  BulkRemoveOne,
+  BulkReplaceOne,
+  BulkUpdateMany,
+  BulkUpdateOne,
+  InitialState,
+  Iter,
+  Query,
+  QueryOptimizer,
+  Rogue,
+  RogueException
+}
 import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.adapter.{AsyncMongoClientAdapter, BlockingMongoClientAdapter, BlockingResult}
 import io.fsq.rogue.adapter.callback.twitter.{TwitterFutureMongoCallback, TwitterFutureMongoCallbackFactory}
@@ -22,8 +34,12 @@ import io.fsq.rogue.connection.MongoIdentifier
 import io.fsq.rogue.connection.testlib.RogueMongoTest
 import io.fsq.rogue.index.{Asc, Desc, MongoIndex}
 import io.fsq.rogue.query.QueryExecutor
-import io.fsq.rogue.query.testlib.{TrivialORMMetaRecord, TrivialORMMongoCollectionFactory, TrivialORMRecord,
-    TrivialORMRogueSerializer}
+import io.fsq.rogue.query.testlib.{
+  TrivialORMMetaRecord,
+  TrivialORMMongoCollectionFactory,
+  TrivialORMRecord,
+  TrivialORMRogueSerializer
+}
 import io.fsq.rogue.util.{DefaultQueryLogger, DefaultQueryUtilities, QueryLogger}
 import java.util.{ArrayList, List => JavaList}
 import java.util.concurrent.CyclicBarrier
@@ -34,7 +50,6 @@ import org.junit.{Assert, Before, Test}
 import org.specs2.matcher.{JUnitMustMatchers, MatchersImplicits}
 import scala.collection.JavaConverters._
 import scala.math.min
-
 
 case class SimpleRecord(
   id: ObjectId = new ObjectId,
@@ -193,7 +208,8 @@ object TrivialORMQueryTest {
 }
 
 // TODO(jacob): Move basically everything in the rogue tests into here.
-class TrivialORMQueryTest extends RogueMongoTest
+class TrivialORMQueryTest
+  extends RogueMongoTest
   with JUnitMustMatchers
   with MatchersImplicits
   with BlockingResult.Implicits
@@ -441,9 +457,11 @@ class TrivialORMQueryTest extends RogueMongoTest
 
   def testSingleBlockingSave(record: SimpleRecord): Unit = {
     blockingQueryExecutor.save(record)
-    blockingQueryExecutor.fetchOne(
-      SimpleRecord.where(_.id eqs record.id)
-    ).unwrap must_== Some(record)
+    blockingQueryExecutor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs record.id)
+      )
+      .unwrap must_== Some(record)
   }
 
   @Test
@@ -488,13 +506,15 @@ class TrivialORMQueryTest extends RogueMongoTest
     )
 
     val duplicateTestFuture = testFutures.flatMap(_ => {
-      asyncQueryExecutor.insert(SimpleRecord(duplicateId))
+      asyncQueryExecutor
+        .insert(SimpleRecord(duplicateId))
         .map(_ => throw new Exception("Expected insertion failure on duplicate id"))
         .handle({
-          case mwe: MongoWriteException => mwe.getError.getCategory match {
-            case ErrorCategory.DUPLICATE_KEY => ()
-            case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw mwe
-          }
+          case mwe: MongoWriteException =>
+            mwe.getError.getCategory match {
+              case ErrorCategory.DUPLICATE_KEY => ()
+              case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw mwe
+            }
         })
     })
 
@@ -503,9 +523,11 @@ class TrivialORMQueryTest extends RogueMongoTest
 
   def testSingleBlockingInsert(record: SimpleRecord): Unit = {
     blockingQueryExecutor.insert(record)
-    blockingQueryExecutor.fetchOne(
-      SimpleRecord.where(_.id eqs record.id)
-    ).unwrap must_== Some(record)
+    blockingQueryExecutor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs record.id)
+      )
+      .unwrap must_== Some(record)
   }
 
   @Test
@@ -520,10 +542,11 @@ class TrivialORMQueryTest extends RogueMongoTest
       blockingQueryExecutor.insert(SimpleRecord(duplicateId))
       throw new Exception("Expected insertion failure on duplicate id")
     } catch {
-      case mwe: MongoWriteException => mwe.getError.getCategory match {
-        case ErrorCategory.DUPLICATE_KEY => ()
-        case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw mwe
-      }
+      case mwe: MongoWriteException =>
+        mwe.getError.getCategory match {
+          case ErrorCategory.DUPLICATE_KEY => ()
+          case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw mwe
+        }
     }
   }
 
@@ -540,7 +563,8 @@ class TrivialORMQueryTest extends RogueMongoTest
     records: Seq[SimpleRecord],
     testFuture: () => Future[Unit]
   ): Future[Unit] = {
-    asyncQueryExecutor.insertAll(records)
+    asyncQueryExecutor
+      .insertAll(records)
       .map(_ => throw new Exception("Expected insertion failure on duplicate id"))
       .handle({
         case mbwe: MongoBulkWriteException => {
@@ -549,7 +573,8 @@ class TrivialORMQueryTest extends RogueMongoTest
             case _ => throw mbwe
           }
         }
-      }).flatMap(_ => testFuture())
+      })
+      .flatMap(_ => testFuture())
   }
 
   /** NOTE(jacob): The following includes tests which specify behavior around how bulk
@@ -570,44 +595,55 @@ class TrivialORMQueryTest extends RogueMongoTest
       newTestRecord(1),
       newTestRecord(2)
     )
-    val testFutures = emptyInsertFuture.flatMap(_ => Future.join(
-      testSingleAsyncInsertAll(Seq(newTestRecord(0))),
-      testSingleAsyncInsertAll(records)
-    ))
+    val testFutures = emptyInsertFuture.flatMap(
+      _ =>
+        Future.join(
+          testSingleAsyncInsertAll(Seq(newTestRecord(0))),
+          testSingleAsyncInsertAll(records)
+        )
+    )
 
     val duplicate = SimpleRecord(new ObjectId)
-    val duplicateTestFutures = testFutures.flatMap(_ => Future.join(
-      testSingleAsyncDuplicateInsertAll(Seq(SimpleRecord(records(0).id)), () => Future.Unit),
-      testSingleAsyncDuplicateInsertAll(
-        Seq(duplicate, duplicate),
-        () => asyncQueryExecutor.count(SimpleRecord.where(_.id eqs duplicate.id)).map(_ must_== 1)
-      )
-    ))
+    val duplicateTestFutures = testFutures.flatMap(
+      _ =>
+        Future.join(
+          testSingleAsyncDuplicateInsertAll(Seq(SimpleRecord(records(0).id)), () => Future.Unit),
+          testSingleAsyncDuplicateInsertAll(
+            Seq(duplicate, duplicate),
+            () => asyncQueryExecutor.count(SimpleRecord.where(_.id eqs duplicate.id)).map(_ must_== 1)
+          )
+        )
+    )
 
     val others = Seq.tabulate(3)(_ => SimpleRecord())
-    val duplicateBehavioralTestFutures = duplicateTestFutures.flatMap(_ => Future.join(
-      testSingleAsyncDuplicateInsertAll(
-        Seq(others(0), duplicate, duplicate),
-        () => asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs others(0).id)).map(_ must_== Some(others(0)))
-      ),
-      testSingleAsyncDuplicateInsertAll(
-        Seq(duplicate, others(1), duplicate),
-        () => asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs others(1).id)).map(_ must_== None)
-      ),
-      testSingleAsyncDuplicateInsertAll(
-        Seq(duplicate, duplicate, others(2)),
-        () => asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs others(2).id)).map(_ must_== None)
-      )
-    ))
+    val duplicateBehavioralTestFutures = duplicateTestFutures.flatMap(
+      _ =>
+        Future.join(
+          testSingleAsyncDuplicateInsertAll(
+            Seq(others(0), duplicate, duplicate),
+            () => asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs others(0).id)).map(_ must_== Some(others(0)))
+          ),
+          testSingleAsyncDuplicateInsertAll(
+            Seq(duplicate, others(1), duplicate),
+            () => asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs others(1).id)).map(_ must_== None)
+          ),
+          testSingleAsyncDuplicateInsertAll(
+            Seq(duplicate, duplicate, others(2)),
+            () => asyncQueryExecutor.fetchOne(SimpleRecord.where(_.id eqs others(2).id)).map(_ must_== None)
+          )
+        )
+    )
 
     Await.result(duplicateBehavioralTestFutures)
   }
 
   def testSingleBlockingInsertAll(records: Seq[SimpleRecord]): Unit = {
     blockingQueryExecutor.insertAll(records)
-    blockingQueryExecutor.fetch(
-      SimpleRecord.where(_.id in records.map(_.id))
-    ).unwrap must_== records
+    blockingQueryExecutor
+      .fetch(
+        SimpleRecord.where(_.id in records.map(_.id))
+      )
+      .unwrap must_== records
   }
 
   def testSingleBlockingDuplicateInsertAll(
@@ -714,12 +750,14 @@ class TrivialORMQueryTest extends RogueMongoTest
     })
 
     val staticId = new ObjectId
-    val staticIdTestFuture = asyncQueryExecutor.insert(SimpleRecord(staticId)).flatMap(_ => {
-      Future.join(
-        asyncQueryExecutor.distinct(SimpleRecord.where(_.id eqs staticId))(_.id).map(_ must_== Seq(staticId)),
-        asyncQueryExecutor.distinct(SimpleRecord.where(_.id eqs staticId))(_.boolean).map(_ must_== Seq.empty)
-      )
-    })
+    val staticIdTestFuture = asyncQueryExecutor
+      .insert(SimpleRecord(staticId))
+      .flatMap(_ => {
+        Future.join(
+          asyncQueryExecutor.distinct(SimpleRecord.where(_.id eqs staticId))(_.id).map(_ must_== Seq(staticId)),
+          asyncQueryExecutor.distinct(SimpleRecord.where(_.id eqs staticId))(_.boolean).map(_ must_== Seq.empty)
+        )
+      })
 
     val allFieldTestFuture = insertFuture.flatMap(_ => {
       Future.join(
@@ -730,14 +768,20 @@ class TrivialORMQueryTest extends RogueMongoTest
         asyncQueryExecutor.distinct(SimpleRecord)(_.double).map(_ must_== Seq(8.5)),
         asyncQueryExecutor.distinct(SimpleRecord)(_.string).map(_ must_== Seq("hello")),
         asyncQueryExecutor.distinct(SimpleRecord)(_.vector).map(_ must containTheSameElementsAs(Seq(0, 1, 2, 3))),
-        asyncQueryExecutor.distinct(SimpleRecord)(
-          _.map,
-          _.asInstanceOf[java.util.Map[String, Int]].asScala.toMap
-        ).map(_ must containTheSameElementsAs(Seq(
-          Map("modThree" -> 0),
-          Map("modThree" -> 1),
-          Map("modThree" -> 2)
-        )))
+        asyncQueryExecutor
+          .distinct(SimpleRecord)(
+            _.map,
+            _.asInstanceOf[java.util.Map[String, Int]].asScala.toMap
+          )
+          .map(
+            _ must containTheSameElementsAs(
+              Seq(
+                Map("modThree" -> 0),
+                Map("modThree" -> 1),
+                Map("modThree" -> 2)
+              )
+            )
+          )
       )
     })
 
@@ -763,14 +807,18 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.distinct(SimpleRecord)(_.double).unwrap must_== Seq(8.5)
     blockingQueryExecutor.distinct(SimpleRecord)(_.string).unwrap must_== Seq("hello")
     blockingQueryExecutor.distinct(SimpleRecord)(_.vector).unwrap must containTheSameElementsAs(Seq(0, 1, 2, 3))
-    blockingQueryExecutor.distinct(SimpleRecord)(
-      _.map,
-      _.asInstanceOf[java.util.Map[String, Int]].asScala.toMap
-    ).unwrap must containTheSameElementsAs(Seq(
-      Map("modThree" -> 0),
-      Map("modThree" -> 1),
-      Map("modThree" -> 2)
-    ))
+    blockingQueryExecutor
+      .distinct(SimpleRecord)(
+        _.map,
+        _.asInstanceOf[java.util.Map[String, Int]].asScala.toMap
+      )
+      .unwrap must containTheSameElementsAs(
+      Seq(
+        Map("modThree" -> 0),
+        Map("modThree" -> 1),
+        Map("modThree" -> 2)
+      )
+    )
   }
 
   @Test
@@ -781,12 +829,14 @@ class TrivialORMQueryTest extends RogueMongoTest
     })
 
     val staticId = new ObjectId
-    val staticIdTestFuture = asyncQueryExecutor.insert(SimpleRecord(staticId)).flatMap(_ => {
-      Future.join(
-        asyncQueryExecutor.countDistinct(SimpleRecord.where(_.id eqs staticId))(_.id).map(_ must_== 1),
-        asyncQueryExecutor.countDistinct(SimpleRecord.where(_.id eqs staticId))(_.boolean).map(_ must_== 0)
-      )
-    })
+    val staticIdTestFuture = asyncQueryExecutor
+      .insert(SimpleRecord(staticId))
+      .flatMap(_ => {
+        Future.join(
+          asyncQueryExecutor.countDistinct(SimpleRecord.where(_.id eqs staticId))(_.id).map(_ must_== 1),
+          asyncQueryExecutor.countDistinct(SimpleRecord.where(_.id eqs staticId))(_.boolean).map(_ must_== 0)
+        )
+      })
 
     val allFieldTestFuture = insertFuture.flatMap(_ => {
       Future.join(
@@ -843,9 +893,11 @@ class TrivialORMQueryTest extends RogueMongoTest
         asyncQueryExecutor.fetch(SimpleRecord).map(_ must containTheSameElementsAs(inserted)),
         asyncQueryExecutor.fetch(SimpleRecord.where(_.id eqs inserted.head.id)).map(_ must_== Seq(inserted.head)),
         asyncQueryExecutor.fetch(SimpleRecord.where(_.id eqs new ObjectId)).map(_ must beEmpty),
-        asyncQueryExecutor.fetch(
-          SimpleRecord.where(_.int in filteredInts)
-        ).map(_ must containTheSameElementsAs(filteredRecords))
+        asyncQueryExecutor
+          .fetch(
+            SimpleRecord.where(_.int in filteredInts)
+          )
+          .map(_ must containTheSameElementsAs(filteredRecords))
       )
     })
 
@@ -874,9 +926,11 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val filteredInts = Set(0, 1)
     val filteredRecords = inserted.filter(_.int.map(filteredInts.has(_)).getOrElse(false))
-    blockingQueryExecutor.fetch(
-      SimpleRecord.where(_.int in filteredInts)
-    ).unwrap must containTheSameElementsAs(filteredRecords)
+    blockingQueryExecutor
+      .fetch(
+        SimpleRecord.where(_.int in filteredInts)
+      )
+      .unwrap must containTheSameElementsAs(filteredRecords)
 
     val emptyRecord = SimpleRecord()
     blockingQueryExecutor.insert(emptyRecord)
@@ -936,9 +990,11 @@ class TrivialORMQueryTest extends RogueMongoTest
     expected: Seq[SimpleRecord]
   ): Future[Unit] = {
     val accumulator = Vector.newBuilder[SimpleRecord]
-    asyncQueryExecutor.foreach(query)(accumulator += _).map(_ => {
-      accumulator.result() must containTheSameElementsAs(expected)
-    })
+    asyncQueryExecutor
+      .foreach(query)(accumulator += _)
+      .map(_ => {
+        accumulator.result() must containTheSameElementsAs(expected)
+      })
   }
 
   @Test
@@ -1010,33 +1066,38 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val testFuture = insertedFuture.flatMap(inserted => {
       Future.join(
-        asyncQueryExecutor.fetchBatch(
-          SimpleRecord,
-          evenBatchSize
-        )(
-          _.map(_.id)
-        ).map(_ must containTheSameElementsAs(inserted.map(_.id))),
-
-        asyncQueryExecutor.fetchBatch(
-          SimpleRecord,
-          oddBatchSize
-        )(
-          _.map(_.id)
-        ).map(_ must containTheSameElementsAs(inserted.map(_.id))),
-
-        asyncQueryExecutor.fetchBatch(
-          SimpleRecord.where(_.id eqs inserted.head.id),
-          evenBatchSize
-        )(
-          _.map(_.id)
-        ).map(_ must_== Seq(inserted.head.id)),
-
-        asyncQueryExecutor.fetchBatch(
-          SimpleRecord.where(_.id eqs new ObjectId),
-          evenBatchSize
-        )(
-          _.map(_.id)
-        ).map(_ must beEmpty)
+        asyncQueryExecutor
+          .fetchBatch(
+            SimpleRecord,
+            evenBatchSize
+          )(
+            _.map(_.id)
+          )
+          .map(_ must containTheSameElementsAs(inserted.map(_.id))),
+        asyncQueryExecutor
+          .fetchBatch(
+            SimpleRecord,
+            oddBatchSize
+          )(
+            _.map(_.id)
+          )
+          .map(_ must containTheSameElementsAs(inserted.map(_.id))),
+        asyncQueryExecutor
+          .fetchBatch(
+            SimpleRecord.where(_.id eqs inserted.head.id),
+            evenBatchSize
+          )(
+            _.map(_.id)
+          )
+          .map(_ must_== Seq(inserted.head.id)),
+        asyncQueryExecutor
+          .fetchBatch(
+            SimpleRecord.where(_.id eqs new ObjectId),
+            evenBatchSize
+          )(
+            _.map(_.id)
+          )
+          .map(_ must beEmpty)
       )
     })
 
@@ -1052,33 +1113,41 @@ class TrivialORMQueryTest extends RogueMongoTest
       blockingQueryExecutor.insert(newTestRecord(i)).unwrap
     }
 
-    blockingQueryExecutor.fetchBatch(
-      SimpleRecord,
-      evenBatchSize
-    )(
-      _.map(_.id)
-    ).unwrap must containTheSameElementsAs(inserted.map(_.id))
+    blockingQueryExecutor
+      .fetchBatch(
+        SimpleRecord,
+        evenBatchSize
+      )(
+        _.map(_.id)
+      )
+      .unwrap must containTheSameElementsAs(inserted.map(_.id))
 
-    blockingQueryExecutor.fetchBatch(
-      SimpleRecord,
-      oddBatchSize
-    )(
-      _.map(_.id)
-    ).unwrap must containTheSameElementsAs(inserted.map(_.id))
+    blockingQueryExecutor
+      .fetchBatch(
+        SimpleRecord,
+        oddBatchSize
+      )(
+        _.map(_.id)
+      )
+      .unwrap must containTheSameElementsAs(inserted.map(_.id))
 
-    blockingQueryExecutor.fetchBatch(
-      SimpleRecord.where(_.id eqs inserted.head.id),
-      evenBatchSize
-    )(
-      _.map(_.id)
-    ).unwrap must_== Seq(inserted.head.id)
+    blockingQueryExecutor
+      .fetchBatch(
+        SimpleRecord.where(_.id eqs inserted.head.id),
+        evenBatchSize
+      )(
+        _.map(_.id)
+      )
+      .unwrap must_== Seq(inserted.head.id)
 
-    blockingQueryExecutor.fetchBatch(
-      SimpleRecord.where(_.id eqs new ObjectId),
-      evenBatchSize
-    )(
-      _.map(_.id)
-    ).unwrap must beEmpty
+    blockingQueryExecutor
+      .fetchBatch(
+        SimpleRecord.where(_.id eqs new ObjectId),
+        evenBatchSize
+      )(
+        _.map(_.id)
+      )
+      .unwrap must beEmpty
   }
 
   @Test
@@ -1091,13 +1160,11 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val testFutures = Future.join(
       asyncQueryExecutor.remove(SimpleRecord()).map(_ must_== 0),
-
       for {
         _ <- asyncQueryExecutor.insert(emptyRecord)
         _ <- asyncQueryExecutor.remove(emptyRecord).map(_ must_== 1)
         _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs emptyRecord.id)).map(_ must_== 0)
       } yield (),
-
       // We just pass the serialized record as the query filter to the driver, thus removes
       // with modified fields do nothing, unless the field is deleted entirely as in the
       // case of modifiedFullRecord2 below.
@@ -1108,7 +1175,6 @@ class TrivialORMQueryTest extends RogueMongoTest
         _ <- asyncQueryExecutor.remove(fullRecord1).map(_ must_== 1)
         _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs fullRecord1.id)).map(_ must_== 0)
       } yield (),
-
       for {
         _ <- asyncQueryExecutor.insert(fullRecord2)
         _ <- asyncQueryExecutor.remove(modifiedFullRecord2).map(_ must_== 1)
@@ -1161,7 +1227,6 @@ class TrivialORMQueryTest extends RogueMongoTest
           _ <- asyncQueryExecutor.bulkDelete_!!(SimpleRecord.where(_.id eqs emptyRecord.id)).map(_ must_== 1)
           _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs emptyRecord.id)).map(_ must_== 0)
         } yield (),
-
         for {
           _ <- asyncQueryExecutor.insertAll(testRecords)
           _ <- asyncQueryExecutor.bulkDelete_!!(SimpleRecord.where(_.id eqs testRecords(0).id)).map(_ must_== 1)
@@ -1173,9 +1238,9 @@ class TrivialORMQueryTest extends RogueMongoTest
         } yield ()
       )
       _ <- for {
-          _ <- asyncQueryExecutor.bulkDelete_!!(SimpleRecord).map(_ must_== 2)
-          _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 0)
-        } yield ()
+        _ <- asyncQueryExecutor.bulkDelete_!!(SimpleRecord).map(_ must_== 2)
+        _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 0)
+      } yield ()
     } yield ()
 
     Await.result(testFutures)
@@ -1211,46 +1276,57 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val serialTestFutures = Future.join(
       asyncQueryExecutor.insert(newTestRecord(1)),
-
       for {
         // update on non-existant record
-        _ <- asyncQueryExecutor.updateOne(
+        _ <- asyncQueryExecutor
+          .updateOne(
             SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
-          ).map(_ must_== 0L)
+          )
+          .map(_ must_== 0L)
         // no-op update
         _ <- asyncQueryExecutor.insert(testRecord)
-        _ <- asyncQueryExecutor.updateOne(
+        _ <- asyncQueryExecutor
+          .updateOne(
             SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
-          ).map(_ must_== 0L)
+          )
+          .map(_ must_== 0L)
         // update on existing record
-        _ <- asyncQueryExecutor.updateOne(
+        _ <- asyncQueryExecutor
+          .updateOne(
             SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10))
-          ).map(_ must_== 1L)
-        _ <- asyncQueryExecutor.fetchOne(
+          )
+          .map(_ must_== 1L)
+        _ <- asyncQueryExecutor
+          .fetchOne(
             SimpleRecord.where(_.id eqs testRecord.id)
-          ).map(_ must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10))))
+          )
+          .map(_ must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10))))
       } yield ()
     )
 
     val testFutures = serialTestFutures.flatMap(_ => {
       Future.join(
         // updates fail on modifying _id
-        asyncQueryExecutor.updateOne(SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId))
+        asyncQueryExecutor
+          .updateOne(SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId))
           .map(_ => throw new Exception("Expected update failure when modifying _id field"))
           .handle({
-            case rogueException: RogueException => Option(rogueException.getCause) match {
-              case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
-                case ErrorCategory.UNCATEGORIZED => ()
-                case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+            case rogueException: RogueException =>
+              Option(rogueException.getCause) match {
+                case Some(mwe: MongoWriteException) =>
+                  mwe.getError.getCategory match {
+                    case ErrorCategory.UNCATEGORIZED => ()
+                    case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+                  }
+                case _ => throw rogueException
               }
-              case _ => throw rogueException
-            }
           }),
-
         // match multiple records, but only modify one
-        asyncQueryExecutor.updateOne(
-          SimpleRecord.modify(_.boolean setTo true)
-        ).map(_ must_== 1L)
+        asyncQueryExecutor
+          .updateOne(
+            SimpleRecord.modify(_.boolean setTo true)
+          )
+          .map(_ must_== 1L)
       )
     })
 
@@ -1262,29 +1338,39 @@ class TrivialORMQueryTest extends RogueMongoTest
     val testRecord = newTestRecord(0)
 
     // update on non-existant record
-    blockingQueryExecutor.updateOne(
-      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
-    ).unwrap must_== 0L
+    blockingQueryExecutor
+      .updateOne(
+        SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+      )
+      .unwrap must_== 0L
 
     // no-op update
     blockingQueryExecutor.insert(testRecord)
-    blockingQueryExecutor.updateOne(
-      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
-    ).unwrap must_== 0L
+    blockingQueryExecutor
+      .updateOne(
+        SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+      )
+      .unwrap must_== 0L
 
     // update on existing record
-    blockingQueryExecutor.updateOne(
-      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10))
-    ).unwrap must_== 1L
-    blockingQueryExecutor.fetchOne(
-      SimpleRecord.where(_.id eqs testRecord.id)
-    ).unwrap must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10)))
+    blockingQueryExecutor
+      .updateOne(
+        SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10))
+      )
+      .unwrap must_== 1L
+    blockingQueryExecutor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs testRecord.id)
+      )
+      .unwrap must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10)))
 
     // match multiple records, but only modify one
     blockingQueryExecutor.insert(newTestRecord(1))
-    blockingQueryExecutor.updateOne(
-      SimpleRecord.modify(_.boolean setTo true)
-    ).unwrap must_== 1L
+    blockingQueryExecutor
+      .updateOne(
+        SimpleRecord.modify(_.boolean setTo true)
+      )
+      .unwrap must_== 1L
 
     // updates fail on modifying _id
     try {
@@ -1293,13 +1379,15 @@ class TrivialORMQueryTest extends RogueMongoTest
       )
       throw new Exception("Expected update failure when modifying _id field")
     } catch {
-      case rogueException: RogueException => Option(rogueException.getCause) match {
-        case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
-          case ErrorCategory.UNCATEGORIZED => ()
-          case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+      case rogueException: RogueException =>
+        Option(rogueException.getCause) match {
+          case Some(mwe: MongoWriteException) =>
+            mwe.getError.getCategory match {
+              case ErrorCategory.UNCATEGORIZED => ()
+              case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+            }
+          case _ => throw rogueException
         }
-        case _ => throw rogueException
-      }
     }
   }
 
@@ -1309,46 +1397,57 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val serialTestFutures = Future.join(
       asyncQueryExecutor.insert(newTestRecord(1)),
-
       for {
         // update on non-existant record
-        _ <- asyncQueryExecutor.updateMany(
+        _ <- asyncQueryExecutor
+          .updateMany(
             SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
-          ).map(_ must_== 0L)
+          )
+          .map(_ must_== 0L)
         // no-op update
         _ <- asyncQueryExecutor.insert(testRecord)
-        _ <- asyncQueryExecutor.updateMany(
+        _ <- asyncQueryExecutor
+          .updateMany(
             SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
-          ).map(_ must_== 0L)
+          )
+          .map(_ must_== 0L)
         // update on existing record
-        _ <- asyncQueryExecutor.updateMany(
+        _ <- asyncQueryExecutor
+          .updateMany(
             SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10))
-          ).map(_ must_== 1L)
-        _ <- asyncQueryExecutor.fetchOne(
+          )
+          .map(_ must_== 1L)
+        _ <- asyncQueryExecutor
+          .fetchOne(
             SimpleRecord.where(_.id eqs testRecord.id)
-          ).map(_ must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10))))
+          )
+          .map(_ must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10))))
       } yield ()
     )
 
     val testFutures = serialTestFutures.flatMap(_ => {
       Future.join(
         // updates fail on modifying _id
-        asyncQueryExecutor.updateMany(SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId))
+        asyncQueryExecutor
+          .updateMany(SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId))
           .map(_ => throw new Exception("Expected update failure when modifying _id field"))
           .handle({
-            case rogueException: RogueException => Option(rogueException.getCause) match {
-              case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
-                case ErrorCategory.UNCATEGORIZED => ()
-                case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+            case rogueException: RogueException =>
+              Option(rogueException.getCause) match {
+                case Some(mwe: MongoWriteException) =>
+                  mwe.getError.getCategory match {
+                    case ErrorCategory.UNCATEGORIZED => ()
+                    case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+                  }
+                case _ => throw rogueException
               }
-              case _ => throw rogueException
-            }
           }),
-
         // update multiple records
-        asyncQueryExecutor.updateMany(
-          SimpleRecord.modify(_.boolean setTo true)
-        ).map(_ must_== 2L)
+        asyncQueryExecutor
+          .updateMany(
+            SimpleRecord.modify(_.boolean setTo true)
+          )
+          .map(_ must_== 2L)
       )
     })
 
@@ -1360,29 +1459,39 @@ class TrivialORMQueryTest extends RogueMongoTest
     val testRecord = newTestRecord(0)
 
     // update on non-existant record
-    blockingQueryExecutor.updateMany(
-      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
-    ).unwrap must_== 0L
+    blockingQueryExecutor
+      .updateMany(
+        SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+      )
+      .unwrap must_== 0L
 
     // no-op update
     blockingQueryExecutor.insert(testRecord)
-    blockingQueryExecutor.updateMany(
-      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
-    ).unwrap must_== 0L
+    blockingQueryExecutor
+      .updateMany(
+        SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+      )
+      .unwrap must_== 0L
 
     // update on existing record
-    blockingQueryExecutor.updateMany(
-      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10))
-    ).unwrap must_== 1L
-    blockingQueryExecutor.fetchOne(
-      SimpleRecord.where(_.id eqs testRecord.id)
-    ).unwrap must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10)))
+    blockingQueryExecutor
+      .updateMany(
+        SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10))
+      )
+      .unwrap must_== 1L
+    blockingQueryExecutor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs testRecord.id)
+      )
+      .unwrap must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10)))
 
     // update multiple records
     blockingQueryExecutor.insert(newTestRecord(1))
-    blockingQueryExecutor.updateMany(
-      SimpleRecord.modify(_.boolean setTo true)
-    ).unwrap must_== 2L
+    blockingQueryExecutor
+      .updateMany(
+        SimpleRecord.modify(_.boolean setTo true)
+      )
+      .unwrap must_== 2L
 
     // updates fail on modifying _id
     try {
@@ -1391,13 +1500,15 @@ class TrivialORMQueryTest extends RogueMongoTest
       )
       throw new Exception("Expected update failure when modifying _id field")
     } catch {
-      case rogueException: RogueException => Option(rogueException.getCause) match {
-        case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
-          case ErrorCategory.UNCATEGORIZED => ()
-          case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+      case rogueException: RogueException =>
+        Option(rogueException.getCause) match {
+          case Some(mwe: MongoWriteException) =>
+            mwe.getError.getCategory match {
+              case ErrorCategory.UNCATEGORIZED => ()
+              case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+            }
+          case _ => throw rogueException
         }
-        case _ => throw rogueException
-      }
     }
   }
 
@@ -1407,48 +1518,61 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val serialTestFutures = Future.join(
       asyncQueryExecutor.insert(newTestRecord(1)),
-
       for {
         // insert new record with only id/modified fields
-        _ <- asyncQueryExecutor.upsertOne(
+        _ <- asyncQueryExecutor
+          .upsertOne(
             SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
-          ).map(_ must_== 0L)
-        _ <- asyncQueryExecutor.fetchOne(
+          )
+          .map(_ must_== 0L)
+        _ <- asyncQueryExecutor
+          .fetchOne(
             SimpleRecord.where(_.id eqs testRecord.id)
-          ).map(_ must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int)))
+          )
+          .map(_ must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int)))
         // no-op upsert
-        _ <- asyncQueryExecutor.upsertOne(
+        _ <- asyncQueryExecutor
+          .upsertOne(
             SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
-          ).map(_ must_== 0L)
+          )
+          .map(_ must_== 0L)
         // modify on existing record
-        _ <- asyncQueryExecutor.upsertOne(
+        _ <- asyncQueryExecutor
+          .upsertOne(
             SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10))
-          ).map(_ must_== 1L)
-        _ <- asyncQueryExecutor.fetchOne(
+          )
+          .map(_ must_== 1L)
+        _ <- asyncQueryExecutor
+          .fetchOne(
             SimpleRecord.where(_.id eqs testRecord.id)
-          ).map(_ must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int.map(_ + 10))))
+          )
+          .map(_ must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int.map(_ + 10))))
       } yield ()
     )
 
     val testFutures = serialTestFutures.flatMap(_ => {
       Future.join(
         // updates fail on modifying _id
-        asyncQueryExecutor.upsertOne(SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId))
+        asyncQueryExecutor
+          .upsertOne(SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId))
           .map(_ => throw new Exception("Expected update failure when modifying _id field"))
           .handle({
-            case rogueException: RogueException => Option(rogueException.getCause) match {
-              case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
-                case ErrorCategory.UNCATEGORIZED => ()
-                case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+            case rogueException: RogueException =>
+              Option(rogueException.getCause) match {
+                case Some(mwe: MongoWriteException) =>
+                  mwe.getError.getCategory match {
+                    case ErrorCategory.UNCATEGORIZED => ()
+                    case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+                  }
+                case _ => throw rogueException
               }
-              case _ => throw rogueException
-            }
           }),
-
         // match multiple records, but only modify one
-        asyncQueryExecutor.upsertOne(
-          SimpleRecord.modify(_.boolean setTo true)
-        ).map(_ must_== 1L)
+        asyncQueryExecutor
+          .upsertOne(
+            SimpleRecord.modify(_.boolean setTo true)
+          )
+          .map(_ must_== 1L)
       )
     })
 
@@ -1460,31 +1584,43 @@ class TrivialORMQueryTest extends RogueMongoTest
     val testRecord = newTestRecord(0)
 
     // insert new record with only id/modified fields
-    blockingQueryExecutor.upsertOne(
-      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
-    ).unwrap must_== 0L
-    blockingQueryExecutor.fetchOne(
-      SimpleRecord.where(_.id eqs testRecord.id)
-    ).unwrap must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int))
+    blockingQueryExecutor
+      .upsertOne(
+        SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+      )
+      .unwrap must_== 0L
+    blockingQueryExecutor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs testRecord.id)
+      )
+      .unwrap must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int))
 
     // no-op upsert
-    blockingQueryExecutor.upsertOne(
-      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
-    ).unwrap must_== 0L
+    blockingQueryExecutor
+      .upsertOne(
+        SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int)
+      )
+      .unwrap must_== 0L
 
     // modify on existing record
-    blockingQueryExecutor.upsertOne(
-      SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10))
-    ).unwrap must_== 1L
-    blockingQueryExecutor.fetchOne(
-      SimpleRecord.where(_.id eqs testRecord.id)
-    ).unwrap must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int.map(_ + 10)))
+    blockingQueryExecutor
+      .upsertOne(
+        SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10))
+      )
+      .unwrap must_== 1L
+    blockingQueryExecutor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs testRecord.id)
+      )
+      .unwrap must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int.map(_ + 10)))
 
     // match multiple records, but only modify one
     blockingQueryExecutor.insert(newTestRecord(1))
-    blockingQueryExecutor.upsertOne(
-      SimpleRecord.modify(_.boolean setTo true)
-    ).unwrap must_== 1L
+    blockingQueryExecutor
+      .upsertOne(
+        SimpleRecord.modify(_.boolean setTo true)
+      )
+      .unwrap must_== 1L
 
     // updates fail on modifying _id
     try {
@@ -1493,13 +1629,15 @@ class TrivialORMQueryTest extends RogueMongoTest
       )
       throw new Exception("Expected update failure when modifying _id field")
     } catch {
-      case rogueException: RogueException => Option(rogueException.getCause) match {
-        case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
-          case ErrorCategory.UNCATEGORIZED => ()
-          case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+      case rogueException: RogueException =>
+        Option(rogueException.getCause) match {
+          case Some(mwe: MongoWriteException) =>
+            mwe.getError.getCategory match {
+              case ErrorCategory.UNCATEGORIZED => ()
+              case ErrorCategory.DUPLICATE_KEY | ErrorCategory.EXECUTION_TIMEOUT => throw rogueException
+            }
+          case _ => throw rogueException
         }
-        case _ => throw rogueException
-      }
     }
   }
 
@@ -1513,62 +1651,76 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val serialTestFutures = Future.join(
       asyncQueryExecutor.insert(otherRecord),
-
       for {
         // update on non-existant record
-        _ <- asyncQueryExecutor.findAndUpdateOne(
+        _ <- asyncQueryExecutor
+          .findAndUpdateOne(
             SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
-          ).map(_ must_== None)
+          )
+          .map(_ must_== None)
         // no-op update
         _ <- asyncQueryExecutor.insert(testRecord)
-        _ <- asyncQueryExecutor.findAndUpdateOne(
+        _ <- asyncQueryExecutor
+          .findAndUpdateOne(
             SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
-          ).map(_ must_== Some(testRecord))
+          )
+          .map(_ must_== Some(testRecord))
         // update on existing record
-        _ <- asyncQueryExecutor.findAndUpdateOne(
+        _ <- asyncQueryExecutor
+          .findAndUpdateOne(
             SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo updatedTestRecord.int)
-          ).map(_ must_== Some(testRecord))
-        _ <- asyncQueryExecutor.fetchOne(
+          )
+          .map(_ must_== Some(testRecord))
+        _ <- asyncQueryExecutor
+          .fetchOne(
             SimpleRecord.where(_.id eqs testRecord.id)
-          ).map(_ must_== Some(updatedTestRecord))
+          )
+          .map(_ must_== Some(updatedTestRecord))
       } yield (),
-
       for {
         // test returnNew = true
         _ <- asyncQueryExecutor.insert(returnNewTestRecord)
-        _ <- asyncQueryExecutor.findAndUpdateOne(
+        _ <- asyncQueryExecutor
+          .findAndUpdateOne(
             SimpleRecord
               .where(_.id eqs returnNewTestRecord.id)
               .findAndModify(_.string setTo updatedReturnNewTestRecord.string),
             returnNew = true
-          ).map(_ must_== Some(updatedReturnNewTestRecord))
+          )
+          .map(_ must_== Some(updatedReturnNewTestRecord))
       } yield ()
     )
 
     val testFutures = serialTestFutures.flatMap(_ => {
       Future.join(
         // updates fail on modifying _id
-        asyncQueryExecutor.findAndUpdateOne(SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.id setTo new ObjectId))
+        asyncQueryExecutor
+          .findAndUpdateOne(SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.id setTo new ObjectId))
           .map(_ => throw new Exception("Expected update failure when modifying _id field"))
           .handle({
-            case rogueException: RogueException => Option(rogueException.getCause) match {
-              case Some(mce: MongoCommandException) => mce.getErrorCode match {
-                case 66 => ()
+            case rogueException: RogueException =>
+              Option(rogueException.getCause) match {
+                case Some(mce: MongoCommandException) =>
+                  mce.getErrorCode match {
+                    case 66 => ()
+                    case _ => throw rogueException
+                  }
                 case _ => throw rogueException
               }
-              case _ => throw rogueException
-            }
           }),
-
         // match multiple records, but only modify one
         for {
-          _ <- asyncQueryExecutor.findAndUpdateOne(
+          _ <- asyncQueryExecutor
+            .findAndUpdateOne(
               SimpleRecord.findAndModify(_.boolean setTo true)
-            ).map(_ must beOneOf(
-              Some(updatedTestRecord),
-              Some(otherRecord),
-              Some(updatedReturnNewTestRecord)
-            ))
+            )
+            .map(
+              _ must beOneOf(
+                Some(updatedTestRecord),
+                Some(otherRecord),
+                Some(updatedReturnNewTestRecord)
+              )
+            )
           _ <- asyncQueryExecutor.count(SimpleRecord.where(_.boolean eqs true)).map(_ must_== 1)
         } yield ()
       )
@@ -1586,38 +1738,50 @@ class TrivialORMQueryTest extends RogueMongoTest
     val updatedReturnNewTestRecord = returnNewTestRecord.copy(string = returnNewTestRecord.string.map(_ + " there"))
 
     // update on non-existant record
-    blockingQueryExecutor.findAndUpdateOne(
-      SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
-    ).unwrap must_== None
+    blockingQueryExecutor
+      .findAndUpdateOne(
+        SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
+      )
+      .unwrap must_== None
 
     // no-op update
     blockingQueryExecutor.insert(testRecord)
-    blockingQueryExecutor.findAndUpdateOne(
-      SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
-    ).unwrap must_== Some(testRecord)
+    blockingQueryExecutor
+      .findAndUpdateOne(
+        SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
+      )
+      .unwrap must_== Some(testRecord)
 
     // update on existing record
-    blockingQueryExecutor.findAndUpdateOne(
-      SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo updatedTestRecord.int)
-    ).unwrap must_== Some(testRecord)
-    blockingQueryExecutor.fetchOne(
-      SimpleRecord.where(_.id eqs testRecord.id)
-    ).unwrap must_== Some(updatedTestRecord)
+    blockingQueryExecutor
+      .findAndUpdateOne(
+        SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo updatedTestRecord.int)
+      )
+      .unwrap must_== Some(testRecord)
+    blockingQueryExecutor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs testRecord.id)
+      )
+      .unwrap must_== Some(updatedTestRecord)
 
     // test returnNew = true
     blockingQueryExecutor.insert(returnNewTestRecord)
-    blockingQueryExecutor.findAndUpdateOne(
-      SimpleRecord
-        .where(_.id eqs returnNewTestRecord.id)
-        .findAndModify(_.string setTo updatedReturnNewTestRecord.string),
-      returnNew = true
-    ).unwrap must_== Some(updatedReturnNewTestRecord)
+    blockingQueryExecutor
+      .findAndUpdateOne(
+        SimpleRecord
+          .where(_.id eqs returnNewTestRecord.id)
+          .findAndModify(_.string setTo updatedReturnNewTestRecord.string),
+        returnNew = true
+      )
+      .unwrap must_== Some(updatedReturnNewTestRecord)
 
     // match multiple records, but only modify one
     blockingQueryExecutor.insert(otherRecord)
-    blockingQueryExecutor.findAndUpdateOne(
-      SimpleRecord.findAndModify(_.boolean setTo true)
-    ).unwrap must beOneOf(
+    blockingQueryExecutor
+      .findAndUpdateOne(
+        SimpleRecord.findAndModify(_.boolean setTo true)
+      )
+      .unwrap must beOneOf(
       Some(updatedTestRecord),
       Some(otherRecord),
       Some(updatedReturnNewTestRecord)
@@ -1631,13 +1795,15 @@ class TrivialORMQueryTest extends RogueMongoTest
       )
       throw new Exception("Expected update failure when modifying _id field")
     } catch {
-      case rogueException: RogueException => Option(rogueException.getCause) match {
-        case Some(mce: MongoCommandException) => mce.getErrorCode match {
-          case 66 => ()
+      case rogueException: RogueException =>
+        Option(rogueException.getCause) match {
+          case Some(mce: MongoCommandException) =>
+            mce.getErrorCode match {
+              case 66 => ()
+              case _ => throw rogueException
+            }
           case _ => throw rogueException
         }
-        case _ => throw rogueException
-      }
     }
   }
 
@@ -1651,65 +1817,81 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val serialTestFutures = Future.join(
       asyncQueryExecutor.insert(otherRecord),
-
       for {
         // insert new record with only id/modified fields
-        _ <- asyncQueryExecutor.findAndUpsertOne(
+        _ <- asyncQueryExecutor
+          .findAndUpsertOne(
             SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
-          ).map(_ must_== None)
-        _ <- asyncQueryExecutor.fetchOne(
+          )
+          .map(_ must_== None)
+        _ <- asyncQueryExecutor
+          .fetchOne(
             SimpleRecord.where(_.id eqs testRecord.id)
-          ).map(_ must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int)))
+          )
+          .map(_ must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int)))
         // no-op update
         _ <- asyncQueryExecutor.save(testRecord)
-        _ <- asyncQueryExecutor.findAndUpsertOne(
+        _ <- asyncQueryExecutor
+          .findAndUpsertOne(
             SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
-          ).map(_ must_== Some(testRecord))
+          )
+          .map(_ must_== Some(testRecord))
         // update on existing record
-        _ <- asyncQueryExecutor.findAndUpsertOne(
+        _ <- asyncQueryExecutor
+          .findAndUpsertOne(
             SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo updatedTestRecord.int)
-          ).map(_ must_== Some(testRecord))
-        _ <- asyncQueryExecutor.fetchOne(
+          )
+          .map(_ must_== Some(testRecord))
+        _ <- asyncQueryExecutor
+          .fetchOne(
             SimpleRecord.where(_.id eqs testRecord.id)
-          ).map(_ must_== Some(updatedTestRecord))
+          )
+          .map(_ must_== Some(updatedTestRecord))
       } yield (),
-
       for {
         // test returnNew = true
         _ <- asyncQueryExecutor.insert(returnNewTestRecord)
-        _ <- asyncQueryExecutor.findAndUpsertOne(
+        _ <- asyncQueryExecutor
+          .findAndUpsertOne(
             SimpleRecord
               .where(_.id eqs returnNewTestRecord.id)
               .findAndModify(_.string setTo updatedReturnNewTestRecord.string),
             returnNew = true
-          ).map(_ must_== Some(updatedReturnNewTestRecord))
+          )
+          .map(_ must_== Some(updatedReturnNewTestRecord))
       } yield ()
     )
 
     val testFutures = serialTestFutures.flatMap(_ => {
       Future.join(
         // updates fail on modifying _id
-        asyncQueryExecutor.findAndUpsertOne(SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.id setTo new ObjectId))
+        asyncQueryExecutor
+          .findAndUpsertOne(SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.id setTo new ObjectId))
           .map(_ => throw new Exception("Expected update failure when modifying _id field"))
           .handle({
-            case rogueException: RogueException => Option(rogueException.getCause) match {
-              case Some(mce: MongoCommandException) => mce.getErrorCode match {
-                case 66 => ()
+            case rogueException: RogueException =>
+              Option(rogueException.getCause) match {
+                case Some(mce: MongoCommandException) =>
+                  mce.getErrorCode match {
+                    case 66 => ()
+                    case _ => throw rogueException
+                  }
                 case _ => throw rogueException
               }
-              case _ => throw rogueException
-            }
           }),
-
         // match multiple records, but only modify one
         for {
-          _ <- asyncQueryExecutor.findAndUpsertOne(
+          _ <- asyncQueryExecutor
+            .findAndUpsertOne(
               SimpleRecord.findAndModify(_.boolean setTo true)
-            ).map(_ must beOneOf(
-              Some(updatedTestRecord),
-              Some(otherRecord),
-              Some(updatedReturnNewTestRecord)
-            ))
+            )
+            .map(
+              _ must beOneOf(
+                Some(updatedTestRecord),
+                Some(otherRecord),
+                Some(updatedReturnNewTestRecord)
+              )
+            )
           _ <- asyncQueryExecutor.count(SimpleRecord.where(_.boolean eqs true)).map(_ must_== 1L)
         } yield ()
       )
@@ -1727,41 +1909,55 @@ class TrivialORMQueryTest extends RogueMongoTest
     val updatedReturnNewTestRecord = returnNewTestRecord.copy(string = returnNewTestRecord.string.map(_ + " there"))
 
     // insert new record with only id/modified fields
-    blockingQueryExecutor.findAndUpsertOne(
-      SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
-    ).unwrap must_== None
-    blockingQueryExecutor.fetchOne(
-      SimpleRecord.where(_.id eqs testRecord.id)
-    ).unwrap must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int))
+    blockingQueryExecutor
+      .findAndUpsertOne(
+        SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
+      )
+      .unwrap must_== None
+    blockingQueryExecutor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs testRecord.id)
+      )
+      .unwrap must_== Some(SimpleRecord(id = testRecord.id, int = testRecord.int))
 
     // no-op update
     blockingQueryExecutor.save(testRecord)
-    blockingQueryExecutor.findAndUpsertOne(
-      SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
-    ).unwrap must_== Some(testRecord)
+    blockingQueryExecutor
+      .findAndUpsertOne(
+        SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo testRecord.int)
+      )
+      .unwrap must_== Some(testRecord)
 
     // update on existing record
-    blockingQueryExecutor.findAndUpsertOne(
-      SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo updatedTestRecord.int)
-    ).unwrap must_== Some(testRecord)
-    blockingQueryExecutor.fetchOne(
-      SimpleRecord.where(_.id eqs testRecord.id)
-    ).unwrap must_== Some(updatedTestRecord)
+    blockingQueryExecutor
+      .findAndUpsertOne(
+        SimpleRecord.where(_.id eqs testRecord.id).findAndModify(_.int setTo updatedTestRecord.int)
+      )
+      .unwrap must_== Some(testRecord)
+    blockingQueryExecutor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs testRecord.id)
+      )
+      .unwrap must_== Some(updatedTestRecord)
 
     // test returnNew = true
     blockingQueryExecutor.insert(returnNewTestRecord)
-    blockingQueryExecutor.findAndUpsertOne(
-      SimpleRecord
-        .where(_.id eqs returnNewTestRecord.id)
-        .findAndModify(_.string setTo updatedReturnNewTestRecord.string),
-      returnNew = true
-    ).unwrap must_== Some(updatedReturnNewTestRecord)
+    blockingQueryExecutor
+      .findAndUpsertOne(
+        SimpleRecord
+          .where(_.id eqs returnNewTestRecord.id)
+          .findAndModify(_.string setTo updatedReturnNewTestRecord.string),
+        returnNew = true
+      )
+      .unwrap must_== Some(updatedReturnNewTestRecord)
 
     // match multiple records, but only modify one
     blockingQueryExecutor.insert(otherRecord)
-    blockingQueryExecutor.findAndUpsertOne(
-      SimpleRecord.findAndModify(_.boolean setTo true)
-    ).unwrap must beOneOf(
+    blockingQueryExecutor
+      .findAndUpsertOne(
+        SimpleRecord.findAndModify(_.boolean setTo true)
+      )
+      .unwrap must beOneOf(
       Some(updatedTestRecord),
       Some(otherRecord),
       Some(updatedReturnNewTestRecord)
@@ -1775,13 +1971,15 @@ class TrivialORMQueryTest extends RogueMongoTest
       )
       throw new Exception("Expected update failure when modifying _id field")
     } catch {
-      case rogueException: RogueException => Option(rogueException.getCause) match {
-        case Some(mce: MongoCommandException) => mce.getErrorCode match {
-          case 66 => ()
+      case rogueException: RogueException =>
+        Option(rogueException.getCause) match {
+          case Some(mce: MongoCommandException) =>
+            mce.getErrorCode match {
+              case 66 => ()
+              case _ => throw rogueException
+            }
           case _ => throw rogueException
         }
-        case _ => throw rogueException
-      }
     }
   }
 
@@ -1798,17 +1996,21 @@ class TrivialORMQueryTest extends RogueMongoTest
       _ <- asyncQueryExecutor.findAndDeleteOne(SimpleRecord).map(_ must_== None)
       // delete single record
       _ <- asyncQueryExecutor.insertAll(testRecords)
-      _ <- asyncQueryExecutor.findAndDeleteOne(
+      _ <- asyncQueryExecutor
+        .findAndDeleteOne(
           SimpleRecord.where(_.id eqs testRecords(0).id)
-        ).map(_ must_== Some(testRecords(0)))
+        )
+        .map(_ must_== Some(testRecords(0)))
       _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs testRecords(0).id)).map(_ must_== 0)
       // delete query does not match
       _ <- asyncQueryExecutor.findAndDeleteOne(SimpleRecord.where(_.id eqs testRecords(0).id)).map(_ must_== None)
       _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 2)
       // match multiple records but only delete one
-      _ <- asyncQueryExecutor.findAndDeleteOne(
+      _ <- asyncQueryExecutor
+        .findAndDeleteOne(
           SimpleRecord
-        ).map(_ must beOneOf(Some(testRecords(1)), Some(testRecords(2))))
+        )
+        .map(_ must beOneOf(Some(testRecords(1)), Some(testRecords(2))))
       _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 1)
     } yield ()
 
@@ -1827,17 +2029,21 @@ class TrivialORMQueryTest extends RogueMongoTest
     blockingQueryExecutor.findAndDeleteOne(SimpleRecord).unwrap must_== None
     // delete single record
     blockingQueryExecutor.insertAll(testRecords)
-    blockingQueryExecutor.findAndDeleteOne(
-      SimpleRecord.where(_.id eqs testRecords(0).id)
-    ).unwrap must_== Some(testRecords(0))
+    blockingQueryExecutor
+      .findAndDeleteOne(
+        SimpleRecord.where(_.id eqs testRecords(0).id)
+      )
+      .unwrap must_== Some(testRecords(0))
     blockingQueryExecutor.count(SimpleRecord.where(_.id eqs testRecords(0).id)).unwrap must_== 0
     // delete query does not match
     blockingQueryExecutor.findAndDeleteOne(SimpleRecord.where(_.id eqs testRecords(0).id)).unwrap must_== None
     blockingQueryExecutor.count(SimpleRecord).unwrap must_== 2
     // match multiple records but only delete one
-    blockingQueryExecutor.findAndDeleteOne(
-      SimpleRecord
-    ).unwrap must beOneOf(Some(testRecords(1)), Some(testRecords(2)))
+    blockingQueryExecutor
+      .findAndDeleteOne(
+        SimpleRecord
+      )
+      .unwrap must beOneOf(Some(testRecords(1)), Some(testRecords(2)))
     blockingQueryExecutor.count(SimpleRecord).unwrap must_== 1
   }
 
@@ -1851,18 +2057,20 @@ class TrivialORMQueryTest extends RogueMongoTest
     handler: (T, Iter.Event[SimpleRecord]) => Iter.Command[T]
   ): Future[Unit] = {
     @volatile var visited = 0
-    asyncQueryExecutor.iterate(query, initial)({
-      case (cumulative, event) => {
-        event match {
-          case Iter.Item(_) => visited += 1
-          case Iter.EOF | Iter.Error(_) => ()
+    asyncQueryExecutor
+      .iterate(query, initial)({
+        case (cumulative, event) => {
+          event match {
+            case Iter.Item(_) => visited += 1
+            case Iter.EOF | Iter.Error(_) => ()
+          }
+          handler(cumulative, event)
         }
-        handler(cumulative, event)
-      }
-    }).map(result => {
-      result must_== expectedResult
-      visited must_== expectedVisited
-    })
+      })
+      .map(result => {
+        result must_== expectedResult
+        visited must_== expectedVisited
+      })
   }
 
   @Test
@@ -1879,96 +2087,95 @@ class TrivialORMQueryTest extends RogueMongoTest
     val shortCircuitVisited = visitedMin
     val shortCircuitFiltered = filteredRecords.take(shortCircuitCount)
 
-    val testFuture = asyncQueryExecutor.insertAll(testRecords).flatMap(_ => Future.join(
-      // no matching records
-      testSingleAsyncIterate(SimpleRecord.where(_.id eqs new ObjectId), 0)(0, 0) {
-        case (count, Iter.Item(record)) => Iter.Continue(count + 1)
-        case (count, Iter.EOF) => Iter.Return(count)
-        case (_, Iter.Error(e)) => throw e
-      },
-
-      // single matching record
-      testSingleAsyncIterate(SimpleRecord.where(_.id eqs testRecords.head.id), 0)(1, 1) {
-        case (count, Iter.Item(record)) => Iter.Continue(count + 1)
-        case (count, Iter.EOF) => Iter.Return(count)
-        case (_, Iter.Error(e)) => throw e
-      },
-
-      // all records match
-      testSingleAsyncIterate(SimpleRecord, 0)(numInserts, numInserts) {
-        case (count, Iter.Item(record)) => Iter.Continue(count + 1)
-        case (count, Iter.EOF) => Iter.Return(count)
-        case (_, Iter.Error(e)) => throw e
-      },
-
-      // filter via query vs iterator
-      testSingleAsyncIterate(
-        SimpleRecord.where(_.int in filterInts).orderAsc(_.id),
-        Seq.empty[SimpleRecord]
-      )(
-        filteredRecords,
-        filteredRecords.size
-      ) {
-        case (matched, Iter.Item(record)) => Iter.Continue(matched :+ record)
-        case (matched, Iter.EOF) => Iter.Return(matched.sortBy(_.id))
-        case (_, Iter.Error(e)) => throw e
-      },
-
-      testSingleAsyncIterate(
-        SimpleRecord,
-        Seq.empty[SimpleRecord]
-      )(
-        filteredRecords,
-        numInserts
-      ) {
-        case (matched, Iter.Item(record)) => {
-          if (record.int.map(filterInts.has(_)).getOrElse(false)) {
-            Iter.Continue(matched :+ record)
-          } else {
-            Iter.Continue(matched)
-          }
-        }
-        case (matched, Iter.EOF) => Iter.Return(matched.sortBy(_.id))
-        case (_, Iter.Error(e)) => throw e
-      },
-
-      // iterator filter + short circuit
-      testSingleAsyncIterate(
-        SimpleRecord.orderAsc(_.id),
-        Seq.empty[SimpleRecord]
-      )(
-        filteredRecords.take(shortCircuitCount),
-        shortCircuitVisited
-      ) {
-        case (matched, Iter.Item(record)) => {
-          if (record.int.map(filterInts.has(_)).getOrElse(false)) {
-            val newMatched = matched :+ record
-            if (newMatched.size >= shortCircuitCount) {
-              Iter.Return(newMatched)
-            } else {
-              Iter.Continue(newMatched)
+    val testFuture = asyncQueryExecutor
+      .insertAll(testRecords)
+      .flatMap(
+        _ =>
+          Future.join(
+            // no matching records
+            testSingleAsyncIterate(SimpleRecord.where(_.id eqs new ObjectId), 0)(0, 0) {
+              case (count, Iter.Item(record)) => Iter.Continue(count + 1)
+              case (count, Iter.EOF) => Iter.Return(count)
+              case (_, Iter.Error(e)) => throw e
+            },
+            // single matching record
+            testSingleAsyncIterate(SimpleRecord.where(_.id eqs testRecords.head.id), 0)(1, 1) {
+              case (count, Iter.Item(record)) => Iter.Continue(count + 1)
+              case (count, Iter.EOF) => Iter.Return(count)
+              case (_, Iter.Error(e)) => throw e
+            },
+            // all records match
+            testSingleAsyncIterate(SimpleRecord, 0)(numInserts, numInserts) {
+              case (count, Iter.Item(record)) => Iter.Continue(count + 1)
+              case (count, Iter.EOF) => Iter.Return(count)
+              case (_, Iter.Error(e)) => throw e
+            },
+            // filter via query vs iterator
+            testSingleAsyncIterate(
+              SimpleRecord.where(_.int in filterInts).orderAsc(_.id),
+              Seq.empty[SimpleRecord]
+            )(
+              filteredRecords,
+              filteredRecords.size
+            ) {
+              case (matched, Iter.Item(record)) => Iter.Continue(matched :+ record)
+              case (matched, Iter.EOF) => Iter.Return(matched.sortBy(_.id))
+              case (_, Iter.Error(e)) => throw e
+            },
+            testSingleAsyncIterate(
+              SimpleRecord,
+              Seq.empty[SimpleRecord]
+            )(
+              filteredRecords,
+              numInserts
+            ) {
+              case (matched, Iter.Item(record)) => {
+                if (record.int.map(filterInts.has(_)).getOrElse(false)) {
+                  Iter.Continue(matched :+ record)
+                } else {
+                  Iter.Continue(matched)
+                }
+              }
+              case (matched, Iter.EOF) => Iter.Return(matched.sortBy(_.id))
+              case (_, Iter.Error(e)) => throw e
+            },
+            // iterator filter + short circuit
+            testSingleAsyncIterate(
+              SimpleRecord.orderAsc(_.id),
+              Seq.empty[SimpleRecord]
+            )(
+              filteredRecords.take(shortCircuitCount),
+              shortCircuitVisited
+            ) {
+              case (matched, Iter.Item(record)) => {
+                if (record.int.map(filterInts.has(_)).getOrElse(false)) {
+                  val newMatched = matched :+ record
+                  if (newMatched.size >= shortCircuitCount) {
+                    Iter.Return(newMatched)
+                  } else {
+                    Iter.Continue(newMatched)
+                  }
+                } else {
+                  Iter.Continue(matched)
+                }
+              }
+              case (matched, Iter.EOF) => Iter.Return(matched)
+              case (_, Iter.Error(e)) => throw e
+            },
+            // reverse ordering
+            testSingleAsyncIterate(
+              SimpleRecord.orderDesc(_.id),
+              Seq.empty[SimpleRecord]
+            )(
+              testRecords.reverse,
+              numInserts
+            ) {
+              case (matched, Iter.Item(record)) => Iter.Continue(matched :+ record)
+              case (matched, Iter.EOF) => Iter.Return(matched)
+              case (_, Iter.Error(e)) => throw e
             }
-          } else {
-            Iter.Continue(matched)
-          }
-        }
-        case (matched, Iter.EOF) => Iter.Return(matched)
-        case (_, Iter.Error(e)) => throw e
-      },
-
-      // reverse ordering
-      testSingleAsyncIterate(
-        SimpleRecord.orderDesc(_.id),
-        Seq.empty[SimpleRecord]
-      )(
-        testRecords.reverse,
-        numInserts
-      ) {
-        case (matched, Iter.Item(record)) => Iter.Continue(matched :+ record)
-        case (matched, Iter.EOF) => Iter.Return(matched)
-        case (_, Iter.Error(e)) => throw e
-      }
-    ))
+          )
+      )
 
     Await.result(testFuture)
   }
@@ -1983,15 +2190,17 @@ class TrivialORMQueryTest extends RogueMongoTest
     handler: (T, Iter.Event[SimpleRecord]) => Iter.Command[T]
   ): Unit = {
     var visited = 0
-    val result = blockingQueryExecutor.iterate(query, initial)({
-      case (cumulative, event) => {
-        event match {
-          case Iter.Item(_) => visited += 1
-          case Iter.EOF | Iter.Error(_) => ()
+    val result = blockingQueryExecutor
+      .iterate(query, initial)({
+        case (cumulative, event) => {
+          event match {
+            case Iter.Item(_) => visited += 1
+            case Iter.EOF | Iter.Error(_) => ()
+          }
+          handler(cumulative, event)
         }
-        handler(cumulative, event)
-      }
-    }).unwrap
+      })
+      .unwrap
     result must_== expectedResult
     visited must_== expectedVisited
   }
@@ -2111,18 +2320,20 @@ class TrivialORMQueryTest extends RogueMongoTest
     handler: (T, Iter.Event[Seq[SimpleRecord]]) => Iter.Command[T]
   ): Future[Unit] = {
     @volatile var visited = 0
-    asyncQueryExecutor.iterateBatch(query, batchSize, initial)({
-      case (cumulative, event) => {
-        event match {
-          case Iter.Item(items) => visited += items.size
-          case Iter.EOF | Iter.Error(_) => ()
+    asyncQueryExecutor
+      .iterateBatch(query, batchSize, initial)({
+        case (cumulative, event) => {
+          event match {
+            case Iter.Item(items) => visited += items.size
+            case Iter.EOF | Iter.Error(_) => ()
+          }
+          handler(cumulative, event)
         }
-        handler(cumulative, event)
-      }
-    }).map(result => {
-      result must_== expectedResult
-      visited must_== expectedVisited
-    })
+      })
+      .map(result => {
+        result must_== expectedResult
+        visited must_== expectedVisited
+      })
   }
 
   @Test
@@ -2148,114 +2359,112 @@ class TrivialORMQueryTest extends RogueMongoTest
       }
       val shortCircuitFiltered = filteredRecords.take(shortCircuitCount)
 
-      Future.join(
-        // no matching records
-        testSingleAsyncIterateBatch(
-          SimpleRecord.where(_.id eqs new ObjectId),
-          batchSize,
-          0
-        )(
-          0,
-          0
-        ) {
-          case (count, Iter.Item(records)) => Iter.Continue(count + records.size)
-          case (count, Iter.EOF) => Iter.Return(count)
-          case (_, Iter.Error(e)) => throw e
-        },
-
-        // single matching record
-        testSingleAsyncIterateBatch(
-          SimpleRecord.where(_.id eqs testRecords.head.id),
-          batchSize,
-          0
-        )(
-          1,
-          1
-        ) {
-          case (count, Iter.Item(records)) => Iter.Continue(count + records.size)
-          case (count, Iter.EOF) => Iter.Return(count)
-          case (_, Iter.Error(e)) => throw e
-        },
-
-        // all records match
-        testSingleAsyncIterateBatch(SimpleRecord, batchSize, 0)(numInserts, numInserts) {
-          case (count, Iter.Item(records)) => Iter.Continue(count + records.size)
-          case (count, Iter.EOF) => Iter.Return(count)
-          case (_, Iter.Error(e)) => throw e
-        },
-
-        // filter via query vs iterator
-        testSingleAsyncIterateBatch(
-          SimpleRecord.where(_.int in filterInts).orderAsc(_.id),
-          batchSize,
-          Seq.empty[SimpleRecord]
-        )(
-          filteredRecords,
-          filteredRecords.size
-        ) {
-          case (matched, Iter.Item(records)) => Iter.Continue(matched ++ records)
-          case (matched, Iter.EOF) => Iter.Return(matched.sortBy(_.id))
-          case (_, Iter.Error(e)) => throw e
-        },
-
-        testSingleAsyncIterateBatch(
-          SimpleRecord,
-          batchSize,
-          Seq.empty[SimpleRecord]
-        )(
-          filteredRecords,
-          numInserts
-        ) {
-          case (matched, Iter.Item(records)) => {
-            val filtered = records.filter(_.int.map(filterInts.has(_)).getOrElse(false))
-            Iter.Continue(matched ++ filtered)
-          }
-          case (matched, Iter.EOF) => Iter.Return(matched.sortBy(_.id))
-          case (_, Iter.Error(e)) => throw e
-        },
-
-        // iterator filter + short circuit
-        testSingleAsyncIterateBatch(
-          SimpleRecord.orderAsc(_.id),
-          batchSize,
-          Seq.empty[SimpleRecord]
-        )(
-          filteredRecords.take(shortCircuitCount),
-          shortCircuitVisited
-        ) {
-          case (matched, Iter.Item(records)) => {
-            val filtered = records.filter(_.int.map(filterInts.has(_)).getOrElse(false))
-            val newMatched = matched ++ filtered.take(shortCircuitCount - matched.size)
-            if (newMatched.size >= shortCircuitCount) {
-              Iter.Return(newMatched)
-            } else {
-              Iter.Continue(newMatched)
+      Future
+        .join(
+          // no matching records
+          testSingleAsyncIterateBatch(
+            SimpleRecord.where(_.id eqs new ObjectId),
+            batchSize,
+            0
+          )(
+            0,
+            0
+          ) {
+            case (count, Iter.Item(records)) => Iter.Continue(count + records.size)
+            case (count, Iter.EOF) => Iter.Return(count)
+            case (_, Iter.Error(e)) => throw e
+          },
+          // single matching record
+          testSingleAsyncIterateBatch(
+            SimpleRecord.where(_.id eqs testRecords.head.id),
+            batchSize,
+            0
+          )(
+            1,
+            1
+          ) {
+            case (count, Iter.Item(records)) => Iter.Continue(count + records.size)
+            case (count, Iter.EOF) => Iter.Return(count)
+            case (_, Iter.Error(e)) => throw e
+          },
+          // all records match
+          testSingleAsyncIterateBatch(SimpleRecord, batchSize, 0)(numInserts, numInserts) {
+            case (count, Iter.Item(records)) => Iter.Continue(count + records.size)
+            case (count, Iter.EOF) => Iter.Return(count)
+            case (_, Iter.Error(e)) => throw e
+          },
+          // filter via query vs iterator
+          testSingleAsyncIterateBatch(
+            SimpleRecord.where(_.int in filterInts).orderAsc(_.id),
+            batchSize,
+            Seq.empty[SimpleRecord]
+          )(
+            filteredRecords,
+            filteredRecords.size
+          ) {
+            case (matched, Iter.Item(records)) => Iter.Continue(matched ++ records)
+            case (matched, Iter.EOF) => Iter.Return(matched.sortBy(_.id))
+            case (_, Iter.Error(e)) => throw e
+          },
+          testSingleAsyncIterateBatch(
+            SimpleRecord,
+            batchSize,
+            Seq.empty[SimpleRecord]
+          )(
+            filteredRecords,
+            numInserts
+          ) {
+            case (matched, Iter.Item(records)) => {
+              val filtered = records.filter(_.int.map(filterInts.has(_)).getOrElse(false))
+              Iter.Continue(matched ++ filtered)
             }
+            case (matched, Iter.EOF) => Iter.Return(matched.sortBy(_.id))
+            case (_, Iter.Error(e)) => throw e
+          },
+          // iterator filter + short circuit
+          testSingleAsyncIterateBatch(
+            SimpleRecord.orderAsc(_.id),
+            batchSize,
+            Seq.empty[SimpleRecord]
+          )(
+            filteredRecords.take(shortCircuitCount),
+            shortCircuitVisited
+          ) {
+            case (matched, Iter.Item(records)) => {
+              val filtered = records.filter(_.int.map(filterInts.has(_)).getOrElse(false))
+              val newMatched = matched ++ filtered.take(shortCircuitCount - matched.size)
+              if (newMatched.size >= shortCircuitCount) {
+                Iter.Return(newMatched)
+              } else {
+                Iter.Continue(newMatched)
+              }
+            }
+            case (matched, Iter.EOF) => Iter.Return(matched)
+            case (_, Iter.Error(e)) => throw e
+          },
+          // reverse ordering
+          testSingleAsyncIterateBatch(
+            SimpleRecord.orderDesc(_.id),
+            batchSize,
+            Seq.empty[SimpleRecord]
+          )(
+            testRecords.reverse,
+            numInserts
+          ) {
+            case (matched, Iter.Item(records)) => Iter.Continue(matched ++ records)
+            case (matched, Iter.EOF) => Iter.Return(matched)
+            case (_, Iter.Error(e)) => throw e
           }
-          case (matched, Iter.EOF) => Iter.Return(matched)
-          case (_, Iter.Error(e)) => throw e
-        },
-
-        // reverse ordering
-        testSingleAsyncIterateBatch(
-          SimpleRecord.orderDesc(_.id),
-          batchSize,
-          Seq.empty[SimpleRecord]
-        )(
-          testRecords.reverse,
-          numInserts
-        ) {
-          case (matched, Iter.Item(records)) => Iter.Continue(matched ++ records)
-          case (matched, Iter.EOF) => Iter.Return(matched)
-          case (_, Iter.Error(e)) => throw e
-        }
-      ).unit
+        )
+        .unit
     }
 
-    val testFuture = asyncQueryExecutor.insertAll(testRecords).flatMap(_ => {
-      val batchTestFutures = (1 to numInserts + 1).map(testBatchSize)
-      Future.collect(batchTestFutures)
-    })
+    val testFuture = asyncQueryExecutor
+      .insertAll(testRecords)
+      .flatMap(_ => {
+        val batchTestFutures = (1 to numInserts + 1).map(testBatchSize)
+        Future.collect(batchTestFutures)
+      })
     Await.result(testFuture)
   }
 
@@ -2270,15 +2479,17 @@ class TrivialORMQueryTest extends RogueMongoTest
     handler: (T, Iter.Event[Seq[SimpleRecord]]) => Iter.Command[T]
   ): Unit = {
     var visited = 0
-    val result = blockingQueryExecutor.iterateBatch(query, batchSize, initial)({
-      case (cumulative, event) => {
-        event match {
-          case Iter.Item(items) => visited += items.size
-          case Iter.EOF | Iter.Error(_) => ()
+    val result = blockingQueryExecutor
+      .iterateBatch(query, batchSize, initial)({
+        case (cumulative, event) => {
+          event match {
+            case Iter.Item(items) => visited += items.size
+            case Iter.EOF | Iter.Error(_) => ()
+          }
+          handler(cumulative, event)
         }
-        handler(cumulative, event)
-      }
-    }).unwrap
+      })
+      .unwrap
     result must_== expectedResult
     visited must_== expectedVisited
   }
@@ -2416,14 +2627,13 @@ class TrivialORMQueryTest extends RogueMongoTest
 
   def assertsForCreateIndexesTest(listedIndexes: Seq[Document]): Unit = {
     val indexMap = listedIndexes.toMapByKey(_.getString("name"))
-    val intIndex = indexMap.getOrElse("int_1",
-      throw new RuntimeException("Expected int_1 index"))
+    val intIndex = indexMap.getOrElse("int_1", throw new RuntimeException("Expected int_1 index"))
     Assert.assertEquals(
       """{ "int" : 1 }""",
       intIndex.get("key", classOf[Document]).toJson
     )
-    val booleanLongIndex = indexMap.getOrElse("boolean_1_long_-1",
-      throw new RuntimeException("Expected boolean_1_long_-1 index"))
+    val booleanLongIndex =
+      indexMap.getOrElse("boolean_1_long_-1", throw new RuntimeException("Expected boolean_1_long_-1 index"))
     Assert.assertEquals(
       """{ "boolean" : 1, "long" : -1 }""",
       booleanLongIndex.get("key", classOf[Document]).toJson
@@ -2484,25 +2694,29 @@ class TrivialORMQueryTest extends RogueMongoTest
       )
       throw new Exception("Expected insertion failure on duplicate id")
     } catch {
-      case rogueException: RogueException => Option(rogueException.getCause) match {
-        case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
-          case Seq(ErrorCategory.DUPLICATE_KEY) => ()
-          case _ => throw mbwe
+      case rogueException: RogueException =>
+        Option(rogueException.getCause) match {
+          case Some(mbwe: MongoBulkWriteException) =>
+            mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+              case Seq(ErrorCategory.DUPLICATE_KEY) => ()
+              case _ => throw mbwe
+            }
+          case _ => throw rogueException
         }
-        case _ => throw rogueException
-      }
     }
 
     blockingQueryExecutor.remove(testRecord)
 
-    blockingQueryExecutor.bulk(
-      Vector(
-        BulkInsertOne(SimpleRecord, testRecord),
-        BulkRemove(SimpleRecord),
-        BulkInsertOne(SimpleRecord, testRecord)
-      ),
-      ordered = true
-    ).unwrap must_== Some(
+    blockingQueryExecutor
+      .bulk(
+        Vector(
+          BulkInsertOne(SimpleRecord, testRecord),
+          BulkRemove(SimpleRecord),
+          BulkInsertOne(SimpleRecord, testRecord)
+        ),
+        ordered = true
+      )
+      .unwrap must_== Some(
       BulkWriteResult.acknowledged(2, 0, 1, 0, new ArrayList[BulkWriteUpsert])
     )
   }
@@ -2521,7 +2735,9 @@ class TrivialORMQueryTest extends RogueMongoTest
 
   def testSingleAsyncBulkInsertOne(records: Seq[SimpleRecord]): Future[Unit] = {
     for {
-      _ <- asyncQueryExecutor.bulk(records.map(BulkInsertOne(SimpleRecord, _))).map(
+      _ <- asyncQueryExecutor
+        .bulk(records.map(BulkInsertOne(SimpleRecord, _)))
+        .map(
           _ must_== records.headOption.flatMap(_ => bulkInsertResult(records.size))
         )
       found <- asyncQueryExecutor.fetch(SimpleRecord.where(_.id in records.map(_.id)))
@@ -2553,17 +2769,21 @@ class TrivialORMQueryTest extends RogueMongoTest
     )
 
     val duplicateTestFuture = insertFutures.flatMap(_ => {
-      asyncQueryExecutor.bulk(
-        Vector(BulkInsertOne(SimpleRecord, SimpleRecord(duplicateId)))
-      ).map(_ => throw new Exception("Expected insertion failure on duplicate id"))
+      asyncQueryExecutor
+        .bulk(
+          Vector(BulkInsertOne(SimpleRecord, SimpleRecord(duplicateId)))
+        )
+        .map(_ => throw new Exception("Expected insertion failure on duplicate id"))
         .handle({
-          case rogueException: RogueException => Option(rogueException.getCause) match {
-            case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
-              case Seq(ErrorCategory.DUPLICATE_KEY) => ()
-              case _ => throw mbwe
+          case rogueException: RogueException =>
+            Option(rogueException.getCause) match {
+              case Some(mbwe: MongoBulkWriteException) =>
+                mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+                  case Seq(ErrorCategory.DUPLICATE_KEY) => ()
+                  case _ => throw mbwe
+                }
+              case _ => throw rogueException
             }
-            case _ => throw rogueException
-          }
         })
     })
 
@@ -2571,12 +2791,16 @@ class TrivialORMQueryTest extends RogueMongoTest
   }
 
   def testSingleBlockingBulkInsertOne(records: Seq[SimpleRecord]): Unit = {
-    blockingQueryExecutor.bulk(
-      records.map(BulkInsertOne(SimpleRecord, _))
-    ).unwrap must_== records.headOption.flatMap(_ => bulkInsertResult(records.size))
-    blockingQueryExecutor.fetch(
-      SimpleRecord.where(_.id in records.map(_.id))
-    ).unwrap must containTheSameElementsAs(records)
+    blockingQueryExecutor
+      .bulk(
+        records.map(BulkInsertOne(SimpleRecord, _))
+      )
+      .unwrap must_== records.headOption.flatMap(_ => bulkInsertResult(records.size))
+    blockingQueryExecutor
+      .fetch(
+        SimpleRecord.where(_.id in records.map(_.id))
+      )
+      .unwrap must containTheSameElementsAs(records)
   }
 
   @Test
@@ -2603,13 +2827,15 @@ class TrivialORMQueryTest extends RogueMongoTest
       blockingQueryExecutor.bulk(Vector(BulkInsertOne(SimpleRecord, SimpleRecord(duplicateId))))
       throw new Exception("Expected insertion failure on duplicate id")
     } catch {
-      case rogueException: RogueException => Option(rogueException.getCause) match {
-        case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
-          case Seq(ErrorCategory.DUPLICATE_KEY) => ()
-          case _ => throw mbwe
+      case rogueException: RogueException =>
+        Option(rogueException.getCause) match {
+          case Some(mbwe: MongoBulkWriteException) =>
+            mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+              case Seq(ErrorCategory.DUPLICATE_KEY) => ()
+              case _ => throw mbwe
+            }
+          case _ => throw rogueException
         }
-        case _ => throw rogueException
-      }
     }
   }
 
@@ -2635,27 +2861,35 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val testFuture = for {
       // delete with no stored records
-      _ <- asyncQueryExecutor.bulk(
+      _ <- asyncQueryExecutor
+        .bulk(
           Vector(BulkRemoveOne(SimpleRecord))
-        ).map(_ must_== bulkRemoveResult(0))
+        )
+        .map(_ must_== bulkRemoveResult(0))
 
       // delete single record
       _ <- asyncQueryExecutor.insertAll(testRecords)
-      _ <- asyncQueryExecutor.bulk(
+      _ <- asyncQueryExecutor
+        .bulk(
           Vector(BulkRemoveOne(SimpleRecord.where(_.id eqs testRecords(0).id)))
-        ).map(_ must_== bulkRemoveResult(1))
+        )
+        .map(_ must_== bulkRemoveResult(1))
       _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs testRecords(0).id)).map(_ must_== 0)
 
       // delete query does not match
-      _ <- asyncQueryExecutor.bulk(
+      _ <- asyncQueryExecutor
+        .bulk(
           Vector(BulkRemoveOne(SimpleRecord.where(_.id eqs testRecords(0).id)))
-        ).map(_ must_== bulkRemoveResult(0))
+        )
+        .map(_ must_== bulkRemoveResult(0))
       _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 2)
 
       // match multiple records but only delete one
-      _ <- asyncQueryExecutor.bulk(
+      _ <- asyncQueryExecutor
+        .bulk(
           Vector(BulkRemoveOne(SimpleRecord))
-        ).map(_ must_== bulkRemoveResult(1))
+        )
+        .map(_ must_== bulkRemoveResult(1))
       _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 1)
     } yield ()
 
@@ -2671,27 +2905,35 @@ class TrivialORMQueryTest extends RogueMongoTest
     )
 
     // delete with no stored records
-    blockingQueryExecutor.bulk(
-      Vector(BulkRemoveOne(SimpleRecord))
-    ).unwrap must_== bulkRemoveResult(0)
+    blockingQueryExecutor
+      .bulk(
+        Vector(BulkRemoveOne(SimpleRecord))
+      )
+      .unwrap must_== bulkRemoveResult(0)
 
     // delete single record
     blockingQueryExecutor.insertAll(testRecords)
-    blockingQueryExecutor.bulk(
-      Vector(BulkRemoveOne(SimpleRecord.where(_.id eqs testRecords(0).id)))
-    ).unwrap must_== bulkRemoveResult(1)
+    blockingQueryExecutor
+      .bulk(
+        Vector(BulkRemoveOne(SimpleRecord.where(_.id eqs testRecords(0).id)))
+      )
+      .unwrap must_== bulkRemoveResult(1)
     blockingQueryExecutor.count(SimpleRecord.where(_.id eqs testRecords(0).id)).unwrap must_== 0
 
     // delete query does not match
-    blockingQueryExecutor.bulk(
-      Vector(BulkRemoveOne(SimpleRecord.where(_.id eqs testRecords(0).id)))
-    ).unwrap must_== bulkRemoveResult(0)
+    blockingQueryExecutor
+      .bulk(
+        Vector(BulkRemoveOne(SimpleRecord.where(_.id eqs testRecords(0).id)))
+      )
+      .unwrap must_== bulkRemoveResult(0)
     blockingQueryExecutor.count(SimpleRecord).unwrap must_== 2
 
     // match multiple records but only delete one
-    blockingQueryExecutor.bulk(
-      Vector(BulkRemoveOne(SimpleRecord))
-    ).unwrap must_== bulkRemoveResult(1)
+    blockingQueryExecutor
+      .bulk(
+        Vector(BulkRemoveOne(SimpleRecord))
+      )
+      .unwrap must_== bulkRemoveResult(1)
     blockingQueryExecutor.count(SimpleRecord).unwrap must_== 1
   }
 
@@ -2703,50 +2945,61 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val testFutures = for {
       // no matching records
-      _ <- asyncQueryExecutor.bulk(
+      _ <- asyncQueryExecutor
+        .bulk(
           Vector(BulkRemove(SimpleRecord))
-        ).map(_ must_== bulkRemoveResult(0))
+        )
+        .map(_ must_== bulkRemoveResult(0))
 
       _ <- Future.join(
         for {
           // empty record
           _ <- asyncQueryExecutor.insert(emptyRecord)
-          _ <- asyncQueryExecutor.bulk(
+          _ <- asyncQueryExecutor
+            .bulk(
               Vector(BulkRemove(SimpleRecord.where(_.id eqs emptyRecord.id)))
-            ).map(_ must_== bulkRemoveResult(1))
+            )
+            .map(_ must_== bulkRemoveResult(1))
           _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id eqs emptyRecord.id)).map(_ must_== 0)
         } yield (),
-
         for {
           _ <- asyncQueryExecutor.insertAll(testRecords)
 
           // remove single record
-          _ <- asyncQueryExecutor.bulk(
+          _ <- asyncQueryExecutor
+            .bulk(
               Vector(BulkRemove(SimpleRecord.where(_.id eqs testRecords(0).id)))
-            ).map(_ must_== bulkRemoveResult(1))
+            )
+            .map(_ must_== bulkRemoveResult(1))
           _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).map(_ must_== 4)
 
           // remove multiple records
-          _ <- asyncQueryExecutor.bulk(
+          _ <- asyncQueryExecutor
+            .bulk(
               Vector(BulkRemove(SimpleRecord.where(_.int eqs 1)))
-            ).map(_ must_== bulkRemoveResult(2))
+            )
+            .map(_ must_== bulkRemoveResult(2))
           _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).map(_ must_== 2)
 
           // re-run of previous remove shouldn't delete anything
-          _ <- asyncQueryExecutor.bulk(
+          _ <- asyncQueryExecutor
+            .bulk(
               Vector(BulkRemove(SimpleRecord.where(_.int eqs 1)))
-            ).map(_ must_== bulkRemoveResult(0))
+            )
+            .map(_ must_== bulkRemoveResult(0))
           _ <- asyncQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).map(_ must_== 2)
         } yield ()
       )
 
       // remove everything
       _ <- for {
-          _ <- asyncQueryExecutor.bulk(
-              Vector(BulkRemove(SimpleRecord))
-            ).map(_ must_== bulkRemoveResult(2))
-          _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 0)
-        } yield ()
+        _ <- asyncQueryExecutor
+          .bulk(
+            Vector(BulkRemove(SimpleRecord))
+          )
+          .map(_ must_== bulkRemoveResult(2))
+        _ <- asyncQueryExecutor.count(SimpleRecord).map(_ must_== 0)
+      } yield ()
     } yield ()
 
     Await.result(testFutures)
@@ -2759,41 +3012,53 @@ class TrivialORMQueryTest extends RogueMongoTest
     val testRecordIds = testRecords.map(_.id)
 
     // no matching records
-    blockingQueryExecutor.bulk(
-      Vector(BulkRemove(SimpleRecord))
-    ).unwrap must_== bulkRemoveResult(0)
+    blockingQueryExecutor
+      .bulk(
+        Vector(BulkRemove(SimpleRecord))
+      )
+      .unwrap must_== bulkRemoveResult(0)
 
     // empty record
     blockingQueryExecutor.insert(emptyRecord)
-    blockingQueryExecutor.bulk(
-      Vector(BulkRemove(SimpleRecord.where(_.id eqs emptyRecord.id)))
-    ).unwrap must_== bulkRemoveResult(1)
+    blockingQueryExecutor
+      .bulk(
+        Vector(BulkRemove(SimpleRecord.where(_.id eqs emptyRecord.id)))
+      )
+      .unwrap must_== bulkRemoveResult(1)
     blockingQueryExecutor.count(SimpleRecord.where(_.id eqs emptyRecord.id)).unwrap must_== 0
 
     blockingQueryExecutor.insertAll(testRecords)
 
     // remove single record
-    blockingQueryExecutor.bulk(
-      Vector(BulkRemove(SimpleRecord.where(_.id eqs testRecords(0).id)))
-    ).unwrap must_== bulkRemoveResult(1)
+    blockingQueryExecutor
+      .bulk(
+        Vector(BulkRemove(SimpleRecord.where(_.id eqs testRecords(0).id)))
+      )
+      .unwrap must_== bulkRemoveResult(1)
     blockingQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).unwrap must_== 4
 
     // remove multiple records
-    blockingQueryExecutor.bulk(
-      Vector(BulkRemove(SimpleRecord.where(_.int eqs 1)))
-    ).unwrap must_== bulkRemoveResult(2)
+    blockingQueryExecutor
+      .bulk(
+        Vector(BulkRemove(SimpleRecord.where(_.int eqs 1)))
+      )
+      .unwrap must_== bulkRemoveResult(2)
     blockingQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).unwrap must_== 2
 
     // re-run of previous remove shouldn't delete anything
-    blockingQueryExecutor.bulk(
-      Vector(BulkRemove(SimpleRecord.where(_.int eqs 1)))
-    ).unwrap must_== bulkRemoveResult(0)
+    blockingQueryExecutor
+      .bulk(
+        Vector(BulkRemove(SimpleRecord.where(_.int eqs 1)))
+      )
+      .unwrap must_== bulkRemoveResult(0)
     blockingQueryExecutor.count(SimpleRecord.where(_.id in testRecordIds)).unwrap must_== 2
 
     // remove everything
-    blockingQueryExecutor.bulk(
-      Vector(BulkRemove(SimpleRecord))
-    ).unwrap must_== bulkRemoveResult(2)
+    blockingQueryExecutor
+      .bulk(
+        Vector(BulkRemove(SimpleRecord))
+      )
+      .unwrap must_== bulkRemoveResult(2)
     blockingQueryExecutor.count(SimpleRecord).unwrap must_== 0
   }
 
@@ -2819,7 +3084,8 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val serialTestFutures = for {
       // replace on non-existant record
-      _ <- asyncQueryExecutor.bulk(
+      _ <- asyncQueryExecutor
+        .bulk(
           Vector(
             BulkReplaceOne(
               OptionalIdRecord,
@@ -2827,25 +3093,36 @@ class TrivialORMQueryTest extends RogueMongoTest
               upsert = false
             )
           )
-        ).map(_ must_== bulkUpdateResult(0, 0))
+        )
+        .map(_ must_== bulkUpdateResult(0, 0))
 
       // upserts
-      _ <- asyncQueryExecutor.bulk(
-          testRecords.take(3).map(record => {
-            BulkReplaceOne(
-              OptionalIdRecord.where(_.id eqs record.id.get),
-              record,
-              upsert = true
-            )
-          }),
+      _ <- asyncQueryExecutor
+        .bulk(
+          testRecords
+            .take(3)
+            .map(record => {
+              BulkReplaceOne(
+                OptionalIdRecord.where(_.id eqs record.id.get),
+                record,
+                upsert = true
+              )
+            }),
           ordered = true
-        ).map(_ must_== bulkUpdateResult(
-          0,
-          0,
-          testRecords.take(3).zipWithIndex.map({
-            case (record, i) => new BulkWriteUpsert(i, new BsonObjectId(record.id.get))
-          }).asJava
-        ))
+        )
+        .map(
+          _ must_== bulkUpdateResult(
+            0,
+            0,
+            testRecords
+              .take(3)
+              .zipWithIndex
+              .map({
+                case (record, i) => new BulkWriteUpsert(i, new BsonObjectId(record.id.get))
+              })
+              .asJava
+          )
+        )
       _ <- asyncQueryExecutor.count(OptionalIdRecord).map(_ must_== 3)
     } yield ()
 
@@ -2853,33 +3130,38 @@ class TrivialORMQueryTest extends RogueMongoTest
     val allTestFutures = serialTestFutures.flatMap(_ => {
       Future.join(
         // match one and replace one
-        asyncQueryExecutor.bulk(
-          Vector(
-            BulkReplaceOne(
-              OptionalIdRecord.where(_.id eqs testRecords(0).id.get),
-              replacement,
-              upsert = false
+        asyncQueryExecutor
+          .bulk(
+            Vector(
+              BulkReplaceOne(
+                OptionalIdRecord.where(_.id eqs testRecords(0).id.get),
+                replacement,
+                upsert = false
+              )
             )
           )
-        ).flatMap(bulkWriteResult => {
-          bulkWriteResult must_== bulkUpdateResult(1, 1)
-          asyncQueryExecutor.fetchOne(
-            OptionalIdRecord.where(_.id eqs testRecords(0).id.get)
-          ).map(_ must_== Some(OptionalIdRecord(id = testRecords(0).id, int = replacement.int)))
-        }),
-
+          .flatMap(bulkWriteResult => {
+            bulkWriteResult must_== bulkUpdateResult(1, 1)
+            asyncQueryExecutor
+              .fetchOne(
+                OptionalIdRecord.where(_.id eqs testRecords(0).id.get)
+              )
+              .map(_ must_== Some(OptionalIdRecord(id = testRecords(0).id, int = replacement.int)))
+          }),
         // match multiple and replace one
-        asyncQueryExecutor.bulk(
-          Vector(
-            BulkReplaceOne(
-              OptionalIdRecord.where(_.id neqs testRecords(0).id.get),
-              OptionalIdRecord(int = Some(2048)),
-              upsert = false
+        asyncQueryExecutor
+          .bulk(
+            Vector(
+              BulkReplaceOne(
+                OptionalIdRecord.where(_.id neqs testRecords(0).id.get),
+                OptionalIdRecord(int = Some(2048)),
+                upsert = false
+              )
             )
           )
-        ).map(
-          _ must_== bulkUpdateResult(1, 1)
-        )
+          .map(
+            _ must_== bulkUpdateResult(1, 1)
+          )
       )
     })
 
@@ -2891,60 +3173,76 @@ class TrivialORMQueryTest extends RogueMongoTest
     val testRecords = Seq.tabulate(4)(i => OptionalIdRecord(id = Some(new ObjectId), int = Some(i)))
 
     // replace on non-existant record
-    blockingQueryExecutor.bulk(
-      Vector(
-        BulkReplaceOne(
-          OptionalIdRecord,
-          testRecords(0),
-          upsert = false
+    blockingQueryExecutor
+      .bulk(
+        Vector(
+          BulkReplaceOne(
+            OptionalIdRecord,
+            testRecords(0),
+            upsert = false
+          )
         )
       )
-    ).unwrap must_== bulkUpdateResult(0, 0)
+      .unwrap must_== bulkUpdateResult(0, 0)
 
     // upserts
-    blockingQueryExecutor.bulk(
-      testRecords.take(3).map(record => {
-        BulkReplaceOne(
-          OptionalIdRecord.where(_.id eqs record.id.get),
-          record,
-          upsert = true
-        )
-      }),
-      ordered = true
-    ).unwrap must_== bulkUpdateResult(
+    blockingQueryExecutor
+      .bulk(
+        testRecords
+          .take(3)
+          .map(record => {
+            BulkReplaceOne(
+              OptionalIdRecord.where(_.id eqs record.id.get),
+              record,
+              upsert = true
+            )
+          }),
+        ordered = true
+      )
+      .unwrap must_== bulkUpdateResult(
       0,
       0,
-      testRecords.take(3).zipWithIndex.map({
-        case (record, i) => new BulkWriteUpsert(i, new BsonObjectId(record.id.get))
-      }).asJava
+      testRecords
+        .take(3)
+        .zipWithIndex
+        .map({
+          case (record, i) => new BulkWriteUpsert(i, new BsonObjectId(record.id.get))
+        })
+        .asJava
     )
     blockingQueryExecutor.count(OptionalIdRecord).unwrap must_== 3
 
     // match one and replace one
     val replacement = OptionalIdRecord(int = Some(9001))
-    blockingQueryExecutor.bulk(
-      Vector(
-        BulkReplaceOne(
-          OptionalIdRecord.where(_.id eqs testRecords(0).id.get),
-          replacement,
-          upsert = false
+    blockingQueryExecutor
+      .bulk(
+        Vector(
+          BulkReplaceOne(
+            OptionalIdRecord.where(_.id eqs testRecords(0).id.get),
+            replacement,
+            upsert = false
+          )
         )
       )
-    ).unwrap must_== bulkUpdateResult(1, 1)
-    blockingQueryExecutor.fetchOne(
-      OptionalIdRecord.where(_.id eqs testRecords(0).id.get)
-    ).unwrap must_== Some(OptionalIdRecord(id = testRecords(0).id, int = replacement.int))
+      .unwrap must_== bulkUpdateResult(1, 1)
+    blockingQueryExecutor
+      .fetchOne(
+        OptionalIdRecord.where(_.id eqs testRecords(0).id.get)
+      )
+      .unwrap must_== Some(OptionalIdRecord(id = testRecords(0).id, int = replacement.int))
 
     // match multiple and replace one
-    blockingQueryExecutor.bulk(
-      Vector(
-        BulkReplaceOne(
-          OptionalIdRecord.where(_.int neqs testRecords(0).int.get),
-          OptionalIdRecord(int = Some(2048)),
-          upsert = false
+    blockingQueryExecutor
+      .bulk(
+        Vector(
+          BulkReplaceOne(
+            OptionalIdRecord.where(_.int neqs testRecords(0).int.get),
+            OptionalIdRecord(int = Some(2048)),
+            upsert = false
+          )
         )
       )
-    ).unwrap must_== bulkUpdateResult(1, 1)
+      .unwrap must_== bulkUpdateResult(1, 1)
   }
 
   @Test
@@ -2954,83 +3252,99 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val serialTestFutures = Future.join(
       // upsert
-      asyncQueryExecutor.bulk(
-        Vector(
-          BulkUpdateOne(
-            SimpleRecord.where(_.id eqs extraRecord.id).modify(_.int setTo extraRecord.int),
-            upsert = true
+      asyncQueryExecutor
+        .bulk(
+          Vector(
+            BulkUpdateOne(
+              SimpleRecord.where(_.id eqs extraRecord.id).modify(_.int setTo extraRecord.int),
+              upsert = true
+            )
           )
         )
-      ).flatMap(bulkWriteResult => {
-        val expectedUpsert = new BulkWriteUpsert(0, new BsonObjectId(extraRecord.id))
-        bulkWriteResult must_== bulkUpdateResult(0, 0, Vector(expectedUpsert).asJava)
-        asyncQueryExecutor.fetchOne(
-          SimpleRecord.where(_.id eqs extraRecord.id)
-        ).map(_ must_== Some(SimpleRecord(id = extraRecord.id, int = extraRecord.int)))
-      }),
-
+        .flatMap(bulkWriteResult => {
+          val expectedUpsert = new BulkWriteUpsert(0, new BsonObjectId(extraRecord.id))
+          bulkWriteResult must_== bulkUpdateResult(0, 0, Vector(expectedUpsert).asJava)
+          asyncQueryExecutor
+            .fetchOne(
+              SimpleRecord.where(_.id eqs extraRecord.id)
+            )
+            .map(_ must_== Some(SimpleRecord(id = extraRecord.id, int = extraRecord.int)))
+        }),
       for {
         // update on non-existant record
-        _ <- asyncQueryExecutor.bulk(
+        _ <- asyncQueryExecutor
+          .bulk(
             Vector(
               BulkUpdateOne(
                 SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
                 upsert = false
               )
             )
-          ).map(_ must_== bulkUpdateResult(0, 0))
+          )
+          .map(_ must_== bulkUpdateResult(0, 0))
 
         // no-op update
         _ <- asyncQueryExecutor.insert(testRecord)
-        _ <- asyncQueryExecutor.bulk(
+        _ <- asyncQueryExecutor
+          .bulk(
             Vector(
               BulkUpdateOne(
                 SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
                 upsert = false
               )
             )
-          ).map(_ must_== bulkUpdateResult(1, 0))
+          )
+          .map(_ must_== bulkUpdateResult(1, 0))
 
         // update on existing record
-        _ <- asyncQueryExecutor.bulk(
+        _ <- asyncQueryExecutor
+          .bulk(
             Vector(
               BulkUpdateOne(
                 SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10)),
                 upsert = false
               )
             )
-          ).map(_ must_== bulkUpdateResult(1, 1))
-        _ <- asyncQueryExecutor.fetchOne(
+          )
+          .map(_ must_== bulkUpdateResult(1, 1))
+        _ <- asyncQueryExecutor
+          .fetchOne(
             SimpleRecord.where(_.id eqs testRecord.id)
-          ).map(_ must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10))))
+          )
+          .map(_ must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10))))
       } yield ()
     )
 
     val testFutures = serialTestFutures.flatMap(_ => {
       Future.join(
         // updates fail on modifying _id
-        asyncQueryExecutor.bulk(
-          Vector(
-            BulkUpdateOne(
-              SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId),
-              upsert = false
+        asyncQueryExecutor
+          .bulk(
+            Vector(
+              BulkUpdateOne(
+                SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId),
+                upsert = false
+              )
             )
           )
-        ).map(_ => throw new Exception("Expected update failure when modifying _id field"))
+          .map(_ => throw new Exception("Expected update failure when modifying _id field"))
           .handle({
-            case rogueException: RogueException => Option(rogueException.getCause) match {
-              case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
-                case Seq(ErrorCategory.UNCATEGORIZED) => ()
+            case rogueException: RogueException =>
+              Option(rogueException.getCause) match {
+                case Some(mbwe: MongoBulkWriteException) =>
+                  mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+                    case Seq(ErrorCategory.UNCATEGORIZED) => ()
+                    case _ => throw rogueException
+                  }
                 case _ => throw rogueException
               }
-              case _ => throw rogueException
-            }
           }),
-
         // match multiple records, but only modify one
-        asyncQueryExecutor.bulk(
-          Vector(BulkUpdateOne(SimpleRecord.modify(_.boolean setTo true), upsert = false))
-        ).map(_ must_== bulkUpdateResult(1, 1))
+        asyncQueryExecutor
+          .bulk(
+            Vector(BulkUpdateOne(SimpleRecord.modify(_.boolean setTo true), upsert = false))
+          )
+          .map(_ must_== bulkUpdateResult(1, 1))
       )
     })
 
@@ -3044,51 +3358,63 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     // upsert
     val expectedUpsert = new BulkWriteUpsert(0, new BsonObjectId(extraRecord.id))
-    blockingQueryExecutor.bulk(
-      Vector(
-        BulkUpdateOne(
-          SimpleRecord.where(_.id eqs extraRecord.id).modify(_.int setTo extraRecord.int),
-          upsert = true
+    blockingQueryExecutor
+      .bulk(
+        Vector(
+          BulkUpdateOne(
+            SimpleRecord.where(_.id eqs extraRecord.id).modify(_.int setTo extraRecord.int),
+            upsert = true
+          )
         )
       )
-    ).unwrap must_== bulkUpdateResult(0, 0, Vector(expectedUpsert).asJava)
-    blockingQueryExecutor.fetchOne(
-      SimpleRecord.where(_.id eqs extraRecord.id)
-    ).unwrap must_== Some(SimpleRecord(id = extraRecord.id, int = extraRecord.int))
+      .unwrap must_== bulkUpdateResult(0, 0, Vector(expectedUpsert).asJava)
+    blockingQueryExecutor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs extraRecord.id)
+      )
+      .unwrap must_== Some(SimpleRecord(id = extraRecord.id, int = extraRecord.int))
 
     // update on non-existant record
-    blockingQueryExecutor.bulk(
-      Vector(
-        BulkUpdateOne(
-          SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
-          upsert = false
+    blockingQueryExecutor
+      .bulk(
+        Vector(
+          BulkUpdateOne(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
+            upsert = false
+          )
         )
       )
-    ).unwrap must_== bulkUpdateResult(0, 0)
+      .unwrap must_== bulkUpdateResult(0, 0)
 
     // no-op update
     blockingQueryExecutor.insert(testRecord)
-    blockingQueryExecutor.bulk(
-      Vector(
-        BulkUpdateOne(
-          SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
-          upsert = false
+    blockingQueryExecutor
+      .bulk(
+        Vector(
+          BulkUpdateOne(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
+            upsert = false
+          )
         )
       )
-    ).unwrap must_== bulkUpdateResult(1, 0)
+      .unwrap must_== bulkUpdateResult(1, 0)
 
     // update on existing record
-    blockingQueryExecutor.bulk(
-      Vector(
-        BulkUpdateOne(
-          SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10)),
-          upsert = false
+    blockingQueryExecutor
+      .bulk(
+        Vector(
+          BulkUpdateOne(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10)),
+            upsert = false
+          )
         )
       )
-    ).unwrap must_== bulkUpdateResult(1, 1)
-    blockingQueryExecutor.fetchOne(
-      SimpleRecord.where(_.id eqs testRecord.id)
-    ).unwrap must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10)))
+      .unwrap must_== bulkUpdateResult(1, 1)
+    blockingQueryExecutor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs testRecord.id)
+      )
+      .unwrap must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10)))
 
     // updates fail on modifying _id
     try {
@@ -3102,19 +3428,23 @@ class TrivialORMQueryTest extends RogueMongoTest
       )
       throw new Exception("Expected update failure when modifying _id field")
     } catch {
-      case rogueException: RogueException => Option(rogueException.getCause) match {
-        case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
-          case Seq(ErrorCategory.UNCATEGORIZED) => ()
+      case rogueException: RogueException =>
+        Option(rogueException.getCause) match {
+          case Some(mbwe: MongoBulkWriteException) =>
+            mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+              case Seq(ErrorCategory.UNCATEGORIZED) => ()
+              case _ => throw rogueException
+            }
           case _ => throw rogueException
         }
-        case _ => throw rogueException
-      }
     }
 
     // match multiple records, but only modify one
-    blockingQueryExecutor.bulk(
-      Vector(BulkUpdateOne(SimpleRecord.modify(_.boolean setTo true), upsert = false))
-    ).unwrap must_== bulkUpdateResult(1, 1)
+    blockingQueryExecutor
+      .bulk(
+        Vector(BulkUpdateOne(SimpleRecord.modify(_.boolean setTo true), upsert = false))
+      )
+      .unwrap must_== bulkUpdateResult(1, 1)
   }
 
   @Test
@@ -3124,83 +3454,99 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     val serialTestFutures = Future.join(
       // upsert
-      asyncQueryExecutor.bulk(
-        Vector(
-          BulkUpdateMany(
-            SimpleRecord.where(_.id eqs extraRecord.id).modify(_.int setTo extraRecord.int),
-            upsert = true
+      asyncQueryExecutor
+        .bulk(
+          Vector(
+            BulkUpdateMany(
+              SimpleRecord.where(_.id eqs extraRecord.id).modify(_.int setTo extraRecord.int),
+              upsert = true
+            )
           )
         )
-      ).flatMap(bulkWriteResult => {
-        val expectedUpsert = new BulkWriteUpsert(0, new BsonObjectId(extraRecord.id))
-        bulkWriteResult must_== bulkUpdateResult(0, 0, Vector(expectedUpsert).asJava)
-        asyncQueryExecutor.fetchOne(
-          SimpleRecord.where(_.id eqs extraRecord.id)
-        ).map(_ must_== Some(SimpleRecord(id = extraRecord.id, int = extraRecord.int)))
-      }),
-
+        .flatMap(bulkWriteResult => {
+          val expectedUpsert = new BulkWriteUpsert(0, new BsonObjectId(extraRecord.id))
+          bulkWriteResult must_== bulkUpdateResult(0, 0, Vector(expectedUpsert).asJava)
+          asyncQueryExecutor
+            .fetchOne(
+              SimpleRecord.where(_.id eqs extraRecord.id)
+            )
+            .map(_ must_== Some(SimpleRecord(id = extraRecord.id, int = extraRecord.int)))
+        }),
       for {
         // update on non-existant record
-        _ <- asyncQueryExecutor.bulk(
+        _ <- asyncQueryExecutor
+          .bulk(
             Vector(
               BulkUpdateMany(
                 SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
                 upsert = false
               )
             )
-          ).map(_ must_== bulkUpdateResult(0, 0))
+          )
+          .map(_ must_== bulkUpdateResult(0, 0))
 
         // no-op update
         _ <- asyncQueryExecutor.insert(testRecord)
-        _ <- asyncQueryExecutor.bulk(
+        _ <- asyncQueryExecutor
+          .bulk(
             Vector(
               BulkUpdateMany(
                 SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
                 upsert = false
               )
             )
-          ).map(_ must_== bulkUpdateResult(1, 0))
+          )
+          .map(_ must_== bulkUpdateResult(1, 0))
 
         // update on existing record
-        _ <- asyncQueryExecutor.bulk(
+        _ <- asyncQueryExecutor
+          .bulk(
             Vector(
               BulkUpdateMany(
                 SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10)),
                 upsert = false
               )
             )
-          ).map(_ must_== bulkUpdateResult(1, 1))
-        _ <- asyncQueryExecutor.fetchOne(
+          )
+          .map(_ must_== bulkUpdateResult(1, 1))
+        _ <- asyncQueryExecutor
+          .fetchOne(
             SimpleRecord.where(_.id eqs testRecord.id)
-          ).map(_ must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10))))
+          )
+          .map(_ must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10))))
       } yield ()
     )
 
     val testFutures = serialTestFutures.flatMap(_ => {
       Future.join(
         // updates fail on modifying _id
-        asyncQueryExecutor.bulk(
-          Vector(
-            BulkUpdateMany(
-              SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId),
-              upsert = false
+        asyncQueryExecutor
+          .bulk(
+            Vector(
+              BulkUpdateMany(
+                SimpleRecord.where(_.id eqs testRecord.id).modify(_.id setTo new ObjectId),
+                upsert = false
+              )
             )
           )
-        ).map(_ => throw new Exception("Expected update failure when modifying _id field"))
+          .map(_ => throw new Exception("Expected update failure when modifying _id field"))
           .handle({
-            case rogueException: RogueException => Option(rogueException.getCause) match {
-              case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
-                case Seq(ErrorCategory.UNCATEGORIZED) => ()
+            case rogueException: RogueException =>
+              Option(rogueException.getCause) match {
+                case Some(mbwe: MongoBulkWriteException) =>
+                  mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+                    case Seq(ErrorCategory.UNCATEGORIZED) => ()
+                    case _ => throw rogueException
+                  }
                 case _ => throw rogueException
               }
-              case _ => throw rogueException
-            }
           }),
-
         // update multiple records
-        asyncQueryExecutor.bulk(
-          Vector(BulkUpdateMany(SimpleRecord.modify(_.boolean setTo true), upsert = false))
-        ).map(_ must_== bulkUpdateResult(2, 2))
+        asyncQueryExecutor
+          .bulk(
+            Vector(BulkUpdateMany(SimpleRecord.modify(_.boolean setTo true), upsert = false))
+          )
+          .map(_ must_== bulkUpdateResult(2, 2))
       )
     })
 
@@ -3214,51 +3560,63 @@ class TrivialORMQueryTest extends RogueMongoTest
 
     // upsert
     val expectedUpsert = new BulkWriteUpsert(0, new BsonObjectId(extraRecord.id))
-    blockingQueryExecutor.bulk(
-      Vector(
-        BulkUpdateMany(
-          SimpleRecord.where(_.id eqs extraRecord.id).modify(_.int setTo extraRecord.int),
-          upsert = true
+    blockingQueryExecutor
+      .bulk(
+        Vector(
+          BulkUpdateMany(
+            SimpleRecord.where(_.id eqs extraRecord.id).modify(_.int setTo extraRecord.int),
+            upsert = true
+          )
         )
       )
-    ).unwrap must_== bulkUpdateResult(0, 0, Vector(expectedUpsert).asJava)
-    blockingQueryExecutor.fetchOne(
-      SimpleRecord.where(_.id eqs extraRecord.id)
-    ).unwrap must_== Some(SimpleRecord(id = extraRecord.id, int = extraRecord.int))
+      .unwrap must_== bulkUpdateResult(0, 0, Vector(expectedUpsert).asJava)
+    blockingQueryExecutor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs extraRecord.id)
+      )
+      .unwrap must_== Some(SimpleRecord(id = extraRecord.id, int = extraRecord.int))
 
     // update on non-existant record
-    blockingQueryExecutor.bulk(
-      Vector(
-        BulkUpdateMany(
-          SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
-          upsert = false
+    blockingQueryExecutor
+      .bulk(
+        Vector(
+          BulkUpdateMany(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
+            upsert = false
+          )
         )
       )
-    ).unwrap must_== bulkUpdateResult(0, 0)
+      .unwrap must_== bulkUpdateResult(0, 0)
 
     // no-op update
     blockingQueryExecutor.insert(testRecord)
-    blockingQueryExecutor.bulk(
-      Vector(
-        BulkUpdateMany(
-          SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
-          upsert = false
+    blockingQueryExecutor
+      .bulk(
+        Vector(
+          BulkUpdateMany(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int),
+            upsert = false
+          )
         )
       )
-    ).unwrap must_== bulkUpdateResult(1, 0)
+      .unwrap must_== bulkUpdateResult(1, 0)
 
     // update on existing record
-    blockingQueryExecutor.bulk(
-      Vector(
-        BulkUpdateMany(
-          SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10)),
-          upsert = false
+    blockingQueryExecutor
+      .bulk(
+        Vector(
+          BulkUpdateMany(
+            SimpleRecord.where(_.id eqs testRecord.id).modify(_.int setTo testRecord.int.map(_ + 10)),
+            upsert = false
+          )
         )
       )
-    ).unwrap must_== bulkUpdateResult(1, 1)
-    blockingQueryExecutor.fetchOne(
-      SimpleRecord.where(_.id eqs testRecord.id)
-    ).unwrap must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10)))
+      .unwrap must_== bulkUpdateResult(1, 1)
+    blockingQueryExecutor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs testRecord.id)
+      )
+      .unwrap must_== Some(testRecord.copy(int = testRecord.int.map(_ + 10)))
 
     // updates fail on modifying _id
     try {
@@ -3272,18 +3630,22 @@ class TrivialORMQueryTest extends RogueMongoTest
       )
       throw new Exception("Expected update failure when modifying _id field")
     } catch {
-      case rogueException: RogueException => Option(rogueException.getCause) match {
-        case Some(mbwe: MongoBulkWriteException) => mbwe.getWriteErrors.asScala.map(_.getCategory) match {
-          case Seq(ErrorCategory.UNCATEGORIZED) => ()
+      case rogueException: RogueException =>
+        Option(rogueException.getCause) match {
+          case Some(mbwe: MongoBulkWriteException) =>
+            mbwe.getWriteErrors.asScala.map(_.getCategory) match {
+              case Seq(ErrorCategory.UNCATEGORIZED) => ()
+              case _ => throw rogueException
+            }
           case _ => throw rogueException
         }
-        case _ => throw rogueException
-      }
     }
 
     // update multiple records
-    blockingQueryExecutor.bulk(
-      Vector(BulkUpdateMany(SimpleRecord.modify(_.boolean setTo true), upsert = false))
-    ).unwrap must_== bulkUpdateResult(2, 2)
+    blockingQueryExecutor
+      .bulk(
+        Vector(BulkUpdateMany(SimpleRecord.modify(_.boolean setTo true), upsert = false))
+      )
+      .unwrap must_== bulkUpdateResult(2, 2)
   }
 }

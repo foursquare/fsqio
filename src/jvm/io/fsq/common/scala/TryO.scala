@@ -7,7 +7,9 @@ import org.bson.types.ObjectId
 
 object TryO {
 
-  def catchAll[T](f: => T): Option[T] = try { Some(f) } catch { case _: Exception => None }
+  def catchAll[T](f: => T): Option[T] = try {
+    Some(f)
+  } catch { case _: Exception => None }
 
   def apply[T](toNone: Class[_]*)(f: => T): Option[T] = try {
     Some(f)

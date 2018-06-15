@@ -17,7 +17,9 @@ private[bson] object ByteStringBuilder {
       constructor.asInstanceOf[Constructor[String]]
     } catch {
       case e: Exception =>
-        System.err.println("Error reflecting for String(chars, boolean) private constructor. Will use public constructor.")
+        System.err.println(
+          "Error reflecting for String(chars, boolean) private constructor. Will use public constructor."
+        )
         e.printStackTrace
         null
     }
@@ -31,15 +33,15 @@ private[bson] object ByteStringBuilder {
 }
 
 /**
- * Growable buffer for building strings. Not thread safe
- * contains a bunch of performance hacks
- * reset() must be called before each re-use
- */
+  * Growable buffer for building strings. Not thread safe
+  * contains a bunch of performance hacks
+  * reset() must be called before each re-use
+  */
 class ByteStringBuilder(initialSize: Int) {
   private var bytes = new Array[Byte](initialSize)
   private var length = 0
   private var isAscii = true
-  
+
   private def ensureGrowth(size: Int) {
     val newRequestedSize = length + size
     if (newRequestedSize > bytes.length) {
@@ -97,8 +99,8 @@ class ByteStringBuilder(initialSize: Int) {
   }
 
   /**
-   * copy bytes from InputStream into this builder
-   */
+    * copy bytes from InputStream into this builder
+    */
   def read(is: InputStream, readLength: Int) {
     ensureGrowth(readLength)
     var counter = 0

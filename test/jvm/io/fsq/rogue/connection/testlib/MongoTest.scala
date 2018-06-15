@@ -10,7 +10,6 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 import org.junit.{After, Before}
 
-
 object MongoTest {
   private[testlib] val dbIdCounter = new AtomicInteger(0)
 }

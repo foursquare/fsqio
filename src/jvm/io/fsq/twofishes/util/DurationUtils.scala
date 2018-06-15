@@ -22,7 +22,9 @@ trait DurationUtils extends Logging {
   def logDuration[T](ostrichKey: String, extraInfo: String = "")(f: => T): T = {
     val (rv, duration) = DurationUtils.inNanoseconds(f)
     if (duration.inMilliseconds > 200) {
-      log.debug(ostrichKey + ": " + extraInfo + " in %s µs / %s ms".format(duration.inMicroseconds, duration.inMilliseconds))
+      log.debug(
+        ostrichKey + ": " + extraInfo + " in %s µs / %s ms".format(duration.inMicroseconds, duration.inMilliseconds)
+      )
     }
     Stats.addMetric(ostrichKey + "_msec", duration.inMilliseconds.toInt)
     rv
@@ -31,9 +33,13 @@ trait DurationUtils extends Logging {
   def logPhase[T](what: String)(f: => T): T = {
     log.info("starting: " + what)
     val (rv, duration) = DurationUtils.inNanoseconds(f)
-    log.info("finished: %s in %s secs / %s mins".format(
-    	what, duration.inSeconds, duration.inMinutes
-    ))
+    log.info(
+      "finished: %s in %s secs / %s mins".format(
+        what,
+        duration.inSeconds,
+        duration.inMinutes
+      )
+    )
     rv
   }
- }
+}

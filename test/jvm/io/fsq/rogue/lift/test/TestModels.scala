@@ -63,7 +63,7 @@ object Venue extends Venue with MongoMetaRecord[Venue] {
   override val mongoIndexList = Vector(idIdx, mayorIdIdx, mayorIdClosedIdx, legIdx, geoIdx, geoCustomIdx)
 
   trait FK[T <: FK[T]] extends MongoRecord[T] {
-    self: T=>
+    self: T =>
     object venueid extends ObjectIdField[T](this) with HasMongoForeignObjectId[Venue] {
       override def name = "vid"
     }
@@ -169,7 +169,7 @@ case class V4(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long)
 case class V5(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long, closed: Boolean)
 case class V6(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long, closed: Boolean, tags: List[String])
 
-class CalendarFld private() extends MongoRecord[CalendarFld] with ObjectIdPk[CalendarFld] {
+class CalendarFld private () extends MongoRecord[CalendarFld] with ObjectIdPk[CalendarFld] {
   def meta = CalendarFld
 
   object inner extends BsonRecordField(this, CalendarInner)
@@ -179,11 +179,10 @@ object CalendarFld extends CalendarFld with MongoMetaRecord[CalendarFld] {
   override def connectionIdentifier = RogueTestMongo
 }
 
-class CalendarInner private() extends BsonRecord[CalendarInner] {
+class CalendarInner private () extends BsonRecord[CalendarInner] {
   def meta = CalendarInner
 
   object date extends DateTimeField(this) //actually calendar field, not joda DateTime
 }
 
 object CalendarInner extends CalendarInner with BsonMetaRecord[CalendarInner]
-

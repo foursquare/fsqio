@@ -23,51 +23,55 @@ class BaseFeaturesImporterJob(
 
     // add primary name as English PREFERRED
     List(DisplayName("en", feature.name, FeatureNameFlags.PREFERRED.getValue)) ++
-    // add ascii name as English DEACCENTED
-    feature.asciiname.map(n => DisplayName("en", n, FeatureNameFlags.DEACCENT.getValue)).toList ++
-    // add country code as abbreviation if this is a country
-    (if (feature.featureClass.woeType.getValue == YahooWoeType.COUNTRY.getValue) {
-      List(DisplayName("abbr", feature.countryCode, 0))
-    } else {
-      Nil
-    }) ++
-    // the admincode is the internal geonames admin code, but is very often the
-    // same short name for the admin area that is actually used in the country
-    (if (feature.featureClass.isAdmin1 || feature.featureClass.isAdmin2 || feature.featureClass.isAdmin3) {
-      feature.adminCode.toList.flatMap(code => {
-        if (!isAllDigits(code)) {
-          Some(DisplayName("abbr", code, FeatureNameFlags.ABBREVIATION.getValue))
-        } else {
-          Some(DisplayName("", code, FeatureNameFlags.NEVER_DISPLAY.getValue))
-        }
-      })
-    } else {
-      Nil
-    })
+      // add ascii name as English DEACCENTED
+      feature.asciiname.map(n => DisplayName("en", n, FeatureNameFlags.DEACCENT.getValue)).toList ++
+      // add country code as abbreviation if this is a country
+      (if (feature.featureClass.woeType.getValue == YahooWoeType.COUNTRY.getValue) {
+         List(DisplayName("abbr", feature.countryCode, 0))
+       } else {
+         Nil
+       }) ++
+      // the admincode is the internal geonames admin code, but is very often the
+      // same short name for the admin area that is actually used in the country
+      (if (feature.featureClass.isAdmin1 || feature.featureClass.isAdmin2 || feature.featureClass.isAdmin3) {
+         feature.adminCode.toList.flatMap(code => {
+           if (!isAllDigits(code)) {
+             Some(DisplayName("abbr", code, FeatureNameFlags.ABBREVIATION.getValue))
+           } else {
+             Some(DisplayName("", code, FeatureNameFlags.NEVER_DISPLAY.getValue))
+           }
+         })
+       } else {
+         Nil
+       })
   }
 
   private def getEmbeddedPolygon(feature: GeonamesFeature): Option[Array[Byte]] = {
-    feature.extraColumns.get("geometry").map(polygon => {
-      val wktReader = new WKTReader()
-      val wkbWriter = new WKBWriter()
-      wkbWriter.write(wktReader.read(polygon))
-    })
+    feature.extraColumns
+      .get("geometry")
+      .map(polygon => {
+        val wktReader = new WKTReader()
+        val wkbWriter = new WKBWriter()
+        wkbWriter.write(wktReader.read(polygon))
+      })
   }
 
   private def getEmbeddedBoundingBox(feature: GeonamesFeature): Option[BoundingBox] = {
-    feature.extraColumns.get("bbox").flatMap(bboxStr => {
-      // west, south, east, north
-      val parts = bboxStr.split(",").map(_.trim)
-      parts.toList match {
-        case w :: s :: e :: n :: Nil => {
-          Some(BoundingBox(Point(n.toDouble, e.toDouble), Point(s.toDouble, w.toDouble)))
+    feature.extraColumns
+      .get("bbox")
+      .flatMap(bboxStr => {
+        // west, south, east, north
+        val parts = bboxStr.split(",").map(_.trim)
+        parts.toList match {
+          case w :: s :: e :: n :: Nil => {
+            Some(BoundingBox(Point(n.toDouble, e.toDouble), Point(s.toDouble, w.toDouble)))
+          }
+          case _ => {
+            // logger.error("malformed bbox: " + bboxStr)
+            None
+          }
         }
-        case _ => {
-          // logger.error("malformed bbox: " + bboxStr)
-          None
-        }
-      }
-    })
+      })
   }
 
   private def getEmbeddedBoost(feature: GeonamesFeature): Option[Int] = {
@@ -76,9 +80,8 @@ class BaseFeaturesImporterJob(
 
   val countryInfoCachedFile = getCachedFileByRelativePath("downloaded/countryInfo.txt")
   val adminCodesCachedFile = getCachedFileByRelativePath("downloaded/adminCodes.txt")
-  @transient lazy val adminCodeMap = InMemoryLookupTableHelper.buildAdminCodeMap(
-    countryInfoCachedFile,
-    adminCodesCachedFile)
+  @transient lazy val adminCodeMap =
+    InMemoryLookupTableHelper.buildAdminCodeMap(countryInfoCachedFile, adminCodesCachedFile)
 
   private def getEmbeddedParents(feature: GeonamesFeature): List[Long] = {
     def lookupAdminCode(p: String): Option[String] = {
@@ -119,17 +122,13 @@ class BaseFeaturesImporterJob(
       attributesBuilder.adm1cap(true)
     }
 
-    feature.population.foreach(pop =>
-      attributesBuilder.population(pop)
-    )
+    feature.population.foreach(pop => attributesBuilder.population(pop))
 
-    feature.extraColumns.get("sociallyRelevant").map(v =>
-      attributesBuilder.sociallyRelevant(v.toBoolean)
-    )
+    feature.extraColumns.get("sociallyRelevant").map(v => attributesBuilder.sociallyRelevant(v.toBoolean))
 
-    feature.extraColumns.get("neighborhoodType").map(v =>
-      attributesBuilder.neighborhoodType(NeighborhoodType.findByNameOrNull(v))
-    )
+    feature.extraColumns
+      .get("neighborhoodType")
+      .map(v => attributesBuilder.neighborhoodType(NeighborhoodType.findByNameOrNull(v)))
 
     if (attributesSet) {
       Some(attributesBuilder.result)
@@ -184,7 +183,10 @@ class BaseFeaturesImporterJob(
 
     val servingFeature = geocodeRecord.toGeocodeServingFeature()
     (new LongWritable(servingFeature.longId) -> servingFeature)
-  }).group
-    .head
-    .write(TypedSink[(LongWritable, GeocodeServingFeature)](SpindleSequenceFileSource[LongWritable, GeocodeServingFeature](outputPath)))
+  }).group.head
+    .write(
+      TypedSink[(LongWritable, GeocodeServingFeature)](
+        SpindleSequenceFileSource[LongWritable, GeocodeServingFeature](outputPath)
+      )
+    )
 }

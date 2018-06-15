@@ -20,25 +20,25 @@ class RingBuffer[A: ClassTag](val maxSize: Int) extends Seq[A] {
   }
 
   /**
-   * Gets the element from the specified index in constant time.
-   */
+    * Gets the element from the specified index in constant time.
+    */
   def apply(i: Int): A = {
     if (i >= count_) throw new IndexOutOfBoundsException(i.toString)
     else array((read + i) % maxSize)
   }
 
   /**
-   * Overwrites an element with a new value
-   */
+    * Overwrites an element with a new value
+    */
   def update(i: Int, elem: A) {
     if (i >= count_) throw new IndexOutOfBoundsException(i.toString)
     else array((read + i) % maxSize) = elem
   }
 
   /**
-   * Adds an element, possibly overwriting the oldest elements in the buffer
-   * if the buffer is at capacity.
-   */
+    * Adds an element, possibly overwriting the oldest elements in the buffer
+    * if the buffer is at capacity.
+    */
   def +=(elem: A) {
     array(write) = elem
     write = (write + 1) % maxSize
@@ -47,18 +47,18 @@ class RingBuffer[A: ClassTag](val maxSize: Int) extends Seq[A] {
   }
 
   /**
-   * Adds multiple elements, possibly overwriting the oldest elements in
-   * the buffer.  If the given iterable contains more elements that this
-   * buffer can hold, then only the last maxSize elements will end up in
-   * the buffer.
-   */
+    * Adds multiple elements, possibly overwriting the oldest elements in
+    * the buffer.  If the given iterable contains more elements that this
+    * buffer can hold, then only the last maxSize elements will end up in
+    * the buffer.
+    */
   def ++=(iter: Iterable[A]) {
     for (elem <- iter) this += elem
   }
 
   /**
-   * Removes the next element from the buffer
-   */
+    * Removes the next element from the buffer
+    */
   def next: A = {
     if (read == write) throw new NoSuchElementException
     else {
@@ -88,7 +88,7 @@ class RingBuffer[A: ClassTag](val maxSize: Int) extends Seq[A] {
     this
   }
 
-  def removeWhere(fn: A=>Boolean): Int = {
+  def removeWhere(fn: A => Boolean): Int = {
     var rmCount_ = 0
     var j = 0
     for (i <- 0 until count_) {

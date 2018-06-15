@@ -7,10 +7,8 @@ import com.mongodb.async.client.{MongoClient, MongoCollection, MongoDatabase}
 import io.fsq.common.scala.Identity._
 import org.bson.codecs.configuration.CodecRegistry
 
-
 /** MongoConnectionManager for the new async client. */
-class AsyncMongoClientManager
-extends MongoClientManager[MongoClient, MongoDatabase, MongoCollection] {
+class AsyncMongoClientManager extends MongoClientManager[MongoClient, MongoDatabase, MongoCollection] {
 
   override protected def closeClient(client: MongoClient): Unit = {
     client.close()

@@ -38,11 +38,13 @@ object IndexerQueryExecutor {
 
   private lazy val clientManager = {
     val manager = new BlockingMongoClientManager
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      override def run(): Unit = {
-        manager.closeAll()
-      }
-    })
+    Runtime
+      .getRuntime()
+      .addShutdownHook(new Thread() {
+        override def run(): Unit = {
+          manager.closeAll()
+        }
+      })
     manager
   }
 
@@ -56,7 +58,7 @@ object IndexerQueryExecutor {
    string formatting (i.e. attempt to print the BlockingResult instead of the underlying value).
    This mostly affects db.count's, since a common pattern in the indexer is to get a count of total
    objects for use in a progress display.
-  */
+   */
   lazy val instance: ExecutorT = {
     val mongoClient = Option(System.getProperty("mongodb.server")) match {
       case Some(address) => new MongoClient(new MongoClientURI(s"mongodb://$address"))
@@ -192,19 +194,25 @@ class RogueMongoGeocodeStorageService extends GeocodeStorageWriteService {
   }
 
   def getById(id: StoredFeatureId): Iterator[GeocodeRecord] = {
-    executor.fetch(
-      Q(ThriftGeocodeRecord)
-        .where(_.id eqs id.longId)
-    ).map(new GeocodeRecord(_)).toIterator
+    executor
+      .fetch(
+        Q(ThriftGeocodeRecord)
+          .where(_.id eqs id.longId)
+      )
+      .map(new GeocodeRecord(_))
+      .toIterator
   }
 
   def getNameIndexByIdLangAndName(id: StoredFeatureId, lang: String, name: String): Iterator[NameIndex] = {
-    executor.fetch(
-      Q(ThriftNameIndex)
-        .scan(_.fid eqs id.longId)
-        .scan(_.lang eqs lang)
-        .scan(_.name eqs name)
-    ).map(new NameIndex(_)).toIterator
+    executor
+      .fetch(
+        Q(ThriftNameIndex)
+          .scan(_.fid eqs id.longId)
+          .scan(_.lang eqs lang)
+          .scan(_.name eqs name)
+      )
+      .map(new NameIndex(_))
+      .toIterator
   }
 
   def updateFlagsOnNameIndexByIdLangAndName(id: StoredFeatureId, lang: String, name: String, flags: Int) = {

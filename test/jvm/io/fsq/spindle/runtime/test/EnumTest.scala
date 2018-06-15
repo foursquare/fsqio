@@ -3,13 +3,17 @@
 package io.fsq.spindle.runtime.test
 
 import io.fsq.spindle.runtime.{KnownTProtocolNames, TProtocolInfo}
-import io.fsq.spindle.runtime.enums.gen.{NewTestEnum, OldTestEnum, StructWithNewEnumField, StructWithOldEnumField,
-    TestEnum}
+import io.fsq.spindle.runtime.enums.gen.{
+  NewTestEnum,
+  OldTestEnum,
+  StructWithNewEnumField,
+  StructWithOldEnumField,
+  TestEnum
+}
 import org.apache.thrift.TBase
 import org.apache.thrift.transport.{TMemoryBuffer, TTransport}
 import org.junit.Assert.assertEquals
 import org.junit.Test
-
 
 class EnumTest {
 
@@ -29,7 +33,10 @@ class EnumTest {
       .anEnumListAsString(List(NewTestEnum.One, NewTestEnum.Two))
       .result()
       .toString
-    assertEquals("""{ "anEnum": 0, "anEnumList": [ 1, 2 ], "anEnumAsString": "zero", "anEnumListAsString": [ "one", "two" ] }""", s)
+    assertEquals(
+      """{ "anEnum": 0, "anEnumList": [ 1, 2 ], "anEnumAsString": "zero", "anEnumListAsString": [ "one", "two" ] }""",
+      s
+    )
   }
 
   @Test
@@ -44,7 +51,10 @@ class EnumTest {
         KnownTProtocolNames.TReadableJSONProtocol ::
         Nil
 
-    for (src <- protocols; dst <- protocols) {
+    for {
+      src <- protocols
+      dst <- protocols
+    } {
       println("Testing unknown enum value compatibility between: %s -> %s".format(src, dst))
       doTestUnknownEnum(src, dst)
     }

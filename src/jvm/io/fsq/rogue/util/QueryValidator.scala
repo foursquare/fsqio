@@ -5,7 +5,6 @@ package io.fsq.rogue.util
 import io.fsq.rogue.{Degrees, FindAndModifyQuery, ModifyQuery, Query}
 import io.fsq.rogue.index.UntypedMongoIndex
 
-
 trait QueryValidator {
   def validateList[T](xs: Traversable[T]): Unit
 

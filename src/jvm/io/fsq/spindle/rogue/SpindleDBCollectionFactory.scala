@@ -34,7 +34,6 @@ trait SpindleDBCollectionFactory extends DBCollectionFactory[UntypedMetaRecord, 
     getDB(metaRecord).getCollection(SpindleHelpers.getCollection(metaRecord))
   }
 
-
   override def getDBCollection[M <: UntypedMetaRecord](query: RogueQuery[M, _, _]): DBCollection =
     getDB(query.meta).getCollection(query.collectionName)
 
@@ -59,17 +58,17 @@ trait SpindleDBCollectionFactory extends DBCollectionFactory[UntypedMetaRecord, 
   }
 
   /**
-   * Implementations should use a concurrent map. Unfortunately there is no common supertype for concurrent
-   * maps that works in both 2.9.2 and 2.10.
-   */
+    * Implementations should use a concurrent map. Unfortunately there is no common supertype for concurrent
+    * maps that works in both 2.9.2 and 2.10.
+    */
   protected def indexCache: Option[MutableMap[UntypedMetaRecord, Seq[UntypedMongoIndex]]]
 
   /**
-   * Retrieves the list of indexes declared for the record type associated with a
-   * query. If the record type doesn't declare any indexes, then returns None.
-   * @param query the query
-   * @return the list of indexes, or an empty list.
-   */
+    * Retrieves the list of indexes declared for the record type associated with a
+    * query. If the record type doesn't declare any indexes, then returns None.
+    * @param query the query
+    * @return the list of indexes, or an empty list.
+    */
   override def getIndexes[M <: UntypedMetaRecord](query: RogueQuery[M, _, _]): Option[Seq[UntypedMongoIndex]] = {
     val cachedIndexes = indexCache.flatMap(_.get(query.meta))
     if (cachedIndexes.isDefined) {
@@ -85,7 +84,7 @@ trait SpindleDBCollectionFactory extends DBCollectionFactory[UntypedMetaRecord, 
               rest match {
                 case Nil => fieldOpt.map(_.name)
                 case rest => {
-                  val structFieldOpt = fieldOpt.collect{ case s: StructFieldDescriptor[_, _, _, _] => s }
+                  val structFieldOpt = fieldOpt.collect { case s: StructFieldDescriptor[_, _, _, _] => s }
                   for {
                     wireName <- fieldOpt.map(_.name)
                     structField <- structFieldOpt
@@ -101,7 +100,9 @@ trait SpindleDBCollectionFactory extends DBCollectionFactory[UntypedMetaRecord, 
           for (index <- indexes.toList) yield {
             val entries = index.map(entry => {
               val wireName = fieldNameToWireName(query.meta, entry.fieldName.split('.').toList).getOrElse {
-                throw new Exception("Struct %s declares an index on non-existent field %s".format(query.meta, entry.fieldName))
+                throw new Exception(
+                  "Struct %s declares an index on non-existent field %s".format(query.meta, entry.fieldName)
+                )
               }
               (wireName, entry.indexType)
             })

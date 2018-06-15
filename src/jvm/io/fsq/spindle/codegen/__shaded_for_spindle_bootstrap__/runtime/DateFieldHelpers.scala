@@ -5,6 +5,7 @@ package io.fsq.spindle.__shaded_for_spindle_bootstrap__.runtime
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 
 object DateFieldHelpers {
+
   /** Used primarily to parse/format the java.util.Date enhanced type. */
   private val javaUtilDateFormatter: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd\'T\'HH:mm:ss\'Z\'")
 

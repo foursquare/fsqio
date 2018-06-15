@@ -21,17 +21,23 @@ class BaseS2CoveringIndexBuildIntermediateJob(
     (featureId, servingFeature) <- features
     if servingFeature.feature.geometryOrThrow.wkbGeometryIsSet
     geometry = new WKBReader().read(servingFeature.feature.geometryOrThrow.wkbGeometryByteArray)
-    cellIds = GeometryUtils.s2PolygonCovering(
-      geometry,
-      S2CoveringConstants.minS2LevelForS2Covering,
-      S2CoveringConstants.maxS2LevelForS2Covering,
-      levelMod = Some(S2CoveringConstants.defaultLevelModForS2Covering),
-      maxCellsHintWhichMightBeIgnored = Some(S2CoveringConstants.defaultMaxCellsHintForS2Covering)
-    ).map(_.id)
+    cellIds = GeometryUtils
+      .s2PolygonCovering(
+        geometry,
+        S2CoveringConstants.minS2LevelForS2Covering,
+        S2CoveringConstants.maxS2LevelForS2Covering,
+        levelMod = Some(S2CoveringConstants.defaultLevelModForS2Covering),
+        maxCellsHintWhichMightBeIgnored = Some(S2CoveringConstants.defaultMaxCellsHintForS2Covering)
+      )
+      .map(_.id)
   } yield {
     (featureId -> IntermediateDataContainer.newBuilder.longList(cellIds).result)
   }).group
     .withReducers(1)
     .head
-    .write(TypedSink[(LongWritable, IntermediateDataContainer)](SpindleSequenceFileSource[LongWritable, IntermediateDataContainer](outputPath)))
+    .write(
+      TypedSink[(LongWritable, IntermediateDataContainer)](
+        SpindleSequenceFileSource[LongWritable, IntermediateDataContainer](outputPath)
+      )
+    )
 }

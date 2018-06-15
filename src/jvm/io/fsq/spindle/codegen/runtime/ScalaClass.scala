@@ -6,13 +6,16 @@ import io.fsq.spindle.__shaded_for_spindle_bootstrap__.descriptors.{Struct, Stru
 import io.fsq.spindle.__shaded_for_spindle_bootstrap__.runtime.{IndexParser, InvalidField, InvalidIndex}
 
 class ScalaClass(
-    override val underlying: Struct,
-    resolver: TypeReferenceResolver
-) extends StructProxy with StructLike {
+  override val underlying: Struct,
+  resolver: TypeReferenceResolver
+) extends StructProxy
+  with StructLike {
   private val primaryKeyFieldName: Option[String] = {
     annotations.get("primary_key") orElse {
       if (annotations.contains("mongo_collection")) {
-        throw new CodegenException("Error: primary_key annotation must be specified on mongo record %s".format(this.name))
+        throw new CodegenException(
+          "Error: primary_key annotation must be specified on mongo record %s".format(this.name)
+        )
       }
       None
     }
@@ -28,8 +31,10 @@ class ScalaClass(
 
   private val missingForeignKeyFieldNames: Set[String] = foreignKeyFieldNames.toSet -- existingFieldNames
   if (missingForeignKeyFieldNames.nonEmpty) {
-    throw new CodegenException("Error: foreign_key annotations reference non-existing fields: %s".format(
-      missingForeignKeyFieldNames.mkString(", ")))
+    throw new CodegenException(
+      "Error: foreign_key annotations reference non-existing fields: %s"
+        .format(missingForeignKeyFieldNames.mkString(", "))
+    )
   }
 
   override val __fields: Seq[ScalaField] =
@@ -54,7 +59,9 @@ class ScalaClass(
     val badIds = ids.intersect(retiredIds)
     val badWireNames = wireNames.intersect(retiredWireNames)
     if (repeatedWireNames.nonEmpty) {
-      throw new CodegenException("Error: illegal repetition of wire_name's: %s".format(repeatedWireNames.mkString(", ")))
+      throw new CodegenException(
+        "Error: illegal repetition of wire_name's: %s".format(repeatedWireNames.mkString(", "))
+      )
     }
     if (badIds.nonEmpty) {
       throw new CodegenException("Error: illegal use of retired ids: %s".format(badIds.mkString(", ")))
@@ -67,15 +74,18 @@ class ScalaClass(
   // Check that index annotations parse and indexed fields actually exist
   {
     IndexParser.parse(this.annotations) match {
-      case Left(errs) => errs.foreach {
-        case InvalidField(fieldSpecifier) =>
-          throw new CodegenException(
-            "Invalid index specifier '%s' for class %s -- must be FIELD_NAME:INDEX_TYPE".format(
-              fieldSpecifier, this.name))
-        case InvalidIndex(indexSpecifier) =>
-          throw new CodegenException(
-            "Unknown index type specifier '%s' for class %s".format(indexSpecifier, this.name))
-      }
+      case Left(errs) =>
+        errs.foreach {
+          case InvalidField(fieldSpecifier) =>
+            throw new CodegenException(
+              "Invalid index specifier '%s' for class %s -- must be FIELD_NAME:INDEX_TYPE"
+                .format(fieldSpecifier, this.name)
+            )
+          case InvalidIndex(indexSpecifier) =>
+            throw new CodegenException(
+              "Unknown index type specifier '%s' for class %s".format(indexSpecifier, this.name)
+            )
+        }
       case Right(indexes) =>
         for {
           index <- indexes
@@ -83,15 +93,15 @@ class ScalaClass(
         } {
           val fieldNames = indexEntry.fieldName.split('.')
           if (fieldNames.size < 1) {
-            throw new CodegenException(
-              "Unknown field name '' in index specifier for class %s".format(this.name))
+            throw new CodegenException("Unknown field name '' in index specifier for class %s".format(this.name))
           }
 
           // TODO: verify subfields exist
           val fieldName = fieldNames.head
           if (!this.fields.exists(field => field.name == fieldName)) {
             throw new CodegenException(
-              "Unknown field name '%s' in index specifier for class %s".format(fieldName, this.name))
+              "Unknown field name '%s' in index specifier for class %s".format(fieldName, this.name)
+            )
           }
         }
     }

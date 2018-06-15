@@ -51,7 +51,7 @@ abstract class ConcreteCompressionAlgorithm extends CompressionAlgorithm {
     })
   }
 
-  def returnCompressor(compressor: Compressor): Unit =  {
+  def returnCompressor(compressor: Compressor): Unit = {
     CodecPool.returnCompressor(compressor)
   }
 }
@@ -88,4 +88,3 @@ class SnappyCompressionAlgorithm extends ConcreteCompressionAlgorithm {
 
   val compressionId: Int = 3
 }
-

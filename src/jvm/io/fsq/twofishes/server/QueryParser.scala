@@ -35,7 +35,9 @@ class QueryParser(logger: TwofishesLogger) {
 
     val tokens = if (hadConnector) {
       originalTokens.drop(connectorEnd + 1)
-    } else { originalTokens }
+    } else {
+      originalTokens
+    }
 
     // if there're too many tokens, take as many as are allowed and continue
     Stats.addMetric("query_length", originalTokens.size)

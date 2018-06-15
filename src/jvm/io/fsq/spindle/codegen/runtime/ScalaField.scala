@@ -6,11 +6,12 @@ import io.fsq.spindle.__shaded_for_spindle_bootstrap__.descriptors.{Field, Field
 import scala.annotation.tailrec
 
 class ScalaField(
-    override val underlying: Field,
-    resolver: TypeReferenceResolver,
-    val isPrimaryKey: Boolean = false,
-    val isForeignKey: Boolean = false
-) extends FieldProxy with HasAnnotations {
+  override val underlying: Field,
+  resolver: TypeReferenceResolver,
+  val isPrimaryKey: Boolean = false,
+  val isForeignKey: Boolean = false
+) extends FieldProxy
+  with HasAnnotations {
   val escapedName: String = CodegenUtil.escapeScalaFieldName(name)
   val wireNameOpt: Option[String] = annotations.get("wire_name")
   val wireName: String = wireNameOpt.getOrElse(name)
@@ -18,26 +19,33 @@ class ScalaField(
   val tfieldName: String = name.toUpperCase + "_FDESC"
   val isSetName: String = name + "IsSet"
   val isSetVar: String = "_" + isSetName
-  val builderRequired: Boolean = 
+  val builderRequired: Boolean =
     (this.requirednessIsSet == false
       || this.requirednessOption.exists(_ == Requiredness.REQUIRED)
       || isPrimaryKey
       || annotations.get("builder_required").exists(_ == "true"))
   val typeReference: TypeReference =
-    resolver.resolveTypeId(underlying.typeId, annotations).fold(
-      missingTypeReference => missingTypeReference match {
-        case AliasNotFound(typeAlias) =>
-          throw new CodegenException("Unknown type `%s` referenced in field %d: _ %s".format(
-            typeAlias, underlying.identifier, underlying.name))
-        case TypeIdNotFound(typeId) =>
-          throw new CodegenException("Unresolveable type id `%s` in field %d: _ %s".format(
-            typeId, underlying.identifier, underlying.name))
-        case EnhancedTypeFailure =>
-          throw new CodegenException("Failure with enhanced types in field %d: _ %s".format(
-            underlying.identifier, underlying.name))
-      },
-      foundTypeReference => foundTypeReference
-    )
+    resolver
+      .resolveTypeId(underlying.typeId, annotations)
+      .fold(
+        missingTypeReference =>
+          missingTypeReference match {
+            case AliasNotFound(typeAlias) =>
+              throw new CodegenException(
+                "Unknown type `%s` referenced in field %d: _ %s"
+                  .format(typeAlias, underlying.identifier, underlying.name)
+              )
+            case TypeIdNotFound(typeId) =>
+              throw new CodegenException(
+                "Unresolveable type id `%s` in field %d: _ %s".format(typeId, underlying.identifier, underlying.name)
+              )
+            case EnhancedTypeFailure =>
+              throw new CodegenException(
+                "Failure with enhanced types in field %d: _ %s".format(underlying.identifier, underlying.name)
+              )
+          },
+        foundTypeReference => foundTypeReference
+      )
 
   // TODO: implement. must be in terms of custom TypeReference
   val enhancedTypeAnnotations = extractEnhancedType(typeReference)
@@ -47,12 +55,12 @@ class ScalaField(
   val defaultName = this.name + nullOrDefault
 
   /**
-   * Should this field be serialized with an enhanced type?
-   *
-   * This is used by TBSONObjectProtocol (and possibly other custom protocols)
-   * to know whether a given field should get special treatment when being
-   * serialized.
-   */
+    * Should this field be serialized with an enhanced type?
+    *
+    * This is used by TBSONObjectProtocol (and possibly other custom protocols)
+    * to know whether a given field should get special treatment when being
+    * serialized.
+    */
   @tailrec
   final def extractEnhancedType(tpe: TypeReference): Option[(String, String)] = tpe match {
     case EnhancedTypeRef(name, _) =>

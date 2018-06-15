@@ -8,19 +8,19 @@ import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 
 /**
- *  Inspired by [[io.fsq.common.concurrent.FutureOption]], this is a monadic wrapper
- *  around Future[Outcome[S, F]] so you can easily combine Future[S], Option[S], Outcome[S, F], etc.
- *  into a for yield.
- *
- * Example:
- *
- *  val result: Future[Outcome[Venue, String]] = (for {
- *    userid <- FutureOutcome.lift(msg.useridOption, "no-userid")
- *    user <- FutureOutcome.lift(services.futureDb.fetchOne(Q(User).where(_.userid eqs userid)), "no-user")
- *    venue <- FutureOutcome(services.foo.bar(user)) // where bar returns Future[Outcome[Venue, String]]
- *    _ <- FutureOutcome.failWhen(venue.isHomeOrOffice, "home-or-office-venue")
- *  } yield venue).resolve
- */
+  *  Inspired by [[io.fsq.common.concurrent.FutureOption]], this is a monadic wrapper
+  *  around Future[Outcome[S, F]] so you can easily combine Future[S], Option[S], Outcome[S, F], etc.
+  *  into a for yield.
+  *
+  * Example:
+  *
+  *  val result: Future[Outcome[Venue, String]] = (for {
+  *    userid <- FutureOutcome.lift(msg.useridOption, "no-userid")
+  *    user <- FutureOutcome.lift(services.futureDb.fetchOne(Q(User).where(_.userid eqs userid)), "no-user")
+  *    venue <- FutureOutcome(services.foo.bar(user)) // where bar returns Future[Outcome[Venue, String]]
+  *    _ <- FutureOutcome.failWhen(venue.isHomeOrOffice, "home-or-office-venue")
+  *  } yield venue).resolve
+  */
 final class FutureOutcome[+S, +F](val resolve: Future[Outcome[S, F]]) extends AnyVal {
   def map[T](f: S => T): FutureOutcome[T, F] = new FutureOutcome(resolve.map(_.map(f)))
 
@@ -42,11 +42,10 @@ final class FutureOutcome[+S, +F](val resolve: Future[Outcome[S, F]]) extends An
     this.flatMap(asFutureOutcome)
   }
 
-  def orElse[B >: S, FF >: F](f: => FutureOutcome[B, FF]): FutureOutcome[B, FF] = FutureOutcome(
-    resolve.flatMap({
-      case Success(v) => Future.value(Success(v))
-      case Failure(_) => f.resolve
-    }))
+  def orElse[B >: S, FF >: F](f: => FutureOutcome[B, FF]): FutureOutcome[B, FF] = FutureOutcome(resolve.flatMap({
+    case Success(v) => Future.value(Success(v))
+    case Failure(_) => f.resolve
+  }))
 }
 
 object FutureOutcome {

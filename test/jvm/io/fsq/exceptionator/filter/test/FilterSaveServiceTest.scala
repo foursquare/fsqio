@@ -4,8 +4,14 @@ package io.fsq.exceptionator.filter.test
 
 import com.twitter.finagle.Service
 import com.twitter.util.Future
-import io.fsq.exceptionator.filter.{BucketSpec, FilteredIncoming, FilteredSaveService, PreSaveFilter,
-    ProcessedIncoming, Registry}
+import io.fsq.exceptionator.filter.{
+  BucketSpec,
+  FilteredIncoming,
+  FilteredSaveService,
+  PreSaveFilter,
+  ProcessedIncoming,
+  Registry
+}
 import io.fsq.exceptionator.model.io.Incoming
 import org.junit.{Assert => A, Test}
 
@@ -21,12 +27,7 @@ class OrderedPreSaveFilter(id: String) extends PreSaveFilter {
 
 class TestService extends Service[FilteredIncoming, ProcessedIncoming] {
   def apply(incoming: FilteredIncoming): Future[ProcessedIncoming] = {
-    Future.value(ProcessedIncoming(
-      None,
-      incoming.incoming,
-      incoming.tags,
-      incoming.keywords,
-      incoming.buckets))
+    Future.value(ProcessedIncoming(None, incoming.incoming, incoming.tags, incoming.keywords, incoming.buckets))
   }
 }
 
@@ -37,18 +38,16 @@ class FilteredSaveServiceTest {
   // the transformations of earlier filters
   @Test
   def testFilterOrder(): Unit = {
-    val incoming = FilteredIncoming(Incoming(
-        Nil, Nil, Nil, Map.empty, Map.empty, "", "", None, None, None)).copy(tags = Set(""))
+    val incoming =
+      FilteredIncoming(Incoming(Nil, Nil, Nil, Map.empty, Map.empty, "", "", None, None, None)).copy(tags = Set(""))
 
     val service = new FilteredSaveService(
       new TestService,
-      List(
-        new OrderedPreSaveFilter("1"),
-        new OrderedPreSaveFilter("2"),
-        new OrderedPreSaveFilter("3")),
+      List(new OrderedPreSaveFilter("1"), new OrderedPreSaveFilter("2"), new OrderedPreSaveFilter("3")),
       new Registry {
         def registerBucket(spec: BucketSpec): Unit = {}
-      })
+      }
+    )
 
     A.assertEquals(Some(Set("123")), service(incoming).poll.flatMap(_.toOption.map(_.tags)))
   }

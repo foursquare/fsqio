@@ -2,7 +2,6 @@
 
 package io.fsq.hfile.common
 
-
 trait HFileMetadataKeys {
   val ThriftClassKey: String = "key.thrift.class"
   val ThriftClassValue: String = "value.thrift.class"

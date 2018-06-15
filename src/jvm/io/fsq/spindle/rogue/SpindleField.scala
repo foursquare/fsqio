@@ -3,50 +3,55 @@
 package io.fsq.spindle.rogue
 
 import io.fsq.field.Field
-import io.fsq.rogue.{AbstractListModifyField, AbstractListQueryField, AbstractModifyField, AbstractQueryField,
-    SelectableDummyField}
+import io.fsq.rogue.{
+  AbstractListModifyField,
+  AbstractListQueryField,
+  AbstractModifyField,
+  AbstractQueryField,
+  SelectableDummyField
+}
 import io.fsq.spindle.common.thrift.bson.TBSONObjectProtocol
 import io.fsq.spindle.runtime.{CompanionProvider, Enum, EnumIntField, EnumStringField, MetaRecord, Record}
 import org.apache.thrift.TBase
 import org.bson.BSONObject
 
 class SpindleEnumIntQueryField[M, E <: Enum[E]](field: Field[E, M] with EnumIntField)
-    extends AbstractQueryField[E, E, Int, M](field) {
+  extends AbstractQueryField[E, E, Int, M](field) {
   override def valueToDB(e: E) = e.id
 }
 
 class SpindleEnumIntListQueryField[M, E <: Enum[E]](field: Field[Seq[E], M] with EnumIntField)
-    extends AbstractListQueryField[E, E, Int, M, Seq](field) {
+  extends AbstractListQueryField[E, E, Int, M, Seq](field) {
   override def valueToDB(e: E) = e.id
 }
 
 class SpindleEnumIntModifyField[M, E <: Enum[E]](field: Field[E, M] with EnumIntField)
-    extends AbstractModifyField[E, Int, M](field) {
+  extends AbstractModifyField[E, Int, M](field) {
   override def valueToDB(e: E) = e.id
 }
 
 class SpindleEnumIntListModifyField[M, E <: Enum[E]](field: Field[Seq[E], M] with EnumIntField)
-    extends AbstractListModifyField[E, Int, M, Seq](field) {
+  extends AbstractListModifyField[E, Int, M, Seq](field) {
   override def valueToDB(e: E) = e.id
 }
 
 class SpindleEnumStringQueryField[M, E <: Enum[E]](field: Field[E, M] with EnumStringField)
-    extends AbstractQueryField[E, E, String, M](field) {
+  extends AbstractQueryField[E, E, String, M](field) {
   override def valueToDB(e: E) = e.stringValue
 }
 
 class SpindleEnumStringListQueryField[M, E <: Enum[E]](field: Field[Seq[E], M] with EnumStringField)
-    extends AbstractListQueryField[E, E, String, M, Seq](field) {
+  extends AbstractListQueryField[E, E, String, M, Seq](field) {
   override def valueToDB(e: E) = e.stringValue
 }
 
 class SpindleEnumStringModifyField[M, E <: Enum[E]](field: Field[E, M] with EnumStringField)
-    extends AbstractModifyField[E, String, M](field) {
+  extends AbstractModifyField[E, String, M](field) {
   override def valueToDB(e: E) = e.stringValue
 }
 
 class SpindleEnumStringListModifyField[M, E <: Enum[E]](field: Field[Seq[E], M] with EnumStringField)
-    extends AbstractListModifyField[E, String, M, Seq](field) {
+  extends AbstractListModifyField[E, String, M, Seq](field) {
   override def valueToDB(e: E) = e.stringValue
 }
 
@@ -61,10 +66,10 @@ abstract class SpindleEmbeddedRecordListQueryFieldHelper[C, F1, F2, F3] {
 }
 
 class SpindleEmbeddedRecordQueryField[
-    R <: Record[_],
-    MM <: MetaRecord[_, _]
+  R <: Record[_],
+  MM <: MetaRecord[_, _]
 ](
-    f: Field[R, MM]
+  f: Field[R, MM]
 ) extends AbstractQueryField[R, R, BSONObject, MM](f) {
 
   override def valueToDB(b: R) = {
@@ -75,16 +80,19 @@ class SpindleEmbeddedRecordQueryField[
   }
 
   def sub[
-      RR <: Record[RR],
-      V
-  ](implicit
-      ev: R <:< Record[RR],
-      d: CompanionProvider[RR]
+    RR <: Record[RR],
+    V
+  ](
+    implicit
+    ev: R <:< Record[RR],
+    d: CompanionProvider[RR]
   ) = new SpindleEmbeddedRecordQueryFieldHelper[d.CompanionT, Field[V, d.CompanionT], SelectableDummyField[V, MM]] {
     override def field(subfield: d.CompanionT => Field[V, d.CompanionT]): SelectableDummyField[V, MM] = {
       new SelectableDummyField[V, MM](f.name + "." + subfield(d.provide).name, f.owner)
     }
-    def enumIntField(subfield: d.CompanionT => Field[V, d.CompanionT] with EnumIntField): SelectableDummyField[V, MM] with EnumIntField = {
+    def enumIntField(
+      subfield: d.CompanionT => Field[V, d.CompanionT] with EnumIntField
+    ): SelectableDummyField[V, MM] with EnumIntField = {
       new SelectableDummyField[V, MM](f.name + "." + subfield(d.provide).name, f.owner) with EnumIntField
     }
   }
@@ -95,10 +103,10 @@ class SpindleEmbeddedRecordQueryField[
 }
 
 class SpindleEmbeddedRecordModifyField[
-    R <: Record[_],
-    MM <: MetaRecord[_, _]
+  R <: Record[_],
+  MM <: MetaRecord[_, _]
 ](
-    f: Field[R, MM]
+  f: Field[R, MM]
 ) extends AbstractModifyField[R, BSONObject, MM](f) {
 
   override def valueToDB(b: R) = {
@@ -109,12 +117,11 @@ class SpindleEmbeddedRecordModifyField[
   }
 }
 
-
 class SpindleEmbeddedRecordListQueryField[
-    R <: Record[_],
-    MM <: MetaRecord[_, _]
+  R <: Record[_],
+  MM <: MetaRecord[_, _]
 ](
-    f: Field[Seq[R], MM]
+  f: Field[Seq[R], MM]
 ) extends AbstractListQueryField[R, R, BSONObject, MM, Seq](f) {
   override def valueToDB(b: R) = {
     val factory = new TBSONObjectProtocol.WriterFactoryForDBObject
@@ -124,12 +131,18 @@ class SpindleEmbeddedRecordListQueryField[
   }
 
   def sub[
-      RR <: Record[RR],
-      V
-  ](implicit
-      ev: R <:< Record[RR],
-      d: CompanionProvider[RR]
-  ) = new SpindleEmbeddedRecordListQueryFieldHelper[d.CompanionT, Field[V, d.CompanionT], SelectableDummyField[V, MM], SelectableDummyField[Seq[Option[V]], MM]] {
+    RR <: Record[RR],
+    V
+  ](
+    implicit
+    ev: R <:< Record[RR],
+    d: CompanionProvider[RR]
+  ) = new SpindleEmbeddedRecordListQueryFieldHelper[
+    d.CompanionT,
+    Field[V, d.CompanionT],
+    SelectableDummyField[V, MM],
+    SelectableDummyField[Seq[Option[V]], MM]
+  ] {
     override def field(subfield: d.CompanionT => Field[V, d.CompanionT]): SelectableDummyField[V, MM] = {
       new SelectableDummyField[V, MM](f.name + "." + subfield(d.provide).name, f.owner)
     }
@@ -144,10 +157,10 @@ class SpindleEmbeddedRecordListQueryField[
 }
 
 class SpindleEmbeddedRecordListModifyField[
-    R <: Record[_],
-    MM <: MetaRecord[_, _]
+  R <: Record[_],
+  MM <: MetaRecord[_, _]
 ](
-    f: Field[Seq[R], MM]
+  f: Field[Seq[R], MM]
 ) extends AbstractListModifyField[R, BSONObject, MM, Seq](f) {
 
   override def valueToDB(b: R) = {

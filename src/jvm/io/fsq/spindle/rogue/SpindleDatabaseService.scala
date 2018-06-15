@@ -3,9 +3,22 @@
 package io.fsq.spindle.rogue
 
 import com.mongodb.{BulkWriteResult, DBObject, DefaultDBDecoder, WriteConcern}
-import io.fsq.rogue.{!<:<, BulkInsertOne, BulkOperation, BulkRemove, BulkRemoveOne,
-    BulkReplaceOne, BulkUpdateMany, BulkUpdateOne, MongoHelpers, MongoJavaDriverAdapter, Query, QueryExecutor,
-    QueryHelpers, QueryOptimizer}
+import io.fsq.rogue.{
+  !<:<,
+  BulkInsertOne,
+  BulkOperation,
+  BulkRemove,
+  BulkRemoveOne,
+  BulkReplaceOne,
+  BulkUpdateMany,
+  BulkUpdateOne,
+  MongoHelpers,
+  MongoJavaDriverAdapter,
+  Query,
+  QueryExecutor,
+  QueryHelpers,
+  QueryOptimizer
+}
 import io.fsq.rogue.MongoHelpers.{AndCondition, MongoBuilder, MongoSelect}
 import io.fsq.rogue.types.MongoDisallowed
 import io.fsq.spindle.common.thrift.bson.TBSONObjectProtocol
@@ -22,8 +35,10 @@ trait SpindleQueryExecutor extends QueryExecutor[UntypedMetaRecord, UntypedRecor
 }
 
 class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory) extends SpindleQueryExecutor {
-  override def readSerializer[M <: UntypedMetaRecord, R](meta: M, select: Option[MongoSelect[M, R]]):
-      SpindleRogueReadSerializer[M, R] = {
+  override def readSerializer[M <: UntypedMetaRecord, R](
+    meta: M,
+    select: Option[MongoSelect[M, R]]
+  ): SpindleRogueReadSerializer[M, R] = {
     new SpindleRogueReadSerializer(meta, select)
   }
 
@@ -52,7 +67,9 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
   )
   override val optimizer = new QueryOptimizer
 
-  override def save[R <: UntypedRecord](record: R, writeConcern: WriteConcern = defaultWriteConcern)(implicit ev: R !<:< MongoDisallowed): R = {
+  override def save[R <: UntypedRecord](record: R, writeConcern: WriteConcern = defaultWriteConcern)(
+    implicit ev: R !<:< MongoDisallowed
+  ): R = {
     if (record.meta.annotations.contains("nosave"))
       throw new IllegalArgumentException("Cannot save a %s record".format(record.meta.recordName))
     super.save(record, writeConcern)
@@ -65,10 +82,10 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
   }
 
   override def bulk[M <: UntypedMetaRecord, R <: UntypedRecord](
-      clauses: Seq[BulkOperation[M, R]],
-      ordered: Boolean,
-      writeConcern: WriteConcern
-    ): Option[BulkWriteResult] = {
+    clauses: Seq[BulkOperation[M, R]],
+    ordered: Boolean,
+    writeConcern: WriteConcern
+  ): Option[BulkWriteResult] = {
     clauses.headOption.map(firstClause => {
       val meta = firstClause match {
         case BulkInsertOne(meta, _) => {
@@ -115,8 +132,8 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
             val dbo = s.toDBObject(record)
             builder.insert(dbo)
 
-            descriptionFuncBuilder += {
-              () => dbo.toString
+            descriptionFuncBuilder += { () =>
+              dbo.toString
             }
           }
           case BulkRemoveOne(query) => {
@@ -124,8 +141,8 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
             validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
             builder.find(queryClause.asDBObject).removeOne()
 
-            descriptionFuncBuilder += {
-              () => MongoHelpers.MongoBuilder.buildConditionString("BulkRemoveOne", collectionName, queryClause)
+            descriptionFuncBuilder += { () =>
+              MongoHelpers.MongoBuilder.buildConditionString("BulkRemoveOne", collectionName, queryClause)
             }
           }
           case BulkRemove(query) => {
@@ -133,8 +150,8 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
             validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
             builder.find(queryClause.asDBObject).remove()
 
-            descriptionFuncBuilder += {
-              () => MongoHelpers.MongoBuilder.buildConditionString("BulkRemove", collectionName, queryClause)
+            descriptionFuncBuilder += { () =>
+              MongoHelpers.MongoBuilder.buildConditionString("BulkRemove", collectionName, queryClause)
             }
           }
           case BulkReplaceOne(query, record, upsert) => {
@@ -149,8 +166,8 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
             }
 
             // TODO: Add the replacement DBO string to the descriptionFunc
-            descriptionFuncBuilder += {
-              () => MongoHelpers.MongoBuilder.buildConditionString("BulkReplaceOne", collectionName, queryClause)
+            descriptionFuncBuilder += { () =>
+              MongoHelpers.MongoBuilder.buildConditionString("BulkReplaceOne", collectionName, queryClause)
             }
           }
           case BulkUpdateOne(query, upsert) => {
@@ -165,11 +182,11 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
                 builder.find(q).updateOne(m)
               }
 
-              descriptionFuncBuilder += {
-                () => MongoHelpers.MongoBuilder.buildModifyString(query.query.collectionName, modClause, upsert = upsert, multi = false)
+              descriptionFuncBuilder += { () =>
+                MongoHelpers.MongoBuilder
+                  .buildModifyString(query.query.collectionName, modClause, upsert = upsert, multi = false)
               }
             }
-
 
           }
           case BulkUpdateMany(query, upsert) => {
@@ -185,17 +202,21 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
               }
             }
 
-            descriptionFuncBuilder += {
-              () => MongoHelpers.MongoBuilder.buildModifyString(query.query.collectionName, modClause, upsert = upsert, multi = true)
+            descriptionFuncBuilder += { () =>
+              MongoHelpers.MongoBuilder
+                .buildModifyString(query.query.collectionName, modClause, upsert = upsert, multi = true)
             }
           }
         }
       }
 
       val descriptionFunc: () => String = () => {
-        descriptionFuncBuilder.result().map(df => {
-          df()
-        }).mkString("\n")
+        descriptionFuncBuilder
+          .result()
+          .map(df => {
+            df()
+          })
+          .mkString("\n")
       }
 
       val fakeQueryForLogging = {

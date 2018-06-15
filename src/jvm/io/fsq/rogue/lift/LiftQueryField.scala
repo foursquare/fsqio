@@ -13,7 +13,7 @@ class CaseClassQueryField[V, M](val field: Field[V, M]) {
 }
 
 class CaseClassListQueryField[V, M](field: Field[List[V], M])
-    extends AbstractListQueryField[V, V, DBObject, M, List](field) {
+  extends AbstractListQueryField[V, V, DBObject, M, List](field) {
   override def valueToDB(v: V) = LiftQueryHelpers.asDBObject(v)
 
   def unsafeField[F](name: String): SelectableDummyField[List[F], M] =
@@ -21,7 +21,6 @@ class CaseClassListQueryField[V, M](field: Field[List[V], M])
 }
 
 class CaseClassListModifyField[V, M](field: Field[List[V], M])
-    extends AbstractListModifyField[V, DBObject, M, List](field) {
+  extends AbstractListModifyField[V, DBObject, M, List](field) {
   override def valueToDB(v: V) = LiftQueryHelpers.asDBObject(v)
 }
-

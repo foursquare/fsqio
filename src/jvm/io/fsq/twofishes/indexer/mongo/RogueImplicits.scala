@@ -7,7 +7,6 @@ import io.fsq.rogue.Rogue
 import io.fsq.rogue.adapter.BlockingResult
 import io.fsq.spindle.rogue.{SpindleQuery, SpindleRogue}
 
-
 object RogueImplicits extends Rogue with SpindleRogue with BlockingResult.Implicits {
   val Q: SpindleQuery.type = SpindleQuery
 }

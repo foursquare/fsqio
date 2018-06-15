@@ -14,7 +14,8 @@ import org.apache.hadoop.conf.Configuration
 import scala.collection.JavaConverters._
 
 package object hacks {
-  class TwofishesFoursquareCacheConfigHack(config: Configuration, cacheLimit: Option[Int] = None) extends TwofishesFoursquareCacheConfig(config, cacheLimit)
+  class TwofishesFoursquareCacheConfigHack(config: Configuration, cacheLimit: Option[Int] = None)
+    extends TwofishesFoursquareCacheConfig(config, cacheLimit)
 }
 
 // The following is an in-memory BlockCache implementation where all blocks are stored in memory and never evicted.
@@ -56,10 +57,18 @@ private class TwofishesInMemoryBlockCache extends BlockCache {
 }
 
 // The following is a simple wrapper around CacheConfig to force it to use the supplied BlockCache implementation.
-class TwofishesFoursquareCacheConfig(config: Configuration, cacheLimit: Option[Int] = None) extends
-    CacheConfig(cacheLimit.map(new LruBlockCache(_, 4*1024, config)).getOrElse(new TwofishesInMemoryBlockCache()),
-                true, cacheLimit.isEmpty, true, true, true, true, false) {
-      // TODO: Not sure if inMemory arg should use cacheLimit.isEmpty or hardcod to true. Still need to
-      // investigate how LruBlockCache.cacheBlock treats this flag. The documentation for CacheConfig is not apparent
-      // what the contract for this flag indicates.
+class TwofishesFoursquareCacheConfig(config: Configuration, cacheLimit: Option[Int] = None)
+  extends CacheConfig(
+    cacheLimit.map(new LruBlockCache(_, 4 * 1024, config)).getOrElse(new TwofishesInMemoryBlockCache()),
+    true,
+    cacheLimit.isEmpty,
+    true,
+    true,
+    true,
+    true,
+    false
+  ) {
+  // TODO: Not sure if inMemory arg should use cacheLimit.isEmpty or hardcod to true. Still need to
+  // investigate how LruBlockCache.cacheBlock treats this flag. The documentation for CacheConfig is not apparent
+  // what the contract for this flag indicates.
 }

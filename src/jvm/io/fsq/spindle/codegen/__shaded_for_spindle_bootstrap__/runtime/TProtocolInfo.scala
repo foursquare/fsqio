@@ -4,7 +4,6 @@ import io.fsq.spindle.common.thrift.bson.TBSONProtocol
 import io.fsq.spindle.common.thrift.json.TReadableJSONProtocol
 import org.apache.thrift.protocol.{TBinaryProtocol, TCompactProtocol, TJSONProtocol, TProtocol, TProtocolFactory}
 
-
 object KnownTProtocolNames {
   val TBinaryProtocol = "org.apache.thrift.protocol.TBinaryProtocol"
   val TCompactProtocol = "org.apache.thrift.protocol.TCompactProtocol"
@@ -31,14 +30,12 @@ object TProtocolInfo {
   // binary fields as Base64-encoded strings, and this causes it to interoperate incorrectly
   // with the binary protocols when writing inline.  So we consider it non-robust.
   def isRobust(protocolName: String): Boolean = protocolName match {
-    case KnownTProtocolNames.TBinaryProtocol |
-         KnownTProtocolNames.TCompactProtocol => true
+    case KnownTProtocolNames.TBinaryProtocol | KnownTProtocolNames.TCompactProtocol => true
     case _ => false
   }
 
   def isTextBased(protocolName: String): Boolean = protocolName match {
-    case KnownTProtocolNames.TJSONProtocol |
-         KnownTProtocolNames.TReadableJSONProtocol => true
+    case KnownTProtocolNames.TJSONProtocol | KnownTProtocolNames.TReadableJSONProtocol => true
     case _ => false
   }
 

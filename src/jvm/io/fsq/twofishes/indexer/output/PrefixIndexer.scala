@@ -11,7 +11,6 @@ import io.fsq.twofishes.util.StoredFeatureId
 import java.util.regex.Pattern
 import scala.collection.mutable.HashSet
 
-
 object PrefixIndexer {
   val MaxPrefixLength = 5
   val MaxNamesToConsider = 1000
@@ -42,24 +41,30 @@ class PrefixIndexer(
     // and then pick the top from each group by turn and cycle through
     // input: a (US), b (US), c (CN), d (US), e (AU), f (AU), g (CN)
     // desired output: a (US), c (CN), e (AU), b (US), g (CN), f (AU), d (US)
-    records.flatGroupBy(_.ccOption)         // (US -> a, b, d), (CN -> c, g), (AU -> e, f)
-      .values.toList                        // (a, b, d), (c, g), (e, f)
-      .flatMap(_.zipWithIndex)              // (a, 0), (b, 1), (d, 2), (c, 0), (g, 1), (e, 0), (f, 1)
-      .groupBy(_._2).toList                 // (0 -> a, c, e), (1 -> b, g, f), (2 -> d)
-      .sortBy(_._1).flatMap(_._2.map(_._1)) // a, c, e, b, g, f, d
+    records
+      .flatGroupBy(_.ccOption) // (US -> a, b, d), (CN -> c, g), (AU -> e, f)
+      .values
+      .toList // (a, b, d), (c, g), (e, f)
+      .flatMap(_.zipWithIndex) // (a, 0), (b, 1), (d, 2), (c, 0), (g, 1), (e, 0), (f, 1)
+      .groupBy(_._2)
+      .toList // (0 -> a, c, e), (1 -> b, g, f), (2 -> d)
+      .sortBy(_._1)
+      .flatMap(_._2.map(_._1)) // a, c, e, b, g, f, d
   }
 
   def sortRecordsByNames(records: List[NameIndex]) = {
     val (prefPureNames, nonPrefPureNames) =
-      records.partition(r =>
-        (hasFlag(r, FeatureNameFlags.PREFERRED) || hasFlag(r, FeatureNameFlags.ALT_NAME)) &&
-        (r.langOption.has("en") || hasFlag(r, FeatureNameFlags.LOCAL_LANG))
+      records.partition(
+        r =>
+          (hasFlag(r, FeatureNameFlags.PREFERRED) || hasFlag(r, FeatureNameFlags.ALT_NAME)) &&
+            (r.langOption.has("en") || hasFlag(r, FeatureNameFlags.LOCAL_LANG))
       )
 
     val (secondBestNames, worstNames) =
-      nonPrefPureNames.partition(r =>
-        r.langOption.has("en")
-        || hasFlag(r, FeatureNameFlags.LOCAL_LANG)
+      nonPrefPureNames.partition(
+        r =>
+          r.langOption.has("en")
+            || hasFlag(r, FeatureNameFlags.LOCAL_LANG)
       )
 
     (joinLists(prefPureNames), joinLists(secondBestNames, worstNames))
@@ -98,7 +103,8 @@ class PrefixIndexer(
       YahooWoeType.COUNTRY
     ).map(_.getValue)
 
-    val prefixWriter = buildMapFileWriter(index,
+    val prefixWriter = buildMapFileWriter(
+      index,
       Map(
         "MAX_PREFIX_LENGTH" -> PrefixIndexer.MaxPrefixLength.toString,
         "MAX_FIDS_PER_PREFIX" -> PrefixIndexer.MaxFidsToStorePerPrefix.toString
@@ -114,8 +120,7 @@ class PrefixIndexer(
       }
       val records = getRecordsByPrefix(prefix, PrefixIndexer.MaxNamesToConsider)
 
-      val (woeMatches, woeMismatches) = records.partition(r =>
-        bestWoeTypes.contains(r.woeTypeOrThrow))
+      val (woeMatches, woeMismatches) = records.partition(r => bestWoeTypes.contains(r.woeTypeOrThrow))
 
       val (prefSortedRecords, unprefSortedRecords) =
         sortRecordsByNames(woeMatches.toList)

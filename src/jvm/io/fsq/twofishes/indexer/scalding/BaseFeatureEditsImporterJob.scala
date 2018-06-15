@@ -14,9 +14,17 @@ class BaseFeatureEditsImporterJob(
   args: Args
 ) extends TwofishesImporterJob(name, inputSpec, args) {
 
-  lines.filterNot(_.startsWith("#")).flatMap(line => lineProcessor(line))
+  lines
+    .filterNot(_.startsWith("#"))
+    .flatMap(line => lineProcessor(line))
     .group
     .toList
-    .mapValues({edits: List[GeocodeServingFeatureEdit] => GeocodeServingFeatureEdits(edits)})
-    .write(TypedSink[(LongWritable, GeocodeServingFeatureEdits)](SpindleSequenceFileSource[LongWritable, GeocodeServingFeatureEdits](outputPath)))
+    .mapValues({ edits: List[GeocodeServingFeatureEdit] =>
+      GeocodeServingFeatureEdits(edits)
+    })
+    .write(
+      TypedSink[(LongWritable, GeocodeServingFeatureEdits)](
+        SpindleSequenceFileSource[LongWritable, GeocodeServingFeatureEdits](outputPath)
+      )
+    )
 }

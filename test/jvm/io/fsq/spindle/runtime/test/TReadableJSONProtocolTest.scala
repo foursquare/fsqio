@@ -25,7 +25,10 @@ class TReadableJSONProtocolTest {
     assertEquals(None, t2.aStringOption)
   }
 
-  def deserializeJson[R <: Record[R] with TBase[R, _ <: org.apache.thrift.TFieldIdEnum]](s: String, recMeta: MetaRecord[R, _]): R = {
+  def deserializeJson[R <: Record[R] with TBase[R, _ <: org.apache.thrift.TFieldIdEnum]](
+    s: String,
+    recMeta: MetaRecord[R, _]
+  ): R = {
     val deserializer = new TDeserializer(new TReadableJSONProtocol.Factory())
     val rec = recMeta.createRecord
     deserializer.deserialize(rec, s.getBytes("UTF-8"))

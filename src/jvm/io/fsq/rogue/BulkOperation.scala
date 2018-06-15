@@ -2,7 +2,6 @@
 
 package io.fsq.rogue
 
-
 sealed trait BulkOperation[MetaRecord, Record] {
   def metaRecord: MetaRecord
 }
@@ -11,7 +10,6 @@ case class BulkInsertOne[MetaRecord, Record](
   metaRecord: MetaRecord,
   record: Record
 ) extends BulkOperation[MetaRecord, Record]
-
 
 sealed trait BulkQueryOperation[MetaRecord, Record] extends BulkOperation[MetaRecord, Record] {
   def query: Query[MetaRecord, Record, _]
@@ -40,7 +38,6 @@ case class BulkReplaceOne[MetaRecord, Record](
   record: Record,
   upsert: Boolean
 ) extends BulkQueryOperation[MetaRecord, Record]
-
 
 sealed trait BulkModifyQueryOperation[MetaRecord, Record] extends BulkOperation[MetaRecord, Record] {
   def modifyQuery: ModifyQuery[MetaRecord, _]

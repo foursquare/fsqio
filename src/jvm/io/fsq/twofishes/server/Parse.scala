@@ -3,8 +3,13 @@ package io.fsq.twofishes.server
 
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
-import io.fsq.twofishes.gen.{DebugScoreComponent, FeatureName, GeocodeFeature, GeocodeServingFeature,
-    InterpretationScoringFeatures}
+import io.fsq.twofishes.gen.{
+  DebugScoreComponent,
+  FeatureName,
+  GeocodeFeature,
+  GeocodeServingFeature,
+  InterpretationScoringFeatures
+}
 import io.fsq.twofishes.util.{GeoTools, NameUtils, StoredFeatureId}
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
@@ -61,8 +66,7 @@ case class Parse[T <: MaybeSorted](
     val namesandids = this.map(f => {
       val name = NameUtils.bestName(f.fmatch.feature, None, false).map(_.name).getOrElse("UNKNOWN")
       val cc = f.fmatch.feature.ccOrThrow
-      val id = f.fmatch.feature.ids.headOption.map(
-        fid => "%s:%s".format(fid.source, fid.id)).getOrElse("no:id")
+      val id = f.fmatch.feature.ids.headOption.map(fid => "%s:%s".format(fid.source, fid.id)).getOrElse("no:id")
       "%s %s %s".format(id, name, cc)
     })
     "%d features: %s".format(this.size, namesandids.mkString(","))
@@ -108,14 +112,13 @@ object ParseUtils {
       f1.geometryOrThrow.center.lat,
       f1.geometryOrThrow.center.lng,
       f2.geometryOrThrow.center.lat,
-      f2.geometryOrThrow.center.lng)
+      f2.geometryOrThrow.center.lng
+    )
   }
 
   def boundsContains(f1: GeocodeFeature, f2: GeocodeFeature) = {
-    f1.geometryOrThrow.boundsOption.exists(bb =>
-      GeoTools.boundsContains(bb, f2.geometryOrThrow.center)) ||
-    f2.geometryOrThrow.boundsOption.exists(bb =>
-      GeoTools.boundsContains(bb, f1.geometryOrThrow.center))
+    f1.geometryOrThrow.boundsOption.exists(bb => GeoTools.boundsContains(bb, f2.geometryOrThrow.center)) ||
+    f2.geometryOrThrow.boundsOption.exists(bb => GeoTools.boundsContains(bb, f1.geometryOrThrow.center))
   }
 
   def parsesNear(p1: Parse[Sorted], p2: Parse[Sorted]): Boolean = {

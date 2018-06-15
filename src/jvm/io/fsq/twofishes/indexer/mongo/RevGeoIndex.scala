@@ -9,12 +9,13 @@ import io.fsq.twofishes.model.gen.{ThriftRevGeoIndex, ThriftRevGeoIndexMeta, Thr
 import java.nio.ByteBuffer
 import org.bson.types.ObjectId
 
-
 class RevGeoIndex(override val underlying: ThriftRevGeoIndex) extends ThriftRevGeoIndexProxy {
   def getGeocodePoint: Option[GeocodePoint] = {
-    pointOption.map({case Seq(lat, lng) => {
-      GeocodePoint.newBuilder.lat(lat).lng(lng).result
-    }})
+    pointOption.map({
+      case Seq(lat, lng) => {
+        GeocodePoint.newBuilder.lat(lat).lng(lng).result
+      }
+    })
   }
 }
 

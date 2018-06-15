@@ -5,8 +5,11 @@ import org.bson.types.ObjectId
 
 sealed abstract class FeatureNamespace(val name: String, val id: Byte)
 case object MaponicsNamespace extends FeatureNamespace("maponics", 0.toByte)
-case object GeonamesNamespace extends FeatureNamespace("geonameid", 
-  Option(System.getProperty("geonameidNamespace")).map(_.toInt).getOrElse(1).toByte)
+case object GeonamesNamespace
+  extends FeatureNamespace(
+    "geonameid",
+    Option(System.getProperty("geonameidNamespace")).map(_.toInt).getOrElse(1).toByte
+  )
 case object GeonamesZipNamespace extends FeatureNamespace("geonamezip", 2.toByte)
 case object AdHocNamespace extends FeatureNamespace("adhoc", 3.toByte)
 case object WoeIdNamespace extends FeatureNamespace("woeid", 4.toByte)
@@ -15,9 +18,18 @@ case object GettyNamespace extends FeatureNamespace("tgn", 6.toByte)
 
 object FeatureNamespace {
   // higher is better
-  val NamespaceOrdering = List(OsmNamespace, WoeIdNamespace, AdHocNamespace, GeonamesNamespace, MaponicsNamespace, GettyNamespace)
+  val NamespaceOrdering =
+    List(OsmNamespace, WoeIdNamespace, AdHocNamespace, GeonamesNamespace, MaponicsNamespace, GettyNamespace)
 
-  val values = List(WoeIdNamespace, AdHocNamespace, GeonamesNamespace, MaponicsNamespace, GeonamesZipNamespace, OsmNamespace, GettyNamespace)
+  val values = List(
+    WoeIdNamespace,
+    AdHocNamespace,
+    GeonamesNamespace,
+    MaponicsNamespace,
+    GeonamesZipNamespace,
+    OsmNamespace,
+    GettyNamespace
+  )
 
   def fromId(id: Byte): FeatureNamespace = fromIdOpt(id).getOrElse(
     throw new RuntimeException("unrecognized feature namespace id '%d'".format(id))
@@ -93,15 +105,78 @@ object GeonamesZip {
   // be necessary when we get new geonames data, please ADD THINGS AT THE END
   // OF THE ARRAY so we leave the existing array indices alone.
   val supportedCountries: Array[String] = Array(
-    "AD", "AR", "AS", "AT", "AU", "BD", "BE", "BG", "BR", "CA", "CH", "CZ",
-    "DE", "DK", "DO", "ES", "FI", "FO", "FR", "GB", "GF", "GG", "GL", "GP",
-    "GT", "GU", "GY", "HR", "HU", "IM", "IN", "IS", "IT", "JE", "JP", "LI",
-    "LK", "LT", "LU", "MC", "MD", "MH", "MK", "MP", "MQ", "MX", "MY", "NL",
-    "NO", "NZ", "PH", "PK", "PL", "PM", "PR", "PT", "RE", "RU", "SE", "SI",
-    "SJ", "SK", "SM", "TH", "TR", "US", "VA", "VI", "YT", "ZA"
+    "AD",
+    "AR",
+    "AS",
+    "AT",
+    "AU",
+    "BD",
+    "BE",
+    "BG",
+    "BR",
+    "CA",
+    "CH",
+    "CZ",
+    "DE",
+    "DK",
+    "DO",
+    "ES",
+    "FI",
+    "FO",
+    "FR",
+    "GB",
+    "GF",
+    "GG",
+    "GL",
+    "GP",
+    "GT",
+    "GU",
+    "GY",
+    "HR",
+    "HU",
+    "IM",
+    "IN",
+    "IS",
+    "IT",
+    "JE",
+    "JP",
+    "LI",
+    "LK",
+    "LT",
+    "LU",
+    "MC",
+    "MD",
+    "MH",
+    "MK",
+    "MP",
+    "MQ",
+    "MX",
+    "MY",
+    "NL",
+    "NO",
+    "NZ",
+    "PH",
+    "PK",
+    "PL",
+    "PM",
+    "PR",
+    "PT",
+    "RE",
+    "RU",
+    "SE",
+    "SI",
+    "SJ",
+    "SK",
+    "SM",
+    "TH",
+    "TR",
+    "US",
+    "VA",
+    "VI",
+    "YT",
+    "ZA"
     // NEW COUNTRIES GO AT THE END
   )
-
 
   assert(supportedCountries.size < 256)
 
@@ -201,7 +276,9 @@ object StoredFeatureId {
     if (ObjectId.isValid(s)) {
       fromLegacyObjectId(new ObjectId(s))
     } else {
-      Helpers.TryO(s.toLong).flatMap(fromLong _)
+      Helpers
+        .TryO(s.toLong)
+        .flatMap(fromLong _)
         .orElse(fromHumanReadableString(s))
     }
   }

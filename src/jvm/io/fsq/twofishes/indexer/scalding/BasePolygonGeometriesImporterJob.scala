@@ -28,7 +28,10 @@ class BasePolygonGeometriesImporterJob(
       .source(source)
       .result
     (new LongWritable(polygonId) -> matchingValue)
-  }).group
-    .head
-    .write(TypedSink[(LongWritable, PolygonMatchingValue)](SpindleSequenceFileSource[LongWritable, PolygonMatchingValue](outputPath)))
+  }).group.head
+    .write(
+      TypedSink[(LongWritable, PolygonMatchingValue)](
+        SpindleSequenceFileSource[LongWritable, PolygonMatchingValue](outputPath)
+      )
+    )
 }

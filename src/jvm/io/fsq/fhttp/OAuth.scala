@@ -36,17 +36,16 @@ class OAuth1Filter(
     val time = clock()
     var oauthParams: List[(String, String)] =
       ("oauth_timestamp", (time / 1000).toString) ::
-      ("oauth_nonce", nonce()) ::
-      ("oauth_version", "1.0") ::
-      ("oauth_consumer_key", consumer.key) ::
-      ("oauth_signature_method", "HMAC-SHA1") :: Nil
-
+        ("oauth_nonce", nonce()) ::
+        ("oauth_version", "1.0") ::
+        ("oauth_consumer_key", consumer.key) ::
+        ("oauth_signature_method", "HMAC-SHA1") :: Nil
 
     token.foreach(t => {
       oauthParams ::= ("oauth_token", t.key)
     })
 
-    verifier.foreach({v =>
+    verifier.foreach({ v =>
       oauthParams ::= ("oauth_verifier", v)
     })
 
@@ -60,7 +59,7 @@ class OAuth1Filter(
       case Method.Get =>
         val qd = new QueryStringDecoder(request.uri)
         (qd.getPath, qd)
-      case Method.Post if request.contentType.exists(_  =? PostParamsType) =>
+      case Method.Post if request.contentType.exists(_ =? PostParamsType) =>
         (
           request.uri,
           new QueryStringDecoder("?" + request.contentString)
@@ -84,14 +83,17 @@ class OAuth1Filter(
     val key = new SecretKeySpec(normKey.getBytes(FHttpRequest.UTF_8), MAC)
     val mac = Mac.getInstance(MAC)
     mac.init(key)
-    val signature: String = new String( Base64.encodeBase64(mac.doFinal(normReq.getBytes(FHttpRequest.UTF_8))),
-                                        FHttpRequest.UTF_8)
+    val signature: String =
+      new String(Base64.encodeBase64(mac.doFinal(normReq.getBytes(FHttpRequest.UTF_8))), FHttpRequest.UTF_8)
 
     oauthParams ::= ("oauth_signature", signature)
 
     // finally, add the header
-    request.headerMap.put("Authorization", "OAuth " +
-      oauthParams.map(p => p._1 + "=\"" + percentEncode(p._2) + "\"").mkString(","))
+    request.headerMap.put(
+      "Authorization",
+      "OAuth " +
+        oauthParams.map(p => p._1 + "=\"" + percentEncode(p._2) + "\"").mkString(",")
+    )
 
     service(request)
   }
@@ -111,7 +113,7 @@ class OAuth1Filter(
     }
   }
 
-  private[this] def percentEncode(params: List[(String,String)]): List[String] = {
+  private[this] def percentEncode(params: List[(String, String)]): List[String] = {
     params.map(p => percentEncode(p._1) + "=" + percentEncode(p._2))
   }
 
@@ -119,4 +121,3 @@ class OAuth1Filter(
     java.net.URLEncoder.encode(s, "utf-8").replace("+", "%20").replace("*", "%2A").replace("%7E", "~")
   }
 }
-

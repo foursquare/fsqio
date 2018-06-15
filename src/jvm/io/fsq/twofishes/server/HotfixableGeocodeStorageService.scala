@@ -10,7 +10,8 @@ import org.slf4s.Logging
 class HotfixableGeocodeStorageService(
   underlying: GeocodeStorageReadService,
   hotfix: HotfixStorageService
-) extends GeocodeStorageReadService with Logging {
+) extends GeocodeStorageReadService
+  with Logging {
 
   def getIdsByName(name: String): Seq[StoredFeatureId] = {
     (underlying.getIdsByName(name) ++ hotfix.getIdsToAddByName(name))
@@ -30,15 +31,15 @@ class HotfixableGeocodeStorageService(
 
   def getByFeatureIds(ids: Seq[StoredFeatureId]): Map[StoredFeatureId, GeocodeServingFeature] = {
     // filter results rather than incoming list of ids in order to correctly handle concordance
-    (underlying.getByFeatureIds(ids)
-      .filterNot({case (id, feature) => hotfix.getAddedOrModifiedFeatureLongIds.has(feature.longId)}) ++
+    (underlying
+      .getByFeatureIds(ids)
+      .filterNot({ case (id, feature) => hotfix.getAddedOrModifiedFeatureLongIds.has(feature.longId) }) ++
       (for {
         id <- ids
         feature <- hotfix.getByFeatureId(id).toList
       } yield {
         (id -> feature)
-      }).toMap
-    ).filterNot({case (id, feature) => hotfix.getDeletedFeatureLongIds.has(feature.longId)})
+      }).toMap).filterNot({ case (id, feature) => hotfix.getDeletedFeatureLongIds.has(feature.longId) })
   }
 
   def getBySlugOrFeatureIds(ids: Seq[String]): Map[String, GeocodeServingFeature] = {
@@ -52,8 +53,9 @@ class HotfixableGeocodeStorageService(
     }).toMap
 
     // next, call underlying lookup to resolve any unchanged slugs/ids
-    val existingIdFidMap = underlying.getBySlugOrFeatureIds(ids.filterNot(changedSlugFidMap.contains))
-      .map({case (idString, feature) => (idString -> StoredFeatureId.fromLong(feature.longId))})
+    val existingIdFidMap = underlying
+      .getBySlugOrFeatureIds(ids.filterNot(changedSlugFidMap.contains))
+      .map({ case (idString, feature) => (idString -> StoredFeatureId.fromLong(feature.longId)) })
       .toMap
 
     // any valid id that is in neither of the above could only be newly created and without a slug
@@ -81,10 +83,11 @@ class HotfixableGeocodeStorageService(
   def getLevelMod: Int = underlying.getLevelMod
 
   def getByS2CellId(id: Long): Seq[CellGeometry] = {
-    (underlying.getByS2CellId(id)
+    (underlying
+      .getByS2CellId(id)
       .filterNot(cellGeometry => hotfix.getAddedOrModifiedPolygonFeatureLongIds.has(cellGeometry.longId)) ++
-      hotfix.getCellGeometriesByS2CellId(id)
-    ).filterNot(cellGeometry => hotfix.getDeletedPolygonFeatureLongIds.has(cellGeometry.longId))
+      hotfix.getCellGeometriesByS2CellId(id))
+      .filterNot(cellGeometry => hotfix.getDeletedPolygonFeatureLongIds.has(cellGeometry.longId))
   }
 
   def getPolygonByFeatureId(id: StoredFeatureId): Option[Geometry] = {

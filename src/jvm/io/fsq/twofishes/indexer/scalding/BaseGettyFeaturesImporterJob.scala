@@ -20,7 +20,8 @@ class BaseGettyFeaturesImporterJob(
   inputSpec: TwofishesImporterInputSpec,
   args: Args
 ) extends TwofishesImporterJob(name, inputSpec, args) {
-  lines.flatMap(line => {
+  lines
+    .flatMap(line => {
       /*
       {
     "geometry": {
@@ -46,59 +47,70 @@ class BaseGettyFeaturesImporterJob(
     },
     "type": "Feature"
 }
-    */
+       */
 
-    parseOpt(line) match {
-      case Some(json) => {
-        val hierarchyStrings: Seq[String] = (json \ "properties" \ "hierarchy").asInstanceOf[JArray].arr.map(_.asInstanceOf[JString].s)
-        val hierarchyIds = for {
-          hid <- hierarchyStrings
-          fid <- StoredFeatureId.fromHumanReadableString(hid)
-        } yield {
-          fid.longId
-        }
+      parseOpt(line) match {
+        case Some(json) => {
+          val hierarchyStrings: Seq[String] =
+            (json \ "properties" \ "hierarchy").asInstanceOf[JArray].arr.map(_.asInstanceOf[JString].s)
+          val hierarchyIds = for {
+            hid <- hierarchyStrings
+            fid <- StoredFeatureId.fromHumanReadableString(hid)
+          } yield {
+            fid.longId
+          }
 
-        val id: Int = (json \ "properties" \ "id").asInstanceOf[JInt].num.toInt
-        val rawPlacetype: Seq[String] = (json \ "properties" \ "placetype").asInstanceOf[JArray].arr.map(_.asInstanceOf[JString].s)
-        val names: Seq[DisplayName] =
-          (
-            (json \ "properties").asInstanceOf[JObject].obj.filter { case (key, _) => key.startsWith("name:")}
-              .map { case (key, value) => {
-              (key.replace("name:", ""), value.asInstanceOf[JString].s)
-            }
-            }
-              .map { case (lang, name) => DisplayName(lang, name)}
+          val id: Int = (json \ "properties" \ "id").asInstanceOf[JInt].num.toInt
+          val rawPlacetype: Seq[String] =
+            (json \ "properties" \ "placetype").asInstanceOf[JArray].arr.map(_.asInstanceOf[JString].s)
+          val names: Seq[DisplayName] =
+            (
+              (json \ "properties")
+                .asInstanceOf[JObject]
+                .obj
+                .filter { case (key, _) => key.startsWith("name:") }
+                .map {
+                  case (key, value) => {
+                    (key.replace("name:", ""), value.asInstanceOf[JString].s)
+                  }
+                }
+                .map { case (lang, name) => DisplayName(lang, name) }
             )
 
-        val feature = new FeatureJSON().readFeature(GeoJSONUtil.toReader(line))
-        val geom = feature.getDefaultGeometry.asInstanceOf[Geometry]
-        val centerLatLng: (Double, Double) = (geom.getCentroid().getY(), geom.getCentroid().getX())
+          val feature = new FeatureJSON().readFeature(GeoJSONUtil.toReader(line))
+          val geom = feature.getDefaultGeometry.asInstanceOf[Geometry]
+          val centerLatLng: (Double, Double) = (geom.getCentroid().getY(), geom.getCentroid().getX())
 
-        val ccOpt = CountryRevGeo.getNearestCountryCode(centerLatLng._1, centerLatLng._2)
-        val featureId = GettyId(id)
+          val ccOpt = CountryRevGeo.getNearestCountryCode(centerLatLng._1, centerLatLng._2)
+          val featureId = GettyId(id)
 
-        val geocodeRecord = GeocodeRecord(
-          id = featureId.longId,
-          names = Nil,
-          cc = ccOpt.getOrElse("XX"),
-          woeType = YahooWoeType.UNKNOWN.id,
-          lat = centerLatLng._1,
-          lng = centerLatLng._2,
-          displayNames = names.toList,
-          ids = List(featureId.longId),
-          parents = hierarchyIds.toList
-        )
+          val geocodeRecord = GeocodeRecord(
+            id = featureId.longId,
+            names = Nil,
+            cc = ccOpt.getOrElse("XX"),
+            woeType = YahooWoeType.UNKNOWN.id,
+            lat = centerLatLng._1,
+            lng = centerLatLng._2,
+            displayNames = names.toList,
+            ids = List(featureId.longId),
+            parents = hierarchyIds.toList
+          )
 
-        val servingFeature = geocodeRecord.toGeocodeServingFeature()
-        Some(new LongWritable(servingFeature.longId) -> servingFeature)
+          val servingFeature = geocodeRecord.toGeocodeServingFeature()
+          Some(new LongWritable(servingFeature.longId) -> servingFeature)
+        }
+
+        case None => {
+          // logger.error("couldn't parse json from line: %s".format(line))
+          None
+        }
       }
-
-      case None => {
-        // logger.error("couldn't parse json from line: %s".format(line))
-        None
-      }
-    }
-  }).group
+    })
+    .group
     .head
-    .write(TypedSink[(LongWritable, GeocodeServingFeature)](SpindleSequenceFileSource[LongWritable, GeocodeServingFeature](outputPath)))
+    .write(
+      TypedSink[(LongWritable, GeocodeServingFeature)](
+        SpindleSequenceFileSource[LongWritable, GeocodeServingFeature](outputPath)
+      )
+    )
 }

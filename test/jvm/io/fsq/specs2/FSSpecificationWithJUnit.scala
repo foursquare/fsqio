@@ -16,10 +16,14 @@ import org.specs2.specification.core.SpecificationStructure
   */
 class JUnitRunner(klass: Class[_]) extends BaseJUnitRunner(klass) {
   override lazy val specification: SpecificationStructure = {
-    SpecificationStructure.create(klass.getName, klass.getClassLoader).execute(consoleLogging).unsafePerformIO.fold(
-      ok => ok,
-      error => error.fold(m => throw new Exception(m), t => throw t, (m, t) => throw t)
-    )
+    SpecificationStructure
+      .create(klass.getName, klass.getClassLoader)
+      .execute(consoleLogging)
+      .unsafePerformIO
+      .fold(
+        ok => ok,
+        error => error.fold(m => throw new Exception(m), t => throw t, (m, t) => throw t)
+      )
   }
 }
 

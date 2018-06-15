@@ -97,13 +97,16 @@ object FeatureEditLineProcessors {
           .longId(longId)
           .editType(EditType.Modify)
           // always add name and rely on merging to collapse flags
-          .namesEdits(Seq(
-            FeatureNameListEdit(
-              EditType.Add,
-              name,
-              lang,
-              flagsList.map(flag => FeatureNameFlagsListEdit(EditType.Add, flag)))
-          ))
+          .namesEdits(
+            Seq(
+              FeatureNameListEdit(
+                EditType.Add,
+                name,
+                lang,
+                flagsList.map(flag => FeatureNameFlagsListEdit(EditType.Add, flag))
+              )
+            )
+          )
           .result
 
         Some(new LongWritable(longId), edit)

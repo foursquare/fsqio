@@ -5,8 +5,8 @@ package io.fsq.common.base
 import java.nio.ByteBuffer
 
 object Hex {
-  val Hexits = Array[Char]('0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F')
-  val HexitsLower = Array[Char]('0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f')
+  val Hexits = Array[Char]('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
+  val HexitsLower = Array[Char]('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f')
 
   private def writeHexits(buf: Array[Char], offset: Int, byte: Byte, lowerCase: Boolean): Unit = {
     val hexits = if (lowerCase) HexitsLower else Hexits
@@ -50,7 +50,7 @@ object Hex {
     val charBuf = new Array[Char](bufCopy.remaining() * 2)
 
     var i = 0
-    while(bufCopy.remaining() > 0) {
+    while (bufCopy.remaining() > 0) {
       writeHexits(charBuf, i * 2, bufCopy.get, lowerCase)
       i += 1
     }
@@ -74,7 +74,7 @@ object Hex {
       // If less than 16 characters, then we can go ahead and use parseLong.
       java.lang.Long.parseLong(hexStr, 16)
     } else if (hexStr.size > 16) {
-        throw new Exception("Number too large to fit in a long.")
+      throw new Exception("Number too large to fit in a long.")
     } else {
       // If the most-significant (sign) bit is set, we need to convert to signed version.
       hexStr.head match {

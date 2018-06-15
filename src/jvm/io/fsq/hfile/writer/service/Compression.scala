@@ -16,4 +16,3 @@ trait CompressionAlgorithm {
 
   def compressionId: Int
 }
-

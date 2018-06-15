@@ -29,11 +29,16 @@ class BaseNameIndexBuildIntermediateJob(
   }).group
     .withReducers(1)
     .toList
-    .mapValues({values: List[(Int, Long)] => {
-      val ids = values
-        .sorted
-        .map({case (s: Int, id: Long) => id})
-      IntermediateDataContainer.newBuilder.longList(ids).result
-    }})
-    .write(TypedSink[(Text, IntermediateDataContainer)](SpindleSequenceFileSource[Text, IntermediateDataContainer](outputPath)))
+    .mapValues({ values: List[(Int, Long)] =>
+      {
+        val ids = values.sorted
+          .map({ case (s: Int, id: Long) => id })
+        IntermediateDataContainer.newBuilder.longList(ids).result
+      }
+    })
+    .write(
+      TypedSink[(Text, IntermediateDataContainer)](
+        SpindleSequenceFileSource[Text, IntermediateDataContainer](outputPath)
+      )
+    )
 }

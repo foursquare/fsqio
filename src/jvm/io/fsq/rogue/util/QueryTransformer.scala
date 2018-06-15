@@ -4,7 +4,6 @@ package io.fsq.rogue.util
 
 import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, Query}
 
-
 trait QueryTransformer {
   def transformQuery[M](query: Query[M, _, _]): Query[M, _, _]
 

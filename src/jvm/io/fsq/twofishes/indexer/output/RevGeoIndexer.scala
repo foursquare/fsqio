@@ -16,7 +16,8 @@ class RevGeoIndexer(
   override val basepath: String,
   override val fidMap: FidMap,
   polygonMap: Map[ObjectId, List[(Long, YahooWoeType)]]
-) extends Indexer with RevGeoConstants {
+) extends Indexer
+  with RevGeoConstants {
   val index = Indexes.S2Index
   override val outputs = Seq(index)
 

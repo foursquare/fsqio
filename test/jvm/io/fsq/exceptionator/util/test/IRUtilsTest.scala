@@ -10,10 +10,10 @@ class IRUtilsTest {
   def testRollingRankWindowing(): Unit = {
     val windowSize = 3
     val rr = new RollingRank("test1", "\\s+", None, None, windowSize)
-    rr.rank("a a b")  // Slot 0
-    rr.rank("b b c")  // Slot 1
-    rr.rank("c c d")  // Slot 2
-    rr.rank("d d e")  // Slot 0
+    rr.rank("a a b") // Slot 0
+    rr.rank("b b c") // Slot 1
+    rr.rank("c c d") // Slot 2
+    rr.rank("d d e") // Slot 0
     println(rr.docFrequency)
     println(rr.window.mkString(","))
     A.assertEquals(None, Option(rr.docFrequency.get("a")))

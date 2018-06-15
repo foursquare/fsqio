@@ -17,15 +17,17 @@ object FsqSimpleFeatureImplicits {
 }
 
 class FsqSimpleFeature(val f: SimpleFeature) {
-  val propMap = f.getProperties().asScala.flatMap(p => {
-    Option(p.getValue()).map(v =>
-      (p.getName().toString, v.toString)
-    )
-  }).toMap
+  val propMap = f
+    .getProperties()
+    .asScala
+    .flatMap(p => {
+      Option(p.getValue()).map(v => (p.getName().toString, v.toString))
+    })
+    .toMap
 
   lazy val geometry: Option[Geometry] = {
     if (f.getDefaultGeometry() != null) {
-      Some(f.getDefaultGeometry().asInstanceOf[Geometry] )
+      Some(f.getDefaultGeometry().asInstanceOf[Geometry])
     } else {
       None
     }
@@ -49,13 +51,13 @@ trait ShapeIterator extends Iterator[SimpleFeature] {
 class GeoJsonIterator(val file: File) extends ShapeIterator {
   def this(path: String) = this(new File(path))
   val io = new FeatureJSON()
-   //urn:ogc:def:crs:OGC:1.3:CRS84
-   // epsg:4326
+  //urn:ogc:def:crs:OGC:1.3:CRS84
+  // epsg:4326
   val source = scala.io.Source.fromFile(file)
   val data = source.mkString
   source.close()
-  val iter = io.streamFeatureCollection(GeoJSONUtil.toReader(data.replace("urn:ogc:def:crs:OGC:1.3:CRS84", "epsg:4326")))
-
+  val iter =
+    io.streamFeatureCollection(GeoJSONUtil.toReader(data.replace("urn:ogc:def:crs:OGC:1.3:CRS84", "epsg:4326")))
 
   def hasNext = iter.hasNext
   def next = iter.next

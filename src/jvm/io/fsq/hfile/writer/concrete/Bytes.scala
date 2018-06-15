@@ -32,7 +32,7 @@ trait Bytes {
         idx <- len until 0 by -1
       } {
         val shiftbits = (idx - 1) * 8
-        val mask = 0xFFL << shiftbits
+        val mask = 0XFFL << shiftbits
         outputStream.writeByte(((i & mask) >> shiftbits).toByte)
       }
     }

@@ -8,7 +8,6 @@ import io.fsq.twofishes.model.gen.{ThriftNameIndex, ThriftNameIndexMeta, ThriftN
 import io.fsq.twofishes.util.StoredFeatureId
 import org.bson.types.ObjectId
 
-
 object NameIndex {
   def apply(
     name: String,
@@ -45,6 +44,6 @@ object NameIndex {
 }
 
 class NameIndex(override val underlying: ThriftNameIndex) extends ThriftNameIndexProxy {
-  def fidAsFeatureId = StoredFeatureId.fromLong(fid).getOrElse(
-    throw new RuntimeException("can't convert %d to a feature id".format(fid)))
+  def fidAsFeatureId =
+    StoredFeatureId.fromLong(fid).getOrElse(throw new RuntimeException("can't convert %d to a feature id".format(fid)))
 }

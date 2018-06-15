@@ -77,12 +77,15 @@ class FutureOptionTest {
       double <- FutureOption(Future { Some(value * 2) })
     } yield double).resolve))
 
-    A.assertEquals(Some(16), Await.result((for {
-      value <- FutureOption.value(2)
-      double <- FutureOption(Future { Some(value * 2) })
-      doubleDouble <- FutureOption(Future { Some(double * 2) })
-      quadrupleDouble <- FutureOption(Future { Some(doubleDouble * 2) })
-    } yield quadrupleDouble).resolve))
+    A.assertEquals(
+      Some(16),
+      Await.result((for {
+        value <- FutureOption.value(2)
+        double <- FutureOption(Future { Some(value * 2) })
+        doubleDouble <- FutureOption(Future { Some(double * 2) })
+        quadrupleDouble <- FutureOption(Future { Some(doubleDouble * 2) })
+      } yield quadrupleDouble).resolve)
+    )
 
     A.assertEquals(None, Await.result((for {
       value <- FutureOption.value(2)
@@ -104,12 +107,15 @@ class FutureOptionTest {
       if false
     } yield value).resolve))
 
-    A.assertEquals(Some(8), Await.result((for {
-      value <- FutureOption.value(2)
-      double = value * 2
-      doubleDouble <- FutureOption(Future { Some(double * 2) })
-      if true
-    } yield doubleDouble).resolve))
+    A.assertEquals(
+      Some(8),
+      Await.result((for {
+        value <- FutureOption.value(2)
+        double = value * 2
+        doubleDouble <- FutureOption(Future { Some(double * 2) })
+        if true
+      } yield doubleDouble).resolve)
+    )
 
     var i: Int = 0
 

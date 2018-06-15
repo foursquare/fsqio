@@ -72,9 +72,12 @@ object ThriftPrinter {
     println("%s{".format(indent))
     var field_header: org.apache.thrift.protocol.TField = iprot.readFieldBegin()
     while (field_header.`type` != org.apache.thrift.protocol.TType.STOP) {
-      val line = "%s  ID: %d, type: %s, %svalue: ".format(indent, field_header.id,
+      val line = "%s  ID: %d, type: %s, %svalue: ".format(
+        indent,
+        field_header.id,
         typeStr(field_header.`type`),
-        Option(field_header.name).filter(_.nonEmpty).map(n => "name: %s, ".format(n)).getOrElse(""))
+        Option(field_header.name).filter(_.nonEmpty).map(n => "name: %s, ".format(n)).getOrElse("")
+      )
       print(line)
       printValue(field_header.`type`, iprot, indent)
       iprot.readFieldEnd()
@@ -128,15 +131,14 @@ object GeocoderTestClient {
       .build())
     val factory = new TBinaryProtocol.Factory()
 
-    def callService(
-      target: String,
-      protocolFactory: TProtocolFactory,
-      args: TBase[_, _]): Future[TProtocol] = {
+    def callService(target: String, protocolFactory: TProtocolFactory, args: TBase[_, _]): Future[TProtocol] = {
       try {
         // TODO: size
         val __memoryTransport__ = new org.apache.thrift.transport.TMemoryBuffer(512)
         val __prot__ = protocolFactory.getProtocol(__memoryTransport__)
-        __prot__.writeMessageBegin(new org.apache.thrift.protocol.TMessage(target, org.apache.thrift.protocol.TMessageType.CALL, 0))
+        __prot__.writeMessageBegin(
+          new org.apache.thrift.protocol.TMessage(target, org.apache.thrift.protocol.TMessageType.CALL, 0)
+        )
         args.write(__prot__)
         __prot__.writeMessageEnd()
 
@@ -157,18 +159,18 @@ object GeocoderTestClient {
     var sent = 0
 
     // .onSuccess(responseProt => {
-        // val response = descriptor.responseMetaRecord.createRawRecord
-        // val responseMsg = responseProt.readMessageBegin()
-        // response.read(responseProt)
-        // responseProt.readMessageEnd()
-        // println(response)
-      // })
+    // val response = descriptor.responseMetaRecord.createRawRecord
+    // val responseMsg = responseProt.readMessageBegin()
+    // response.read(responseProt)
+    // responseProt.readMessageEnd()
+    // println(response)
+    // })
 
     def processMessage(rb: Array[Byte]) = {
-       val inputTransport = new org.apache.thrift.transport.TMemoryInputTransport(rb)
-       val iprot = factory.getProtocol(inputTransport)
-       val msg = iprot.readMessageBegin()
-       // println(msg.name)
+      val inputTransport = new org.apache.thrift.transport.TMemoryInputTransport(rb)
+      val iprot = factory.getProtocol(inputTransport)
+      val msg = iprot.readMessageBegin()
+      // println(msg.name)
 
       val descriptor = Geocoder.functionDescriptors.find(_.functionName == msg.name).get
       val req: TBase[_, _] = descriptor.requestMetaRecord.createRawRecord.asInstanceOf[TBase[_, _]]
@@ -193,7 +195,9 @@ object GeocoderTestClient {
       }
     }
 
-    0.to(50).foreach { p => requestLoop() }
+    0.to(50).foreach { p =>
+      requestLoop()
+    }
     //throw new Exception("done!")
   }
 }
@@ -202,19 +206,22 @@ import java.net.URLEncoder
 
 object ConvertSeqToJavascript {
   def processMessage(output: FileWriter, rb: Array[Byte]) = {
-     val factory = new TBinaryProtocol.Factory()
-     val inputTransport = new org.apache.thrift.transport.TMemoryInputTransport(rb)
-     val iprot = factory.getProtocol(inputTransport)
-     val msg = iprot.readMessageBegin()
-     // println(msg.name)
+    val factory = new TBinaryProtocol.Factory()
+    val inputTransport = new org.apache.thrift.transport.TMemoryInputTransport(rb)
+    val iprot = factory.getProtocol(inputTransport)
+    val msg = iprot.readMessageBegin()
+    // println(msg.name)
 
     val descriptor = Geocoder.functionDescriptors.find(_.functionName == msg.name).get
-    val req = descriptor.requestMetaRecord.createRawRecord.asInstanceOf[TBase[org.apache.thrift.TBase[_, _],org.apache.thrift.TFieldIdEnum]]
+    val req = descriptor.requestMetaRecord.createRawRecord
+      .asInstanceOf[TBase[org.apache.thrift.TBase[_, _], org.apache.thrift.TFieldIdEnum]]
     req.read(iprot)
 
     val field = req.fieldForId(1)
     val innerReq = req.getFieldValue(field)
-    output.write("/" + msg.name + "?json=" + URLEncoder.encode(innerReq.asInstanceOf[TBase[_, _]].toString, "UTF-8") + "\n")
+    output.write(
+      "/" + msg.name + "?json=" + URLEncoder.encode(innerReq.asInstanceOf[TBase[_, _]].toString, "UTF-8") + "\n"
+    )
 
     // val params = new scala.collection.mutable.HashMap[String, String]()
     // params("method") = msg.name

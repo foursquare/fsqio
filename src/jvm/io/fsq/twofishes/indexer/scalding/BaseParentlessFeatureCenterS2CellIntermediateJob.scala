@@ -19,7 +19,8 @@ class BaseParentlessFeatureCenterS2CellIntermediateJob(
   val s2Levels = scala.collection.immutable.Range.inclusive(
     RevGeoConstants.minS2LevelForRevGeo,
     RevGeoConstants.maxS2LevelForRevGeo,
-    RevGeoConstants.defaultLevelModForRevGeo)
+    RevGeoConstants.defaultLevelModForRevGeo
+  )
 
   (for {
     (featureId, servingFeature) <- features
@@ -31,10 +32,15 @@ class BaseParentlessFeatureCenterS2CellIntermediateJob(
   } yield {
     // HACK: cellIds seem to hash terribly and all go to the same reducer so use Text for now
     (new Text(cellId.toString) -> ParentMatchingValue(featureId.get, center, woeType))
-  }).group
-    .toList
-    .map({case (idText: Text, matchingValues: List[ParentMatchingValue]) => {
-      (new LongWritable(idText.toString.toLong) -> ParentMatchingValues(matchingValues))
-    }})
-    .write(TypedSink[(LongWritable, ParentMatchingValues)](SpindleSequenceFileSource[LongWritable, ParentMatchingValues](outputPath)))
+  }).group.toList
+    .map({
+      case (idText: Text, matchingValues: List[ParentMatchingValue]) => {
+        (new LongWritable(idText.toString.toLong) -> ParentMatchingValues(matchingValues))
+      }
+    })
+    .write(
+      TypedSink[(LongWritable, ParentMatchingValues)](
+        SpindleSequenceFileSource[LongWritable, ParentMatchingValues](outputPath)
+      )
+    )
 }

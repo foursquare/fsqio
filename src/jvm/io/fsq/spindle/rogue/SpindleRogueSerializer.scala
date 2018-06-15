@@ -9,25 +9,28 @@ import io.fsq.spindle.common.thrift.bson.TBSONObjectProtocol
 import io.fsq.spindle.runtime.{UntypedFieldDescriptor, UntypedMetaRecord, UntypedRecord}
 
 class SpindleRogueReadSerializer[M <: UntypedMetaRecord, R](meta: M, select: Option[MongoSelect[M, R]])
-    extends RogueReadSerializer[R] {
+  extends RogueReadSerializer[R] {
 
   private def getValueFromRecord(metaRecord: UntypedMetaRecord, record: Any, fieldName: String): Option[Any] = {
     val fieldList: List[UntypedFieldDescriptor] = metaRecord.untypedFields.toList
-    val fieldDescriptor = fieldList.find(fd => fd.name == fieldName).getOrElse(
-      throw new Exception("The meta record does not have a definition for field %s".format(fieldName))
-    )
+    val fieldDescriptor = fieldList
+      .find(fd => fd.name == fieldName)
+      .getOrElse(
+        throw new Exception("The meta record does not have a definition for field %s".format(fieldName))
+      )
     fieldDescriptor.unsafeGetterOption(record)
   }
 
   private def getValueFromAny(sourceObj: Option[Any], fieldName: String): Option[Any] = sourceObj.flatMap(_ match {
-    case (map: Map[_, _]) => map.find({case(key, value) => key.toString == fieldName}).map(_._2)
-    case (seq: Seq[_]) => Some(seq.map(elem => {
-      val elemOpt = elem match {
-        case opt: Option[_] => opt
-        case nonOpt => Some(nonOpt)
-      }
-      getValueFromAny(elemOpt, fieldName)
-    }))
+    case (map: Map[_, _]) => map.find({ case (key, value) => key.toString == fieldName }).map(_._2)
+    case (seq: Seq[_]) =>
+      Some(seq.map(elem => {
+        val elemOpt = elem match {
+          case opt: Option[_] => opt
+          case nonOpt => Some(nonOpt)
+        }
+        getValueFromAny(elemOpt, fieldName)
+      }))
     case (rec: UntypedRecord) => getValueFromRecord(rec.meta, rec, fieldName)
     case _ => throw new Exception("Rogue bug: unepected object type")
   })
@@ -63,7 +66,8 @@ class SpindleRogueReadSerializer[M <: UntypedMetaRecord, R](meta: M, select: Opt
           } else {
             // We need to handle a request for a subrecord, such as foo.x.y
             val (rootFieldName :: subPath) = fld.field.name.split('.').toList.filter(_ != "$")
-            val rootValueOpt = getValueFromRecord(fld.field.owner.asInstanceOf[UntypedMetaRecord], record, rootFieldName)
+            val rootValueOpt =
+              getValueFromRecord(fld.field.owner.asInstanceOf[UntypedMetaRecord], record, rootFieldName)
             val valueOpt = subPath.foldLeft(rootValueOpt)(getValueFromAny)
             fld.valueOrDefault(valueOpt)
           }

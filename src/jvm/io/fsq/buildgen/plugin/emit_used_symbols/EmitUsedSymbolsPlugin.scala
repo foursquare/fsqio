@@ -1,11 +1,9 @@
-
 // Copyright 2011 Foursquare Labs Inc. All Rights Reserved.
 
 package io.fsq.buildgen.plugin.emit_used_symbols
 
 import scala.tools.nsc.{Global, Phase}
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
-
 
 class EmitUsedSymbolsPlugin(val global: Global) extends Plugin {
   import global._
@@ -89,4 +87,3 @@ class EmitUsedSymbolsPlugin(val global: Global) extends Plugin {
     }
   }
 }
-

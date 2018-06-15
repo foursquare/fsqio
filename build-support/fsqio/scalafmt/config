@@ -22,3 +22,13 @@ spaces.inImportCurlyBraces = false
 newlines.alwaysBeforeMultilineDef = false
 newlines.penalizeSingleSelectMultiArgList = true
 rewrite.rules = [sortimports, prefercurlyfors]
+# Only format files tracked by git.
+project.git = true
+# manually exclude files to format.
+project.excludeFilters = [
+  "/Generated.*Bag\\.scala$$"
+  "^scripts/"
+  "/repl/"
+  # This file crashes Scalafmt beyond recovery :(
+  "/RequestBaseTest.scala"
+]

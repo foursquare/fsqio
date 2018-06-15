@@ -7,11 +7,11 @@ import java.io.File
 import org.apache.commons.io.FilenameUtils
 
 /**
- * This class represents a Thrift source file.
- *
- * It can provide the path to a file, the AST of the program in the file,
- * the name of the file, and the names of the included files.
- */
+  * This class represents a Thrift source file.
+  *
+  * It can provide the path to a file, the AST of the program in the file,
+  * the name of the file, and the names of the included files.
+  */
 case class ProgramSource(file: File, tree: Program, includedFiles: Seq[File]) {
   val name = file.getName
   val baseName = FilenameUtils.removeExtension(name)

@@ -4,16 +4,32 @@ package io.fsq.rogue.query
 
 import com.mongodb.{ReadPreference, WriteConcern}
 import io.fsq.field.Field
-import io.fsq.rogue.{!<:<, AddLimit, BulkInsertOne, BulkModifyQueryOperation, BulkOperation, BulkQueryOperation,
-    FindAndModifyQuery, Iter, ModifyQuery, Query, QueryOptimizer, Required, RequireShardKey, Rogue, ShardingOk,
-    Unlimited, Unselected, Unskipped}
+import io.fsq.rogue.{
+  !<:<,
+  AddLimit,
+  BulkInsertOne,
+  BulkModifyQueryOperation,
+  BulkOperation,
+  BulkQueryOperation,
+  FindAndModifyQuery,
+  Iter,
+  ModifyQuery,
+  Query,
+  QueryOptimizer,
+  RequireShardKey,
+  Required,
+  Rogue,
+  ShardingOk,
+  Unlimited,
+  Unselected,
+  Unskipped
+}
 import com.mongodb.bulk.BulkWriteResult
 import io.fsq.rogue.adapter.MongoClientAdapter
 import io.fsq.rogue.index.UntypedMongoIndex
 import io.fsq.rogue.types.MongoDisallowed
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.ArrayBuffer
-
 
 /** TODO(jacob): All of the collection methods implemented here should get rid of the
   *     option to send down a read preference, and just use the one on the query.

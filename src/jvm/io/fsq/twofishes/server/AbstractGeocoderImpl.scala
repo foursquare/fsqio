@@ -39,7 +39,7 @@ abstract class AbstractGeocoderImpl[T] extends GeocoderTypes {
   object Stats extends StatsInterface[T] {
     def incr(k: String, num: Int) { OstrichStats.incr(implName + "." + k, num) }
     def incr(k: String) { OstrichStats.incr(implName + "." + k, 1) }
-    def addMetric(name: String, value: Int)  { OstrichStats.addMetric(implName + "." + name, value) }
+    def addMetric(name: String, value: Int) { OstrichStats.addMetric(implName + "." + name, value) }
     def time[T](name: String)(f: => T): T = { OstrichStats.time(implName + "." + name) { f } }
   }
 }

@@ -10,8 +10,14 @@ import com.vividsolutions.jts.io.{WKBReader, WKBWriter}
 import io.fsq.twofishes.indexer.mongo.{IndexerQueryExecutor, RevGeoIndex}
 import io.fsq.twofishes.indexer.mongo.RogueImplicits._
 import io.fsq.twofishes.model.gen.{ThriftPolygonIndex, ThriftS2CoveringIndex, ThriftS2InteriorIndex}
-import io.fsq.twofishes.util.{DurationUtils, GeometryCleanupUtils, GeometryUtils, RevGeoConstants, S2CoveringConstants,
-    ShapefileS2Util}
+import io.fsq.twofishes.util.{
+  DurationUtils,
+  GeometryCleanupUtils,
+  GeometryUtils,
+  RevGeoConstants,
+  S2CoveringConstants,
+  ShapefileS2Util
+}
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 import org.bson.types.ObjectId
@@ -50,9 +56,7 @@ class S2CoveringWorker extends Actor with DurationUtils with RevGeoConstants wit
 
   def calculateCoverFromMongo(msg: CalculateCoverFromMongo) {
     val records = executor.fetch(Q(ThriftPolygonIndex).where(_.id in msg.polyIds))
-    records.foreach(p =>
-      calculateCover(p.id, p.polygonOrThrow.array(), msg.options)
-    )
+    records.foreach(p => calculateCover(p.id, p.polygonOrThrow.array(), msg.options))
   }
 
   def calculateCover(msg: CalculateCover) {
@@ -71,13 +75,18 @@ class S2CoveringWorker extends Actor with DurationUtils with RevGeoConstants wit
 
       if (options.forS2CoveringIndex) {
         // println("generating cover for %s for s2covering index".format(polyId))
-        val cells = logDuration("s2CoveringForS2CoveringIndex", "generated cover for %s for s2covering index".format(polyId)) {
-          GeometryUtils.s2PolygonCovering(
-            geom, minS2LevelForS2Covering, maxS2LevelForS2Covering,
-            levelMod = Some(defaultLevelModForS2Covering),
-            maxCellsHintWhichMightBeIgnored = Some(defaultMaxCellsHintForS2Covering)
-          ).toList
-        }
+        val cells =
+          logDuration("s2CoveringForS2CoveringIndex", "generated cover for %s for s2covering index".format(polyId)) {
+            GeometryUtils
+              .s2PolygonCovering(
+                geom,
+                minS2LevelForS2Covering,
+                maxS2LevelForS2Covering,
+                levelMod = Some(defaultLevelModForS2Covering),
+                maxCellsHintWhichMightBeIgnored = Some(defaultMaxCellsHintForS2Covering)
+              )
+              .toList
+          }
 
         val record = ThriftS2CoveringIndex(polyId, cells.map(_.id()))
         executor.insert(record)
@@ -89,14 +98,16 @@ class S2CoveringWorker extends Actor with DurationUtils with RevGeoConstants wit
           "s2InteriorForS2InteriorIndex",
           "generated cover for %s for s2interior index".format(polyId)
         ) {
-          GeometryUtils.s2PolygonCovering(
-            geomCollection = geom,
-            minS2Level = minS2LevelForS2Interior,
-            maxS2Level = maxS2LevelForS2Interior,
-            levelMod = Some(defaultLevelModForS2Covering),
-            maxCellsHintWhichMightBeIgnored = Some(defaultMaxCellsHintForS2Interior),
-            interior = true
-          ).toList
+          GeometryUtils
+            .s2PolygonCovering(
+              geomCollection = geom,
+              minS2Level = minS2LevelForS2Interior,
+              maxS2Level = maxS2LevelForS2Interior,
+              levelMod = Some(defaultLevelModForS2Covering),
+              maxCellsHintWhichMightBeIgnored = Some(defaultMaxCellsHintForS2Interior),
+              interior = true
+            )
+            .toList
         }
 
         val record = ThriftS2InteriorIndex(polyId, cells.map(_.id()))
@@ -107,19 +118,25 @@ class S2CoveringWorker extends Actor with DurationUtils with RevGeoConstants wit
         // println("generating cover for %s for revgeo index".format(polyId))
         val cells = logDuration("s2CoveringForRevGeoIndex", "generated cover for %s for revgeo index".format(polyId)) {
           GeometryUtils.s2PolygonCovering(
-            geom, minS2LevelForRevGeo, maxS2LevelForRevGeo,
+            geom,
+            minS2LevelForRevGeo,
+            maxS2LevelForRevGeo,
             levelMod = Some(defaultLevelModForRevGeo),
             maxCellsHintWhichMightBeIgnored = Some(defaultMaxCellsHintForRevGeo)
           )
         }
 
-        logDuration("coverClippingForRevGeoIndex", "clipped and outputted cover for %d cells (%s) for revgeo index".format(cells.size, polyId)) {
+        logDuration(
+          "coverClippingForRevGeoIndex",
+          "clipped and outputted cover for %d cells (%s) for revgeo index".format(cells.size, polyId)
+        ) {
           val recordShape = geom.buffer(0)
           val preparedRecordShape = PreparedGeometryFactory.prepare(recordShape)
           val records = cells.map((cellid: S2CellId) => {
             if (geom.isInstanceOf[JTSPoint]) {
               RevGeoIndex(
-                cellid.id(), polyId,
+                cellid.id(),
+                polyId,
                 full = false,
                 geom = Some(wkbWriter.write(geom))
               )
@@ -129,7 +146,8 @@ class S2CoveringWorker extends Actor with DurationUtils with RevGeoConstants wit
                 RevGeoIndex(cellid.id(), polyId, full = true, geom = None)
               } else if (preparedRecordShape.within(s2shape)) {
                 RevGeoIndex(
-                  cellid.id(), polyId,
+                  cellid.id(),
+                  polyId,
                   full = false,
                   geom = Some(wkbWriter.write(geom))
                 )
@@ -165,7 +183,6 @@ class S2CoveringWorker extends Actor with DurationUtils with RevGeoConstants wit
   }
 }
 
-
 // ==================
 // ===== Master =====
 // ==================
@@ -174,7 +191,10 @@ class S2CoveringMaster(val latch: CountDownLatch) extends Actor with Logging {
 
   val _system = ActorSystem("RoundRobinRouterExample")
   val numThreads = Runtime.getRuntime.availableProcessors
-  val router = _system.actorOf(Props[S2CoveringWorker].withRouter(new RoundRobinPool(numThreads)), name = "myRoundRobinRouterActor")
+  val router = _system.actorOf(
+    Props[S2CoveringWorker].withRouter(new RoundRobinPool(numThreads)),
+    name = "myRoundRobinRouterActor"
+  )
   var inFlight = 0
   var seenDone = false
 
@@ -191,7 +211,7 @@ class S2CoveringMaster(val latch: CountDownLatch) extends Actor with Logging {
     case msg: CalculateCover =>
       Stats.incr("s2.akkaWorkers.CalculateCover")
       inFlight += 1
-	    router ! msg
+      router ! msg
     case msg: CalculateCoverFromMongo =>
       inFlight += 1
       router ! msg

@@ -5,8 +5,16 @@ import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.core.YahooWoeTypes
 import io.fsq.twofishes.country.CountryInfo
-import io.fsq.twofishes.gen.{CommonGeocodeRequestParams, DebugScoreComponent, FeatureNameFlags, GeocodeBoundingBox,
-    GeocodeFeature, GeocodePoint, GeocodeServingFeature, YahooWoeType}
+import io.fsq.twofishes.gen.{
+  CommonGeocodeRequestParams,
+  DebugScoreComponent,
+  FeatureNameFlags,
+  GeocodeBoundingBox,
+  GeocodeFeature,
+  GeocodePoint,
+  GeocodeServingFeature,
+  YahooWoeType
+}
 import io.fsq.twofishes.util.{GeoTools, TwofishesLogger}
 import scala.collection.JavaConverters._
 import scala.collection.mutable.HashMap
@@ -15,7 +23,12 @@ import scala.collection.mutable.HashMap
 //
 
 case class ScoringTerm(func: GeocodeParseOrdering.ScoringFunc, multiplier: Double = 1.0)
-case class ScorerArguments(req: CommonGeocodeRequestParams, parse: Parse[Sorted], primaryFeature: GeocodeServingFeature, rest: Seq[FeatureMatch])
+case class ScorerArguments(
+  req: CommonGeocodeRequestParams,
+  parse: Parse[Sorted],
+  primaryFeature: GeocodeServingFeature,
+  rest: Seq[FeatureMatch]
+)
 
 sealed trait ScorerResponse
 class EmptyScorerResponse extends ScorerResponse
@@ -52,7 +65,10 @@ object GeocodeParseOrdering {
 
   val promoteWoeHintMatch: ScoringFunc = {
     case args if (args.req.woeHint.has(args.primaryFeature.feature.woeType)) => {
-      ScorerResponseWithScoreAndMessage(50000000, "woe hint matches %d".format(args.primaryFeature.feature.woeType.getValue))
+      ScorerResponseWithScoreAndMessage(
+        50000000,
+        "woe hint matches %d".format(args.primaryFeature.feature.woeType.getValue)
+      )
     }
   }
 
@@ -71,7 +87,9 @@ object GeocodeParseOrdering {
           primaryMatchLangs.has("icao") ||
           primaryMatchLangs.has("") || // a lot of aliases tend to be names without a language
           args.req.langOption.exists(lang => primaryMatchLangs.has(lang)) ||
-          primaryMatchLangs.exists(lang => CountryInfo.getCountryInfo(args.primaryFeature.feature.ccOrThrow).exists(_.isLocalLanguage(lang)))) {
+          primaryMatchLangs.exists(
+            lang => CountryInfo.getCountryInfo(args.primaryFeature.feature.ccOrThrow).exists(_.isLocalLanguage(lang))
+          )) {
         ScorerResponse.Empty
       } else {
         ScorerResponseWithScoreAndMessage(-100000000, "penalizing name match in irrelevant language")
@@ -138,9 +156,12 @@ object GeocodeParseOrdering {
     val distance = if (args.primaryFeature.feature.geometryOrThrow.boundsOption.nonEmpty) {
       GeoTools.distanceFromPointToBounds(ll, args.primaryFeature.feature.geometryOrThrow.boundsOrThrow)
     } else {
-      GeoTools.getDistance(ll.lat, ll.lng,
+      GeoTools.getDistance(
+        ll.lat,
+        ll.lng,
         args.primaryFeature.feature.geometryOrThrow.center.lat,
-        args.primaryFeature.feature.geometryOrThrow.center.lng)
+        args.primaryFeature.feature.geometryOrThrow.center.lng
+      )
     }
 
     val (bucketName, distanceBoost, woeTypeBoost) = if (distance < 5000) {
@@ -152,13 +173,11 @@ object GeocodeParseOrdering {
     } else if (distance < 100000) {
       ("20-100km boost", -10000, 0)
     } else {
-      (">=100km penalty",
-        if (clampPenalty) {
-          -100000
-        } else {
-          -(distance.toInt)
-        },
-        0)
+      (">=100km penalty", if (clampPenalty) {
+        -100000
+      } else {
+        -(distance.toInt)
+      }, 0)
     }
 
     val debugString = if (args.req.debug > 0) {
@@ -167,18 +186,18 @@ object GeocodeParseOrdering {
       } else {
         ""
       }
-      "%s : %s for being %s meters away.%s".format(
-        bucketName,
-        distanceBoost,
-        distance.toString,
-        woeTypeBoostString)
+      "%s : %s for being %s meters away.%s".format(bucketName, distanceBoost, distance.toString, woeTypeBoostString)
     } else {
       ""
     }
     ScorerResponseWithScoreAndMessage(distanceBoost + woeTypeBoost, debugString)
   }
 
-  def distanceBoostForBounds(args: ScorerArguments, bounds: GeocodeBoundingBox, clampPenalty: Boolean): ScorerResponse = {
+  def distanceBoostForBounds(
+    args: ScorerArguments,
+    bounds: GeocodeBoundingBox,
+    clampPenalty: Boolean
+  ): ScorerResponse = {
     // if you're in the bounds and the bounds are some small enough size
     // you get a uniform boost
     val bbox = GeoTools.boundingBoxToS2Rect(bounds)
@@ -188,11 +207,12 @@ object GeocodeParseOrdering {
     val bboxContainsCenter =
       GeoTools.boundsContains(bounds, args.primaryFeature.feature.geometryOrThrow.center)
     val bboxesIntersect =
-      args.primaryFeature.feature.geometryOrThrow.boundsOption.map(fBounds =>
-        GeoTools.boundsIntersect(bounds, fBounds)).getOrElse(false)
+      args.primaryFeature.feature.geometryOrThrow.boundsOption
+        .map(fBounds => GeoTools.boundsIntersect(bounds, fBounds))
+        .getOrElse(false)
 
     if (bbox.lo().getEarthDistance(bbox.hi()) < 200 * 1000 &&
-      (bboxContainsCenter || bboxesIntersect)) {
+        (bboxContainsCenter || bboxesIntersect)) {
       if (args.primaryFeature.feature.woeType =? YahooWoeType.SUBURB) {
         ScorerResponseWithScoreAndMessage(5000000, "200km bbox neighborhood intersection BONUS")
       } else {
@@ -208,14 +228,14 @@ object GeocodeParseOrdering {
     val llHint = args.req.llHintOption
     val boundsHint = args.req.boundsOption
     if (boundsHint.isDefined) {
-      boundsHint.flatMap(bounds => {
-        Some(distanceBoostForBounds(args, bounds, clampPenalty))
-      }).getOrElse(ScorerResponse.Empty)
+      boundsHint
+        .flatMap(bounds => {
+          Some(distanceBoostForBounds(args, bounds, clampPenalty))
+        })
+        .getOrElse(ScorerResponse.Empty)
     } else {
       // Penalize far-away things
-      llHint.flatMap(ll =>
-        Some(distanceBoostForPoint(args, ll, clampPenalty))
-      ).getOrElse(ScorerResponse.Empty)
+      llHint.flatMap(ll => Some(distanceBoostForPoint(args, ll, clampPenalty))).getOrElse(ScorerResponse.Empty)
     }
   }
 
@@ -247,7 +267,8 @@ object GeocodeParseOrdering {
   }
 
   val penalizeCounties: ScoringFunc = {
-    case args if (args.primaryFeature.feature.ccOrThrow == "US" && args.primaryFeature.feature.woeType == YahooWoeType.ADMIN2) => {
+    case args
+        if (args.primaryFeature.feature.ccOrThrow == "US" && args.primaryFeature.feature.woeType == YahooWoeType.ADMIN2) => {
       // no one likes counties
       ScorerResponseWithScoreAndMessage(-30000, "no one likes counties in the US")
     }
@@ -262,7 +283,10 @@ object GeocodeParseOrdering {
 
   val woeTypeOrderForFeature: ScoringFunc = {
     case args =>
-      ScorerResponseWithScoreAndMessage(-1 * YahooWoeTypes.getOrdering(args.primaryFeature.feature.woeType), "prefer smaller interpretation")
+      ScorerResponseWithScoreAndMessage(
+        -1 * YahooWoeTypes.getOrdering(args.primaryFeature.feature.woeType),
+        "prefer smaller interpretation"
+      )
   }
 
   val woeTypeOrderForParents: ScoringFunc = {
@@ -274,7 +298,10 @@ object GeocodeParseOrdering {
     case args => {
       val parentTypes = args.rest.map(_.fmatch.feature.woeType).sortBy(YahooWoeTypes.getOrdering)
       if (parentTypes.nonEmpty) {
-        ScorerResponseWithScoreAndMessage(-1 * YahooWoeTypes.getOrdering(parentTypes(0)), "prefer smaller parent interpretation")
+        ScorerResponseWithScoreAndMessage(
+          -1 * YahooWoeTypes.getOrdering(parentTypes(0)),
+          "prefer smaller parent interpretation"
+        )
       } else ScorerResponse.Empty
     }
   }
@@ -357,17 +384,17 @@ object GeocodeParseOrdering {
     val (qualifyingCity, rest) = parses.partition(p => {
       // this is a city
       p.primaryFeature.fmatch.feature.woeType == YahooWoeType.TOWN &&
-      parses.headOption.exists(r => {
-        // this and that match same tokens in query
-        r.primaryFeature.tokenStart == p.primaryFeature.tokenStart &&
-        r.primaryFeature.tokenEnd == p.primaryFeature.tokenEnd &&
-        // that is not a country or an ADMIN1
-        r.primaryFeature.fmatch.feature.woeType != YahooWoeType.COUNTRY &&
-        r.primaryFeature.fmatch.feature.woeType != YahooWoeType.ADMIN1 &&
-        // this is a parent of that or the other way around
-        (r.primaryFeature.fmatch.scoringFeatures.parentIds.has(p.primaryFeature.fmatch.longId) ||
-         p.primaryFeature.fmatch.scoringFeatures.parentIds.has(r.primaryFeature.fmatch.longId))
-      })
+        parses.headOption.exists(r => {
+          // this and that match same tokens in query
+          r.primaryFeature.tokenStart == p.primaryFeature.tokenStart &&
+            r.primaryFeature.tokenEnd == p.primaryFeature.tokenEnd &&
+            // that is not a country or an ADMIN1
+            r.primaryFeature.fmatch.feature.woeType != YahooWoeType.COUNTRY &&
+            r.primaryFeature.fmatch.feature.woeType != YahooWoeType.ADMIN1 &&
+            // this is a parent of that or the other way around
+            (r.primaryFeature.fmatch.scoringFeatures.parentIds.has(p.primaryFeature.fmatch.longId) ||
+              p.primaryFeature.fmatch.scoringFeatures.parentIds.has(r.primaryFeature.fmatch.longId))
+        })
     })
 
     if (qualifyingCity.isEmpty) {
@@ -379,51 +406,53 @@ object GeocodeParseOrdering {
 }
 
 class GeocodeParseOrdering(
-    req: CommonGeocodeRequestParams,
-    logger: TwofishesLogger,
-    scorers: List[ScoringTerm] = Nil,
-    scorersName: String = ""
-  ) extends Ordering[Parse[Sorted]] {
+  req: CommonGeocodeRequestParams,
+  logger: TwofishesLogger,
+  scorers: List[ScoringTerm] = Nil,
+  scorersName: String = ""
+) extends Ordering[Parse[Sorted]] {
   // Higher is better
   def scoreParse(parse: Parse[Sorted]): Int = {
-    parse.headOption.map(primaryFeatureMatch => {
-      val primaryFeature = primaryFeatureMatch.fmatch
-      val rest = parse.drop(1)
-      var signal = 0
+    parse.headOption
+      .map(primaryFeatureMatch => {
+        val primaryFeature = primaryFeatureMatch.fmatch
+        val rest = parse.drop(1)
+        var signal = 0
 
-      def modifySignal(value: Int, debug: String) {
+        def modifySignal(value: Int, debug: String) {
+          if (req.debug > 0) {
+            logger.ifDebug(" -- %s: %s + %s = %s", debug, signal, value, signal + value)
+            parse.addDebugLine(
+              DebugScoreComponent(debug, value)
+            )
+          }
+          signal += value
+        }
+
         if (req.debug > 0) {
-          logger.ifDebug(" -- %s: %s + %s = %s", debug, signal, value, signal + value)
-          parse.addDebugLine(
-            DebugScoreComponent(debug, value)
-          )
+          logger.ifDebug("Scorer %s scoring %s", scorersName, parse)
         }
-        signal += value
-      }
 
-      if (req.debug > 0) {
-        logger.ifDebug("Scorer %s scoring %s", scorersName, parse)
-      }
+        val scorerArguments = ScorerArguments(req, parse, primaryFeature, rest)
+        for {
+          scorer <- scorers
+          response = (scorer.func orElse GeocodeParseOrdering.noOpScorer)(scorerArguments)
+        } {
+          response match {
+            case r: ScorerResponseWithScoreAndMessage =>
+              modifySignal((r.score * scorer.multiplier).toInt, r.message)
 
-      val scorerArguments = ScorerArguments(req, parse, primaryFeature, rest)
-      for {
-        scorer <- scorers
-        response = (scorer.func orElse GeocodeParseOrdering.noOpScorer)(scorerArguments)
-      } {
-        response match {
-          case r: ScorerResponseWithScoreAndMessage =>
-            modifySignal((r.score * scorer.multiplier).toInt, r.message)
-
-          case _ =>
+            case _ =>
+          }
         }
-      }
 
-      if (req.debug > 0) {
-        logger.ifDebug("final score %s", signal)
-      }
-      parse.setFinalScore(signal)
-      signal
-    }).getOrElse(0)
+        if (req.debug > 0) {
+          logger.ifDebug("final score %s", signal)
+        }
+        parse.setFinalScore(signal)
+        signal
+      })
+      .getOrElse(0)
   }
 
   var scoreMap = new scala.collection.mutable.HashMap[String, Int]
@@ -444,9 +473,13 @@ class GeocodeParseOrdering(
         b.headOption.map(_.fmatch.feature.longId).getOrElse(0L))
       // .signum is slow, we don't want the .toInt to cause weird
       // long wrapping issues, so manually do this.
-      if (diff < 0) { -1 }
-      else if (diff > 0) { 1 }
-      else { 0 }
+      if (diff < 0) {
+        -1
+      } else if (diff > 0) {
+        1
+      } else {
+        0
+      }
     } else {
       scoreB - scoreA
     }

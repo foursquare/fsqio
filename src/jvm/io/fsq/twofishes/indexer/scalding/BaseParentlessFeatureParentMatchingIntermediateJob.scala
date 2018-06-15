@@ -45,10 +45,15 @@ class BaseParentlessFeatureParentMatchingIntermediateJob(
     parentId <- getParentIds(matchingValue, candidates)
   } yield {
     (new LongWritable(featureId) -> IntermediateDataContainer.newBuilder.longValue(parentId).result)
-  }).group
-    .toList
-    .mapValues({parents: List[IntermediateDataContainer] => {
-      IntermediateDataContainer.newBuilder.longList(parents.flatMap(_.longValueOption).distinct).result
-    }})
-    .write(TypedSink[(LongWritable, IntermediateDataContainer)](SpindleSequenceFileSource[LongWritable, IntermediateDataContainer](outputPath)))
+  }).group.toList
+    .mapValues({ parents: List[IntermediateDataContainer] =>
+      {
+        IntermediateDataContainer.newBuilder.longList(parents.flatMap(_.longValueOption).distinct).result
+      }
+    })
+    .write(
+      TypedSink[(LongWritable, IntermediateDataContainer)](
+        SpindleSequenceFileSource[LongWritable, IntermediateDataContainer](outputPath)
+      )
+    )
 }

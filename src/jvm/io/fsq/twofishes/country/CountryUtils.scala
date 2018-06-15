@@ -1,6 +1,5 @@
 package io.fsq.twofishes.country
 
-
 object CountryUtils {
   val englishNameOverrides = Map(
     "TA" -> "Tristan da Cunha",
@@ -12,7 +11,8 @@ object CountryUtils {
   )
 
   def getNameByCode(code: String): Option[String] = {
-    englishNameOverrides.get(CountryInfo.getCanonicalISO2(code))
+    englishNameOverrides
+      .get(CountryInfo.getCanonicalISO2(code))
       .orElse(CountryInfo.getCountryInfo(code).map(_.englishName))
   }
 

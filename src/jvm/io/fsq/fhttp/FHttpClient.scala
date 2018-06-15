@@ -20,7 +20,7 @@ class FHttpClient(
     def apply(request: Request, service: Service[Request, Response]) = {
       // flatMap asynchronously responds to requests and can "map" them to both
       // success and failure values:
-      service(request) flatMap(response => {
+      service(request) flatMap (response => {
         response.statusCode match {
           case x if x >= 200 && x < 300 =>
             Future.value(response)
@@ -35,7 +35,7 @@ class FHttpClient(
   // hackazor!
   def scheme = if (builder.toString.contains("TLSEngine")) "https" else "http"
 
-  val firstHostPort = hostPort.split(",",2)(0)
+  val firstHostPort = hostPort.split(",", 2)(0)
 
   def builtClient = builder.name(name).hosts(hostPort).build()
 
@@ -48,7 +48,7 @@ class FHttpClient(
   }
 
   def releaseOnShutdown(): FHttpClient = {
-    Runtime.getRuntime.addShutdownHook( new Thread() {
+    Runtime.getRuntime.addShutdownHook(new Thread() {
       override def run() {
         release()
       }

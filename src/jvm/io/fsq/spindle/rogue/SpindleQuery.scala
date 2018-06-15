@@ -8,10 +8,21 @@ import io.fsq.spindle.runtime.{MetaRecord, Record}
 
 object SpindleQuery {
   def apply[R <: Record[R], M <: MetaRecord[R, M]](
-      model: M with MetaRecord[R, M]
+    model: M with MetaRecord[R, M]
   ): RogueQuery[M, R, InitialState] = {
     val collection = SpindleHelpers.getCollection(model)
     RogueQuery[M, R, InitialState](
-      model, collection, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
+      model,
+      collection,
+      None,
+      None,
+      None,
+      None,
+      None,
+      AndCondition(Nil, None),
+      None,
+      None,
+      None
+    )
   }
 }

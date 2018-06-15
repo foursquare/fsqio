@@ -24,18 +24,18 @@ object TProtoBench {
     .aString("hello, how are you today?")
     .aBinary(ByteBuffer.wrap("foobar".getBytes("UTF-8")))
     .aStruct(InnerStruct("inner hello", 1234567))
-    .aSet(Set("1","2","3","4","5"))
-    .aList(List(1,2,3,4,5))
+    .aSet(Set("1", "2", "3", "4", "5"))
+    .aList(List(1, 2, 3, 4, 5))
     .aMap(
-      Map("one" -> InnerStruct("inner in map one", 1),
-          "two" -> InnerStruct("inner in map two", 2)
-      )
+      Map("one" -> InnerStruct("inner in map one", 1), "two" -> InnerStruct("inner in map two", 2))
     )
     .aMyBinary(ByteBuffer.wrap(Array[Byte](1, 2, 3, 4, 5, 6)))
-    .aStructList(List(
-      InnerStruct("inner in list one", 1),
-      InnerStruct("inner in list one", 2)
-    ))
+    .aStructList(
+      List(
+        InnerStruct("inner in list one", 1),
+        InnerStruct("inner in list one", 2)
+      )
+    )
     .result()
 
   def smallStruct = InnerStruct("inner in list one", 1)
@@ -64,8 +64,8 @@ object TProtoBench {
   }
 
   /**
-   * returns (allocated bytes, average time per decode in nanoseconds)
-   */
+    * returns (allocated bytes, average time per decode in nanoseconds)
+    */
   def runBench(iterations: Int, testStruct: UntypedRecord, func: (InputStream) => Unit): (Long, Long) = {
     val protocolFactory = new TBSONObjectProtocol.WriterFactoryForDBObject
     val writeProtocol = protocolFactory.getProtocol
@@ -91,14 +91,14 @@ object TProtoBench {
     def benchBinary(struct: UntypedRecord) = runBench(iterations, struct, parseBytesBinary)
 
     // warmups
-    (1 to 5).foreach{i =>
+    (1 to 5).foreach { i =>
       benchDbo(largeNestedStruct)
       benchBinary(largeNestedStruct)
     }
 
     def benchWithStruct(struct: UntypedRecord) {
       println(s"\nBenching with ${struct.getClass}")
-      (1 to 5).foreach{i =>
+      (1 to 5).foreach { i =>
         println(s"Run $i: ")
         println(s"Dbo takes ${benchDbo(struct)}")
         println(s"Binary takes ${benchBinary(struct)}")

@@ -7,7 +7,6 @@ import io.fsq.rogue.Query
 import io.fsq.rogue.index.UntypedMongoIndex
 import org.bson.codecs.configuration.CodecRegistry
 
-
 trait MongoCollectionFactory[
   MongoCollection[_],
   DocumentValue,

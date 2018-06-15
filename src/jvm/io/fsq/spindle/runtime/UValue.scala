@@ -6,7 +6,6 @@ import java.nio.ByteBuffer
 import org.apache.thrift.TBase
 import org.apache.thrift.protocol.{TField, TList, TMap, TProtocol, TSet, TStruct, TType}
 
-
 // The value of an unknown field read off the wire.
 // There's no field to put it in, so we have to store it along with
 // whatever type/field id info the protocol provided on the wire.
@@ -60,14 +59,14 @@ case class StructUValue(tstruct: TStruct, value: UnknownFields) extends UValue {
 case class SetUValue(tset: TSet, value: Set[UValue]) extends UValue {
   def write(oprot: TProtocol) {
     oprot.writeSetBegin(tset)
-    value foreach(_.write(oprot))
+    value foreach (_.write(oprot))
     oprot.writeSetEnd()
   }
 }
 case class ListUValue(tlist: TList, value: Vector[UValue]) extends UValue {
   def write(oprot: TProtocol) {
     oprot.writeListBegin(tlist)
-    value foreach(_.write(oprot))
+    value foreach (_.write(oprot))
     oprot.writeListEnd()
   }
 }
@@ -94,15 +93,16 @@ object UValue {
     case TType.I64 => I64UValue(iprot.readI64())
     // Note that binary and string both use TType.STRING. In text-based protocols the safe way
     // to read either is as a string, in binary protocols the safe way to read either is as a binary.
-    case TType.STRING => TProtocolInfo.isTextBased(TProtocolInfo.getProtocolName(iprot)) match {
-      case true => StringUValue(iprot.readString())
-      case false => BinaryUValue(iprot.readBinary())
-    }
+    case TType.STRING =>
+      TProtocolInfo.isTextBased(TProtocolInfo.getProtocolName(iprot)) match {
+        case true => StringUValue(iprot.readString())
+        case false => BinaryUValue(iprot.readBinary())
+      }
     case TType.STRUCT => {
       val inner = new UnknownFields(rec, TProtocolInfo.getProtocolName(iprot))
       val tstruct: TStruct = iprot.readStructBegin()
-      Iterator.continually(iprot.readFieldBegin()).takeWhile(_.`type` != TType.STOP) foreach {
-        tfield: TField => {
+      Iterator.continually(iprot.readFieldBegin()).takeWhile(_.`type` != TType.STOP) foreach { tfield: TField =>
+        {
           inner.readInline(iprot, tfield)
           iprot.readFieldEnd()
         }

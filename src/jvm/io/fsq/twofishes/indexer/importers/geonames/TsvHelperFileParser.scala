@@ -9,17 +9,19 @@ trait TsvHelperFileParserLogger {
   def logUnused: Iterable[String]
 }
 
-class GeoIdTsvHelperFileParser(defaultNamespace: FeatureNamespace, filenames: String*) extends TsvHelperFileParserLogger with Logging {
+class GeoIdTsvHelperFileParser(defaultNamespace: FeatureNamespace, filenames: String*)
+  extends TsvHelperFileParserLogger
+  with Logging {
   class TableEntry(val values: List[String]) {
     var used = false
-    def markUsed { used = true}
+    def markUsed { used = true }
   }
 
   if (filenames.isEmpty) {
     throw new Exception("no filenames specified for parse, maybe you forgot to add defaultNamespace")
   }
 
-  lazy val gidMap = new scala.collection.mutable.HashMap[String,TableEntry]()
+  lazy val gidMap = new scala.collection.mutable.HashMap[String, TableEntry]()
   def parseInput() {
     filenames.foreach(filename => {
       if (new File(filename).exists()) {
@@ -34,14 +36,14 @@ class GeoIdTsvHelperFileParser(defaultNamespace: FeatureNamespace, filenames: St
           if (parts.length != 2) {
             log.error("Broken line in %s: %s (%d parts, needs 2)".format(filename, line, parts.length))
           } else {
-            StoredFeatureId.fromHumanReadableString(parts(0), Some(defaultNamespace)).foreach(key => {
-              var values: List[String] = parts(1).split(",").toList
+            StoredFeatureId
+              .fromHumanReadableString(parts(0), Some(defaultNamespace))
+              .foreach(key => {
+                var values: List[String] = parts(1).split(",").toList
 
-              gidMap.get(key.humanReadableString).foreach(te =>
-                values ++= te.values
-              )
-              gidMap += (key.humanReadableString -> new TableEntry(values))
-            })
+                gidMap.get(key.humanReadableString).foreach(te => values ++= te.values)
+                gidMap += (key.humanReadableString -> new TableEntry(values))
+              })
           }
         })
       }
@@ -61,23 +63,25 @@ class GeoIdTsvHelperFileParser(defaultNamespace: FeatureNamespace, filenames: St
   }
 
   override def logUnused: Iterable[String] = {
-    gidMap.flatMap({case (k, v) => {
-      if (!v.used) {
-        Some("%s:%s in %s went unused".format(k, v, filenames.mkString(",")))
-      } else {
-        None
+    gidMap.flatMap({
+      case (k, v) => {
+        if (!v.used) {
+          Some("%s:%s in %s went unused".format(k, v, filenames.mkString(",")))
+        } else {
+          None
+        }
       }
-    }})
+    })
   }
 }
 
 class TsvHelperFileParser(filenames: String*) extends TsvHelperFileParserLogger with Logging {
   class TableEntry(val values: List[String]) {
     var used = false
-    def markUsed { used = true}
+    def markUsed { used = true }
   }
 
-  lazy val gidMap = new scala.collection.mutable.HashMap[String,TableEntry]()
+  lazy val gidMap = new scala.collection.mutable.HashMap[String, TableEntry]()
 
   if (filenames.isEmpty) {
     throw new Exception("no filenames specified for parse, maybe you forgot to add defaultNamespace")
@@ -100,9 +104,7 @@ class TsvHelperFileParser(filenames: String*) extends TsvHelperFileParserLogger 
             val key = parts(0)
             var values: List[String] = parts(1).split(",").toList
 
-            gidMap.get(key).foreach(te =>
-              values ++= te.values
-            )
+            gidMap.get(key).foreach(te => values ++= te.values)
             gidMap += (key -> new TableEntry(values))
           }
         })
@@ -113,13 +115,15 @@ class TsvHelperFileParser(filenames: String*) extends TsvHelperFileParserLogger 
   parseInput()
 
   override def logUnused: Iterable[String] = {
-    gidMap.flatMap({case (k, v) => {
-      if (!v.used) {
-        Some("%s:%s in %s went unused".format(k, v, filenames.mkString(",")))
-      } else {
-        None
+    gidMap.flatMap({
+      case (k, v) => {
+        if (!v.used) {
+          Some("%s:%s in %s went unused".format(k, v, filenames.mkString(",")))
+        } else {
+          None
+        }
       }
-    }})
+    })
   }
 
   def get(key: String): List[String] = {

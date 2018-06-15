@@ -9,9 +9,7 @@ import io.fsq.rogue.query.RogueSerializer
 import io.fsq.spindle.common.thrift.bson.TBSONObjectProtocol
 import io.fsq.spindle.runtime.{UntypedFieldDescriptor, UntypedMetaRecord, UntypedRecord}
 
-
-class SpindleRogueSerializer
-extends RogueSerializer[UntypedMetaRecord, UntypedRecord, BasicDBObject] {
+class SpindleRogueSerializer extends RogueSerializer[UntypedMetaRecord, UntypedRecord, BasicDBObject] {
 
   // TODO(jacob): Instead of caching factories, just throw the protocols in a ThreadLocal
   val readerProtocolFactory = new TBSONObjectProtocol.ReaderFactory
@@ -30,17 +28,19 @@ extends RogueSerializer[UntypedMetaRecord, UntypedRecord, BasicDBObject] {
 
   private def getFieldValueFromAny(source: Option[Any], fieldName: String): Option[Any] = source.flatMap({
     case map: Map[_, _] => map.find(_._1.toString =? fieldName).map(_._2)
-    case list: Seq[_] => Some(list.map(elem => {
-      val elemOpt = elem match {
-        case opt: Option[_] => opt
-        case nonOpt => Some(nonOpt)
-      }
-      getFieldValueFromAny(elemOpt, fieldName)
-    }))
+    case list: Seq[_] =>
+      Some(list.map(elem => {
+        val elemOpt = elem match {
+          case opt: Option[_] => opt
+          case nonOpt => Some(nonOpt)
+        }
+        getFieldValueFromAny(elemOpt, fieldName)
+      }))
     case record: UntypedRecord => getFieldValueFromRecord(record.meta, record, fieldName)
-    case other => throw new Exception(
-      s"Rogue bug: unepected object type encountered during spindle deserialization - ${other.getClass.getName}"
-    )
+    case other =>
+      throw new Exception(
+        s"Rogue bug: unepected object type encountered during spindle deserialization - ${other.getClass.getName}"
+      )
   })
 
   private def readFullUntypedRecordFromDocument[M <: UntypedMetaRecord](
@@ -64,18 +64,21 @@ extends RogueSerializer[UntypedMetaRecord, UntypedRecord, BasicDBObject] {
 
     selectOpt match {
       case Some(MongoSelect(fields, transformer)) => {
-        val selectedFields = fields.map(field => field.field match {
-          case descriptor: UntypedFieldDescriptor => {
-            field.valueOrDefault(descriptor.unsafeGetterOption(intermediateRecord))
-          }
+        val selectedFields = fields.map(
+          field =>
+            field.field match {
+              case descriptor: UntypedFieldDescriptor => {
+                field.valueOrDefault(descriptor.unsafeGetterOption(intermediateRecord))
+              }
 
-          case subrecordField => {
-            val Array(rootFieldName, subPath @ _*) = subrecordField.name.split('.').filter(_ !=? "$")
-            val rootValueOpt = getFieldValueFromRecord(subrecordField.owner, intermediateRecord, rootFieldName)
-            val valueOpt = subPath.foldLeft(rootValueOpt)(getFieldValueFromAny)
-            field.valueOrDefault(valueOpt)
-          }
-        })
+              case subrecordField => {
+                val Array(rootFieldName, subPath @ _*) = subrecordField.name.split('.').filter(_ !=? "$")
+                val rootValueOpt = getFieldValueFromRecord(subrecordField.owner, intermediateRecord, rootFieldName)
+                val valueOpt = subPath.foldLeft(rootValueOpt)(getFieldValueFromAny)
+                field.valueOrDefault(valueOpt)
+              }
+            }
+        )
 
         transformer(selectedFields)
       }

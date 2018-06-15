@@ -8,7 +8,6 @@ import io.fsq.twofishes.model.gen.ThriftNameIndex
 import io.fsq.twofishes.util.StoredFeatureId
 import scala.collection.mutable.{HashSet, ListBuffer}
 
-
 class NameIndexer(
   override val basepath: String,
   override val fidMap: FidMap,
@@ -16,7 +15,11 @@ class NameIndexer(
 ) extends Indexer {
   val index = Indexes.NameIndex
   override val outputs = Seq(index) ++
-    (if (outputPrefixIndex) { Seq(PrefixIndexer.index) } else { Seq.empty })
+    (if (outputPrefixIndex) {
+       Seq(PrefixIndexer.index)
+     } else {
+       Seq.empty
+     })
 
   def writeIndexImpl() {
     var nameCount = 0
@@ -36,7 +39,7 @@ class NameIndexer(
       writer.append(lastName, fidsToCanonicalFids(nameFids.toList.distinct))
       if (outputPrefixIndex) {
         for {
-         length <- 1 to math.min(PrefixIndexer.MaxPrefixLength, lastName.size)
+          length <- 1 to math.min(PrefixIndexer.MaxPrefixLength, lastName.size)
         } {
           prefixSet.add(lastName.substring(0, length))
         }

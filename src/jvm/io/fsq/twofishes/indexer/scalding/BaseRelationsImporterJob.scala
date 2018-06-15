@@ -17,26 +17,35 @@ class BaseRelationsImporterJob(
   args: Args
 ) extends TwofishesImporterJob(name, inputSpec, args) {
 
-  lines.filterNot(_.startsWith("#")).flatMap(line => {
-    val parts = line.split("[\t|]")
-    val fromOpt = StoredFeatureId.fromHumanReadableString(parts(fromColumnIndex), Some(GeonamesNamespace))
-    val toOpt = StoredFeatureId.fromHumanReadableString(parts(toColumnIndex), Some(GeonamesNamespace))
+  lines
+    .filterNot(_.startsWith("#"))
+    .flatMap(line => {
+      val parts = line.split("[\t|]")
+      val fromOpt = StoredFeatureId.fromHumanReadableString(parts(fromColumnIndex), Some(GeonamesNamespace))
+      val toOpt = StoredFeatureId.fromHumanReadableString(parts(toColumnIndex), Some(GeonamesNamespace))
 
-    if (lineAcceptor(parts)) {
-      (fromOpt, toOpt) match {
-        case (Some(fromId), Some(toId)) => {
-          Some(new LongWritable(fromId.longId), toId.longId)
+      if (lineAcceptor(parts)) {
+        (fromOpt, toOpt) match {
+          case (Some(fromId), Some(toId)) => {
+            Some(new LongWritable(fromId.longId), toId.longId)
+          }
+          case _ => {
+            // logger.error("%s: couldn't parse StoredFeatureId pair".format(line))
+            None
+          }
         }
-        case _ => {
-          // logger.error("%s: couldn't parse StoredFeatureId pair".format(line))
-          None
-        }
+      } else {
+        None
       }
-    } else {
-      None
-    }
-  }).group
+    })
+    .group
     .toList
-    .mapValues({ids: List[Long] => IntermediateDataContainer.newBuilder.longList(ids).result})
-    .write(TypedSink[(LongWritable, IntermediateDataContainer)](SpindleSequenceFileSource[LongWritable, IntermediateDataContainer](outputPath)))
+    .mapValues({ ids: List[Long] =>
+      IntermediateDataContainer.newBuilder.longList(ids).result
+    })
+    .write(
+      TypedSink[(LongWritable, IntermediateDataContainer)](
+        SpindleSequenceFileSource[LongWritable, IntermediateDataContainer](outputPath)
+      )
+    )
 }

@@ -32,7 +32,9 @@ class OutputIndexes(
 
     val hasPolyRecords = executor.fetch(Q(ThriftGeocodeRecord).scan(_.hasPoly eqs true)).map(new GeocodeRecord(_))
     val polygonMap = logPhase("preloading polygon map") {
-      hasPolyRecords.map(r => (r.polyIdOrThrow, (r.id, r.woeTypeOrThrow))).toList
+      hasPolyRecords
+        .map(r => (r.polyIdOrThrow, (r.id, r.woeTypeOrThrow)))
+        .toList
         .groupBy(_._1)
         .mappedValues(v => v.map(_._2).toList)
         .toMap
@@ -43,18 +45,21 @@ class OutputIndexes(
       new FeatureIndexer(basepath, fidMap, polygonMap),
       new PolygonIndexer(basepath, fidMap)
     ) ++ (if (outputRevgeo) {
-      List(new RevGeoIndexer(basepath, fidMap, polygonMap))
-    } else { Nil }) ++ (if (outputS2Covering) {
-      List(new S2CoveringIndexer(basepath, fidMap))
-    } else { Nil }) ++ (if (outputS2Interior) {
-      List(new S2InteriorIndexer(basepath, fidMap))
-    } else { Nil })
-
+            List(new RevGeoIndexer(basepath, fidMap, polygonMap))
+          } else {
+            Nil
+          }) ++ (if (outputS2Covering) {
+                   List(new S2CoveringIndexer(basepath, fidMap))
+                 } else {
+                   Nil
+                 }) ++ (if (outputS2Interior) {
+                          List(new S2InteriorIndexer(basepath, fidMap))
+                        } else {
+                          Nil
+                        })
 
     val diskIoFuturePool = FuturePool(Executors.newFixedThreadPool(4))
-    val indexFutures = parallelizedIndexers.map(indexer =>
-      diskIoFuturePool(indexer.writeIndex())
-    )
+    val indexFutures = parallelizedIndexers.map(indexer => diskIoFuturePool(indexer.writeIndex()))
     // wait forever to finish
     Await.result(Future.collect(indexFutures))
 

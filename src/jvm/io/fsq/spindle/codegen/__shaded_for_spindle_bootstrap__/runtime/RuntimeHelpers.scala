@@ -6,126 +6,125 @@ object RuntimeHelpers {
   def reportError(e: Throwable): Unit = errorHooks.reportError(e)
   def preserveUnknownFields(record: Record[_]): Boolean = configHooks.preserveUnknownFields(record)
 
-
   trait ForeignKeyHooks {
     def missingKey[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _]
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _]
     ): Option[FR]
 
     def missingObj[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: F
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: F
     ): Option[FR]
 
     def missingAlternateObj[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        fieldValue: Option[F]
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      fieldValue: Option[F]
     ): Option[AnyRef]
 
     def mismatchedInstanceType[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: F,
-        obj: AnyRef
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: F,
+      obj: AnyRef
     ): Option[FR]
 
     def mismatchedPrimaryKey[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: F,
-        foreignRecord: FR
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: F,
+      foreignRecord: FR
     ): Option[FR]
   }
 
   class DefaultForeignKeyHooks extends ForeignKeyHooks {
     override def missingKey[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _]
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _]
     ): Option[FR] = None
 
     override def missingObj[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: F
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: F
     ): Option[FR] = None
 
     override def missingAlternateObj[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        fieldValue: Option[F]
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      fieldValue: Option[F]
     ): Option[AnyRef] = None
 
     override def mismatchedInstanceType[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: F,
-        obj: AnyRef
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: F,
+      obj: AnyRef
     ): Option[FR] = None
 
     override def mismatchedPrimaryKey[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: F,
-        foreignRecord: FR
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: F,
+      foreignRecord: FR
     ): Option[FR] = None
   }
 

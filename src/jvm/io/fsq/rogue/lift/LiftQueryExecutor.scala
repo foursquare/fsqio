@@ -3,8 +3,16 @@
 package io.fsq.rogue.lift
 
 import com.mongodb.{DBCollection, DBObject}
-import io.fsq.rogue.{DBCollectionFactory, MongoJavaDriverAdapter, Query, QueryExecutor, QueryHelpers, QueryOptimizer,
-    RogueReadSerializer, RogueWriteSerializer}
+import io.fsq.rogue.{
+  DBCollectionFactory,
+  MongoJavaDriverAdapter,
+  Query,
+  QueryExecutor,
+  QueryHelpers,
+  QueryOptimizer,
+  RogueReadSerializer,
+  RogueWriteSerializer
+}
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
 import net.liftweb.common.Box
@@ -15,16 +23,18 @@ import org.bson.types.BasicBSONList
 
 object LiftDBCollectionFactory extends DBCollectionFactory[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_]] {
   override def getDBCollection[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): DBCollection = {
-    MongoDB.use(query.meta.connectionIdentifier){ db =>
+    MongoDB.use(query.meta.connectionIdentifier) { db =>
       db.getCollection(query.collectionName)
     }
   }
   protected def getPrimaryDBCollection(meta: MongoMetaRecord[_], collectionName: String): DBCollection = {
-    MongoDB.use(meta/* TODO: .master*/.connectionIdentifier){ db =>
+    MongoDB.use(meta /* TODO: .master*/ .connectionIdentifier) { db =>
       db.getCollection(collectionName)
     }
   }
-  override def getPrimaryDBCollection[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): DBCollection = {
+  override def getPrimaryDBCollection[M <: MongoRecord[_] with MongoMetaRecord[_]](
+    query: Query[M, _, _]
+  ): DBCollection = {
     getPrimaryDBCollection(query.meta, query.collectionName)
   }
   override def getPrimaryDBCollection(record: MongoRecord[_]): DBCollection = {
@@ -38,12 +48,14 @@ object LiftDBCollectionFactory extends DBCollectionFactory[MongoRecord[_] with M
   }
 
   /**
-   * Retrieves the list of indexes declared for the record type associated with a
-   * query. If the record type doesn't declare any indexes, then returns None.
-   * @param query the query
-   * @return the list of indexes, or an empty list.
-   */
-  override def getIndexes[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): Option[Seq[UntypedMongoIndex]] = {
+    * Retrieves the list of indexes declared for the record type associated with a
+    * query. If the record type doesn't declare any indexes, then returns None.
+    * @param query the query
+    * @return the list of indexes, or an empty list.
+    */
+  override def getIndexes[M <: MongoRecord[_] with MongoMetaRecord[_]](
+    query: Query[M, _, _]
+  ): Option[Seq[UntypedMongoIndex]] = {
     val queryMetaRecord = query.meta
     if (queryMetaRecord.isInstanceOf[IndexedRecord[_]]) {
       Some(queryMetaRecord.asInstanceOf[IndexedRecord[_]].mongoIndexList)
@@ -59,14 +71,14 @@ class LiftAdapter(dbCollectionFactory: DBCollectionFactory[MongoRecord[_] with M
 object LiftAdapter extends LiftAdapter(LiftDBCollectionFactory)
 
 class LiftQueryExecutor(
-    override val adapter: MongoJavaDriverAdapter[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_]]
+  override val adapter: MongoJavaDriverAdapter[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_]]
 ) extends QueryExecutor[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_]] {
   override def defaultWriteConcern = QueryHelpers.config.defaultWriteConcern
   override lazy val optimizer = new QueryOptimizer
 
   override protected def readSerializer[M <: MongoRecord[_] with MongoMetaRecord[_], R](
-      meta: M,
-      select: Option[MongoSelect[M, R]]
+    meta: M,
+    select: Option[MongoSelect[M, R]]
   ): RogueReadSerializer[R] = {
     new RogueReadSerializer[R] {
       override def fromDBObject(dbo: DBObject): R = select match {
@@ -118,7 +130,7 @@ object LiftQueryExecutorHelpers {
           case obj: DBObject => fld.flatMap(setFieldFromDbo(_, obj, rest))
           case list: BasicBSONList => fallbackValueFromDbObject(dbo, fieldNames)
           case null => None
-      }
+        }
       case Nil => throw new UnsupportedOperationException("was called with empty list, shouldn't possibly happen")
     }
   }
@@ -144,20 +156,22 @@ object LiftQueryExecutorHelpers {
         setInstanceFieldFromDboList(instance, dbo, names)
       case false =>
         val fld: Box[LField[_, _]] = instance.fieldByName(fieldName)
-        fld.flatMap (setLastFieldFromDbo(_, dbo, fieldName))
+        fld.flatMap(setLastFieldFromDbo(_, dbo, fieldName))
     }
   }
 
   def fallbackValueFromDbObject(dbo: DBObject, fieldNames: List[String]): Option[_] = {
     import scala.collection.JavaConverters._
-    Box.!!(fieldNames.foldLeft(dbo: Object)((obj: Object, fieldName: String) => {
-      obj match {
-        case dbl: BasicBSONList =>
-          dbl.asScala.map(_.asInstanceOf[DBObject]).map(_.get(fieldName)).toList
-        case dbo: DBObject =>
-          dbo.get(fieldName)
-        case null => null
-      }
-    })).toOption
+    Box
+      .!!(fieldNames.foldLeft(dbo: Object)((obj: Object, fieldName: String) => {
+        obj match {
+          case dbl: BasicBSONList =>
+            dbl.asScala.map(_.asInstanceOf[DBObject]).map(_.get(fieldName)).toList
+          case dbo: DBObject =>
+            dbo.get(fieldName)
+          case null => null
+        }
+      }))
+      .toOption
   }
 }

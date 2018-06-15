@@ -10,5 +10,5 @@ trait HotfixSource {
 
 class EmptyHotfixSource extends HotfixSource {
   def getEdits(): Seq[GeocodeServingFeatureEdit] = Nil
-  def refresh(): Unit = { }
+  def refresh(): Unit = {}
 }

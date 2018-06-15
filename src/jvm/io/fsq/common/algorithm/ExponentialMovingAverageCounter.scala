@@ -6,11 +6,11 @@ import io.fsq.common.scala.Identity._
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Thread-safe exponential moving average counter. `coefficient` is a number between
- * 0 and 1 that determines to what degree the previous average is factored in when
- * constructing a new average (0 = use entirely the old average, aka average doesn't
- * change, 1 = use entirely the new average).
- */
+  * Thread-safe exponential moving average counter. `coefficient` is a number between
+  * 0 and 1 that determines to what degree the previous average is factored in when
+  * constructing a new average (0 = use entirely the old average, aka average doesn't
+  * change, 1 = use entirely the new average).
+  */
 class ExponentialMovingAverageCounter(val coefficient: Double) {
   @volatile private var average: Option[Double] = None
 

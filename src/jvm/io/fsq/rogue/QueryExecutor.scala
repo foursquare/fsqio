@@ -25,15 +25,16 @@ trait QueryExecutor[MB, RB] extends Rogue {
   def defaultWriteConcern: WriteConcern
 
   protected def readSerializer[M <: MB, R](
-      meta: M,
-      select: Option[MongoSelect[M, R]]
+    meta: M,
+    select: Option[MongoSelect[M, R]]
   ): RogueReadSerializer[R]
 
   protected def writeSerializer(record: RB): RogueWriteSerializer[RB]
 
-  def count[M <: MB, State](query: Query[M, _, State],
-                            readPreference: Option[ReadPreference] = None)
-                           (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Long = {
+  def count[M <: MB, State](
+    query: Query[M, _, State],
+    readPreference: Option[ReadPreference] = None
+  )(implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Long = {
     if (optimizer.isEmptyQuery(query)) {
       0L
     } else {
@@ -41,10 +42,9 @@ trait QueryExecutor[MB, RB] extends Rogue {
     }
   }
 
-  def countDistinct[M <: MB, V, State](query: Query[M, _, State],
-                                       readPreference: Option[ReadPreference] = None)
-                                      (field: M => Field[V, M])
-                                      (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Long = {
+  def countDistinct[M <: MB, V, State](query: Query[M, _, State], readPreference: Option[ReadPreference] = None)(
+    field: M => Field[V, M]
+  )(implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Long = {
     if (optimizer.isEmptyQuery(query)) {
       0L
     } else {
@@ -52,10 +52,9 @@ trait QueryExecutor[MB, RB] extends Rogue {
     }
   }
 
-  def distinct[M <: MB, V, State](query: Query[M, _, State],
-                                  readPreference: Option[ReadPreference] = None)
-                                 (field: M => Field[V, M])
-                                 (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Seq[V] = {
+  def distinct[M <: MB, V, State](query: Query[M, _, State], readPreference: Option[ReadPreference] = None)(
+    field: M => Field[V, M]
+  )(implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Seq[V] = {
     if (optimizer.isEmptyQuery(query)) {
       Nil
     } else {
@@ -65,9 +64,10 @@ trait QueryExecutor[MB, RB] extends Rogue {
     }
   }
 
-  def fetchList[M <: MB, R, State](query: Query[M, R, State],
-                                   readPreference: Option[ReadPreference] = None)
-                                  (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): List[R] = {
+  def fetchList[M <: MB, R, State](
+    query: Query[M, R, State],
+    readPreference: Option[ReadPreference] = None
+  )(implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): List[R] = {
     if (optimizer.isEmptyQuery(query)) {
       Nil
     } else {
@@ -78,9 +78,10 @@ trait QueryExecutor[MB, RB] extends Rogue {
     }
   }
 
-  def fetch[M <: MB, R, State](query: Query[M, R, State],
-                               readPreference: Option[ReadPreference] = None)
-                              (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Seq[R] = {
+  def fetch[M <: MB, R, State](
+    query: Query[M, R, State],
+    readPreference: Option[ReadPreference] = None
+  )(implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Seq[R] = {
     if (optimizer.isEmptyQuery(query)) {
       Nil
     } else {
@@ -91,16 +92,16 @@ trait QueryExecutor[MB, RB] extends Rogue {
     }
   }
 
-  def fetchOne[M <: MB, R, State, S2](query: Query[M, R, State],
-                                      readPreference: Option[ReadPreference] = None)
-                                 (implicit ev1: AddLimit[State, S2], ev2: ShardingOk[M, S2], ev3: M !<:< MongoDisallowed): Option[R] = {
+  def fetchOne[M <: MB, R, State, S2](
+    query: Query[M, R, State],
+    readPreference: Option[ReadPreference] = None
+  )(implicit ev1: AddLimit[State, S2], ev2: ShardingOk[M, S2], ev3: M !<:< MongoDisallowed): Option[R] = {
     fetch(query.limit(1), readPreference).headOption
   }
 
-  def foreach[M <: MB, R, State](query: Query[M, R, State],
-                                 readPreference: Option[ReadPreference] = None)
-                                (f: R => Unit)
-                                (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Unit = {
+  def foreach[M <: MB, R, State](query: Query[M, R, State], readPreference: Option[ReadPreference] = None)(
+    f: R => Unit
+  )(implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): Unit = {
     if (optimizer.isEmptyQuery(query)) {
       ()
     } else {
@@ -110,10 +111,10 @@ trait QueryExecutor[MB, RB] extends Rogue {
   }
 
   private def drainBufferList[A, B](
-      from: ListBuffer[A],
-      to: ListBuffer[B],
-      f: List[A] => List[B],
-      size: Int
+    from: ListBuffer[A],
+    to: ListBuffer[B],
+    f: List[A] => List[B],
+    size: Int
   ): Unit = {
     // ListBuffer#length is O(1) vs ListBuffer#size is O(N) (true in 2.9.x, fixed in 2.10.x)
     if (from.length >= size) {
@@ -150,10 +151,10 @@ trait QueryExecutor[MB, RB] extends Rogue {
   }
 
   private def drainBufferSeq[A, B](
-      from: ListBuffer[A],
-      to: Builder[B, Vector[B]],
-      f: Seq[A] => Seq[B],
-      size: Int
+    from: ListBuffer[A],
+    to: Builder[B, Vector[B]],
+    f: Seq[A] => Seq[B],
+    size: Int
   ): Unit = {
     // ListBuffer#length is O(1) vs ListBuffer#size is O(N) (true in 2.9.x, fixed in 2.10.x)
     if (from.length >= size) {
@@ -189,10 +190,11 @@ trait QueryExecutor[MB, RB] extends Rogue {
     }
   }
 
-  def bulkDelete_!![M <: MB, State](query: Query[M, _, State],
-                                    writeConcern: WriteConcern = defaultWriteConcern)
-                                   (implicit ev1: Required[State, Unselected with Unlimited with Unskipped],
-                                    ev2: ShardingOk[M, State], ev3: M !<:< MongoDisallowed): Unit = {
+  def bulkDelete_!![M <: MB, State](query: Query[M, _, State], writeConcern: WriteConcern = defaultWriteConcern)(
+    implicit ev1: Required[State, Unselected with Unlimited with Unskipped],
+    ev2: ShardingOk[M, State],
+    ev3: M !<:< MongoDisallowed
+  ): Unit = {
     if (optimizer.isEmptyQuery(query)) {
       ()
     } else {
@@ -201,8 +203,8 @@ trait QueryExecutor[MB, RB] extends Rogue {
   }
 
   def updateOne[M <: MB, State](
-      query: ModifyQuery[M, State],
-      writeConcern: WriteConcern = defaultWriteConcern
+    query: ModifyQuery[M, State],
+    writeConcern: WriteConcern = defaultWriteConcern
   )(implicit ev: RequireShardKey[M, State], ev2: M !<:< MongoDisallowed): Unit = {
     if (optimizer.isEmptyQuery(query)) {
       ()
@@ -212,8 +214,8 @@ trait QueryExecutor[MB, RB] extends Rogue {
   }
 
   def upsertOne[M <: MB, State](
-      query: ModifyQuery[M, State],
-      writeConcern: WriteConcern = defaultWriteConcern
+    query: ModifyQuery[M, State],
+    writeConcern: WriteConcern = defaultWriteConcern
   )(implicit ev: RequireShardKey[M, State], ev2: M !<:< MongoDisallowed): Unit = {
     if (optimizer.isEmptyQuery(query)) {
       ()
@@ -232,8 +234,8 @@ trait QueryExecutor[MB, RB] extends Rogue {
   }
 
   def updateMulti[M <: MB, State](
-      query: ModifyQuery[M, State],
-      writeConcern: WriteConcern = defaultWriteConcern
+    query: ModifyQuery[M, State],
+    writeConcern: WriteConcern = defaultWriteConcern
   )(implicit ev: M !<:< MongoDisallowed): Unit = {
     if (optimizer.isEmptyQuery(query)) {
       ()
@@ -251,7 +253,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
       None
     } else {
       val s = readSerializer[M, R](query.query.meta, query.query.select)
-      adapter.findAndModify(query, returnNew, upsert=false, remove=false)(s.fromDBObject _)
+      adapter.findAndModify(query, returnNew, upsert = false, remove = false)(s.fromDBObject _)
     }
   }
 
@@ -287,7 +289,7 @@ trait QueryExecutor[MB, RB] extends Rogue {
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
       val mod = FindAndModifyQuery(query, MongoModify(Nil))
-      adapter.findAndModify(mod, returnNew=false, upsert=false, remove=true)(s.fromDBObject _)
+      adapter.findAndModify(mod, returnNew = false, upsert = false, remove = true)(s.fromDBObject _)
     }
   }
 
@@ -295,11 +297,9 @@ trait QueryExecutor[MB, RB] extends Rogue {
     adapter.explain(query)
   }
 
-  def iterate[S, M <: MB, R, State](query: Query[M, R, State],
-                                    state: S,
-                                    readPreference: Option[ReadPreference] = None)
-                                   (handler: (S, Iter.Event[R]) => Iter.Command[S])
-                                   (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): S = {
+  def iterate[S, M <: MB, R, State](query: Query[M, R, State], state: S, readPreference: Option[ReadPreference] = None)(
+    handler: (S, Iter.Event[R]) => Iter.Command[S]
+  )(implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): S = {
     if (optimizer.isEmptyQuery(query)) {
       handler(state, Iter.EOF).state
     } else {
@@ -308,12 +308,14 @@ trait QueryExecutor[MB, RB] extends Rogue {
     }
   }
 
-  def iterateBatch[S, M <: MB, R, State](query: Query[M, R, State],
-                                         batchSize: Int,
-                                         state: S,
-                                         readPreference: Option[ReadPreference] = None)
-                                        (handler: (S, Iter.Event[Seq[R]]) => Iter.Command[S])
-                                        (implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): S = {
+  def iterateBatch[S, M <: MB, R, State](
+    query: Query[M, R, State],
+    batchSize: Int,
+    state: S,
+    readPreference: Option[ReadPreference] = None
+  )(
+    handler: (S, Iter.Event[Seq[R]]) => Iter.Command[S]
+  )(implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): S = {
     if (optimizer.isEmptyQuery(query)) {
       handler(state, Iter.EOF).state
     } else {
@@ -322,7 +324,9 @@ trait QueryExecutor[MB, RB] extends Rogue {
     }
   }
 
-  def save[RecordType <: RB](record: RecordType, writeConcern: WriteConcern = defaultWriteConcern)(implicit ev: RecordType !<:< MongoDisallowed): RecordType = {
+  def save[RecordType <: RB](record: RecordType, writeConcern: WriteConcern = defaultWriteConcern)(
+    implicit ev: RecordType !<:< MongoDisallowed
+  ): RecordType = {
     val s = writeSerializer(record)
     val dbo = s.toDBObject(record)
     adapter.save(record, dbo, writeConcern)
@@ -336,7 +340,10 @@ trait QueryExecutor[MB, RB] extends Rogue {
     record
   }
 
-  def insertAll[RecordType <: RB](records: Seq[RecordType], writeConcern: WriteConcern = defaultWriteConcern): Seq[RecordType] = {
+  def insertAll[RecordType <: RB](
+    records: Seq[RecordType],
+    writeConcern: WriteConcern = defaultWriteConcern
+  ): Seq[RecordType] = {
     records.headOption.foreach(record => {
       val s = writeSerializer(record)
       val dbos = records.map(s.toDBObject)

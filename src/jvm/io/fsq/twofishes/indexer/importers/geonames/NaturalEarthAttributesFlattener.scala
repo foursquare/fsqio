@@ -20,7 +20,9 @@ object NaturalEarthAttributesFlattener extends Logging {
     val fileWriter = new FileWriter("src/jvm/io/fsq/twofishes/indexer/data/downloaded/flattenedAttributes.txt", false)
 
     var features = 0
-    val iterator = new ShapefileIterator("src/jvm/io/fsq/twofishes/indexer/data/downloaded/ne_10m_populated_places_simple.shp")
+    val iterator = new ShapefileIterator(
+      "src/jvm/io/fsq/twofishes/indexer/data/downloaded/ne_10m_populated_places_simple.shp"
+    )
 
     for {
       f <- iterator
@@ -34,13 +36,7 @@ object NaturalEarthAttributesFlattener extends Logging {
       natscale = f.propMap.getOrElse("natscale", "0").toInt
       labelrank = f.propMap.getOrElse("labelrank", "0").toInt
     } {
-      fileWriter.write("%d\t%d\t%d\t%d\t%d\t%d\n".format(
-        geonameId,
-        adm0cap,
-        worldcity,
-        scalerank,
-        natscale,
-        labelrank))
+      fileWriter.write("%d\t%d\t%d\t%d\t%d\t%d\n".format(geonameId, adm0cap, worldcity, scalerank, natscale, labelrank))
 
       features += 1
       if (features % 1000 == 0) {

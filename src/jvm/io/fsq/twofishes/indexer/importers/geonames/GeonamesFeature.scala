@@ -7,13 +7,11 @@ import io.fsq.twofishes.util.{GeonamesNamespace, GeonamesZip, StoredFeatureId}
 import io.fsq.twofishes.util.Helpers._
 import org.slf4s.Logging
 
-
 object GeonamesFeatureColumns extends Enumeration {
-   type GeonamesFeatureColumns = Value
-   val GEONAMEID, PLACE_NAME, NAME, ASCIINAME, ALTERNATENAMES, LATITUDE, LONGITUDE,
-      FEATURE_CLASS, FEATURE_CODE, COUNTRY_CODE, CC2, ADMIN1_CODE, ADMIN2_CODE, ADMIN3_CODE,
-      ADMIN4_CODE, ADMIN1_NAME, ADMIN2_NAME, ADMIN3_NAME, POPULATION, ELEVATION, GTOPO30, TIMEZONE,
-      MODIFICATION_DATE, ACCURACY, EXTRA = Value
+  type GeonamesFeatureColumns = Value
+  val GEONAMEID, PLACE_NAME, NAME, ASCIINAME, ALTERNATENAMES, LATITUDE, LONGITUDE, FEATURE_CLASS, FEATURE_CODE,
+    COUNTRY_CODE, CC2, ADMIN1_CODE, ADMIN2_CODE, ADMIN3_CODE, ADMIN4_CODE, ADMIN1_NAME, ADMIN2_NAME, ADMIN3_NAME,
+    POPULATION, ELEVATION, GTOPO30, TIMEZONE, MODIFICATION_DATE, ACCURACY, EXTRA = Value
 }
 
 import io.fsq.twofishes.indexer.importers.geonames.GeonamesFeatureColumns._
@@ -66,18 +64,20 @@ object GeonamesFeature extends Logging {
 
     def cb(in: Map[GeonamesFeatureColumns.Value, String]) = {
       try {
-        Some(in ++ List(
-          (GeonamesFeatureColumns.FEATURE_CLASS -> "Z"),
-          (GeonamesFeatureColumns.GEONAMEID ->
-            (new GeonamesZip(in(COUNTRY_CODE), in(NAME))).humanReadableString),
-           // hack to ensure US postal codes are always in prefix index
-          (GeonamesFeatureColumns.POPULATION ->
-            (if (in(COUNTRY_CODE) =? "US") {
-              1000
-            } else {
-              0
-            }).toString)
-        ))
+        Some(
+          in ++ List(
+            (GeonamesFeatureColumns.FEATURE_CLASS -> "Z"),
+            (GeonamesFeatureColumns.GEONAMEID ->
+              (new GeonamesZip(in(COUNTRY_CODE), in(NAME))).humanReadableString),
+            // hack to ensure US postal codes are always in prefix index
+            (GeonamesFeatureColumns.POPULATION ->
+              (if (in(COUNTRY_CODE) =? "US") {
+                 1000
+               } else {
+                 0
+               }).toString)
+          )
+        )
       } catch {
         case e: Exception =>
           log.error("Exception when handling '%s': %s".format(in, e))
@@ -93,14 +93,18 @@ object GeonamesFeature extends Logging {
     parseLine(index, line, adminColumns, cb)
   }
 
-  def parseLine(index: Int, line: String,
-      columns: List[GeonamesFeatureColumns.Value],
-      modifyCallback: Map[GeonamesFeatureColumns.Value, String] => Option[Map[GeonamesFeatureColumns.Value, String]]
-      ): Option[GeonamesFeature] = {
+  def parseLine(
+    index: Int,
+    line: String,
+    columns: List[GeonamesFeatureColumns.Value],
+    modifyCallback: Map[GeonamesFeatureColumns.Value, String] => Option[Map[GeonamesFeatureColumns.Value, String]]
+  ): Option[GeonamesFeature] = {
     val parts = line.split("\t")
     if (parts.size < columns.size) {
-      log.error("line %d has too few columns. Has %d, needs %d (%s)".format(
-        index, parts.size, columns.size, parts.mkString(",")))
+      log.error(
+        "line %d has too few columns. Has %d, needs %d (%s)"
+          .format(index, parts.size, columns.size, parts.mkString(","))
+      )
       None
     } else {
       modifyCallback(columns.zip(parts).toMap) match {
@@ -164,7 +168,9 @@ class GeonamesFeatureClass(featureClass: Option[String], featureCode: Option[Str
   val stupidCodes = List(
     "RGNE", // economic region
     "PPLQ", // abandoned (historical) place
-    "WLL", "WLLS", "WLLQ" // wells!
+    "WLL",
+    "WLLS",
+    "WLLQ" // wells!
   )
   def isContinent = featureCode.exists(_ == "CONT")
   def isStupid = featureCode.exists(fc => stupidCodes.contains(fc))
@@ -191,13 +197,15 @@ class GeonamesFeatureClass(featureClass: Option[String], featureCode: Option[Str
     } else if (isAirport) {
       YahooWoeType.AIRPORT
     } else {
-      featureCode.map(_ match {
-        case "ADM1" => YahooWoeType.ADMIN1
-        case "ADM2" => YahooWoeType.ADMIN2
-        case "ADM3" => YahooWoeType.ADMIN3
-        case "ADM4" | "ADMD" => YahooWoeType.ADMIN3
-        case _ => YahooWoeType.UNKNOWN
-      }).getOrElse(YahooWoeType.UNKNOWN)
+      featureCode
+        .map(_ match {
+          case "ADM1" => YahooWoeType.ADMIN1
+          case "ADM2" => YahooWoeType.ADMIN2
+          case "ADM3" => YahooWoeType.ADMIN3
+          case "ADM4" | "ADMD" => YahooWoeType.ADMIN3
+          case _ => YahooWoeType.UNKNOWN
+        })
+        .getOrElse(YahooWoeType.UNKNOWN)
     }
   }
 
@@ -205,13 +213,15 @@ class GeonamesFeatureClass(featureClass: Option[String], featureCode: Option[Str
     if (isCountry) {
       COUNTRY
     } else {
-      featureCode.map(_ match {
-        case "ADM1" => ADM1
-        case "ADM2" => ADM2
-        case "ADM3" => ADM3
-        case "ADM4" => ADM4
-        case _ => OTHER
-      }).getOrElse(OTHER)
+      featureCode
+        .map(_ match {
+          case "ADM1" => ADM1
+          case "ADM2" => ADM2
+          case "ADM3" => ADM3
+          case "ADM4" => ADM4
+          case _ => OTHER
+        })
+        .getOrElse(OTHER)
     }
   }
 }
@@ -238,7 +248,7 @@ trait InputFeature {
   def name: String
   def asciiname: Option[String] = None
 
-  def extraColumns: Map[String,String] = Map.empty
+  def extraColumns: Map[String, String] = Map.empty
 
   def featureId: StoredFeatureId
 }
@@ -272,8 +282,7 @@ class GeonamesFeature(values: Map[GeonamesFeatureColumns.Value, String]) extends
     !(featureClass.woeType =? YahooWoeType.ADMIN3 &&
       featureClass.adminLevel =? AdminLevel.OTHER &&
       name.startsWith("City of") &&
-      countryCode =? "US"
-    ) &&
+      countryCode =? "US") &&
     !(name.contains(", Stadt") && countryCode =? "DE")
   }
 
@@ -306,17 +315,19 @@ class GeonamesFeature(values: Map[GeonamesFeatureColumns.Value, String]) extends
     if (featureClass.isAdmin) {
       makeAdminId(featureClass.adminLevel)
     } else {
-        None
+      None
     }
   }
 
   override def parents: List[String] = {
-    AdminLevel.values.filter(_ < featureClass.adminLevel).flatMap(l =>
-      makeAdminId(l)
-    ).toList.filterNot(_.endsWith(".00"))
+    AdminLevel.values
+      .filter(_ < featureClass.adminLevel)
+      .flatMap(l => makeAdminId(l))
+      .toList
+      .filterNot(_.endsWith(".00"))
   }
 
-  override def population: Option[Int] = flatTryO {values.get(POPULATION).map(_.toInt)}
+  override def population: Option[Int] = flatTryO { values.get(POPULATION).map(_.toInt) }
   override def latitude: Double = values.get(LATITUDE).map(_.toDouble).get
   override def longitude: Double = values.get(LONGITUDE).map(_.toDouble).get
   override def countryCode: String = if (featureClass.isIsraeliSettlement) {
@@ -328,18 +339,22 @@ class GeonamesFeature(values: Map[GeonamesFeatureColumns.Value, String]) extends
   override def asciiname: Option[String] = values.get(ASCIINAME)
   def place: String = values.getOrElse(PLACE_NAME, "no name")
 
-  override val extraColumns: Map[String,String] = values.getOrElse(EXTRA, "").split("\t").flatMap(p => {
-    if (p.nonEmpty) {
-      val parts = p.split(";")
-      if (parts.size == 2) {
-        Some(parts(0) -> parts(1))
+  override val extraColumns: Map[String, String] = values
+    .getOrElse(EXTRA, "")
+    .split("\t")
+    .flatMap(p => {
+      if (p.nonEmpty) {
+        val parts = p.split(";")
+        if (parts.size == 2) {
+          Some(parts(0) -> parts(1))
+        } else {
+          None
+        }
       } else {
         None
       }
-    } else {
-      None
-    }
-  }).toMap
+    })
+    .toMap
 
   def geonameid: Option[String] = values.get(GEONAMEID)
 
@@ -356,7 +371,9 @@ class GeonamesFeature(values: Map[GeonamesFeatureColumns.Value, String]) extends
     names
   }
 
-  override val featureId = geonameid.flatMap(id => {
-    StoredFeatureId.fromHumanReadableString(id, defaultNamespace = Some(GeonamesNamespace))
-  }).get
+  override val featureId = geonameid
+    .flatMap(id => {
+      StoredFeatureId.fromHumanReadableString(id, defaultNamespace = Some(GeonamesNamespace))
+    })
+    .get
 }

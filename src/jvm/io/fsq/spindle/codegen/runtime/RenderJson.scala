@@ -32,7 +32,7 @@ case class RenderJson() {
   Render program into a list of json dicts using [[allJsonAnnotations]] to render each struct.
   Skip classes with no annotations.
   Return includes number of processed classes (so you can skip writing the file if empty).
-  */
+   */
   def jsonBody(program: ScalaProgram): (Int, String) = {
     val node = mapper.createObjectNode()
     var nfields = 0

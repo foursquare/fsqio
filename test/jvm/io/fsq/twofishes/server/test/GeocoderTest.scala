@@ -5,11 +5,26 @@ import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBWriter, WKTReader}
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.specs2.FSSpecificationWithJUnit
-import io.fsq.twofishes.gen.{CellGeometry, FeatureGeometry, FeatureName, FeatureNameFlags, GeocodeFeature,
-    GeocodePoint, GeocodeRequest, GeocodeServingFeature, MutableGeocodeServingFeature, ResponseIncludes,
-    ScoringFeatures, YahooWoeType}
-import io.fsq.twofishes.server.{GeocodeRequestDispatcher, GeocodeServerConfigSingleton, GeocodeStorageReadService,
-    ReverseGeocoderImpl}
+import io.fsq.twofishes.gen.{
+  CellGeometry,
+  FeatureGeometry,
+  FeatureName,
+  FeatureNameFlags,
+  GeocodeFeature,
+  GeocodePoint,
+  GeocodeRequest,
+  GeocodeServingFeature,
+  MutableGeocodeServingFeature,
+  ResponseIncludes,
+  ScoringFeatures,
+  YahooWoeType
+}
+import io.fsq.twofishes.server.{
+  GeocodeRequestDispatcher,
+  GeocodeServerConfigSingleton,
+  GeocodeStorageReadService,
+  ReverseGeocoderImpl
+}
 import io.fsq.twofishes.util.{GeometryUtils, GeonamesId, NameNormalizer, ShapefileS2Util, StoredFeatureId}
 import java.nio.ByteBuffer
 import scala.collection.JavaConverters._
@@ -32,17 +47,20 @@ class MockGeocodeStorageReadService extends GeocodeStorageReadService {
   }
 
   def getByFeatureIds(ids: Seq[StoredFeatureId]): Map[StoredFeatureId, GeocodeServingFeature] = {
-    ids.map(id => {
-      (id -> idMap(id))
-    }).toMap
+    ids
+      .map(id => {
+        (id -> idMap(id))
+      })
+      .toMap
   }
 
   def getBySlugOrFeatureIds(ids: Seq[String]): Map[String, GeocodeServingFeature] = {
     (for {
       id <- ids
-      feature <- idMap.values.filter(servingFeature =>
-        id == servingFeature.feature.slugOrNull ||
-        servingFeature.feature.ids.exists(fid => "%s:%s".format(fid.source, fid.id) == id)
+      feature <- idMap.values.filter(
+        servingFeature =>
+          id == servingFeature.feature.slugOrNull ||
+            servingFeature.feature.ids.exists(fid => "%s:%s".format(fid.source, fid.id) == id)
       )
     } yield {
       (id -> feature)
@@ -70,8 +88,7 @@ class MockGeocodeStorageReadService extends GeocodeStorageReadService {
       if (recordShape.contains(s2shape)) {
         cellGeometryBuilder.full(true)
       } else {
-        cellGeometryBuilder.wkbGeometry(
-          ByteBuffer.wrap(wkbWriter.write(s2shape.intersection(recordShape))))
+        cellGeometryBuilder.wkbGeometry(ByteBuffer.wrap(wkbWriter.write(s2shape.intersection(recordShape))))
       }
       cellGeometryBuilder.woeType(woeType)
       cellGeometryBuilder.longId(id.longId)
@@ -96,7 +113,7 @@ class MockGeocodeStorageReadService extends GeocodeStorageReadService {
   def getMinS2Level: Int = 8
   def getMaxS2Level: Int = 12
 
-  def refresh() { }
+  def refresh() {}
 
   var idCounter = 0
   def addGeocode(
@@ -152,79 +169,123 @@ class MockGeocodeStorageReadService extends GeocodeStorageReadService {
 
 // TODO: See if there's a way to clean up the extra noise this sends to stderr.
 class GeocoderSpec extends FSSpecificationWithJUnit {
-  GeocodeServerConfigSingleton.init(Array(
-    "--vm_map_count", "65530",
-    "--hfile_basepath", ""
-  ))
+  GeocodeServerConfigSingleton.init(
+    Array(
+      "--vm_map_count",
+      "65530",
+      "--hfile_basepath",
+      ""
+    )
+  )
 
   def addParisFrance(store: MockGeocodeStorageReadService) = {
-    val frRecord = store.addGeocode("FR", Nil, 1, 2, YahooWoeType.COUNTRY, cc="FR")
-    val idfRecord = store.addGeocode("IDF", List(frRecord), 3, 4, YahooWoeType.ADMIN1, cc="FR")
-    val parisRecord = store.addGeocode("Paris", List(idfRecord, frRecord), 50, 60, YahooWoeType.TOWN, population=Some(1000000), cc="FR")
+    val frRecord = store.addGeocode("FR", Nil, 1, 2, YahooWoeType.COUNTRY, cc = "FR")
+    val idfRecord = store.addGeocode("IDF", List(frRecord), 3, 4, YahooWoeType.ADMIN1, cc = "FR")
+    val parisRecord = store.addGeocode(
+      "Paris",
+      List(idfRecord, frRecord),
+      50,
+      60,
+      YahooWoeType.TOWN,
+      population = Some(1000000),
+      cc = "FR"
+    )
     store
   }
 
   def addSenayans(store: MockGeocodeStorageReadService) = {
-    val idRecord = store.addGeocode("ID", Nil, 1, 2, YahooWoeType.COUNTRY, cc="ID")
-    val adm1Record1 = store.addGeocode("Daerah Khusus Ibukota Jakarta", List(idRecord), 3, 4, YahooWoeType.ADMIN1, cc="ID")
-    val senayanRecord1 = store.addGeocode("Senayan", List(adm1Record1, idRecord), 5, 6, YahooWoeType.TOWN, population=Some(20000), cc="ID")
+    val idRecord = store.addGeocode("ID", Nil, 1, 2, YahooWoeType.COUNTRY, cc = "ID")
+    val adm1Record1 =
+      store.addGeocode("Daerah Khusus Ibukota Jakarta", List(idRecord), 3, 4, YahooWoeType.ADMIN1, cc = "ID")
+    val senayanRecord1 = store.addGeocode(
+      "Senayan",
+      List(adm1Record1, idRecord),
+      5,
+      6,
+      YahooWoeType.TOWN,
+      population = Some(20000),
+      cc = "ID"
+    )
 
-    val adm1Record2 = store.addGeocode("Sumatera Utara", List(idRecord), 3, 4, YahooWoeType.ADMIN1, cc="ID")
-    val senayanRecord2 = store.addGeocode("Senayan", List(adm1Record2, idRecord), 10, 20, YahooWoeType.TOWN, population=Some(20000), cc="ID")
+    val adm1Record2 = store.addGeocode("Sumatera Utara", List(idRecord), 3, 4, YahooWoeType.ADMIN1, cc = "ID")
+    val senayanRecord2 = store.addGeocode(
+      "Senayan",
+      List(adm1Record2, idRecord),
+      10,
+      20,
+      YahooWoeType.TOWN,
+      population = Some(20000),
+      cc = "ID"
+    )
     store
   }
 
   def addParisTX(store: MockGeocodeStorageReadService) = {
     val usRecord = store.addGeocode("US", Nil, 1, 2, YahooWoeType.COUNTRY)
     val txRecord = store.addGeocode("Texas", List(usRecord), 3, 4, YahooWoeType.ADMIN1)
-    val parisRecord = store.addGeocode("Paris", List(txRecord, usRecord), 5, 6, YahooWoeType.TOWN, population=Some(20000))
+    val parisRecord =
+      store.addGeocode("Paris", List(txRecord, usRecord), 5, 6, YahooWoeType.TOWN, population = Some(20000))
     store
   }
 
   def addParisIL(store: MockGeocodeStorageReadService) = {
     val usRecord = store.addGeocode("US", Nil, 1, 2, YahooWoeType.COUNTRY)
     val ilRecord = store.addGeocode("Illinois", List(usRecord), 3, 4, YahooWoeType.ADMIN1)
-    val parisRecord = store.addGeocode("Paris", List(ilRecord, usRecord), 2, 6, YahooWoeType.TOWN, population=Some(20000))
+    val parisRecord =
+      store.addGeocode("Paris", List(ilRecord, usRecord), 2, 6, YahooWoeType.TOWN, population = Some(20000))
     store
   }
 
   def addKansas(store: MockGeocodeStorageReadService) = {
     val usRecord = store.addGeocode("US", Nil, 1, 2, YahooWoeType.COUNTRY)
-    val kansasRecord = store.addGeocode("Kansas", List(usRecord), 3, 4, YahooWoeType.ADMIN1, population=Some(2000000))
+    val kansasRecord = store.addGeocode("Kansas", List(usRecord), 3, 4, YahooWoeType.ADMIN1, population = Some(2000000))
     store
   }
 
   def addKansasCityMO(store: MockGeocodeStorageReadService) = {
     val usRecord = store.addGeocode("US", Nil, 1, 2, YahooWoeType.COUNTRY)
     val moRecord = store.addGeocode("Missouri", List(usRecord), 3, 4, YahooWoeType.ADMIN1)
-    val kansasCityRecord = store.addGeocode("Kansas City", List(moRecord, usRecord), 2, 6, YahooWoeType.TOWN, population=Some(20000))
+    val kansasCityRecord =
+      store.addGeocode("Kansas City", List(moRecord, usRecord), 2, 6, YahooWoeType.TOWN, population = Some(20000))
     store
   }
 
   def addSohos(store: MockGeocodeStorageReadService) = {
     val usRecord = store.addGeocode("US", Nil, 1, 2, YahooWoeType.COUNTRY)
     val nyRecord = store.addGeocode("New York", List(usRecord), 3, 4, YahooWoeType.ADMIN1)
-    val soho1 = store.addGeocode("Soho", List(nyRecord, usRecord),
-      40.723537, -74.005313, YahooWoeType.TOWN, population = Some(500012))
-    val soho2 = store.addGeocode("Soho", List(nyRecord, usRecord),
-     40.72241, -73.99961, YahooWoeType.TOWN, population = Some(500012))
+    val soho1 = store.addGeocode(
+      "Soho",
+      List(nyRecord, usRecord),
+      40.723537,
+      -74.005313,
+      YahooWoeType.TOWN,
+      population = Some(500012)
+    )
+    val soho2 = store.addGeocode(
+      "Soho",
+      List(nyRecord, usRecord),
+      40.72241,
+      -73.99961,
+      YahooWoeType.TOWN,
+      population = Some(500012)
+    )
     store
   }
 
   def addBrooklyns(store: MockGeocodeStorageReadService) = {
     val usRecord = store.addGeocode("US", Nil, 1, 2, YahooWoeType.COUNTRY)
-    val brooklynTigerAdm2 = store.addGeocode("Brooklyn", List(usRecord),
-      40.63439, -73.95027, YahooWoeType.ADMIN2, population = Some(2504700))
-    val brooklynGeonamesTown = store.addGeocode("Brooklyn", List(usRecord),
-     40.6501, -73.94958, YahooWoeType.TOWN, population = Some(2300664))
+    val brooklynTigerAdm2 =
+      store.addGeocode("Brooklyn", List(usRecord), 40.63439, -73.95027, YahooWoeType.ADMIN2, population = Some(2504700))
+    val brooklynGeonamesTown =
+      store.addGeocode("Brooklyn", List(usRecord), 40.6501, -73.94958, YahooWoeType.TOWN, population = Some(2300664))
     store
   }
 
   def addRegoPark(store: MockGeocodeStorageReadService) = {
     val usRecord = store.addGeocode("US", Nil, 1, 2, YahooWoeType.COUNTRY)
     val nyRecord = store.addGeocode("New York", List(usRecord), 3, 4, YahooWoeType.ADMIN1)
-    val regoParkRecord = store.addGeocode("Rego Park", List(nyRecord, usRecord), 5, 6, YahooWoeType.TOWN,
-      population = Some(500012))
+    val regoParkRecord =
+      store.addGeocode("Rego Park", List(nyRecord, usRecord), 5, 6, YahooWoeType.TOWN, population = Some(500012))
     store
   }
 
@@ -242,8 +303,8 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
 
   def addLosAngeles(store: MockGeocodeStorageReadService) = {
     val usRecord = store.addGeocode("US", Nil, 1, 2, YahooWoeType.COUNTRY)
-    val caRecord = store.addGeocode("California", List(usRecord), 10, 11, YahooWoeType.ADMIN1,
-            population = Some(5000000))
+    val caRecord =
+      store.addGeocode("California", List(usRecord), 10, 11, YahooWoeType.ADMIN1, population = Some(5000000))
     val losAngelesRecord = store.addGeocode("Los Angeles", List(caRecord, usRecord), 12, 13, YahooWoeType.TOWN)
     val laRecord = store.addGeocode("L.A.", List(caRecord, usRecord), 12, 13, YahooWoeType.TOWN)
     store
@@ -286,7 +347,8 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
   "everything returns parents" in {
     val store = buildRegoPark()
 
-    val req = GeocodeRequest.newBuilder.query("Rego Park")
+    val req = GeocodeRequest.newBuilder
+      .query("Rego Park")
       .responseIncludes(List(ResponseIncludes.EVERYTHING))
       .result
 
@@ -299,7 +361,8 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
   "don't include matching country in displayName" in {
     val store = buildRegoPark()
 
-    val req = GeocodeRequest.newBuilder.query("Rego Park")
+    val req = GeocodeRequest.newBuilder
+      .query("Rego Park")
       .cc("US")
       .result
 
@@ -362,7 +425,8 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
     val store = buildRegoPark()
     addLosAngeles(store)
 
-    val req = GeocodeRequest.newBuilder.query("Rego Park, California")
+    val req = GeocodeRequest.newBuilder
+      .query("Rego Park, California")
       .debug(4)
       .result
 
@@ -379,7 +443,8 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
   "everything request fills parents" in {
     val store = buildRegoPark()
 
-    val req = GeocodeRequest.newBuilder.query("Rego Park, New York")
+    val req = GeocodeRequest.newBuilder
+      .query("Rego Park, New York")
       .responseIncludes(List(ResponseIncludes.EVERYTHING))
       .result
     val r = new GeocodeRequestDispatcher(store).geocode(req)
@@ -396,12 +461,13 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
     parents(1).nameOrNull mustEqual "US"
   }
 
- "full request fills parents" in {
+  "full request fills parents" in {
     val store = getStore
     addParisTX(store)
     addParisFrance(store)
 
-    val req = GeocodeRequest.newBuilder.query("Paris")
+    val req = GeocodeRequest.newBuilder
+      .query("Paris")
       .maxInterpretations(2)
       .debug(1)
       .result
@@ -418,13 +484,14 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
     interp2.feature.ccOrThrow must_== "US"
   }
 
- "ambiguous names" in {
+  "ambiguous names" in {
 
     val store = getStore
     addParisTX(store)
     addParisIL(store)
 
-    val req = GeocodeRequest.newBuilder.query("Paris US")
+    val req = GeocodeRequest.newBuilder
+      .query("Paris US")
       .maxInterpretations(2)
       .debug(1)
       .result
@@ -476,7 +543,8 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
     val store = buildRegoPark()
     addRego(store)
 
-    val req = GeocodeRequest.newBuilder.query("Rego")
+    val req = GeocodeRequest.newBuilder
+      .query("Rego")
       .autocomplete(true)
       .debug(2)
       .result
@@ -536,8 +604,8 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
 
   "woe restrict works" in {
     val store = getStore
-    val parisTownRecord = store.addGeocode("Paris", Nil, 5, 6, YahooWoeType.TOWN, cc="FR")
-    val parisAdmin1Record = store.addGeocode("Paris", Nil, 10, 11, YahooWoeType.ADMIN1, cc="FR")
+    val parisTownRecord = store.addGeocode("Paris", Nil, 5, 6, YahooWoeType.TOWN, cc = "FR")
+    val parisAdmin1Record = store.addGeocode("Paris", Nil, 10, 11, YahooWoeType.ADMIN1, cc = "FR")
 
     val req = GeocodeRequest.newBuilder.query("paris").woeRestrict(List(YahooWoeType.ADMIN1)).result
 
@@ -556,10 +624,11 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
 
   "woe hint works" in {
     val store = getStore
-    val parisTownRecord = store.addGeocode("Paris", Nil, 5, 6, YahooWoeType.TOWN, cc="FR")
-    val parisAdmin1Record = store.addGeocode("Paris", Nil, 10, 11, YahooWoeType.ADMIN1, cc="FR")
+    val parisTownRecord = store.addGeocode("Paris", Nil, 5, 6, YahooWoeType.TOWN, cc = "FR")
+    val parisAdmin1Record = store.addGeocode("Paris", Nil, 10, 11, YahooWoeType.ADMIN1, cc = "FR")
 
-    val req = GeocodeRequest.newBuilder.query("paris")
+    val req = GeocodeRequest.newBuilder
+      .query("paris")
       .maxInterpretations(2)
       .woeHint(List(YahooWoeType.ADMIN1))
       .result
@@ -573,8 +642,7 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
 
   "slug lookup works" in {
     val store = getStore
-    val parisTownRecord = store.addGeocode("Paris", Nil, 5, 6, YahooWoeType.TOWN,
-      cc="FR", slug=Some("paris-fr"))
+    val parisTownRecord = store.addGeocode("Paris", Nil, 5, 6, YahooWoeType.TOWN, cc = "FR", slug = Some("paris-fr"))
 
     val req = GeocodeRequest.newBuilder.slug("paris-fr").result
 
@@ -587,8 +655,7 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
 
   "bad slug lookup fails" in {
     val store = getStore
-    val parisTownRecord = store.addGeocode("Paris", Nil, 5, 6, YahooWoeType.TOWN,
-      cc="FR", slug = Some("paris-fr"))
+    val parisTownRecord = store.addGeocode("Paris", Nil, 5, 6, YahooWoeType.TOWN, cc = "FR", slug = Some("paris-fr"))
 
     val req = GeocodeRequest.newBuilder.slug("paris").result
 
@@ -602,18 +669,22 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
 
   "reverse geocode" in {
     val store = getStore
-    val parisTownRecord = store.addGeocode("Paris", Nil, 5, 6, YahooWoeType.TOWN, cc="FR")
+    val parisTownRecord = store.addGeocode("Paris", Nil, 5, 6, YahooWoeType.TOWN, cc = "FR")
     val parisId = getId(parisTownRecord)
     store.addGeometry(
-      new WKTReader().read("POLYGON ((1.878662109375 48.8719414772291,2.164306640625 49.14578361775004,2.779541015625 49.14578361775004,3.153076171875 48.72720881940671,2.581787109375 48.50932644976633,1.878662109375 48.8719414772291))"),
+      new WKTReader().read(
+        "POLYGON ((1.878662109375 48.8719414772291,2.164306640625 49.14578361775004,2.779541015625 49.14578361775004,3.153076171875 48.72720881940671,2.581787109375 48.50932644976633,1.878662109375 48.8719414772291))"
+      ),
       YahooWoeType.TOWN,
       parisId
     )
 
-    val nyTownRecord = store.addGeocode("New York", Nil, 5, 6, YahooWoeType.TOWN, cc="US")
+    val nyTownRecord = store.addGeocode("New York", Nil, 5, 6, YahooWoeType.TOWN, cc = "US")
     val nyId = getId(nyTownRecord)
     store.addGeometry(
-      new WKTReader().read("POLYGON ((-74.0427017211914 40.7641613153526,-73.93146514892578 40.7641613153526,-73.93146514892578 40.681679458715635,-74.0427017211914 40.681679458715635,-74.0427017211914 40.7641613153526))"),
+      new WKTReader().read(
+        "POLYGON ((-74.0427017211914 40.7641613153526,-73.93146514892578 40.7641613153526,-73.93146514892578 40.681679458715635,-74.0427017211914 40.681679458715635,-74.0427017211914 40.7641613153526))"
+      ),
       YahooWoeType.TOWN,
       nyId
     )
@@ -634,11 +705,12 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
     r.interpretations()(0).feature.nameOrNull must_== "New York"
   }
 
- "ambiguous names outside US" in {
+  "ambiguous names outside US" in {
     val store = getStore
     addSenayans(store)
 
-    val req = GeocodeRequest.newBuilder.query("Senayan")
+    val req = GeocodeRequest.newBuilder
+      .query("Senayan")
       .maxInterpretations(2)
       .debug(1)
       .result
@@ -653,11 +725,12 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
     interp2.feature.highlightedNameOrNull must_== "<b>Senayan</b>, Sumatera Utara, ID"
   }
 
- "duplicate features" in {
+  "duplicate features" in {
     val store = getStore
     addSohos(store)
 
-    val req = GeocodeRequest.newBuilder.query("Soho")
+    val req = GeocodeRequest.newBuilder
+      .query("Soho")
       .maxInterpretations(2)
       .debug(1)
       .result
@@ -672,7 +745,8 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
     val store = getStore
     addBrooklyns(store)
 
-    val req = GeocodeRequest.newBuilder.query("Brooklyn")
+    val req = GeocodeRequest.newBuilder
+      .query("Brooklyn")
       .maxInterpretations(2)
       .debug(1)
       .result
@@ -685,7 +759,8 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
   "name highlighting handles length-altering normalization" in {
     val store = getStore
     addLosAngeles(store)
-    val req = GeocodeRequest.newBuilder.query("LA")
+    val req = GeocodeRequest.newBuilder
+      .query("LA")
       .maxInterpretations(2)
       .debug(1)
       .result

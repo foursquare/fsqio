@@ -5,8 +5,15 @@ package io.fsq.rogue.adapter
 import com.mongodb.{Block, DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException}
 import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.client.{FindIterable, MongoCollection}
-import com.mongodb.client.model.{BulkWriteOptions, CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions,
-    IndexModel, UpdateOptions, WriteModel}
+import com.mongodb.client.model.{
+  BulkWriteOptions,
+  CountOptions,
+  FindOneAndDeleteOptions,
+  FindOneAndUpdateOptions,
+  IndexModel,
+  UpdateOptions,
+  WriteModel
+}
 import io.fsq.rogue.{Iter, Query, RogueException}
 import io.fsq.rogue.util.QueryUtilities
 import java.util.{List => JavaList}
@@ -16,7 +23,6 @@ import org.bson.conversions.Bson
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
-
 
 object BlockingResult {
   trait Implicits {
@@ -32,7 +38,6 @@ object BlockingResult {
 class BlockingResult[T](val value: T) {
   def unwrap: T = value
 }
-
 
 object BlockingMongoClientAdapter {
   type CollectionFactory[
@@ -58,9 +63,10 @@ class BlockingMongoClientAdapter[
   collectionFactory: BlockingMongoClientAdapter.CollectionFactory[DocumentValue, Document, MetaRecord, Record],
   queryHelpers: QueryUtilities[BlockingResult]
 ) extends MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, BlockingResult](
-  collectionFactory,
-  queryHelpers
-) with BlockingResult.Implicits {
+    collectionFactory,
+    queryHelpers
+  )
+  with BlockingResult.Implicits {
 
   type Cursor = FindIterable[Document]
 
@@ -78,22 +84,24 @@ class BlockingMongoClientAdapter[
     try {
       upsert
     } catch {
-      case rogueException: RogueException => Option(rogueException.getCause) match {
-        case Some(_: DuplicateKeyException) => {
-          queryHelpers.logger.logCounter("rogue.adapter.upsert.DuplicateKeyException")
-          upsert
-        }
-
-        case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
-          case ErrorCategory.DUPLICATE_KEY => {
-            queryHelpers.logger.logCounter("rogue.adapter.upsert.MongoWriteException-DUPLICATE_KEY")
+      case rogueException: RogueException =>
+        Option(rogueException.getCause) match {
+          case Some(_: DuplicateKeyException) => {
+            queryHelpers.logger.logCounter("rogue.adapter.upsert.DuplicateKeyException")
             upsert
           }
-          case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw rogueException
-        }
 
-        case _ => throw rogueException
-      }
+          case Some(mwe: MongoWriteException) =>
+            mwe.getError.getCategory match {
+              case ErrorCategory.DUPLICATE_KEY => {
+                queryHelpers.logger.logCounter("rogue.adapter.upsert.MongoWriteException-DUPLICATE_KEY")
+                upsert
+              }
+              case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw rogueException
+            }
+
+          case _ => throw rogueException
+        }
     }
   }
 
@@ -177,13 +185,14 @@ class BlockingMongoClientAdapter[
     while (continue) {
       if (iterator.hasNext) {
         Try(deserializer(iterator.next())) match {
-          case Success(record) => handler(iterState, Iter.Item(record)) match {
-            case Iter.Continue(newIterState) => iterState = newIterState
-            case Iter.Return(finalState) => {
-              iterState = finalState
-              continue = false
+          case Success(record) =>
+            handler(iterState, Iter.Item(record)) match {
+              case Iter.Continue(newIterState) => iterState = newIterState
+              case Iter.Return(finalState) => {
+                iterState = finalState
+                continue = false
+              }
             }
-          }
           case Failure(exception: Exception) => {
             iterState = handler(iterState, Iter.Error(exception)).state
             continue = false
@@ -226,13 +235,14 @@ class BlockingMongoClientAdapter[
           iterState = handler(iterState, Iter.EOF).state
           continue = false
         }
-        case Success(records) => handler(iterState, Iter.Item(records)) match {
-          case Iter.Continue(newIterState) => iterState = newIterState
-          case Iter.Return(finalState) => {
-            iterState = finalState
-            continue = false
+        case Success(records) =>
+          handler(iterState, Iter.Item(records)) match {
+            case Iter.Continue(newIterState) => iterState = newIterState
+            case Iter.Return(finalState) => {
+              iterState = finalState
+              continue = false
+            }
           }
-        }
         case Failure(exception: Exception) => {
           iterState = handler(iterState, Iter.Error(exception)).state
           continue = false

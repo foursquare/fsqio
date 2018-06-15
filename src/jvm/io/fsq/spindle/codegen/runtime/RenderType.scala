@@ -41,12 +41,12 @@ trait RenderType {
 }
 
 case class PrimitiveRenderType(
-    override val text: String,
-    override val javaText: String,
-    override val boxedText: String,
-    override val defaultText: String,
-    override val javaDefaultText: String,
-    override val ttype: TType
+  override val text: String,
+  override val javaText: String,
+  override val boxedText: String,
+  override val defaultText: String,
+  override val javaDefaultText: String,
+  override val ttype: TType
 ) extends RenderType {
   val tprotocolSuffix = ttype match {
     case TType.BOOL => "Bool"
@@ -166,7 +166,6 @@ case class ExceptionRenderType(override val text: String) extends RefRenderType 
   override def isRecord: Boolean = true
 }
 
-
 case class ThriftJsonRenderType(ref: RenderType) extends RefRenderType with EnhancedRenderType {
   override def text: String = "net.liftweb.json.JObject"
   override def javaText: String = "net.liftweb.json.JsonAST.JObject"
@@ -201,11 +200,12 @@ abstract class Container1RenderType(
 }
 
 // TODO: Make this immutable.Seq
-case class SeqRenderType(e1: RenderType) extends Container1RenderType(
-  "scala.collection.Seq",
-  "scala.collection.immutable.Vector",
-  e1
-) {
+case class SeqRenderType(e1: RenderType)
+  extends Container1RenderType(
+    "scala.collection.Seq",
+    "scala.collection.immutable.Vector",
+    e1
+  ) {
   override def ttype: TType = TType.LIST
   override def compareTemplate: String = "compare/seq.ssp"
   override def fieldWriteTemplate: String = "write/seq.ssp"
@@ -214,8 +214,8 @@ case class SeqRenderType(e1: RenderType) extends Container1RenderType(
   override val renderValueSupported = e1.renderValueSupported
   override def renderValue(v: String) = try {
     if (renderValueSupported) {
-      val to = v.size-2
-      val withoutParens = v.slice(1, v.size-1)
+      val to = v.size - 2
+      val withoutParens = v.slice(1, v.size - 1)
       val values = withoutParens.split("\\s*,\\s*")
       Some("List(%s)".format(values.flatMap(v => e1.renderValue(v)).mkString(", ")))
     } else None
@@ -227,11 +227,12 @@ case class SeqRenderType(e1: RenderType) extends Container1RenderType(
   }
 }
 
-case class SetRenderType(e1: RenderType) extends Container1RenderType(
-  "scala.collection.immutable.Set",
-  "scala.collection.immutable.Set",
-  e1
-) {
+case class SetRenderType(e1: RenderType)
+  extends Container1RenderType(
+    "scala.collection.immutable.Set",
+    "scala.collection.immutable.Set",
+    e1
+  ) {
   override def ttype: TType = TType.SET
   override def compareTemplate: String = "compare/set.ssp"
   override def fieldWriteTemplate: String = "write/set.ssp"
@@ -239,14 +240,16 @@ case class SetRenderType(e1: RenderType) extends Container1RenderType(
   override def underlying: SetRenderType = SetRenderType(e1.underlying)
 }
 
-abstract class Container2RenderType(override val container: String, val elem1: RenderType, val elem2: RenderType) extends ContainerRenderType {
+abstract class Container2RenderType(override val container: String, val elem1: RenderType, val elem2: RenderType)
+  extends ContainerRenderType {
   override def text: String = "%s[%s, %s]".format(container, elem1.text, elem2.text)
   override def javaText: String = "%s<%s, %s>".format(container, elem1.javaContainerText, elem2.javaContainerText)
   override def javaTypeParameters: Seq[RenderType] = elem1.javaTypeParameters ++ elem2.javaTypeParameters
   override def javaUnderlying: String = "%s<%s, %s>".format(container, elem1.javaUnderlying, elem2.javaUnderlying)
 }
 
-case class MapRenderType(e1: RenderType, e2: RenderType) extends Container2RenderType("scala.collection.immutable.Map", e1, e2) {
+case class MapRenderType(e1: RenderType, e2: RenderType)
+  extends Container2RenderType("scala.collection.immutable.Map", e1, e2) {
   override def ttype: TType = TType.MAP
   override def compareTemplate: String = "compare/map.ssp"
   override def fieldWriteTemplate: String = "write/map.ssp"
@@ -255,13 +258,14 @@ case class MapRenderType(e1: RenderType, e2: RenderType) extends Container2Rende
   override val renderValueSupported = e1.renderValueSupported && e2.renderValueSupported
   override def renderValue(v: String) = try {
     if (renderValueSupported) {
-      val withoutParens = v.slice(1, v.size-1)
+      val withoutParens = v.slice(1, v.size - 1)
       val tuples = withoutParens.split("\\s*,\\s*").map(_.split("\\s*:\\s*"))
-      val formatted = tuples.flatMap{case Array(k,v) =>
-        (e1.renderValue(k), e2.renderValue(v)) match {
-          case (Some(rk), Some(rv)) => Some("%s->%s".format(rk,rv))
-          case _ => None
-        }
+      val formatted = tuples.flatMap {
+        case Array(k, v) =>
+          (e1.renderValue(k), e2.renderValue(v)) match {
+            case (Some(rk), Some(rv)) => Some("%s->%s".format(rk, rv))
+            case _ => None
+          }
       }
       Some("Map(%s)".format(formatted.mkString(", ")))
     } else None
@@ -374,7 +378,9 @@ case class DateTimeRenderType(ref: RenderType) extends RefRenderType with Enhanc
 
 // TODO: Ideally this takes and hands out an S2CellId instead of a Long, but
 // the ship has probably sailed on that.
-class S2CellIdRenderType extends PrimitiveRenderType("Long", "long", "java.lang.Long", "0L", "0", TType.I64) with EnhancedRenderType {
+class S2CellIdRenderType
+  extends PrimitiveRenderType("Long", "long", "java.lang.Long", "0L", "0", TType.I64)
+  with EnhancedRenderType {
   override def fieldDefTemplate: String = "field/def_s2cellid.ssp"
   override def fieldImplTemplate: String = "field/impl_s2cellid.ssp"
   override def fieldProxyTemplate: String = "field/proxy_s2cellid.ssp"
@@ -422,9 +428,9 @@ case class TypesafeIdRenderType(className: String, ref: RenderType) extends RefR
 }
 
 case class BitfieldStructRenderType(
-    className: String,
-    ref: RenderType,
-    hasSetBits: Boolean
+  className: String,
+  ref: RenderType,
+  hasSetBits: Boolean
 ) extends RenderType {
   override def boxedText: String = ref.boxedText
   override def text: String = ref.text
@@ -452,7 +458,8 @@ case class BitfieldStructRenderType(
     case (true, TType.I64) => "io.fsq.spindle.runtime.BitFieldHelpers.longBitFieldToStruct"
     case (false, TType.I32) => "io.fsq.spindle.runtime.BitFieldHelpers.bitFieldToStructNoSetBits"
     case (false, TType.I64) => "io.fsq.spindle.runtime.BitFieldHelpers.longBitFieldToStructNoSetBits"
-    case _ => throw new IllegalArgumentException("Unsupported bitfield type: " + ref.ttype + " with hasSetBits: " + hasSetBits)
+    case _ =>
+      throw new IllegalArgumentException("Unsupported bitfield type: " + ref.ttype + " with hasSetBits: " + hasSetBits)
   }
 
   val bitfieldWrite = (hasSetBits, ref.ttype) match {
@@ -460,7 +467,8 @@ case class BitfieldStructRenderType(
     case (true, TType.I64) => "io.fsq.spindle.runtime.BitFieldHelpers.structToLongBitField"
     case (false, TType.I32) => "io.fsq.spindle.runtime.BitFieldHelpers.structToBitFieldNoSetBits"
     case (false, TType.I64) => "io.fsq.spindle.runtime.BitFieldHelpers.structToLongBitFieldNoSetBits"
-    case _ => throw new IllegalArgumentException("Unsupported bitfield type: " + ref.ttype + " with hasSetBits: " + hasSetBits)
+    case _ =>
+      throw new IllegalArgumentException("Unsupported bitfield type: " + ref.ttype + " with hasSetBits: " + hasSetBits)
   }
 }
 
@@ -482,10 +490,11 @@ object RenderType {
       case ListRef(elem) => SeqRenderType(RenderType(elem, annotations))
       case SetRef(elem) => SetRenderType(RenderType(elem, annotations))
       case MapRef(key, value) => MapRenderType(RenderType(key, annotations), RenderType(value, annotations))
-      case EnumRef(name) => annotations.get("serialize_as") match {
-        case Some("string") => EnumStringRenderType(name)
-        case _ => EnumIntRenderType(name)
-      }
+      case EnumRef(name) =>
+        annotations.get("serialize_as") match {
+          case Some("string") => EnumStringRenderType(name)
+          case _ => EnumIntRenderType(name)
+        }
       case StructRef(name) => StructRenderType(name)
       case UnionRef(name) => StructRenderType(name)
       case ExceptionRef(name) => ExceptionRenderType(name)
@@ -499,11 +508,13 @@ object RenderType {
       case EnhancedTypeRef("java:Date", ref @ StringRef) => JavaDateRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("java:UUID", ref @ BinaryRef) => UUIDRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("fs:DollarAmount", ref @ I64Ref) => DollarAmountRenderType(RenderType(ref, annotations))
-      case EnhancedTypeRef(JsonEnhancedType(suffix), ref @ StringRef) => ThriftJsonRenderType(RenderType(ref, annotations))
+      case EnhancedTypeRef(JsonEnhancedType(suffix), ref @ StringRef) =>
+        ThriftJsonRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("fs:MessageSet", ref: StructRef) => MessageSetRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("fs:S2CellId", _) => new S2CellIdRenderType
       case EnhancedTypeRef(name, _) => throw new CodegenException("Unknown enhanced type: " + name)
-      case BitfieldRef(name, bitType, hasSetBits) => BitfieldStructRenderType(name, RenderType(bitType, annotations), hasSetBits)
+      case BitfieldRef(name, bitType, hasSetBits) =>
+        BitfieldStructRenderType(name, RenderType(bitType, annotations), hasSetBits)
     }
   }
 }

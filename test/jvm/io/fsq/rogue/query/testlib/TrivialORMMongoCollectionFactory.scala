@@ -10,16 +10,15 @@ import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
 import org.bson.Document
 import org.bson.codecs.configuration.CodecRegistry
 
-
 class TrivialORMMongoCollectionFactory[MongoClient, MongoDatabase, MongoCollection[_]](
   clientManager: MongoClientManager[MongoClient, MongoDatabase, MongoCollection]
 ) extends MongoCollectionFactory[
-  MongoCollection,
-  Object,
-  Document,
-  TrivialORMMetaRecord[_],
-  TrivialORMRecord
-] {
+    MongoCollection,
+    Object,
+    Document,
+    TrivialORMMetaRecord[_],
+    TrivialORMRecord
+  ] {
 
   override def documentClass: Class[Document] = classOf[Document]
 

@@ -24,7 +24,11 @@ class OutcomeTest {
       case _ => A.fail("Sucess.toOption was not a Some")
     }
 
-    x.fold({ v => A.assertEquals(value, v) }, { v => A.fail("Success.fold must not invoke onFailure") })
+    x.fold({ v =>
+      A.assertEquals(value, v)
+    }, { v =>
+      A.fail("Success.fold must not invoke onFailure")
+    })
 
     A.assertTrue(x.exists(_ == value))
     A.assertFalse(x.exists(_ == (value + value)))
@@ -36,7 +40,9 @@ class OutcomeTest {
     A.assertEquals(Success(value.length), x.flatMap(v => Success(v.length)))
 
     var i = 0
-    x.foreach { v => i = v.length }
+    x.foreach { v =>
+      i = v.length
+    }
     A.assertEquals(value.length, i)
 
     A.assertEquals(Success("foo"), x.rescue(x => Success(x + "bar")))
@@ -64,7 +70,11 @@ class OutcomeTest {
       case _ => A.fail("Failure.toOption was not a None")
     }
 
-    x.fold({ v => A.fail("Failure.fold must not invoke onSuccess") }, { v => A.assertEquals(value, v) })
+    x.fold({ v =>
+      A.fail("Failure.fold must not invoke onSuccess")
+    }, { v =>
+      A.assertEquals(value, v)
+    })
 
     A.assertFalse(x.exists(_ == value))
     A.assertFalse(x.exists(_ == (value + value)))
@@ -74,7 +84,9 @@ class OutcomeTest {
 
     A.assertEquals(x, x.map(_.length))
     A.assertEquals(x, x.flatMap(v => Success(v.length)))
-    x.foreach { x => A.fail("Failure.foreach must not invoke the closure") }
+    x.foreach { x =>
+      A.fail("Failure.foreach must not invoke the closure")
+    }
 
     A.assertEquals(Success("foobar"), x.rescue(x => Success(x + "bar")))
     A.assertEquals(Failure("foobar"), x.rescue(x => Failure(x + "bar")))
@@ -102,7 +114,9 @@ class OutcomeTest {
 
     A.assertTrue(classOf[FailureProjection[String, Int]].isAssignableFrom(sp.map(_.length).getClass))
     A.assertTrue(sp.flatMap(v => Some(v.length)).isEmpty)
-    sp.foreach { x => A.fail("FailureProject(Success).foreach must not invoke the closure") }
+    sp.foreach { x =>
+      A.fail("FailureProject(Success).foreach must not invoke the closure")
+    }
   }
 
   @Test
@@ -130,7 +144,9 @@ class OutcomeTest {
     A.assertEquals(Some(value.length), fp.flatMap(v => Some(v.length)))
 
     var i = 0
-    fp.foreach { v => i = v.length }
+    fp.foreach { v =>
+      i = v.length
+    }
     A.assertEquals(value.length, i)
   }
 

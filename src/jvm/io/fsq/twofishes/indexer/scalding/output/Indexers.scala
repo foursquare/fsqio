@@ -44,7 +44,8 @@ object PrefixIndexer {
         Map(
           "MAX_PREFIX_LENGTH" -> io.fsq.twofishes.indexer.output.PrefixIndexer.MaxPrefixLength.toString,
           "MAX_FIDS_PER_PREFIX" -> io.fsq.twofishes.indexer.output.PrefixIndexer.MaxFidsToStorePerPrefix.toString
-        )),
+        )
+      ),
       processor = NameIndexer.processor
     ).writeIndex()
   }
@@ -117,7 +118,8 @@ object S2CoveringIndexer {
           "minS2Level" -> S2CoveringConstants.minS2LevelForS2Covering.toString,
           "maxS2Level" -> S2CoveringConstants.maxS2LevelForS2Covering.toString,
           "levelMod" -> S2CoveringConstants.defaultLevelModForS2Covering.toString
-        )),
+        )
+      ),
       processor = processor
     ).writeIndex()
   }
@@ -144,7 +146,8 @@ object S2InteriorIndexer {
           "minS2Level" -> S2CoveringConstants.minS2LevelForS2Covering.toString,
           "maxS2Level" -> S2CoveringConstants.maxS2LevelForS2Covering.toString,
           "levelMod" -> S2CoveringConstants.defaultLevelModForS2Covering.toString
-        )),
+        )
+      ),
       processor = processor
     ).writeIndex()
   }
@@ -168,7 +171,8 @@ object RevGeoIndexer {
           "minS2Level" -> RevGeoConstants.minS2LevelForRevGeo.toString,
           "maxS2Level" -> RevGeoConstants.maxS2LevelForRevGeo.toString,
           "levelMod" -> RevGeoConstants.defaultLevelModForRevGeo.toString
-        )),
+        )
+      ),
       processor = processor
     ).writeIndex()
   }

@@ -8,7 +8,6 @@ import scala.collection.TraversableLike
 import scala.math.max
 import scala.reflect.runtime.universe.TypeTag
 
-
 object FoursquareMatchers {
   private[matchers] class IsNone[T] extends BaseMatcher[Option[T]] {
     override def describeTo(d: Description) = d.appendText("Is not None")
@@ -54,16 +53,19 @@ object FoursquareMatchers {
         clauses += s"collection lengths differed: expected.size=${expected.size}, actual.size=${actual.size}"
       }
       var numTotalDifferent = 0
-      expected.zip(actual).zipWithIndex.foreach({
-        case ((e, a), i) => {
-          if (e !=? a) {
-            numTotalDifferent += 1
-            if (numTotalDifferent <= MaxElementsToDisplay) {
-              clauses += s"element at index ${i} differed: expected=${e}, actual=${a}"
+      expected
+        .zip(actual)
+        .zipWithIndex
+        .foreach({
+          case ((e, a), i) => {
+            if (e !=? a) {
+              numTotalDifferent += 1
+              if (numTotalDifferent <= MaxElementsToDisplay) {
+                clauses += s"element at index ${i} differed: expected=${e}, actual=${a}"
+              }
             }
           }
-        }
-      })
+        })
       val extraElementsThatWereDifferent = max(0, numTotalDifferent - MaxElementsToDisplay)
       if (extraElementsThatWereDifferent > 0) {
         clauses += s"${extraElementsThatWereDifferent} additional elements differed"
@@ -76,14 +78,14 @@ object FoursquareMatchers {
   }
 
   /**
-   * Hamcrest matcher that asserts a given Scala collection is equal to the provided collection,
-   * and provides helpful error messages.
-   *
-   * Examples:
-   *   assertThat(List(1, 2), equalsCollection(List(1, 2))) // Pass
-   *   assertThat(List(2, 2), equalsCollection(List(1, 2))) // element at index 0 differed: expected=1, actual=2
-   *   assertThat(List(1), equalsCollection(List(1, 2))) // collection lengths differed: expected.size=2, actual.size=1
-   */
+    * Hamcrest matcher that asserts a given Scala collection is equal to the provided collection,
+    * and provides helpful error messages.
+    *
+    * Examples:
+    *   assertThat(List(1, 2), equalsCollection(List(1, 2))) // Pass
+    *   assertThat(List(2, 2), equalsCollection(List(1, 2))) // element at index 0 differed: expected=1, actual=2
+    *   assertThat(List(1), equalsCollection(List(1, 2))) // collection lengths differed: expected.size=2, actual.size=1
+    */
   def equalsCollection[A](expected: Iterable[A]): Matcher[Iterable[A]] = {
     new EqualsCollection(expected)
   }
@@ -131,4 +133,3 @@ object FoursquareMatchers {
     }
   }
 }
-

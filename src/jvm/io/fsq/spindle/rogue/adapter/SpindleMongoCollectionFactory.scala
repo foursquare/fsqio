@@ -16,7 +16,6 @@ import org.bson.codecs.configuration.CodecRegistry
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.collection.concurrent.{Map => ConcurrentMap}
 
-
 class SpindleMongoCollectionFactory[
   MongoClient,
   MongoDatabase,
@@ -24,12 +23,12 @@ class SpindleMongoCollectionFactory[
 ](
   clientManager: MongoClientManager[MongoClient, MongoDatabase, MongoCollection]
 ) extends MongoCollectionFactory[
-  MongoCollection,
-  Object,
-  BasicDBObject,
-  UntypedMetaRecord,
-  UntypedRecord
-] {
+    MongoCollection,
+    Object,
+    BasicDBObject,
+    UntypedMetaRecord,
+    UntypedRecord
+  ] {
 
   private val indexCache: ConcurrentMap[UntypedMetaRecord, Option[Seq[UntypedMongoIndex]]] = {
     new ConcurrentHashMap[UntypedMetaRecord, Option[Seq[UntypedMongoIndex]]].asScala
@@ -122,19 +121,25 @@ class SpindleMongoCollectionFactory[
   }
 
   override def getIndexes(meta: UntypedMetaRecord): Option[Seq[UntypedMongoIndex]] = {
-    indexCache.getOrElseUpdate(meta, {
-      IndexParser.parse(meta.annotations).right.toOption.map(indexes => {
-        for (index <- indexes) yield {
-          val indexEntries = index.map(entry => {
-            val wireName = fieldNameToWireName(meta, entry.fieldName.split('.')).getOrElse(
-              throw new Exception(s"Struct $meta declares an index on non-existent field ${entry.fieldName}")
-            )
-            (wireName, TryO.toInt(entry.indexType).getOrElse(entry.indexType))
-          })
+    indexCache.getOrElseUpdate(
+      meta, {
+        IndexParser
+          .parse(meta.annotations)
+          .right
+          .toOption
+          .map(indexes => {
+            for (index <- indexes) yield {
+              val indexEntries = index.map(entry => {
+                val wireName = fieldNameToWireName(meta, entry.fieldName.split('.')).getOrElse(
+                  throw new Exception(s"Struct $meta declares an index on non-existent field ${entry.fieldName}")
+                )
+                (wireName, TryO.toInt(entry.indexType).getOrElse(entry.indexType))
+              })
 
-          DefaultUntypedMongoIndex(indexEntries)
-        }
-      })
-    })
+              DefaultUntypedMongoIndex(indexEntries)
+            }
+          })
+      }
+    )
   }
 }

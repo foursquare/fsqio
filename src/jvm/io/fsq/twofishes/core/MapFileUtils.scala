@@ -8,8 +8,11 @@ import org.apache.hadoop.io.{BytesWritable, MapFile, SequenceFile, Text, Writabl
 import org.apache.hadoop.util.Options
 import scala.collection.JavaConverters._
 
-class MemoryMappedSequenceFileReader(conf: Configuration, val shouldPreload: Boolean, options: SequenceFile.Reader.Option*)
-    extends SequenceFile.Reader(conf, options: _*) {
+class MemoryMappedSequenceFileReader(
+  conf: Configuration,
+  val shouldPreload: Boolean,
+  options: SequenceFile.Reader.Option*
+) extends SequenceFile.Reader(conf, options: _*) {
 
   override protected def openFile(fs: FileSystem, path: Path, bufferSize: Int, length: Long): FSDataInputStream = {
     assert(fs.isInstanceOf[LocalFileSystem])
@@ -34,12 +37,16 @@ class MemoryMappedSequenceFileReader(conf: Configuration, val shouldPreload: Boo
   * would run and overwrite it to None. Jorge suggested this workaround for
   * that problem.
   */
-class MemoryMappedMapFileReader(val path: Path, val conf: Configuration, val shouldPreload: Boolean)
-    extends { private var metadataOpt: Option[SequenceFile.Metadata] = None } with MapFileConcurrentReader(path, conf) {
+class MemoryMappedMapFileReader(val path: Path, val conf: Configuration, val shouldPreload: Boolean) extends {
+  private var metadataOpt: Option[SequenceFile.Metadata] = None
+} with MapFileConcurrentReader(path, conf) {
 
   // Called by the parent's ctor.
   override protected def createDataFileReader(
-      dataFile: Path, conf: Configuration, options: SequenceFile.Reader.Option*): SequenceFile.Reader = {
+    dataFile: Path,
+    conf: Configuration,
+    options: SequenceFile.Reader.Option*
+  ): SequenceFile.Reader = {
     val newOptions = Options.prependOptions(options.toArray, SequenceFile.Reader.file(dataFile))
     val dataReader = new MemoryMappedSequenceFileReader(conf, shouldPreload, newOptions: _*)
     metadataOpt = Some(dataReader.getMetadata)
@@ -51,8 +58,10 @@ class MemoryMappedMapFileReader(val path: Path, val conf: Configuration, val sho
 }
 
 object MapFileUtils {
-  def readerAndInfoFromLocalPath(path: String, shouldPreload: Boolean):
-    (MapFileConcurrentReader, Map[String, String]) = {
+  def readerAndInfoFromLocalPath(
+    path: String,
+    shouldPreload: Boolean
+  ): (MapFileConcurrentReader, Map[String, String]) = {
     val fs = new LocalFileSystem
     val conf = new Configuration
     fs.initialize(URI.create("file:///"), conf)
@@ -72,16 +81,17 @@ object MapFileUtils {
     indexInterval: Int = 1,
     compress: Boolean = false,
     keyComparator: WritableComparator,
-    valueClass: Class[V])
+    valueClass: Class[V]
+  )
 
-  val DefaultByteKeyValueWriteOptions = WriteOptions[BytesWritable](
-    keyComparator = new BytesWritable.Comparator,
-    valueClass = classOf[BytesWritable])
+  val DefaultByteKeyValueWriteOptions =
+    WriteOptions[BytesWritable](keyComparator = new BytesWritable.Comparator, valueClass = classOf[BytesWritable])
 
   def writerToLocalPath(
-      path: String,
-      info: Map[String, String],
-      writeOptions: WriteOptions[_] = DefaultByteKeyValueWriteOptions): MapFile.Writer = {
+    path: String,
+    info: Map[String, String],
+    writeOptions: WriteOptions[_] = DefaultByteKeyValueWriteOptions
+  ): MapFile.Writer = {
     val fs = new LocalFileSystem
     val conf = new Configuration
     fs.initialize(URI.create("file:///"), conf)
@@ -91,8 +101,7 @@ object MapFileUtils {
       dir.mkdirs
       assert(dir.exists && dir.isDirectory)
     } else {
-      throw new RuntimeException(
-        "%s exists, will not overwrite it to create a MapFile.".format(dir))
+      throw new RuntimeException("%s exists, will not overwrite it to create a MapFile.".format(dir))
     }
 
     val infoMetadata = new SequenceFile.Metadata()
@@ -104,8 +113,10 @@ object MapFileUtils {
       MapFile.Writer.comparator(writeOptions.keyComparator),
       MapFile.Writer.valueClass(writeOptions.valueClass),
       MapFile.Writer.compression(
-        if (writeOptions.compress) SequenceFile.CompressionType.BLOCK else SequenceFile.CompressionType.NONE),
-      SequenceFile.Writer.metadata(infoMetadata))
+        if (writeOptions.compress) SequenceFile.CompressionType.BLOCK else SequenceFile.CompressionType.NONE
+      ),
+      SequenceFile.Writer.metadata(infoMetadata)
+    )
 
     writer.setIndexInterval(writeOptions.indexInterval)
 

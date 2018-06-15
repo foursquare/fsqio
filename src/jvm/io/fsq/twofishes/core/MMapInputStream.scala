@@ -37,7 +37,7 @@ class ByteBufferReader(val buf: ByteBuffer) {
   * covers to be faster. All methods are thread-safe and can be used by
   * multiple MMapInputStream's so we can have multiple readers hitting the same
   * input stream, sharing the same mmap'd memory. */
-class MMapInputStreamImpl(filename: String, mmapChunkSize: Int = 64*1024) {
+class MMapInputStreamImpl(filename: String, mmapChunkSize: Int = 64 * 1024) {
   val (fileChannel, readers, fileSize) = {
     val file: File = new File(filename)
     val fileChannel: FileChannel = (new FileInputStream(file)).getChannel
@@ -45,9 +45,12 @@ class MMapInputStreamImpl(filename: String, mmapChunkSize: Int = 64*1024) {
     // Chunk the file into blocks. This is 1), because FileChannel.map only
     // allows a max length of 2G so we have to chunk into something and 2), so
     // we can have finer-grained locks with less contention.
-    val byteBuffers = (0L to fileSize by mmapChunkSize).map((offset: Long) =>
-      fileChannel.map(FileChannel.MapMode.READ_ONLY, offset, math.min(mmapChunkSize, fileSize - offset))
-    ).toArray
+    val byteBuffers = (0L to fileSize by mmapChunkSize)
+      .map(
+        (offset: Long) =>
+          fileChannel.map(FileChannel.MapMode.READ_ONLY, offset, math.min(mmapChunkSize, fileSize - offset))
+      )
+      .toArray
     val readers = byteBuffers.map(bb => new ByteBufferReader(bb))
     (fileChannel, readers, fileSize)
   }
@@ -103,11 +106,13 @@ object MMapInputStreamImpl {
   var streams: Map[String, MMapInputStreamImpl] = Map.empty
 
   def findOrOpen(filename: String) = synchronized {
-    streams.get(filename).getOrElse({
-      val ret = new MMapInputStreamImpl(filename)
-      streams = streams.updated(filename, ret)
-      ret
-    })
+    streams
+      .get(filename)
+      .getOrElse({
+        val ret = new MMapInputStreamImpl(filename)
+        streams = streams.updated(filename, ret)
+        ret
+      })
   }
 }
 

@@ -7,7 +7,6 @@ import io.fsq.common.testing.matchers.{FoursquareMatchers => FM}
 import org.junit.{Assert => A, Test}
 import scala.util.matching.Regex
 
-
 class FoursquareMatchersTest {
   def anyAssert: PartialFunction[Throwable, Boolean] = { case e: AssertionError => true }
   def assertWithMessage(r: Regex): PartialFunction[Throwable, Boolean] = {

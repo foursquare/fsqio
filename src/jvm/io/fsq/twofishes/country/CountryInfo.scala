@@ -5,25 +5,9 @@ package io.fsq.twofishes.country
 import scala.io.BufferedSource
 
 object CountryInfoFields extends Enumeration {
-  val ISO2,
-      ISO3,
-      ISO_NUMERIC,
-      FIPS,
-      ENGLISH_NAME,
-      CAPITAL,
-      AREA_SQ_KM,
-      POPULATION,
-      CONTINENT,
-      TLD,
-      CURRENCY_CODE,
-      CURRENCY_NAME,
-      PHONE,
-      POSTAL_CODE_FORMAT,
-      POSTAL_CODE_REGEX,
-      LANGUAGES,
-      GEONAMEID,
-      NEIGHBOURS,
-      EQUIVALENT_FIPS_CODE = Value
+  val ISO2, ISO3, ISO_NUMERIC, FIPS, ENGLISH_NAME, CAPITAL, AREA_SQ_KM, POPULATION, CONTINENT, TLD, CURRENCY_CODE,
+    CURRENCY_NAME, PHONE, POSTAL_CODE_FORMAT, POSTAL_CODE_REGEX, LANGUAGES, GEONAMEID, NEIGHBOURS,
+    EQUIVALENT_FIPS_CODE = Value
 }
 
 object CountryNames {
@@ -75,7 +59,9 @@ object CountryInfo {
   import CountryInfoFields._
 
   def tryToInt(s: String): Option[Int] = {
-    try { Some(s.toInt) } catch { case e: java.lang.NumberFormatException => None }
+    try {
+      Some(s.toInt)
+    } catch { case e: java.lang.NumberFormatException => None }
   }
 
   val englishNameOverrides = Map(
@@ -84,32 +70,37 @@ object CountryInfo {
   )
 
   val countryLines = new BufferedSource(getClass.getResourceAsStream("/io/fsq/twofishes/country/data/countryInfo.txt")).getLines
-  val countryInfos = countryLines.filterNot(l => l.startsWith("#") || l.isEmpty).toList.flatMap(l => {
-    val parts = l.split("\t")
-    try {
-      Some(CountryInfo(
-        iso2=parts(ISO2.id),
-        iso3=parts(ISO3.id),
-        isoNumeric=parts(ISO_NUMERIC.id).toInt,
-        fips=parts(FIPS.id),
-        englishName=englishNameOverrides.get(parts(ISO2.id)).getOrElse(parts(ENGLISH_NAME.id)),
-        languages=parts(LANGUAGES.id).split(",").toList,
-        geonameid=tryToInt(parts(GEONAMEID.id)),
-        tld=parts(TLD.id),
-        population=parts(POPULATION.id).toInt,
-        continent=parts(CONTINENT.id),
-        currencyCode=parts(CURRENCY_CODE.id),
-        currencyName=parts(CURRENCY_NAME.id),
-        neighbors=parts.lift(NEIGHBOURS.id).getOrElse("").split(",").toList,
-        postalCodeRegexString=parts(POSTAL_CODE_REGEX.id),
-        phonePrefix=parts(PHONE.id),
-        capital=parts(CAPITAL.id),
-        areaSqKm=tryToInt(parts(AREA_SQ_KM.id))
-      ))
-    } catch {
-      case e: Exception => throw new Exception(s"failed to parse line $l", e)
-    }
-  })
+  val countryInfos = countryLines
+    .filterNot(l => l.startsWith("#") || l.isEmpty)
+    .toList
+    .flatMap(l => {
+      val parts = l.split("\t")
+      try {
+        Some(
+          CountryInfo(
+            iso2 = parts(ISO2.id),
+            iso3 = parts(ISO3.id),
+            isoNumeric = parts(ISO_NUMERIC.id).toInt,
+            fips = parts(FIPS.id),
+            englishName = englishNameOverrides.get(parts(ISO2.id)).getOrElse(parts(ENGLISH_NAME.id)),
+            languages = parts(LANGUAGES.id).split(",").toList,
+            geonameid = tryToInt(parts(GEONAMEID.id)),
+            tld = parts(TLD.id),
+            population = parts(POPULATION.id).toInt,
+            continent = parts(CONTINENT.id),
+            currencyCode = parts(CURRENCY_CODE.id),
+            currencyName = parts(CURRENCY_NAME.id),
+            neighbors = parts.lift(NEIGHBOURS.id).getOrElse("").split(",").toList,
+            postalCodeRegexString = parts(POSTAL_CODE_REGEX.id),
+            phonePrefix = parts(PHONE.id),
+            capital = parts(CAPITAL.id),
+            areaSqKm = tryToInt(parts(AREA_SQ_KM.id))
+          )
+        )
+      } catch {
+        case e: Exception => throw new Exception(s"failed to parse line $l", e)
+      }
+    })
 
   private val countryInfoMap = countryInfos.map(ci => (ci.iso2, ci)).toMap
   private val countryInfoMapByISO3 = countryInfos.map(ci => (ci.iso3, ci)).toMap
@@ -118,7 +109,7 @@ object CountryInfo {
     "FX" -> "FR", // "metropolitan france"
     "KO-" -> "XK", // Kosovo
     "CYN" -> "CY", // Northern Cyprus
-    "AP" -> "XX",  // Officially reserved (Asia/Pacific or African Regional Industrial Property Organization)
+    "AP" -> "XX", // Officially reserved (Asia/Pacific or African Regional Industrial Property Organization)
     "NQ" -> "AQ", // Merged into Antarctica (AQ, ATA, 010)
     "JT" -> "UM", // Merged into United States Minor Outlying Islands (UM, UMI, 581)
     "MI" -> "UM", // Merged into United States Minor Outlying Islands (UM, UMI, 581)

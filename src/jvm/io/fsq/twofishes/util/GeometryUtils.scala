@@ -39,13 +39,15 @@ object GeometryUtils extends RevGeoConstants {
   }
 
   /**
-   * Returns an `Iterable` of cells that cover a rectangle.
-   */
-  def rectCover(topRight: (Double,Double), bottomLeft: (Double,Double),
-                minLevel: Int,
-                maxLevel: Int,
-                levelMod: Option[Int]):
-      Seq[com.google.common.geometry.S2CellId] = {
+    * Returns an `Iterable` of cells that cover a rectangle.
+    */
+  def rectCover(
+    topRight: (Double, Double),
+    bottomLeft: (Double, Double),
+    minLevel: Int,
+    maxLevel: Int,
+    levelMod: Option[Int]
+  ): Seq[com.google.common.geometry.S2CellId] = {
     val topRightPoint = S2LatLng.fromDegrees(topRight._1, topRight._2)
     val bottomLeftPoint = S2LatLng.fromDegrees(bottomLeft._1, bottomLeft._2)
 
@@ -53,12 +55,13 @@ object GeometryUtils extends RevGeoConstants {
     rectCover(rect, minLevel, maxLevel, levelMod)
   }
 
-  def rectCover(rect: S2LatLngRect,
-                minLevel: Int,
-                maxLevel: Int,
-                levelMod: Option[Int]):
-      Seq[com.google.common.geometry.S2CellId] = {
-    val coverer =  new S2RegionCoverer
+  def rectCover(
+    rect: S2LatLngRect,
+    minLevel: Int,
+    maxLevel: Int,
+    levelMod: Option[Int]
+  ): Seq[com.google.common.geometry.S2CellId] = {
+    val coverer = new S2RegionCoverer
     coverer.setMinLevel(minLevel)
     coverer.setMaxLevel(maxLevel)
     levelMod.foreach(m => coverer.setLevelMod(m))
@@ -70,8 +73,7 @@ object GeometryUtils extends RevGeoConstants {
     coveringCells.asScala
   }
 
-  def s2BoundingBoxCovering(geomCollection: Geometry,
-      minS2Level: Int, maxS2Level: Int) = {
+  def s2BoundingBoxCovering(geomCollection: Geometry, minS2Level: Int, maxS2Level: Int) = {
     val envelope = geomCollection.getEnvelopeInternal()
     rectCover(
       topRight = (envelope.getMaxY(), envelope.getMaxX()),
@@ -88,22 +90,24 @@ object GeometryUtils extends RevGeoConstants {
     }
 
     val polygons: List[S2Polygon] = (for {
-     i <- 0.until(geomCollection.getNumGeometries()).toList
-     geom = geomCollection.getGeometryN(i)
-     if (geom.isInstanceOf[Polygon])
+      i <- 0.until(geomCollection.getNumGeometries()).toList
+      geom = geomCollection.getGeometryN(i)
+      if (geom.isInstanceOf[Polygon])
     } yield {
       val poly = geom.asInstanceOf[Polygon]
       val ring = poly.getExteriorRing()
       val coords = ring.getCoordinates()
       val builder = new S2PolygonBuilder()
-      (coords ++ List(coords(0))).sliding(2).foreach(pair => {
-        val p1 = pair(0)
-        val p2 = pair(1)
-        builder.addEdge(
-          S2LatLng.fromDegrees(p1.y, p1.x).toPoint,
-          S2LatLng.fromDegrees(p2.y, p2.x).toPoint
-        )
-      })
+      (coords ++ List(coords(0)))
+        .sliding(2)
+        .foreach(pair => {
+          val p1 = pair(0)
+          val p2 = pair(1)
+          builder.addEdge(
+            S2LatLng.fromDegrees(p1.y, p1.x).toPoint,
+            S2LatLng.fromDegrees(p2.y, p2.x).toPoint
+          )
+        })
       builder.assemblePolygon()
     })
     val builder = new S2PolygonBuilder()
@@ -123,12 +127,14 @@ object GeometryUtils extends RevGeoConstants {
       val point = geomCollection.asInstanceOf[Point]
       val lat = point.getY
       val lng = point.getX
-      minS2Level.to(maxS2Level, levelMod.getOrElse(1)).map(level => {
-        GeometryUtils.getS2CellIdForLevel(lat, lng, level)
-      })
+      minS2Level
+        .to(maxS2Level, levelMod.getOrElse(1))
+        .map(level => {
+          GeometryUtils.getS2CellIdForLevel(lat, lng, level)
+        })
     } else {
       val s2poly = s2Polygon(geomCollection)
-      val coverer =  new S2RegionCoverer
+      val coverer = new S2RegionCoverer
       coverer.setMinLevel(minS2Level)
       coverer.setMaxLevel(maxS2Level)
       maxCellsHintWhichMightBeIgnored.foreach(coverer.setMaxCells)
@@ -143,16 +149,14 @@ object GeometryUtils extends RevGeoConstants {
     }
   }
 
-  def coverAtAllLevels(geomCollection: Geometry,
-      minS2Level: Int,
-      maxS2Level: Int,
-      levelMod: Option[Int] = None
-    ): Seq[S2CellId] = {
-    val initialCovering = s2PolygonCovering(geomCollection,
-      minS2Level = maxS2Level,
-      maxS2Level = maxS2Level,
-      levelMod = levelMod
-    )
+  def coverAtAllLevels(
+    geomCollection: Geometry,
+    minS2Level: Int,
+    maxS2Level: Int,
+    levelMod: Option[Int] = None
+  ): Seq[S2CellId] = {
+    val initialCovering =
+      s2PolygonCovering(geomCollection, minS2Level = maxS2Level, maxS2Level = maxS2Level, levelMod = levelMod)
 
     val allCells = Set.newBuilder[S2CellId]
     // The final set of cells will be at most all the parents of the cells in
@@ -161,17 +165,20 @@ object GeometryUtils extends RevGeoConstants {
     // http://www.wolframalpha.com/input/?i=sum+from+0+to+30+of+1%2F%284%5En%29.
     // In practice, it'll be less than that since we don't ask for all the
     // levels. But this is a reasonable upper bound.
-    allCells.sizeHint((initialCovering.size*4)/3)
+    allCells.sizeHint((initialCovering.size * 4) / 3)
 
     initialCovering.foreach(cellid => {
       val level = cellid.level()
       allCells += cellid
 
       if (level > minS2Level) {
-        level.to(minS2Level, -levelMod.getOrElse(1)).drop(1).foreach(l => {
-          val p = cellid.parent(l)
-          allCells += p
-        })
+        level
+          .to(minS2Level, -levelMod.getOrElse(1))
+          .drop(1)
+          .foreach(l => {
+            val p = cellid.parent(l)
+            allCells += p
+          })
       }
     })
 

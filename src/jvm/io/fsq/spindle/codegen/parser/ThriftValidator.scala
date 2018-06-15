@@ -30,7 +30,7 @@ class ThriftValidator(file: File) {
   def validateService(service: Service): Unit = {
     val where = "Service " + service.name
     validateDistinct(service.functions.map(_.name), "function name(s)", Some(where))
-    service.functions.foreach(function => validateFunction(function,  where))
+    service.functions.foreach(function => validateFunction(function, where))
   }
 
   def validateFunction(function: Function, _where: String): Unit = {

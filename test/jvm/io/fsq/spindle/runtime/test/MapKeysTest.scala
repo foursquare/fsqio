@@ -8,16 +8,15 @@ import io.fsq.spindle.runtime.{KnownTProtocolNames, TProtocolInfo}
 import org.apache.thrift.transport.TMemoryBuffer
 import org.junit.Test
 
-
 class MapKeysTest {
 
-  @Test(expected=classOf[NonStringMapKeyException])
+  @Test(expected = classOf[NonStringMapKeyException])
   def testBSONStringOnlyMapKeys(): Unit = {
     doTestStringOnlyMapKeys(KnownTProtocolNames.TBSONProtocol)
   }
 
-  @Test(expected=classOf[NonStringMapKeyException])
-  def testTReadableJSONStringOnlyMapKeys(): Unit =  {
+  @Test(expected = classOf[NonStringMapKeyException])
+  def testTReadableJSONStringOnlyMapKeys(): Unit = {
     doTestStringOnlyMapKeys(KnownTProtocolNames.TReadableJSONProtocol)
   }
 
@@ -30,6 +29,6 @@ class MapKeysTest {
     val protocolFactory = TProtocolInfo.getWriterFactory(tproto)
     val trans = new TMemoryBuffer(1024)
     val oprot = protocolFactory.getProtocol(trans)
-    struct.write(oprot)  // Expected to throw NonStringMapKeyException.
+    struct.write(oprot) // Expected to throw NonStringMapKeyException.
   }
 }

@@ -8,10 +8,10 @@ import scala.collection.JavaConverters._
 
 trait BulkImplHelpers {
   def makeBulkReply[T](
-      inputs: Seq[T],
-      inputFids: Map[T, Seq[StoredFeatureId]],
-      interps: Seq[GeocodeInterpretation]):
-      (Seq[Seq[Int]], Seq[GeocodeInterpretation], Seq[GeocodeFeature]) = {
+    inputs: Seq[T],
+    inputFids: Map[T, Seq[StoredFeatureId]],
+    interps: Seq[GeocodeInterpretation]
+  ): (Seq[Seq[Int]], Seq[GeocodeInterpretation], Seq[GeocodeFeature]) = {
     val inputToInputIdxes: Map[T, Seq[Int]] = inputs.zipWithIndex.groupBy(_._1).mappedValues(_.map(_._2))
 
     val inputIdxToLongFids: Map[Int, Seq[Long]] = inputFids.flatMap({

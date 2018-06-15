@@ -27,7 +27,12 @@ object ConcreteHFileReader {
   @volatile var mmapedBytes: Long = 0
   val MB = 1024 * 1024
 
-  def fromFile(file: File, hfilename: String, maximumMMappedBytes: Option[Long], trackCacheStats: Boolean): ConcreteHFileReader = {
+  def fromFile(
+    file: File,
+    hfilename: String,
+    maximumMMappedBytes: Option[Long],
+    trackCacheStats: Boolean
+  ): ConcreteHFileReader = {
 
     maximumMMappedBytes.map(m => Stats.addGauge("HFileService.TotalCollectionSizeLimit") { m.toDouble })
 
@@ -55,14 +60,15 @@ object ConcreteHFileReader {
 
     val blockReader = new BlockReader with Logger {
       override def apply(startOffset: Long, size: Long): ByteBuffer = {
-        val buffer = chunks.find(c => c.startOffset <= startOffset && c.startOffset + c.buffer.limit  >= startOffset + size)
+        val buffer = chunks
+          .find(c => c.startOffset <= startOffset && c.startOffset + c.buffer.limit >= startOffset + size)
           .map(c => {
             val buffer = c.buffer.slice
             buffer.position((startOffset - c.startOffset).toInt)
             buffer.limit((startOffset - c.startOffset + size).toInt)
             buffer.slice
           })
-          .getOrElse ({
+          .getOrElse({
             logger.info(s"offset=$startOffset, size=$size not possible for chunks: ${chunks.mkString}")
             channel.map(READ_ONLY, startOffset, size)
           })
@@ -80,7 +86,12 @@ object ConcreteHFileReader {
     new ConcreteHFileReader(filePath, file.length, hfilename, blockReader, trackCacheStats, true, maximumMMappedBytes)
   }
 
-  def fromFileChannel(file: File, hfilename: String, maximumMMappedBytes: Option[Long], trackCacheStats: Boolean): ConcreteHFileReader = {
+  def fromFileChannel(
+    file: File,
+    hfilename: String,
+    maximumMMappedBytes: Option[Long],
+    trackCacheStats: Boolean
+  ): ConcreteHFileReader = {
     maximumMMappedBytes.map(m => Stats.addGauge("HFileService.TotalCollectionSizeLimit") { m.toDouble })
 
     val filePath = file.getPath
@@ -141,7 +152,7 @@ object ConcreteHFileReader {
         val arr = input.slice(start.toInt, (start + length).toInt)
         ByteBuffer.wrap(arr, 0, arr.length)
       }
-      override def close(): Unit = { }
+      override def close(): Unit = {}
     }
     new ConcreteHFileReader(name, input.length, "bytes", blockReader, false, false, None)
   }
@@ -149,7 +160,13 @@ object ConcreteHFileReader {
   //Work around for S3 before 2.8.1 see https://issues.apache.org/jira/browse/HADOOP-11694
   //code inspired from https://issues.apache.org/jira/browse/HADOOP-11694
   //TODO: remove after Amazon upgrades Hadoop
-  def readFullyWorkAround (stream: FSDataInputStream, position: Long, buffer: Array[Byte], offset: Int, length: Int): Unit =
+  def readFullyWorkAround(
+    stream: FSDataInputStream,
+    position: Long,
+    buffer: Array[Byte],
+    offset: Int,
+    length: Int
+  ): Unit =
     stream.synchronized {
       var nread = 0
       stream.seek(position)
@@ -162,24 +179,27 @@ object ConcreteHFileReader {
 }
 
 class ConcreteHFileReader(
-    val filePath: String,
-    val fileLength: Long,
-    val hfilename: String,
-    blockReader: BlockReader,
-    val trackCacheStats: Boolean,
-    val canEvictPages: Boolean,
-    val maximumMMappedBytesOpt: Option[Long]) extends HFileReader with Logger {
+  val filePath: String,
+  val fileLength: Long,
+  val hfilename: String,
+  blockReader: BlockReader,
+  val trackCacheStats: Boolean,
+  val canEvictPages: Boolean,
+  val maximumMMappedBytesOpt: Option[Long]
+) extends HFileReader
+  with Logger {
   val TrailerSize = 60
   val trailerStart: Long = fileLength - TrailerSize
   val trailerBuffer: ByteBuffer = blockReader(trailerStart, TrailerSize)
 
   val version = new Version(trailerBuffer)
   val expectedMajorVersion = 1
-  val expectedMinorVersion =  0
+  val expectedMinorVersion = 0
   if (version.majorVersion != expectedMajorVersion && version.minorVersion != expectedMinorVersion)
-    throw new Exception("wrong version, got %d.%d, was expecting %d.%d.  (File path is %s)"
-      .format(version.majorVersion, version.minorVersion, expectedMajorVersion, expectedMinorVersion, filePath))
-
+    throw new Exception(
+      "wrong version, got %d.%d, was expecting %d.%d.  (File path is %s)"
+        .format(version.majorVersion, version.minorVersion, expectedMajorVersion, expectedMinorVersion, filePath)
+    )
 
   val trailer = new Trailer(trailerBuffer)
 
@@ -190,14 +210,22 @@ class ConcreteHFileReader(
     val dataIndexSize = (dataIndexEnd - trailer.dataIndexOffset).toInt
     if (dataIndexSize > 0) {
       val buffer: ByteBuffer = blockReader(trailer.dataIndexOffset, dataIndexSize)
-      new DataIndex(blockReader, buffer, dataIndexSize, trailer.dataIndexCount, trailer.compressionCodec, trailer.fileInfoOffset, trackCacheStats)
+      new DataIndex(
+        blockReader,
+        buffer,
+        dataIndexSize,
+        trailer.dataIndexCount,
+        trailer.compressionCodec,
+        trailer.fileInfoOffset,
+        trackCacheStats
+      )
     } else {
       null
     }
   }
 
   lazy val fileInfo = {
-    val fileInfoSize = trailer.dataIndexOffset-trailer.fileInfoOffset
+    val fileInfoSize = trailer.dataIndexOffset - trailer.fileInfoOffset
     val buffer: ByteBuffer = blockReader(trailer.fileInfoOffset, fileInfoSize)
     FileInfo.get(buffer)
   }
@@ -212,7 +240,6 @@ class ConcreteHFileReader(
     pb.start
   }
 
-
   def close(evict: Boolean): Unit = {
     try {
       blockReader.close
@@ -225,7 +252,9 @@ class ConcreteHFileReader(
       // vmtouch -e <hfile> to evict all pages
       if (canEvictPages && evict) {
         logger.info("evict: return code" + execProcess(s"./bin/vmtouch -m 100G -e $filePath").waitFor)
-        logger.info(s"Ejected $filePath with size $fileLength. ConcreteHFileReader.mmapedBytes = ${ConcreteHFileReader.mmapedBytes}")
+        logger.info(
+          s"Ejected $filePath with size $fileLength. ConcreteHFileReader.mmapedBytes = ${ConcreteHFileReader.mmapedBytes}"
+        )
       } else {
         logger.info(s"Not ejecting hfile blocks from memory. canEvictPages = $canEvictPages. evict = $evict")
       }
@@ -235,29 +264,36 @@ class ConcreteHFileReader(
 
   def loadIntoMemory(processIsStarting: Boolean): MsgAndSize = {
     // vmtouch -t <hfile> to load into memory
-    maximumMMappedBytesOpt.map(limit =>
-      if ((ConcreteHFileReader.mmapedBytes + fileLength) > limit) {
-        throw new Exception (s"Total mmapped memory about to exceed the limit of $limit bytes. current size = ${ConcreteHFileReader.mmapedBytes} bytes, new file = $fileLength bytes.")
-      })
+    maximumMMappedBytesOpt.map(
+      limit =>
+        if ((ConcreteHFileReader.mmapedBytes + fileLength) > limit) {
+          throw new Exception(
+            s"Total mmapped memory about to exceed the limit of $limit bytes. current size = ${ConcreteHFileReader.mmapedBytes} bytes, new file = $fileLength bytes."
+          )
+        }
+    )
 
     logger.info("touch: return code " + execProcess(s"./bin/vmtouch -m 100G -t $filePath").waitFor)
     ConcreteHFileReader.synchronized { ConcreteHFileReader.mmapedBytes += fileLength }
     // vmtouch -l <hfile> to prevent evictions
     process = Some(execProcess(s"./bin/vmtouch -m 100G -l $filePath"))
-    MsgAndSize(s"Loaded $filePath with size $fileLength. ConcreteHFileReader.mmapedBytes = ${ConcreteHFileReader.mmapedBytes}",
-      fileLength/ConcreteHFileReader.MB)
+    MsgAndSize(
+      s"Loaded $filePath with size $fileLength. ConcreteHFileReader.mmapedBytes = ${ConcreteHFileReader.mmapedBytes}",
+      fileLength / ConcreteHFileReader.MB
+    )
   }
-
 
   // get the closest dataBlock with it's firstKey <= key
   @tailrec
   final def getDataBlock(key: ByteBuffer, min: Int, max: Int, lastDataBlockIndex: Int = -1): Int = {
     if (max < min) {
-      if (lastDataBlockIndex == -1) { throw new Exception("key not found") }
+      if (lastDataBlockIndex == -1) {
+        throw new Exception("key not found")
+      }
       logger.debug("min = %d", min)
       lastDataBlockIndex
     } else {
-      val mid = min + ((max - min) / 2 )
+      val mid = min + ((max - min) / 2)
       val res = dataIndex.compareFirstKey(key, mid)
 
       if (res == 0) {
@@ -279,11 +315,13 @@ class ConcreteHFileReader(
     lastDataBlockIndex: Int = -1
   ): Int = {
     if (max < min) {
-      if (lastDataBlockIndex == -1) { throw new Exception("key not found") }
+      if (lastDataBlockIndex == -1) {
+        throw new Exception("key not found")
+      }
       logger.debug("min = %d", min)
       lastDataBlockIndex
     } else {
-      val mid = min + ((max - min) / 2 )
+      val mid = min + ((max - min) / 2)
       val res = dataIndex.compareFirstKey(splitKey, mid)
 
       if (res == 0) {
@@ -306,12 +344,10 @@ class ConcreteHFileReader(
   }
 
   def getLastKey(): Array[Byte] = {
-    fileInfo
-      .asScala
-      .toMap
-      .map { case (k,v) => k.toSeq -> v }
+    fileInfo.asScala.toMap
+      .map { case (k, v) => k.toSeq -> v }
       .getOrElse("hfile.LASTKEY".getBytes("UTF-8"), null)
- }
+  }
 
   // Needs to be different for readers with the same `hfilename` but different files for hfile updates to work correctly
   // in HFileServerImpl.  Returns the last component of `filePath`, which is what the hbase reader does.
@@ -328,7 +364,7 @@ class ConcreteHFileReader(
   }
 
   def getTrailerInfo(): String = {
-      "compressionCodec=" + trailer.compressionCodecName +
+    "compressionCodec=" + trailer.compressionCodecName +
       ", dataIndexCount=" + trailer.dataIndexCount +
       ", entryCount=" + trailer.entryCount +
       ", fileinfoOffset=" + trailer.fileInfoOffset +

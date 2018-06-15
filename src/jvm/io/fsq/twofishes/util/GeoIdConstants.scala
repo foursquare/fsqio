@@ -2,8 +2,6 @@
 
 package io.fsq.twofishes.util
 
-
-
 object GeoIdConstants {
 
   def makeGeonameIds(ids: Int*): Seq[GeonamesId] = {
@@ -30,11 +28,11 @@ object GeoIdConstants {
   val ManhattanLongId = 72057594043053707L
   val NewYorkBoroughLongIds = Vector(
     NewYorkLongId,
-    ManhattanLongId,    // Manhattan
+    ManhattanLongId, // Manhattan
     72057594043038238L, // Brooklyn
     72057594043067504L, // Staten Island
     72057594043061209L, // Queens
-    72057594043038202L  // Bronx
+    72057594043038202L // Bronx
   )
 
   val NewYorkBoroughCountyLongIds = Vector(
@@ -42,7 +40,7 @@ object GeoIdConstants {
     72057594044869711L, // Brooklyn County
     72057594043067495L, // Staten Island County
     72057594043061204L, // Queens County
-    72057594043038189L  // Bronx County
+    72057594043038189L // Bronx County
   )
 
   val NewYorkBoroughGeonames = Vector(
@@ -53,7 +51,7 @@ object GeoIdConstants {
     5139568, // Staten Island
     5139559, // Staten Island County
     5133273, // Queens
-    5110266  // Bronx
+    5110266 // Bronx
   )
 
   val FiveBoroughId = 9151314442832893801L

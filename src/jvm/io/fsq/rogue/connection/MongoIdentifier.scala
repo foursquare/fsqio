@@ -4,7 +4,6 @@ package io.fsq.rogue.connection
 
 import io.fsq.common.scala.Identity._
 
-
 object MongoIdentifier {
   def apply(name: String): MongoIdentifier = new DefaultMongoIdentifier(name)
 }

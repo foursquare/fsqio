@@ -11,9 +11,11 @@ object CountryRevGeo {
   val fudgerCC = Some(new ShapefileGeo.MultiFudgerCC("XX"))
 
   def loadResource(resourceName: String): URL = {
-    Option(getClass.getClassLoader.getResource(resourceName)).getOrElse{
-      throw new FileNotFoundException("Could not find " + resourceName +
-        " resource.  Check the classpath/deps?")
+    Option(getClass.getClassLoader.getResource(resourceName)).getOrElse {
+      throw new FileNotFoundException(
+        "Could not find " + resourceName +
+          " resource.  Check the classpath/deps?"
+      )
     }
   }
 
@@ -22,10 +24,15 @@ object CountryRevGeo {
     val validCCs = new scala.collection.mutable.HashSet[String]
     java.util.Locale.getISOCountries.foreach(validCCs += _)
     val ccShapefile = loadResource("4sq_cc-1.1.shp")
-    ShapefileGeo.load(ccShapefile, "ISO2", Some(validCCs.toSet), "XX",
+    ShapefileGeo.load(
+      ccShapefile,
+      "ISO2",
+      Some(validCCs.toSet),
+      "XX",
       // ie, if it's in the ocean off the edge of a country, allow it to
       // be part of the country
-      alwaysCheckGeometry = false)
+      alwaysCheckGeometry = false
+    )
   }
 
   def getNearestCountryCode(geolat: Double, geolong: Double): Option[String] = {

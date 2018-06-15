@@ -7,7 +7,6 @@ import io.fsq.rogue.connection.testlib.RogueMongoTest
 import java.util.concurrent.atomic.AtomicReference
 import org.junit.{Assert, Before, Test}
 
-
 object HarnessTest {
   val dbName = "test"
   val mongoIdentifier = MongoIdentifier("test")
@@ -63,9 +62,10 @@ class HarnessTest extends RogueMongoTest {
     val mangledFirstDbName = asyncClientManager.use(firstMongoIdentifier)(_.getName)
     val dbId = mangledFirstDbName.split('-') match {
       case Array(`firstDbName`, dbIdString) => dbIdString.toInt
-      case _ => throw new IllegalStateException(
-        s"Actual database name does not match expected '$firstDbName-<counter>' format: $mangledFirstDbName"
-      )
+      case _ =>
+        throw new IllegalStateException(
+          s"Actual database name does not match expected '$firstDbName-<counter>' format: $mangledFirstDbName"
+        )
     }
 
     Assert.assertEquals(
@@ -101,4 +101,3 @@ class HarnessTest extends RogueMongoTest {
   @Test
   def unusedDbNameTest2(): Unit = unusedDbNameCheck()
 }
-

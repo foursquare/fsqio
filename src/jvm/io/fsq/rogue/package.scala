@@ -4,7 +4,13 @@ package io.fsq
 
 package object rogue {
 
-  type InitialState = Unordered with Unselected with Unlimited with Unskipped with HasNoOrClause with Unhinted with ShardKeyNotSpecified
+  type InitialState = Unordered
+    with Unselected
+    with Unlimited
+    with Unskipped
+    with HasNoOrClause
+    with Unhinted
+    with ShardKeyNotSpecified
   type OrderedState = Ordered with Unselected with Unlimited with Unskipped with HasNoOrClause with ShardKeyNotSpecified
 
   type SimpleQuery[M] = Query[M, M, InitialState]
@@ -15,13 +21,14 @@ package object rogue {
   trait ShardKey[V] {
     def name: String
     def eqs(v: V) = new EqClause(this.name, v) with ShardKeyClause
-    def in[L <% Traversable[V]](vs: L) = new InQueryClause(this.name, QueryHelpers.validatedList(vs.toSet)) with ShardKeyClause
+    def in[L <% Traversable[V]](vs: L) = new InQueryClause(this.name, QueryHelpers.validatedList(vs.toSet))
+    with ShardKeyClause
   }
 
   /**
-   * Iteratee helper classes
-   * @tparam S state type
-   */
+    * Iteratee helper classes
+    * @tparam S state type
+    */
   object Iter {
     sealed trait Command[S] {
       def state: S

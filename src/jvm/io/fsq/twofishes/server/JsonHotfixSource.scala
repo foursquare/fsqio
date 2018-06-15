@@ -17,11 +17,13 @@ class JsonHotfixSource(originalPath: String) extends HotfixSource with Logging {
     path = new File(originalPath).getCanonicalPath
     val dir = new File(path)
     if (dir.exists && dir.isDirectory) {
-      allEdits = dir.listFiles.filter(f => f.getName.endsWith(".json")).flatMap(file => {
-        val edits = new RawGeocodeServingFeatureEdits
-        deserializer.deserialize(edits, scala.io.Source.fromFile(file).getLines().toList.mkString("").getBytes)
-        edits.edits
-      })
+      allEdits = dir.listFiles
+        .filter(f => f.getName.endsWith(".json"))
+        .flatMap(file => {
+          val edits = new RawGeocodeServingFeatureEdits
+          deserializer.deserialize(edits, scala.io.Source.fromFile(file).getLines().toList.mkString("").getBytes)
+          edits.edits
+        })
     } else {
       log.warn("invalid hotfix directory: %s".format(path))
     }

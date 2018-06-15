@@ -9,6 +9,7 @@ import org.apache.thrift.protocol.{TCompactProtocol, TProtocolFactory}
 
 trait ThriftDeserializer[T <: ThriftConverter.TType] {
   def deserialize(raw: Array[Byte]): T
+
   /** Deserialize the bytes into T */
   def deserialize(raw: Array[Byte], t: T): Unit
 }
@@ -19,9 +20,11 @@ trait ThriftSerializer[T <: ThriftConverter.TType] {
 
 /** Uses the given RecordProvider to generate records to deserialize into. Can also override protocolFactory, which
 defaults to TCompactProtocol. */
-class ThriftConverter[T <: ThriftConverter.TType](rp: RecordProvider[T],
-    protocolFactory: TProtocolFactory = new TCompactProtocol.Factory) extends ThriftDeserializer[T]
-    with ThriftSerializer[T] {
+class ThriftConverter[T <: ThriftConverter.TType](
+  rp: RecordProvider[T],
+  protocolFactory: TProtocolFactory = new TCompactProtocol.Factory
+) extends ThriftDeserializer[T]
+  with ThriftSerializer[T] {
 
   val deserializer = new TDeserializer(protocolFactory)
   val serializer = new TSerializer(protocolFactory)

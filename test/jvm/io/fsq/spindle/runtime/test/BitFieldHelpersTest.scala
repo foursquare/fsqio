@@ -25,52 +25,79 @@ class BitFieldHelpersTest {
     A.assertEquals(s7, BitFieldHelpers.bitFieldToStruct(BitFieldHelpers.structToBitField(s7), s7.meta))
     A.assertEquals(s7, BitFieldHelpers.longBitFieldToStruct(BitFieldHelpers.structToLongBitField(s7), s7.meta))
 
-    A.assertEquals(s7WithUnset,BitFieldHelpers.bitFieldToStruct(
-      BitFieldHelpers.structToBitField(s7WithUnset), s7WithUnset.meta))
-    A.assertEquals(s7WithUnset, BitFieldHelpers.longBitFieldToStruct(
-      BitFieldHelpers.structToLongBitField(s7WithUnset), s7WithUnset.meta))
+    A.assertEquals(
+      s7WithUnset,
+      BitFieldHelpers.bitFieldToStruct(BitFieldHelpers.structToBitField(s7WithUnset), s7WithUnset.meta)
+    )
+    A.assertEquals(
+      s7WithUnset,
+      BitFieldHelpers.longBitFieldToStruct(BitFieldHelpers.structToLongBitField(s7WithUnset), s7WithUnset.meta)
+    )
 
     A.assertEquals(s16, BitFieldHelpers.bitFieldToStruct(BitFieldHelpers.structToBitField(s16), s16.meta))
     A.assertEquals(s16, BitFieldHelpers.longBitFieldToStruct(BitFieldHelpers.structToLongBitField(s16), s16.meta))
 
-    A.assertEquals(s32,BitFieldHelpers.bitFieldToStructNoSetBits(BitFieldHelpers.structToBitFieldNoSetBits(s32), s32.meta))
+    A.assertEquals(
+      s32,
+      BitFieldHelpers.bitFieldToStructNoSetBits(BitFieldHelpers.structToBitFieldNoSetBits(s32), s32.meta)
+    )
 
-    A.assertEquals(s64, BitFieldHelpers.longBitFieldToStructNoSetBits(
-      BitFieldHelpers.structToLongBitFieldNoSetBits(s64), s64.meta))
+    A.assertEquals(
+      s64,
+      BitFieldHelpers.longBitFieldToStructNoSetBits(BitFieldHelpers.structToLongBitFieldNoSetBits(s64), s64.meta)
+    )
   }
 
   @Test
   def toStruct(): Unit = {
     val int = 0xFFFFAA55
-    val long = 0xFFFFFFFFAAAA5555L
+    val long = 0XFFFFFFFFAAAA5555L
 
     A.assertEquals(int, BitFieldHelpers.structToBitField(BitFieldHelpers.bitFieldToStruct(int, s16.meta)))
-    A.assertEquals(int, BitFieldHelpers.structToBitFieldNoSetBits(
-      BitFieldHelpers.bitFieldToStructNoSetBits(int, s32.meta)))
+    A.assertEquals(
+      int,
+      BitFieldHelpers.structToBitFieldNoSetBits(BitFieldHelpers.bitFieldToStructNoSetBits(int, s32.meta))
+    )
 
-    A.assertEquals(long, BitFieldHelpers.structToLongBitFieldNoSetBits(
-      BitFieldHelpers.longBitFieldToStructNoSetBits(long, s64.meta)))
+    A.assertEquals(
+      long,
+      BitFieldHelpers.structToLongBitFieldNoSetBits(BitFieldHelpers.longBitFieldToStructNoSetBits(long, s64.meta))
+    )
   }
 
   @Test
   def testBuilder(): Unit = {
-    A.assertEquals(ParentStruct.newBuilder.s7As32Struct(s7).result(),
-      ParentStruct.newBuilder.s7As32(BitFieldHelpers.structToBitField(s7)).result())
-    A.assertEquals(ParentStruct.newBuilder.s16As32Struct(s16).result(),
-      ParentStruct.newBuilder.s16As32(BitFieldHelpers.structToBitField(s16)).result())
+    A.assertEquals(
+      ParentStruct.newBuilder.s7As32Struct(s7).result(),
+      ParentStruct.newBuilder.s7As32(BitFieldHelpers.structToBitField(s7)).result()
+    )
+    A.assertEquals(
+      ParentStruct.newBuilder.s16As32Struct(s16).result(),
+      ParentStruct.newBuilder.s16As32(BitFieldHelpers.structToBitField(s16)).result()
+    )
 
-    A.assertEquals(ParentStruct.newBuilder.s7As64Struct(s7).result(),
-      ParentStruct.newBuilder.s7As64(BitFieldHelpers.structToLongBitField(s7)).result())
+    A.assertEquals(
+      ParentStruct.newBuilder.s7As64Struct(s7).result(),
+      ParentStruct.newBuilder.s7As64(BitFieldHelpers.structToLongBitField(s7)).result()
+    )
 
-    A.assertEquals(ParentStruct.newBuilder.s7As32NoSetStruct(s7).result(),
-      ParentStruct.newBuilder.s7As32NoSet(BitFieldHelpers.structToBitFieldNoSetBits(s7)).result())
-    A.assertEquals(ParentStruct.newBuilder.s32As32NoSetStruct(s32).result(),
-      ParentStruct.newBuilder.s32As32NoSet(BitFieldHelpers.structToBitFieldNoSetBits(s32)).result())
+    A.assertEquals(
+      ParentStruct.newBuilder.s7As32NoSetStruct(s7).result(),
+      ParentStruct.newBuilder.s7As32NoSet(BitFieldHelpers.structToBitFieldNoSetBits(s7)).result()
+    )
+    A.assertEquals(
+      ParentStruct.newBuilder.s32As32NoSetStruct(s32).result(),
+      ParentStruct.newBuilder.s32As32NoSet(BitFieldHelpers.structToBitFieldNoSetBits(s32)).result()
+    )
 
-    A.assertEquals(ParentStruct.newBuilder.s7As64NoSetStruct(s7).result(),
-      ParentStruct.newBuilder.s7As64NoSet(BitFieldHelpers.structToLongBitFieldNoSetBits(s7)).result())
-    A.assertEquals(ParentStruct.newBuilder.s64As64NoSetStruct(s64).result(),
-      ParentStruct.newBuilder.s64As64NoSet(BitFieldHelpers.structToLongBitFieldNoSetBits(s64)).result())
+    A.assertEquals(
+      ParentStruct.newBuilder.s7As64NoSetStruct(s7).result(),
+      ParentStruct.newBuilder.s7As64NoSet(BitFieldHelpers.structToLongBitFieldNoSetBits(s7)).result()
+    )
+    A.assertEquals(
+      ParentStruct.newBuilder.s64As64NoSetStruct(s64).result(),
+      ParentStruct.newBuilder.s64As64NoSet(BitFieldHelpers.structToLongBitFieldNoSetBits(s64)).result()
+    )
   }
 
   val s7 = ChildStruct7.newBuilder

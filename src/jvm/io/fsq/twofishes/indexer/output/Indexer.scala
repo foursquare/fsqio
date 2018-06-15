@@ -1,4 +1,4 @@
-  package io.fsq.twofishes.indexer.output
+package io.fsq.twofishes.indexer.output
 
 import io.fsq.twofishes.core.{Index, MapFileUtils}
 import io.fsq.twofishes.indexer.mongo.IndexerQueryExecutor
@@ -73,8 +73,7 @@ abstract class Indexer extends DurationUtils {
     }
   }
 
-  def buildHFileV1Writer[K, V](index: Index[K, V],
-                         info: Map[String, String] = Map.empty): WrappedHFileWriter[K, V] = {
+  def buildHFileV1Writer[K, V](index: Index[K, V], info: Map[String, String] = Map.empty): WrappedHFileWriter[K, V] = {
     val conf = new Configuration()
     val blockSizeKey = "hbase.mapreduce.hfileoutputformat.blocksize"
     val compressionKey = "hfile.compression"
@@ -90,21 +89,23 @@ abstract class Indexer extends DurationUtils {
     val compressionAlgorithm: Compression.Algorithm =
       Compression.getCompressionAlgorithmByName("none")
 
-    val writer = HFile.getWriterFactory(hadoopConfiguration, new TwofishesFoursquareCacheConfigHack(hadoopConfiguration))
+    val writer = HFile
+      .getWriterFactory(hadoopConfiguration, new TwofishesFoursquareCacheConfigHack(hadoopConfiguration))
       .withPath(fs, path)
       .withBlockSize(blockSize)
       .withCompression(compressionAlgorithm)
       .create()
 
-    info.foreach({case (k, v) => writer.appendFileInfo(k.getBytes("UTF-8"), v.getBytes("UTF-8")) })
+    info.foreach({ case (k, v) => writer.appendFileInfo(k.getBytes("UTF-8"), v.getBytes("UTF-8")) })
 
     new WrappedHFileWriter(writer, index)
   }
 
-  def buildMapFileWriter[K : Manifest, V : Manifest](
-      index: Index[K, V],
-      info: Map[String, String] = Map.empty,
-      indexInterval: Option[Int] = None) = {
+  def buildMapFileWriter[K: Manifest, V: Manifest](
+    index: Index[K, V],
+    info: Map[String, String] = Map.empty,
+    indexInterval: Option[Int] = None
+  ) = {
 
     val keyClassName = fixThriftClassName(manifest[K].runtimeClass.getName)
     val valueClassName = fixThriftClassName(manifest[V].runtimeClass.getName)
@@ -115,7 +116,8 @@ abstract class Indexer extends DurationUtils {
       (ThriftEncodingKey, factory.getClass.getName)
     )
 
-    val opts = indexInterval.map(i => MapFileUtils.DefaultByteKeyValueWriteOptions.copy(indexInterval = i))
+    val opts = indexInterval
+      .map(i => MapFileUtils.DefaultByteKeyValueWriteOptions.copy(indexInterval = i))
       .getOrElse(MapFileUtils.DefaultByteKeyValueWriteOptions)
 
     new WrappedByteMapWriter(

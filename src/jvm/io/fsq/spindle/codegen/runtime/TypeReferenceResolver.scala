@@ -2,8 +2,15 @@
 
 package io.fsq.spindle.codegen.runtime
 
-import io.fsq.spindle.__shaded_for_spindle_bootstrap__.descriptors.{Annotation, BaseType, ContainerType,
-    SimpleBaseType, Type, TypeRegistry, Typeref}
+import io.fsq.spindle.__shaded_for_spindle_bootstrap__.descriptors.{
+  Annotation,
+  BaseType,
+  ContainerType,
+  SimpleBaseType,
+  Type,
+  TypeRegistry,
+  Typeref
+}
 import io.fsq.spindle.__shaded_for_spindle_bootstrap__.runtime.Annotations
 import scala.{Either, Right}
 
@@ -13,9 +20,9 @@ final case class TypeIdNotFound(typeId: String) extends TypeNotFound
 final case object EnhancedTypeFailure extends TypeNotFound
 
 class TypeReferenceResolver(
-    val registry: TypeRegistry,
-    val scope: Map[String, TypeDeclaration],
-    val enhancedTypes: EnhancedTypes
+  val registry: TypeRegistry,
+  val scope: Map[String, TypeDeclaration],
+  val enhancedTypes: EnhancedTypes
 ) {
 
   def typeForTypeId(typeId: String): Either[TypeNotFound, (Type, Annotations)] = {
@@ -93,15 +100,17 @@ class TypeReferenceResolver(
   }
 
   def resolveTypeAlias(name: String): Either[TypeNotFound, TypeReference] = {
-    val option = scope.get(name).map({
-      case EnumDecl(name, _) => EnumRef(name)
-      case StructDecl(name, _) => StructRef(name)
-      case UnionDecl(name, _) => UnionRef(name)
-      case ExceptionDecl(name, _) => ExceptionRef(name)
-      case ServiceDecl(name, _) => ServiceRef(name)
-      case TypedefDecl(name, false, ref, _) => TypedefRef(name, ref)
-      case TypedefDecl(name, true, ref, _) => NewtypeRef(name, ref)
-    })
+    val option = scope
+      .get(name)
+      .map({
+        case EnumDecl(name, _) => EnumRef(name)
+        case StructDecl(name, _) => StructRef(name)
+        case UnionDecl(name, _) => UnionRef(name)
+        case ExceptionDecl(name, _) => ExceptionRef(name)
+        case ServiceDecl(name, _) => ServiceRef(name)
+        case TypedefDecl(name, false, ref, _) => TypedefRef(name, ref)
+        case TypedefDecl(name, true, ref, _) => NewtypeRef(name, ref)
+      })
     optionToEither(option, AliasNotFound(name))
   }
 

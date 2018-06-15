@@ -19,7 +19,8 @@ class CompilerForNegativeTests(imports: Seq[String]) extends JUnitMustMatchers {
   // the full classpath in a MANIFEST.  IMain's default classloader does
   // not respect MANIFEST Class-Path entries by default, so we force it
   // here.
-  settings.classpath.value = ClasspathHelper.forManifest()
+  settings.classpath.value = ClasspathHelper
+    .forManifest()
     .asScala
     .map(_.toString)
     .mkString(":")
@@ -45,7 +46,8 @@ class CompilerForNegativeTests(imports: Seq[String]) extends JUnitMustMatchers {
 
   def check(code: String, expectedErrorREOpt: Option[String] = Some("")): Unit = {
     (expectedErrorREOpt, typeCheck(code)) aka "'%s' compiles or fails with the right message!".format(code) must beLike {
-      case (Some(expectedErrorRE), Some(actualError)) => expectedErrorRE.r.findFirstIn(actualError.replaceAll("\n", "")).isDefined must beTrue
+      case (Some(expectedErrorRE), Some(actualError)) =>
+        expectedErrorRE.r.findFirstIn(actualError.replaceAll("\n", "")).isDefined must beTrue
       case (None, None) => true must beTrue
     }
   }

@@ -3,26 +3,69 @@
 package io.fsq.rogue.lift
 
 import io.fsq.field.{Field => RField, OptionalField => ROptionalField}
-import io.fsq.rogue.{BSONType, BsonRecordListModifyField, BsonRecordListQueryField, BsonRecordModifyField,
-    BsonRecordQueryField, DateModifyField, DateQueryField, EnumIdQueryField, EnumNameQueryField,
-    EnumerationListModifyField, EnumerationListQueryField, EnumerationModifyField, FindAndModifyQuery,
-    ForeignObjectIdQueryField, GeoModifyField, GeoQueryField, HasOrClause, InitialState, LatLong, ListModifyField,
-    ListQueryField, MandatorySelectField, MapModifyField, MapQueryField, ModifyField, ModifyQuery, NumericModifyField,
-    NumericQueryField, ObjectIdQueryField, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException,
-    SafeModifyField, SelectField, ShardingOk, StringQueryField, StringsListQueryField, Unlimited, Unordered,
-    Unselected, Unskipped}
+import io.fsq.rogue.{
+  BSONType,
+  BsonRecordListModifyField,
+  BsonRecordListQueryField,
+  BsonRecordModifyField,
+  BsonRecordQueryField,
+  DateModifyField,
+  DateQueryField,
+  EnumIdQueryField,
+  EnumNameQueryField,
+  EnumerationListModifyField,
+  EnumerationListQueryField,
+  EnumerationModifyField,
+  FindAndModifyQuery,
+  ForeignObjectIdQueryField,
+  GeoModifyField,
+  GeoQueryField,
+  HasOrClause,
+  InitialState,
+  LatLong,
+  ListModifyField,
+  ListQueryField,
+  MandatorySelectField,
+  MapModifyField,
+  MapQueryField,
+  ModifyField,
+  ModifyQuery,
+  NumericModifyField,
+  NumericQueryField,
+  ObjectIdQueryField,
+  OptionalSelectField,
+  Query,
+  QueryField,
+  QueryHelpers,
+  Rogue,
+  RogueException,
+  SafeModifyField,
+  SelectField,
+  ShardingOk,
+  StringQueryField,
+  StringsListQueryField,
+  Unlimited,
+  Unordered,
+  Unselected,
+  Unskipped
+}
 import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.index.MongoIndex
 import java.util.Date
 import net.liftweb.common.Box.box2Option
 import net.liftweb.json.JsonAST.{JArray, JInt}
 import net.liftweb.mongodb.record.{BsonRecord, MongoMetaRecord, MongoRecord}
-import net.liftweb.mongodb.record.field.{BsonRecordField, BsonRecordListField, MongoCaseClassField,
-    MongoCaseClassListField}
+import net.liftweb.mongodb.record.field.{
+  BsonRecordField,
+  BsonRecordListField,
+  MongoCaseClassField,
+  MongoCaseClassListField
+}
 import net.liftweb.record.{Field, MandatoryTypedField, OptionalTypedField, Record}
 import net.liftweb.record.field.EnumField
 import org.bson.types.ObjectId
 
+// format: off
 trait LiftRogue {
   def OrQuery[M <: MongoRecord[M], R]
       (subqueries: Query[M, R, _]*)

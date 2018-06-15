@@ -31,9 +31,9 @@ class FeatureIndexer(
     } yield {
       new GeocodeRecord(
         g.toBuilder
-        .polygon(polygon)
-        .polygonSource(source)
-        .result()
+          .polygon(polygon)
+          .polygonSource(source)
+          .result()
       )
     }).getOrElse(g).toGeocodeServingFeature()
 
@@ -67,17 +67,20 @@ class FeatureIndexer(
       val cells: Seq[Long] = GeometryUtils.s2PolygonCovering(geom).map(_.id)
 
       // now for each cell, find the matches in our index
-      val candidates = IndexerQueryExecutor.instance.fetch(
-        Q(ThriftRevGeoIndex)
-          .where(_.cellId in cells)
-      ).map(new RevGeoIndex(_))
+      val candidates = IndexerQueryExecutor.instance
+        .fetch(
+          Q(ThriftRevGeoIndex)
+            .where(_.cellId in cells)
+        )
+        .map(new RevGeoIndex(_))
 
       // for each candidate, check if it's full or we're in it
       val matches = (for {
         revGeoCell <- candidates
         fidLong <- polygonMap.getOrElse(revGeoCell.polyIdOrThrow, Nil)
-        if (revGeoCell.full || revGeoCell.geomOption.exists(geomBuffer =>
-          wkbReader.read(geomBuffer.array()).contains(geom)))
+        if (revGeoCell.full || revGeoCell.geomOption.exists(
+          geomBuffer => wkbReader.read(geomBuffer.array()).contains(geom)
+        ))
       } yield { fidLong }).toList
 
       parents = matches.map(_._1)
@@ -101,15 +104,17 @@ class FeatureIndexer(
       event match {
         case Iter.Item(group) => {
           val toFindPolys: Map[Long, ObjectId] = group.filter(f => f.hasPoly).map(r => (r.id, r.polyIdOrThrow)).toMap
-          val polyMap: Map[ObjectId, PolygonIndex] = executor.fetch(
-            Q(ThriftPolygonIndex)
-              .where(_.id in toFindPolys.values)
-          ).groupBy(_.id).map({ case (k, v) => (k, new PolygonIndex(v(0))) })
+          val polyMap: Map[ObjectId, PolygonIndex] = executor
+            .fetch(
+              Q(ThriftPolygonIndex)
+                .where(_.id in toFindPolys.values)
+            )
+            .groupBy(_.id)
+            .map({ case (k, v) => (k, new PolygonIndex(v(0))) })
           group.foreach(unwrapped => {
             val f = new GeocodeRecord(unwrapped)
             val polyOpt = polyMap.get(f.polyIdOrThrow)
-            writer.append(
-              f.featureId, makeGeocodeRecordWithoutGeometry(f, polyOpt))
+            writer.append(f.featureId, makeGeocodeRecordWithoutGeometry(f, polyOpt))
             fidCount += 1
             if (fidCount % 100000 == 0) {
               log.info("processed %d of %d features".format(fidCount, fidSize))

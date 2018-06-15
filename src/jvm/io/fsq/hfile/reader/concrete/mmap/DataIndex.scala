@@ -8,18 +8,17 @@ import java.lang.{Long => JLong}
 import java.nio.ByteBuffer
 import java.util.Arrays
 
-
 case class DataBlockInfo(indexByteOffset: Int, keyOffset: Short, keyLength: Short, hfileByteOffset: Long)
 
 class DataIndex(
-    blockReader: BlockReader,
-    buffer: ByteBuffer,
-    bufferSize: Int,
-    val blockCount: Int,
-    compressionCodec: Int,
-    lastOffset: Long,
-    trackCacheStats: Boolean)
-    extends Logger {
+  blockReader: BlockReader,
+  buffer: ByteBuffer,
+  bufferSize: Int,
+  val blockCount: Int,
+  compressionCodec: Int,
+  lastOffset: Long,
+  trackCacheStats: Boolean
+) extends Logger {
   val indexOffsets = new Array[DataBlockInfo](blockCount)
 
   val MidKeyMetaDataSize = JLong.BYTES + (2 * Integer.BYTES)
@@ -31,8 +30,7 @@ class DataIndex(
   if (Arrays.equals(magic, "IDXBLK)+".getBytes()) !=? true)
     throw new Exception("bad data index magic")
 
-
-  val accessLogger:Option[CacheSim[Int]] = if (trackCacheStats) {
+  val accessLogger: Option[CacheSim[Int]] = if (trackCacheStats) {
     Some(CacheSim.makeSim[Int](blockCount))
   } else {
     None
@@ -49,7 +47,11 @@ class DataIndex(
       val uncompressedSize = buffer.getInt()
       val (sizeLength, keyLength) = Bytes.readVarlenByteSeqOffsets(buffer)
       indexOffsets(dataBlockCount) = DataBlockInfo(indexOffset, (sizeLength + 12).toShort, keyLength, offset)
-      val nextOffset = if (dataBlockCount == blockCount-1) { lastOffset } else { buffer.slice.getLong }
+      val nextOffset = if (dataBlockCount == blockCount - 1) {
+        lastOffset
+      } else {
+        buffer.slice.getLong
+      }
       dataBlockCount += 1
     }
     assert(buffer.position =? bufferSize, "the parsing of the DataIndex is incorrect")
@@ -72,12 +74,13 @@ class DataIndex(
     val offset = bufferSlice.getLong()
     val uncompressedSize = bufferSlice.getInt()
     bufferSlice.position(offsets.indexByteOffset + offsets.keyOffset + offsets.keyLength)
-    val nextOffset = if (index == blockCount-1) { lastOffset } else { bufferSlice.getLong }
+    val nextOffset = if (index == blockCount - 1) {
+      lastOffset
+    } else {
+      bufferSlice.getLong
+    }
 
-    new DataBlock(
-      compressionCodec,
-      blockReader(offset, nextOffset-offset),
-      uncompressedSize, index, accessLogger)
+    new DataBlock(compressionCodec, blockReader(offset, nextOffset - offset), uncompressedSize, index, accessLogger)
   }
 
   def compareFirstKey(key: ByteBuffer, index: Int): Int = {
@@ -121,6 +124,5 @@ class DataIndex(
 
     ClassSize.align(heapSize)
   }
-
 
 }

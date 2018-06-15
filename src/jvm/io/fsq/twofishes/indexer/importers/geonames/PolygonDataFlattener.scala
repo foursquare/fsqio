@@ -39,11 +39,16 @@ object PolygonDataFlattener extends Logging {
 
   val parenNameRegex = "^(.*) \\((.*)\\)$".r
   def getNames(config: PolygonMappingConfig, feature: FsqSimpleFeature): Seq[DisplayName] = {
-    config.nameFields.view.flatMap({case (lang, nameFields) => {
-      nameFields.flatMap(nameField => feature.propMap.get(nameField)).filterNot(_.isEmpty).map(name =>
-        DisplayName(lang, name)
-      )
-    }}).toSeq
+    config.nameFields.view
+      .flatMap({
+        case (lang, nameFields) => {
+          nameFields
+            .flatMap(nameField => feature.propMap.get(nameField))
+            .filterNot(_.isEmpty)
+            .map(name => DisplayName(lang, name))
+        }
+      })
+      .toSeq
   }
   def getFixedNames(config: PolygonMappingConfig, feature: FsqSimpleFeature) = {
     val originalFeatureNames = getNames(config, feature)
@@ -53,31 +58,29 @@ object PolygonDataFlattener extends Logging {
     // some OSM feature names look like A (B), make that into two extra names
     featureNames ++= originalFeatureNames.flatMap(n => {
       // If the name looks like "A (B)"
-      parenNameRegex.findFirstIn(n.name).toList.flatMap(_ => {
-        // split it into "A" and "B"
-        List(
-          DisplayName(n.lang, parenNameRegex.replaceAllIn(n.name, "$1")),
-          DisplayName(n.lang, parenNameRegex.replaceAllIn(n.name, "$2"))
-        )
-      })
+      parenNameRegex
+        .findFirstIn(n.name)
+        .toList
+        .flatMap(_ => {
+          // split it into "A" and "B"
+          List(
+            DisplayName(n.lang, parenNameRegex.replaceAllIn(n.name, "$1")),
+            DisplayName(n.lang, parenNameRegex.replaceAllIn(n.name, "$2"))
+          )
+        })
     })
 
     // Additionally, some names are actually multiple comma separated names,
     // so split those into individual names too
     featureNames = featureNames.flatMap(n => {
-      n.name.split(",").map(_.trim).filterNot(_.isEmpty).map(namePart =>
-        DisplayName(n.lang, namePart)
-      )
+      n.name.split(",").map(_.trim).filterNot(_.isEmpty).map(namePart => DisplayName(n.lang, namePart))
     })
 
     // Additionally, some names are actually multiple slash separated names
     // so split those into individual names too
     featureNames = featureNames.flatMap(n => {
-      n.name.split("/").map(_.trim).filterNot(_.isEmpty).map(namePart =>
-        DisplayName(n.lang, namePart)
-      )
+      n.name.split("/").map(_.trim).filterNot(_.isEmpty).map(namePart => DisplayName(n.lang, namePart))
     })
-
 
     featureNames.filterNot(_.name.isEmpty)
   }
@@ -98,20 +101,21 @@ object PolygonDataFlattener extends Logging {
       if (index % 100 == 0) {
         log.info("processing feature %d in %s".format(index, features.file.getName))
       }
-      
+
       val polygonId = getId()
 
       val source = polygonMappingConfig.flatMap(_.source).getOrElse(features.file.getName())
-      
+
       val geomBase64String = Base64.encodeBase64URLSafeString(wkbWriter.write(geom))
 
-      val fidsFromFileName = fparts.lift(0).flatMap(p => Helpers.TryO(p.toInt.toString))
-        .flatMap(i => StoredFeatureId.fromHumanReadableString(i, Some(defaultNamespace))).toList
+      val fidsFromFileName = fparts
+        .lift(0)
+        .flatMap(p => Helpers.TryO(p.toInt.toString))
+        .flatMap(i => StoredFeatureId.fromHumanReadableString(i, Some(defaultNamespace)))
+        .toList
 
       val geoidColumnNameToNamespaceMapping =
-        List(
-          "qs_gn_id" -> GeonamesNamespace,
-          "gn_id" -> GeonamesNamespace) ++
+        List("qs_gn_id" -> GeonamesNamespace, "gn_id" -> GeonamesNamespace) ++
           FeatureNamespace.values.map(namespace => (namespace.name -> namespace))
       val geoidsFromFile = for {
         (columnName, namespace) <- geoidColumnNameToNamespaceMapping
@@ -127,7 +131,8 @@ object PolygonDataFlattener extends Logging {
         }
       }
       val fidsFromFile = geoidsFromFile
-        .filterNot(_.isEmpty).map(_.replace(".0", ""))
+        .filterNot(_.isEmpty)
+        .map(_.replace(".0", ""))
         .flatMap(i => StoredFeatureId.fromHumanReadableString(i, Some(defaultNamespace)))
 
       val fids: Seq[StoredFeatureId] = if (fidsFromFileName.nonEmpty) {
@@ -137,20 +142,23 @@ object PolygonDataFlattener extends Logging {
       } else {
         Nil
       }
-      
+
       val (names, woeTypes) = (fids, polygonMappingConfig) match {
-        case (Nil, Some(polygonMatchingConfig)) => (getFixedNames(polygonMatchingConfig, feature), polygonMatchingConfig.getWoeTypes)
+        case (Nil, Some(polygonMatchingConfig)) =>
+          (getFixedNames(polygonMatchingConfig, feature), polygonMatchingConfig.getWoeTypes)
         case _ => (Nil, Nil)
       }
-      
-      outputWriter.write("%s\t%s\t%s\t%s\t%s\t%s\n".format(
-        polygonId.toString,
-        source,
-        fids.map(_.longId).mkString(","),
-        names.map(dn => "%s:%s".format(dn.lang, dn.name)).mkString("|"),
-        woeTypes.map(list => list.map(_.name).mkString(",")).mkString("|"),
-        geomBase64String
-      ))
+
+      outputWriter.write(
+        "%s\t%s\t%s\t%s\t%s\t%s\n".format(
+          polygonId.toString,
+          source,
+          fids.map(_.longId).mkString(","),
+          names.map(dn => "%s:%s".format(dn.lang, dn.name)).mkString("|"),
+          woeTypes.map(list => list.map(_.name).mkString(",")).mkString("|"),
+          geomBase64String
+        )
+      )
     }
   }
 
@@ -183,7 +191,8 @@ object PolygonDataFlattener extends Logging {
     val defaultNameSpace = GeonamesNamespace
     val polygonDirs = List(
       new File("src/jvm/io/fsq/twofishes/indexer/data/computed/polygons"),
-      new File("src/jvm/io/fsq/twofishes/indexer/data/private/polygons"))
+      new File("src/jvm/io/fsq/twofishes/indexer/data/private/polygons")
+    )
     val polygonFiles = polygonDirs.flatMap(recursiveListFiles).sorted
 
     val fileWriter = new FileWriter("src/jvm/io/fsq/twofishes/indexer/data/private/flattenedPolygons.txt", false)

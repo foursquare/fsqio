@@ -15,7 +15,10 @@ object FeatureEditHelper {
     applyEdits(feature, edits.edits)
   }
 
-  def applyEdits(feature: GeocodeServingFeature, edits: Seq[GeocodeServingFeatureEdit]): Option[GeocodeServingFeature] = {
+  def applyEdits(
+    feature: GeocodeServingFeature,
+    edits: Seq[GeocodeServingFeatureEdit]
+  ): Option[GeocodeServingFeature] = {
     // if there is a Remove edit, return None right away
     if (edits.exists(edit => edit.editType == EditType.Remove)) {
       None
@@ -62,7 +65,10 @@ object FeatureEditHelper {
     listCopy
   }
 
-  private def processFeatureNameFlagsListEdits(list: Seq[FeatureNameFlags], edits: Seq[FeatureNameFlagsListEdit]): Seq[FeatureNameFlags] = {
+  private def processFeatureNameFlagsListEdits(
+    list: Seq[FeatureNameFlags],
+    edits: Seq[FeatureNameFlagsListEdit]
+  ): Seq[FeatureNameFlags] = {
     var listCopy = list
     edits.foreach(edit => {
       edit.editType match {
@@ -79,7 +85,8 @@ object FeatureEditHelper {
     edits.foreach(edit => {
       // if the edit adds the PREFERRED flag to a name, clear the PREFERRED flag from all
       // other names in the same language
-      if (edit.flagsEdits.exists(flagsEdit => flagsEdit.editType == EditType.Add && flagsEdit.value == FeatureNameFlags.PREFERRED)) {
+      if (edit.flagsEdits
+            .exists(flagsEdit => flagsEdit.editType == EditType.Add && flagsEdit.value == FeatureNameFlags.PREFERRED)) {
         listCopy = listCopy.map(name => {
           if (name.lang == edit.lang && name.flags.contains(FeatureNameFlags.PREFERRED)) {
             name.copy(flags = name.flags.filterNot(flag => flag == FeatureNameFlags.PREFERRED))
@@ -143,9 +150,8 @@ object FeatureEditHelper {
 
     // extraRelationsEdits
     if (edit.extraRelationsEditsIsSet) {
-      val extraRelations = processLongListEdits(
-        servingFeatureMutable.scoringFeatures.extraRelationIds,
-        edit.extraRelationsEditsOrThrow)
+      val extraRelations =
+        processLongListEdits(servingFeatureMutable.scoringFeatures.extraRelationIds, edit.extraRelationsEditsOrThrow)
       servingFeatureMutable.scoringFeatures_=({
         servingFeatureMutable.scoringFeatures.toBuilder
           .extraRelationIds(extraRelations)
@@ -182,13 +188,11 @@ object FeatureEditHelper {
 
     // urlsEdits
     if (edit.urlsEditsIsSet) {
-      val urls = processStringListEdits(
-        if (featureMutable.attributesIsSet) {
-          featureMutable.attributesOrThrow.urls
-        } else {
-          Nil
-        },
-        edit.urlsEditsOrThrow)
+      val urls = processStringListEdits(if (featureMutable.attributesIsSet) {
+        featureMutable.attributesOrThrow.urls
+      } else {
+        Nil
+      }, edit.urlsEditsOrThrow)
       featureMutable.attributes_=({
         val attributesBuilder = if (featureMutable.attributesIsSet) {
           featureMutable.attributesOrThrow.toBuilder
@@ -204,9 +208,7 @@ object FeatureEditHelper {
     // parentIdsEdits
     // edit both feature and servingFeature.scoringFeatures
     if (edit.parentIdsEditsIsSet) {
-      val parentIds = processLongListEdits(
-        featureMutable.parentIds,
-        edit.parentIdsEditsOrThrow)
+      val parentIds = processLongListEdits(featureMutable.parentIds, edit.parentIdsEditsOrThrow)
       featureMutable.parentIds_=(parentIds)
 
       servingFeatureMutable.scoringFeatures_=({
@@ -249,7 +251,7 @@ object FeatureEditHelper {
       }
 
       if ((edit.wktGeometryIsSet && edit.wktGeometryOrThrow.isEmpty) ||
-        (edit.geojsonGeometryIsSet && edit.geojsonGeometryOrThrow.isEmpty)) {
+          (edit.geojsonGeometryIsSet && edit.geojsonGeometryOrThrow.isEmpty)) {
         geometryMutable.wkbGeometryUnset()
         setHasPolyRankingFeature(false)
       } else {

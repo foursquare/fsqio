@@ -28,5 +28,9 @@ class BaseIdIndexBuildIntermediateJob(
   }).group
     .withReducers(1)
     .head
-    .write(TypedSink[(Text, IntermediateDataContainer)](SpindleSequenceFileSource[Text, IntermediateDataContainer](outputPath)))
+    .write(
+      TypedSink[(Text, IntermediateDataContainer)](
+        SpindleSequenceFileSource[Text, IntermediateDataContainer](outputPath)
+      )
+    )
 }

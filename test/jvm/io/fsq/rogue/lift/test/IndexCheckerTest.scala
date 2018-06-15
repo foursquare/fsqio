@@ -36,7 +36,8 @@ object TestModel extends TestModel with MongoMetaRecord[TestModel] with IndexedR
     TestModel.index(_.a, Asc, _.b, Asc, _.c, Asc),
     TestModel.index(_.m, Asc, _.a, Asc),
     TestModel.index(_.l, Asc),
-    TestModel.index(_.ll, TwoD, _.b, Asc))
+    TestModel.index(_.ll, TwoD, _.b, Asc)
+  )
 }
 
 class MongoIndexCheckerTest extends JUnitMustMatchers {
@@ -56,28 +57,28 @@ class MongoIndexCheckerTest extends JUnitMustMatchers {
 
     yes(TestModel where (_.a eqs 1))
     yes(TestModel iscan (_.a eqs 1))
-    yes(TestModel scan  (_.a eqs 1))
+    yes(TestModel scan (_.a eqs 1))
 
     no(TestModel where (_.a > 1))
 
     yes(TestModel iscan (_.a > 1))
-    yes(TestModel scan  (_.a > 1))
+    yes(TestModel scan (_.a > 1))
 
-    no(TestModel where  (_.a neqs 1))
+    no(TestModel where (_.a neqs 1))
     yes(TestModel iscan (_.a neqs 1))
-    yes(TestModel scan  (_.a neqs 1))
+    yes(TestModel scan (_.a neqs 1))
 
-    no(TestModel where  (_.a exists true))
+    no(TestModel where (_.a exists true))
     yes(TestModel iscan (_.a exists true))
-    yes(TestModel scan  (_.a exists true))
+    yes(TestModel scan (_.a exists true))
 
     no(TestModel where (_.l size 1))
     no(TestModel iscan (_.l size 1))
     yes(TestModel scan (_.l size 1))
 
-    no(TestModel where  (_.ll near (1.0, 2.0, Degrees(1.0))))
+    no(TestModel where (_.ll near (1.0, 2.0, Degrees(1.0))))
     yes(TestModel iscan (_.ll near (1.0, 2.0, Degrees(1.0))))
-    yes(TestModel scan  (_.ll near (1.0, 2.0, Degrees(1.0))))
+    yes(TestModel scan (_.ll near (1.0, 2.0, Degrees(1.0))))
 
     // $or queries
     yes(TestModel where (_.a eqs 1) or (_.where(_.b eqs 2), _.where(_.b eqs 2)))
@@ -98,7 +99,7 @@ class MongoIndexCheckerTest extends JUnitMustMatchers {
       val q = query.asInstanceOf[Query[_, _, _]]
       val indexes = q.meta.asInstanceOf[IndexedRecord[_]].mongoIndexList
       MongoIndexChecker.validateIndexExpectations(q, indexes) &&
-        MongoIndexChecker.validateQueryMatchesSomeIndex(q, indexes)
+      MongoIndexChecker.validateQueryMatchesSomeIndex(q, indexes)
     }
 
     def yes(query: Query[_, _, _]) =

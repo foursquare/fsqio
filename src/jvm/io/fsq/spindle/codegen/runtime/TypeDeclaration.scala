@@ -26,8 +26,8 @@ case class UnionDecl(name: String, annotations: Annotations) extends TypeDeclara
 case class ExceptionDecl(name: String, annotations: Annotations) extends TypeDeclaration
 case class ServiceDecl(name: String, annotations: Annotations) extends TypeDeclaration
 case class TypedefDecl(
-    name: String,
-    newType: Boolean,
-    ref: TypeReference,
-    annotations: Annotations
+  name: String,
+  newType: Boolean,
+  ref: TypeReference,
+  annotations: Annotations
 ) extends TypeDeclaration

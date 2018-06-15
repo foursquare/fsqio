@@ -18,7 +18,9 @@ import org.apache.thrift.TBaseHelper
 import org.slf4s.Logging
 import scala.collection.JavaConverters._
 
-class HFileStorageService(originalBasepath: String, shouldPreload: Boolean) extends GeocodeStorageReadService with Logging {
+class HFileStorageService(originalBasepath: String, shouldPreload: Boolean)
+  extends GeocodeStorageReadService
+  with Logging {
   // Do this to ensure that our data doesn't get rewritten out from under us if we're pointing at a symlink
   val basepath = new File(originalBasepath).getCanonicalPath()
 
@@ -32,23 +34,25 @@ class HFileStorageService(originalBasepath: String, shouldPreload: Boolean) exte
 
   val infoFile = new File(basepath, "upload-info")
   if (infoFile.exists) {
-    scala.io.Source.fromFile(infoFile).getLines.foreach(line => {
-      val parts = line.split(": ")
-      if (parts.size != 2) {
-        log.error("badly formatted info line: " + line)
-      }
-      for {
-        key <- parts.lift(0)
-        value <- parts.lift(1)
-      } {
-        Stats.setLabel(key, value)
-      }
-    })
+    scala.io.Source
+      .fromFile(infoFile)
+      .getLines
+      .foreach(line => {
+        val parts = line.split(": ")
+        if (parts.size != 2) {
+          log.error("badly formatted info line: " + line)
+        }
+        for {
+          key <- parts.lift(0)
+          value <- parts.lift(1)
+        } {
+          Stats.setLabel(key, value)
+        }
+      })
   }
 
   // will only be hit if we get a reverse geocode query
-  lazy val s2map = s2mapOpt.getOrElse(
-    throw new Exception("s2/revgeo index not built, please build s2_index"))
+  lazy val s2map = s2mapOpt.getOrElse(throw new Exception("s2/revgeo index not built, please build s2_index"))
 
   def getIdsByNamePrefix(name: String): Seq[StoredFeatureId] = {
     nameMap.getPrefix(name)
@@ -139,14 +143,14 @@ class HFileInput[V](basepath: String, index: Index[String, V], shouldPreload: Bo
 
   val reader = HFile.createReader(path.getFileSystem(conf), path, cache)
 
-  val fileInfo = reader.loadFileInfo().asScala.map({ case (k, v) => new String(k, "UTF-8") -> new String(v, "UTF-8")})
+  val fileInfo = reader.loadFileInfo().asScala.map({ case (k, v) => new String(k, "UTF-8") -> new String(v, "UTF-8") })
 
   // prefetch the hfile
   if (shouldPreload) {
     val (rv, duration) = DurationUtils.inMilliseconds({
       val scanner = reader.getScanner(true, false) // Seek, caching.
       scanner.seekTo()
-      while(scanner.next()) {}
+      while (scanner.next()) {}
     })
 
     log.info("took %s seconds to read %s".format(duration.inSeconds, index.filename))
@@ -171,14 +175,13 @@ class HFileInput[V](basepath: String, index: Index[String, V], shouldPreload: Bo
       scanner.next()
     }
 
-
     val ret: ListBuffer[Array[Byte]] = new ListBuffer()
 
     // I'd rather not encode this logic here, but I don't really want to thread
     // it all the way through the storage logic.
     while (new String(scanner.getKeyValue().getKey()).startsWith(key)) {
       if ((key.size >= 3) ||
-          (key.size*1.0 / new String(scanner.getKeyValue().getKey()).size) >= minPrefixRatio) {
+          (key.size * 1.0 / new String(scanner.getKeyValue().getKey()).size) >= minPrefixRatio) {
         ret.append(scanner.getKeyValue().getValue())
       }
       scanner.next()
@@ -213,8 +216,10 @@ class MapFileInput[K, V](basepath: String, index: Index[K, V], shouldPreload: Bo
     // This might just end up logging GC pauses, but it's possible we have
     // degenerate keys/values as well.
     if (duration.inMilliseconds > 100) {
-      log.info("reading key '%s' from index '%s' took %s milliseconds. valueOpt is %s bytes long".format(
-        key.toString, index.filename, duration.inMilliseconds, rv.map(_ => valueBytes.getLength)))
+      log.info(
+        "reading key '%s' from index '%s' took %s milliseconds. valueOpt is %s bytes long"
+          .format(key.toString, index.filename, duration.inMilliseconds, rv.map(_ => valueBytes.getLength))
+      )
     }
 
     rv
@@ -225,10 +230,12 @@ class TooManyResultsException(query: String, number: Long, message: String) exte
 
 class NameIndexHFileInput(basepath: String, shouldPreload: Boolean) {
   val nameIndex = new HFileInput(basepath, Indexes.NameIndex, shouldPreload)
-  val featuresSortedByStaticImportance = nameIndex.fileInfo.getOrElse(
-    "FEATURES_SORTED_BY_STATIC_IMPORTANCE",
-    "false"
-  ).toBoolean
+  val featuresSortedByStaticImportance = nameIndex.fileInfo
+    .getOrElse(
+      "FEATURES_SORTED_BY_STATIC_IMPORTANCE",
+      "false"
+    )
+    .toBoolean
   val prefixMapOpt = PrefixIndexMapFileInput.readInput(basepath, shouldPreload)
 
   def get(name: String): Seq[StoredFeatureId] = {
@@ -257,22 +264,22 @@ class NameIndexHFileInput(basepath: String, shouldPreload: Boolean) {
           // features sorted by static importance, just return them all
           val results = if (!featuresSortedByStaticImportance || allFlattened.size <= resultLimit) {
             allFlattened
-          // total number of results too high but the number of unique names
-          // is small enough that we can take at least 1 feature off the top
-          // for each key so all names are represented and the total number
-          // of results will still be within the limit
+            // total number of results too high but the number of unique names
+            // is small enough that we can take at least 1 feature off the top
+            // for each key so all names are represented and the total number
+            // of results will still be within the limit
           } else if (numKeys <= resultLimit) {
             val resultsPerKey = resultLimit / numKeys
             allMatches.map(_.take(resultsPerKey)).flatten
-          // number of unique names greater than number of results allowed
-          // (so all names cannot be represented) but lower than limit on
-          // number of unique names so we can still pick one result off the top
-          // for each name and have resultLimit of them represented
+            // number of unique names greater than number of results allowed
+            // (so all names cannot be represented) but lower than limit on
+            // number of unique names so we can still pick one result off the top
+            // for each name and have resultLimit of them represented
           } else if (numKeys <= keyLimit) {
             allMatches.flatMap(_.headOption).take(resultLimit)
-          // too many unique names for us to risk representing only resultLimit
-          // of them and possibly looking stupid so we just return all and allow
-          // TooManyResultsException to be thrown
+            // too many unique names for us to risk representing only resultLimit
+            // of them and possibly looking stupid so we just return all and allow
+            // TooManyResultsException to be thrown
           } else {
             allFlattened
           }
@@ -302,9 +309,8 @@ object PrefixIndexMapFileInput {
 
 class PrefixIndexMapFileInput(basepath: String, shouldPreload: Boolean) {
   val prefixIndex = new MapFileInput(basepath, Indexes.PrefixIndex, shouldPreload)
-  val maxPrefixLength = prefixIndex.fileInfo.getOrElse(
-    "MAX_PREFIX_LENGTH",
-    throw new Exception("missing MAX_PREFIX_LENGTH")).toInt
+  val maxPrefixLength =
+    prefixIndex.fileInfo.getOrElse("MAX_PREFIX_LENGTH", throw new Exception("missing MAX_PREFIX_LENGTH")).toInt
 
   def get(name: String): Seq[StoredFeatureId] = {
     prefixIndex.lookup(name).toVector.flatten
@@ -321,21 +327,14 @@ object ReverseGeocodeMapFileInput {
   }
 }
 
-
 class ReverseGeocodeMapFileInput(basepath: String, shouldPreload: Boolean) {
   val s2Index = new MapFileInput(basepath, Indexes.S2Index, shouldPreload)
 
-  lazy val minS2Level = s2Index.fileInfo.getOrElse(
-    "minS2Level",
-    throw new Exception("missing minS2Level")).toInt
+  lazy val minS2Level = s2Index.fileInfo.getOrElse("minS2Level", throw new Exception("missing minS2Level")).toInt
 
-  lazy val maxS2Level = s2Index.fileInfo.getOrElse(
-    "maxS2Level",
-    throw new Exception("missing maxS2Level")).toInt
+  lazy val maxS2Level = s2Index.fileInfo.getOrElse("maxS2Level", throw new Exception("missing maxS2Level")).toInt
 
-  lazy val levelMod = s2Index.fileInfo.getOrElse(
-    "levelMod",
-    throw new Exception("missing levelMod")).toInt
+  lazy val levelMod = s2Index.fileInfo.getOrElse("levelMod", throw new Exception("missing levelMod")).toInt
 
   def get(cellid: Long): Seq[CellGeometry] = {
     s2Index.lookup(cellid).toVector.flatMap(_.cells)

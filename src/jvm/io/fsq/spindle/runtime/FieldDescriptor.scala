@@ -77,58 +77,85 @@ trait EnumIntField
 trait EnumStringField
 
 abstract class OptionalFieldDescriptor[F, R <: Record[R], M <: MetaRecord[R, M]](
-    override val name: String,
-    override val longName: String,
-    override val id: Int,
-    override val annotations: Map[String, String],
-    override val owner: M,
-    override val manifest: Manifest[F]
-) extends OptionalField[F, M] with FieldDescriptor[F, R, M]
+  override val name: String,
+  override val longName: String,
+  override val id: Int,
+  override val annotations: Map[String, String],
+  override val owner: M,
+  override val manifest: Manifest[F]
+) extends OptionalField[F, M]
+  with FieldDescriptor[F, R, M]
 
 abstract class ForeignKeyFieldDescriptor[F, R <: Record[R], M <: MetaRecord[R, M]](
-    override val name: String,
-    override val longName: String,
-    override val id: Int,
-    override val annotations: Map[String, String],
-    override val owner: M,
-    override val manifest: Manifest[F]
-) extends OptionalField[F, M] with FieldDescriptor[F, R, M] with ForeignKeyField[F, R]
+  override val name: String,
+  override val longName: String,
+  override val id: Int,
+  override val annotations: Map[String, String],
+  override val owner: M,
+  override val manifest: Manifest[F]
+) extends OptionalField[F, M]
+  with FieldDescriptor[F, R, M]
+  with ForeignKeyField[F, R]
 
 abstract class ForeignKeySeqFieldDescriptor[F, R <: Record[R], M <: MetaRecord[R, M]](
-    override val name: String,
-    override val longName: String,
-    override val id: Int,
-    override val annotations: Map[String, String],
-    override val owner: M,
-    override val manifest: Manifest[Seq[F]]
-) extends OptionalField[Seq[F], M] with FieldDescriptor[Seq[F], R, M] with ForeignKeySeqField[F, R]
+  override val name: String,
+  override val longName: String,
+  override val id: Int,
+  override val annotations: Map[String, String],
+  override val owner: M,
+  override val manifest: Manifest[Seq[F]]
+) extends OptionalField[Seq[F], M]
+  with FieldDescriptor[Seq[F], R, M]
+  with ForeignKeySeqField[F, R]
 
-abstract class BitfieldFieldDescriptor[F, R <: Record[R], M <: MetaRecord[R, M], FR <: Record[FR], FM <: MetaRecord[FR, FM]](
-    override val name: String,
-    override val longName: String,
-    override val id: Int,
-    override val annotations: Map[String, String],
-    override val owner: M,
-    override val structMeta: FM,
-    override val manifest: Manifest[F]
-) extends OptionalField[F, M] with FieldDescriptor[F, R, M] with BitfieldField[FR, FM]
+// format: off
+abstract class BitfieldFieldDescriptor[
+  F,
+  R <: Record[R],
+  M <: MetaRecord[R, M],
+  FR <: Record[FR],
+  FM <: MetaRecord[FR, FM]
+](
+  override val name: String,
+  override val longName: String,
+  override val id: Int,
+  override val annotations: Map[String, String],
+  override val owner: M,
+  override val structMeta: FM,
+  override val manifest: Manifest[F]
+) extends OptionalField[F, M]
+  with FieldDescriptor[F, R, M]
+  with BitfieldField[FR, FM]
+// format: on
 
 abstract class StructFieldDescriptor[R <: Record[R], M <: MetaRecord[R, M], ER <: Record[ER], EM <: MetaRecord[ER, EM]](
-    override val name: String,
-    override val longName: String,
-    override val id: Int,
-    override val annotations: Map[String, String],
-    override val owner: M,
-    override val structMeta: EM,
-    override val manifest: Manifest[ER]
-) extends OptionalField[ER, M] with FieldDescriptor[ER, R, M] with StructField[ER, EM]
+  override val name: String,
+  override val longName: String,
+  override val id: Int,
+  override val annotations: Map[String, String],
+  override val owner: M,
+  override val structMeta: EM,
+  override val manifest: Manifest[ER]
+) extends OptionalField[ER, M]
+  with FieldDescriptor[ER, R, M]
+  with StructField[ER, EM]
 
-abstract class ExceptionFieldDescriptor[R <: Record[R], M <: MetaRecord[R, M], ER <: Record[ER], EM <: MetaRecord[ER, EM], E <: RuntimeException with ER](
-    override val name: String,
-    override val longName: String,
-    override val id: Int,
-    override val annotations: Map[String, String],
-    override val owner: M,
-    override val structMeta: EM,
-    override val manifest: Manifest[E]
-) extends OptionalField[E, M] with FieldDescriptor[E, R, M] with StructField[ER, EM]
+// format: off
+abstract class ExceptionFieldDescriptor[
+  R <: Record[R],
+  M <: MetaRecord[R, M],
+  ER <: Record[ER],
+  EM <: MetaRecord[ER, EM],
+  E <: RuntimeException with ER
+](
+  override val name: String,
+  override val longName: String,
+  override val id: Int,
+  override val annotations: Map[String, String],
+  override val owner: M,
+  override val structMeta: EM,
+  override val manifest: Manifest[E]
+) extends OptionalField[E, M]
+  with FieldDescriptor[E, R, M]
+  with StructField[ER, EM]
+// format: on

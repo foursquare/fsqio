@@ -15,20 +15,20 @@ object GeocodeRequestUtils {
 
   def responseIncludes(req: CommonGeocodeRequestParams, include: ResponseIncludes): Boolean = {
     req.responseIncludes.has(include) ||
-      req.responseIncludes.has(ResponseIncludes.EVERYTHING)
+    req.responseIncludes.has(ResponseIncludes.EVERYTHING)
   }
 
   def shouldFetchPolygon(req: CommonGeocodeRequestParams) =
     responseIncludes(req, ResponseIncludes.WKB_GEOMETRY) ||
-    responseIncludes(req, ResponseIncludes.WKT_GEOMETRY) ||
-    responseIncludes(req, ResponseIncludes.REVGEO_COVERAGE) ||
-    responseIncludes(req, ResponseIncludes.WKB_GEOMETRY_SIMPLIFIED) ||
-    responseIncludes(req, ResponseIncludes.WKT_GEOMETRY_SIMPLIFIED)
+      responseIncludes(req, ResponseIncludes.WKT_GEOMETRY) ||
+      responseIncludes(req, ResponseIncludes.REVGEO_COVERAGE) ||
+      responseIncludes(req, ResponseIncludes.WKB_GEOMETRY_SIMPLIFIED) ||
+      responseIncludes(req, ResponseIncludes.WKT_GEOMETRY_SIMPLIFIED)
 
   def geocodeRequestToCommonRequestParams(req: GeocodeRequest): CommonGeocodeRequestParams = {
     val llToRevGeo: Option[GeocodePoint] = req.llOption.orElse(req.boundsOption.map(_.ne))
-    val ccOpt: Option[String] = req.ccOption.orElse(llToRevGeo.flatMap(ll =>
-      CountryRevGeo.getNearestCountryCode(ll.lat, ll.lng)))
+    val ccOpt: Option[String] =
+      req.ccOption.orElse(llToRevGeo.flatMap(ll => CountryRevGeo.getNearestCountryCode(ll.lat, ll.lng)))
 
     CommonGeocodeRequestParams.newBuilder
       .debug(req.debug)
@@ -46,7 +46,7 @@ object GeocodeRequestUtils {
 
   def makeCircle(ll: GeocodePoint, radius: Double) = {
     Stats.addMetric("incoming_radius", radius.toInt)
-    val adjustedRadius: Int  = if (radius > maxRadius) {
+    val adjustedRadius: Int = if (radius > maxRadius) {
       maxRadius
     } else {
       radius.toInt

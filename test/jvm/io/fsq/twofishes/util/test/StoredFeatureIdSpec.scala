@@ -1,8 +1,14 @@
 package io.fsq.twofishes.util.test
 
 import io.fsq.specs2.FSSpecificationWithJUnit
-import io.fsq.twofishes.util.{FeatureNamespace, GeonamesNamespace, GeonamesZip, GeonamesZipNamespace,
-    MaponicsNamespace, StoredFeatureId}
+import io.fsq.twofishes.util.{
+  FeatureNamespace,
+  GeonamesNamespace,
+  GeonamesZip,
+  GeonamesZipNamespace,
+  MaponicsNamespace,
+  StoredFeatureId
+}
 import org.bson.types.ObjectId
 
 // TODO: See if there's a way to clean up the extra noise this sends to stderr.
@@ -28,8 +34,13 @@ class StoredFeatureIdSpec extends FSSpecificationWithJUnit {
     }
 
     "geonames conversion" in {
-      testConversion("geonameid:1234", 1234, 1234 + (1L << 56), new ObjectId("0000000000000001000004d2"),
-        GeonamesNamespace)
+      testConversion(
+        "geonameid:1234",
+        1234,
+        1234 + (1L << 56),
+        new ObjectId("0000000000000001000004d2"),
+        GeonamesNamespace
+      )
     }
 
     "geonameszip conversion" in {
@@ -38,32 +49,35 @@ class StoredFeatureIdSpec extends FSSpecificationWithJUnit {
         18295873488277779L,
         18295873488277779L + (2L << 56),
         new ObjectId("0000000002410000001fd113"),
-        GeonamesZipNamespace)
+        GeonamesZipNamespace
+      )
 
       testConversion(
         "geonamezip:JP-100-0001",
         9570263698809793L,
         9570263698809793L + (2L << 56),
         new ObjectId("000000000222001aa82ca3c1"),
-        GeonamesZipNamespace)
+        GeonamesZipNamespace
+      )
 
       testConversion(
         "geonamezip:FR-68968 CEDEX 9",
         5067260887862605L,
         5067260887862605L + (2L << 56),
         new ObjectId("00000000021200a59d348d4d"),
-        GeonamesZipNamespace)
+        GeonamesZipNamespace
+      )
     }
 
     "geonameszip long construction" in {
       (new GeonamesZip("US-10003")).longId must_==
         ((GeonamesZipNamespace.id.toLong << 56) +
-         (GeonamesZip.supportedCountries.indexOf("US").toLong << 48) +
-         (1 * math.pow(38, 4).toLong) +
-         (0 * math.pow(38, 3).toLong) +
-         (0 * math.pow(38, 2).toLong) +
-         (0 * math.pow(38, 1).toLong) +
-         (3 * math.pow(38, 0).toLong))
+          (GeonamesZip.supportedCountries.indexOf("US").toLong << 48) +
+          (1 * math.pow(38, 4).toLong) +
+          (0 * math.pow(38, 3).toLong) +
+          (0 * math.pow(38, 2).toLong) +
+          (0 * math.pow(38, 1).toLong) +
+          (3 * math.pow(38, 0).toLong))
     }
 
     "geonameszip long conversion" in {

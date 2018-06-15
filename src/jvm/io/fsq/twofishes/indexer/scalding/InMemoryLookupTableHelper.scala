@@ -13,42 +13,56 @@ object InMemoryLookupTableHelper {
   def buildAdminCodeMap(countryInfoFile: CachedFile, adminCodesFile: CachedFile): Map[String, String] = {
 
     val countryInfoSource = Source.fromFile(countryInfoFile.file)
-    val countries = countryInfoSource.getLines.filterNot(_.startsWith("#")).map(l => {
-      val parts = l.split("\t")
-      val cc = parts(0)
-      val geonameid = parts(16)
-      (cc -> geonameid)
-    })
+    val countries = countryInfoSource.getLines
+      .filterNot(_.startsWith("#"))
+      .map(l => {
+        val parts = l.split("\t")
+        val cc = parts(0)
+        val geonameid = parts(16)
+        (cc -> geonameid)
+      })
 
     val adminCodesSource = Source.fromFile(adminCodesFile.file)
-    val admins = adminCodesSource.getLines.filterNot(_.startsWith("#")).map(l => {
-      val parts = l.split("\t")
-      val admCode = parts(0)
-      val geonameid = parts(3)
-      (admCode -> geonameid)
-    })
+    val admins = adminCodesSource.getLines
+      .filterNot(_.startsWith("#"))
+      .map(l => {
+        val parts = l.split("\t")
+        val admCode = parts(0)
+        val geonameid = parts(3)
+        (admCode -> geonameid)
+      })
 
     (countries ++ admins).toMap
   }
 
   def buildCountryNameMap(countryInfoFile: CachedFile): Map[String, String] = {
 
-    Source.fromFile(countryInfoFile.file).getLines.filterNot(_.startsWith("#")).map(l => {
-      val parts = l.split("\t")
-      val cc = parts(0)
-      val englishName = parts(4)
-      (cc -> englishName)
-    }).toMap
+    Source
+      .fromFile(countryInfoFile.file)
+      .getLines
+      .filterNot(_.startsWith("#"))
+      .map(l => {
+        val parts = l.split("\t")
+        val cc = parts(0)
+        val englishName = parts(4)
+        (cc -> englishName)
+      })
+      .toMap
   }
 
   def buildCountryLangsMap(countryInfoFile: CachedFile): Map[String, Seq[String]] = {
 
-    Source.fromFile(countryInfoFile.file).getLines.filterNot(_.startsWith("#")).map(l => {
-      val parts = l.split("\t")
-      val cc = parts(0)
-      val langs = parts(15).split(",").map(l => l.split("-")(0)).toSeq
-      (cc -> langs)
-    }).toMap
+    Source
+      .fromFile(countryInfoFile.file)
+      .getLines
+      .filterNot(_.startsWith("#"))
+      .map(l => {
+        val parts = l.split("\t")
+        val cc = parts(0)
+        val langs = parts(15).split(",").map(l => l.split("-")(0)).toSeq
+        (cc -> langs)
+      })
+      .toMap
   }
 
   def buildNameRewritesMap(cachedFiles: Seq[CachedFile]): Map[Regex, Seq[String]] = {

@@ -19,35 +19,36 @@ abstract class CacheSim[Key](numKeys: Long, pool: FuturePool = CacheSim.pool) {
 
   val histogram: mutable.Map[Long, Long] = mutable.Map.empty //use an array here?
 
-  def access(k: Key):Unit = pool { Stats.time("cachesim.internal") { accessInternal(k) } }
+  def access(k: Key): Unit = pool { Stats.time("cachesim.internal") { accessInternal(k) } }
 
   def accessInternal(k: Key): Unit
 
   var accessCount: Double = 0
 
-  def cumlativeHist: collection.immutable.ListMap[String,Double] = {
+  def cumlativeHist: collection.immutable.ListMap[String, Double] = {
     var total = 0L
     var percentile: Double = 1.0
     val m = List.newBuilder[(String, Double)]
-    histogram.toVector.sortBy(_._1).foreach (kv => {
-      total = total + kv._2
-      // m += (kv._1.toString -> total.toDouble) // uncomment for more detail
-      while (kv._1.toDouble/numKeys  > percentile/100) {
-        percentile += 1
-        m +=(s"p${percentile-1}" -> total.toDouble/accessCount)
-      }
-    })
-    collection.immutable.ListMap(m.result:_*)
+    histogram.toVector
+      .sortBy(_._1)
+      .foreach(kv => {
+        total = total + kv._2
+        // m += (kv._1.toString -> total.toDouble) // uncomment for more detail
+        while (kv._1.toDouble / numKeys > percentile / 100) {
+          percentile += 1
+          m += (s"p${percentile - 1}" -> total.toDouble / accessCount)
+        }
+      })
+    collection.immutable.ListMap(m.result: _*)
   }
 }
-
 
 class JavaLLCacheSim[Key](numKeys: Long) extends CacheSim[Key](numKeys) {
   val lastAccess: java.util.LinkedList[Key] = new java.util.LinkedList[Key]()
   def accessInternal(k: Key): Unit = synchronized {
     accessCount += 1
     val distance = lastAccess.indexOf(k)
-    if (distance>0) {
+    if (distance > 0) {
       histogram.update(distance, histogram.getOrElseUpdate(distance, 0) + 1)
       lastAccess.remove(distance)
     } else {
@@ -57,10 +58,6 @@ class JavaLLCacheSim[Key](numKeys: Long) extends CacheSim[Key](numKeys) {
   }
 }
 
-
-
-
-
 class CacheSimLL[Key](numKeys: Long) extends CacheSim[Key](numKeys) {
 
 // A linked list with a combined indexOf/remove operation that scans the list once.
@@ -69,12 +66,12 @@ class CacheSimLL[Key](numKeys: Long) extends CacheSim[Key](numKeys) {
     case class Entry[V](obj: V, var next: Option[Entry[V]])
     var headO: Option[Entry[V]] = None
 
-    def addFirst(o: V)  { headO  = Some(Entry(o, headO)) }
+    def addFirst(o: V) { headO = Some(Entry(o, headO)) }
 
     def delete(o: V): Long = {
       headO match {
         case None => -1 // empty list, nothing to do
-        case Some(head)  if (head.obj == o)  => {  // deleting the head of the list
+        case Some(head) if (head.obj == o) => { // deleting the head of the list
           headO = head.next
           1
         }
@@ -103,7 +100,7 @@ class CacheSimLL[Key](numKeys: Long) extends CacheSim[Key](numKeys) {
   def accessInternal(k: Key): Unit = synchronized {
     accessCount += 1
     val distance = lastAccess.delete(k)
-    if (distance>0) {
+    if (distance > 0) {
       histogram.update(distance, histogram.getOrElseUpdate(distance, 0) + 1)
     } else {
       // histogram.update(-1, histogram.getOrElseUpdate(-1, 0) + 1)
@@ -111,7 +108,6 @@ class CacheSimLL[Key](numKeys: Long) extends CacheSim[Key](numKeys) {
     lastAccess.addFirst(k)
   }
 }
-
 
 object CacheSim {
 

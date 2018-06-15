@@ -16,9 +16,8 @@ import org.specs2.matcher.JUnitMustMatchers
 import scala.collection.immutable.ListMap
 
 /**
- * Test spindle index annotations.
- */
-
+  * Test spindle index annotations.
+  */
 class MongoIndexCheckerTest extends JUnitMustMatchers {
   type IndexModelType = ThriftIndexTestModel
   val db = new TestDatabaseService
@@ -28,40 +27,45 @@ class MongoIndexCheckerTest extends JUnitMustMatchers {
   def testGetIndexes {
     val indexesOpt = db.dbCollectionFactory.getIndexes(Q(ThriftIndexTestModel))
 
-    indexesOpt.map(_.map(_.asListMap)) must_== Some(List(
-      ListMap("_id" -> "1"),
-      ListMap("a" -> "1", "b" -> "1", "c" -> "1"),
-      ListMap("m" -> "1", "a" -> "1"),
-      ListMap("l" -> "1"),
-      ListMap("ll" -> "2d", "b" -> "1"),
-      ListMap("e.i" -> "-1")
-    ))
+    indexesOpt.map(_.map(_.asListMap)) must_== Some(
+      List(
+        ListMap("_id" -> "1"),
+        ListMap("a" -> "1", "b" -> "1", "c" -> "1"),
+        ListMap("m" -> "1", "a" -> "1"),
+        ListMap("l" -> "1"),
+        ListMap("ll" -> "2d", "b" -> "1"),
+        ListMap("e.i" -> "-1")
+      )
+    )
 
-    indexesOpt.map(_.map(_.toString)) must_== Some(List(
-      "_id:1",
-      "a:1, b:1, c:1",
-      "m:1, a:1",
-      "l:1",
-      "ll:2d, b:1",
-      "e.i:-1"
-    ))
+    indexesOpt.map(_.map(_.toString)) must_== Some(
+      List(
+        "_id:1",
+        "a:1, b:1, c:1",
+        "m:1, a:1",
+        "l:1",
+        "ll:2d, b:1",
+        "e.i:-1"
+      )
+    )
   }
 
   @Test
   def testGetIndexesWithMutuallyRecursiveStructs {
     val indexesOpt = db.dbCollectionFactory.getIndexes(Q(MutuallyRecursive1))
-    indexesOpt.map(_.map(_.toString)) must_== Some(List(
-      "_id:1",
-      "m2.m1:1"
-    ))
+    indexesOpt.map(_.map(_.toString)) must_== Some(
+      List(
+        "_id:1",
+        "m2.m1:1"
+      )
+    )
   }
 
   @Test
   def testIndexExpectations {
     def test[M <: UntypedMetaRecord](query: Query[M, _, _]) = {
       val indexesOpt = db.dbCollectionFactory.getIndexes(query)
-      indexesOpt.forall(indexes =>
-        MongoIndexChecker.validateIndexExpectations(query, indexes))
+      indexesOpt.forall(indexes => MongoIndexChecker.validateIndexExpectations(query, indexes))
     }
 
     def yes[M <: UntypedMetaRecord](query: Query[M, _, _]) =
@@ -71,20 +75,20 @@ class MongoIndexCheckerTest extends JUnitMustMatchers {
 
     yes(Q(ThriftIndexTestModel) where (_.a eqs 1))
     yes(Q(ThriftIndexTestModel) iscan (_.a eqs 1))
-    yes(Q(ThriftIndexTestModel) scan  (_.a eqs 1))
+    yes(Q(ThriftIndexTestModel) scan (_.a eqs 1))
 
     no(Q(ThriftIndexTestModel) where (_.a > 1))
 
     yes(Q(ThriftIndexTestModel) iscan (_.a > 1))
-    yes(Q(ThriftIndexTestModel) scan  (_.a > 1))
+    yes(Q(ThriftIndexTestModel) scan (_.a > 1))
 
-    no(Q(ThriftIndexTestModel) where  (_.a neqs 1))
+    no(Q(ThriftIndexTestModel) where (_.a neqs 1))
     yes(Q(ThriftIndexTestModel) iscan (_.a neqs 1))
-    yes(Q(ThriftIndexTestModel) scan  (_.a neqs 1))
+    yes(Q(ThriftIndexTestModel) scan (_.a neqs 1))
 
-    no(Q(ThriftIndexTestModel) where  (_.a exists true))
+    no(Q(ThriftIndexTestModel) where (_.a exists true))
     yes(Q(ThriftIndexTestModel) iscan (_.a exists true))
-    yes(Q(ThriftIndexTestModel) scan  (_.a exists true))
+    yes(Q(ThriftIndexTestModel) scan (_.a exists true))
 
     no(Q(ThriftIndexTestModel) where (_.l size 1))
     no(Q(ThriftIndexTestModel) iscan (_.l size 1))
@@ -94,7 +98,7 @@ class MongoIndexCheckerTest extends JUnitMustMatchers {
     no(Q(ThriftIndexTestModel) where  (_.ll near (1.0, 2.0, Degrees(1.0))))
     yes(Q(ThriftIndexTestModel) iscan (_.ll near (1.0, 2.0, Degrees(1.0))))
     yes(Q(ThriftIndexTestModel) scan  (_.ll near (1.0, 2.0, Degrees(1.0))))
-    */
+     */
 
     // $or queries
     yes(Q(ThriftIndexTestModel) where (_.a eqs 1) or (_.where(_.b eqs 2), _.where(_.b eqs 2)))
@@ -114,9 +118,11 @@ class MongoIndexCheckerTest extends JUnitMustMatchers {
     def test[M <: UntypedMetaRecord](query: Query[M, _, _]) = {
       val q = query.asInstanceOf[Query[_, _, _]]
       val indexesOpt = db.dbCollectionFactory.getIndexes(query)
-      indexesOpt.forall(indexes =>
-        MongoIndexChecker.validateIndexExpectations(q, indexes) &&
-          MongoIndexChecker.validateQueryMatchesSomeIndex(q, indexes))
+      indexesOpt.forall(
+        indexes =>
+          MongoIndexChecker.validateIndexExpectations(q, indexes) &&
+            MongoIndexChecker.validateQueryMatchesSomeIndex(q, indexes)
+      )
     }
 
     def yes[M <: UntypedMetaRecord](query: Query[M, _, _]) =
@@ -189,7 +195,7 @@ class MongoIndexCheckerTest extends JUnitMustMatchers {
     no(Q(ThriftIndexTestModel) iscan (_.ll near (1.0, 2.0, Degrees(1.0))) and (_.b eqs 2))
     yes(Q(ThriftIndexTestModel) iscan (_.ll near (1.0, 2.0, Degrees(1.0))) scan (_.c eqs 2))
     no(Q(ThriftIndexTestModel) iscan (_.ll near (1.0, 2.0, Degrees(1.0))) iscan (_.c eqs 2))
-    */
+     */
 
     // Overspecifed queries
     val id = new ObjectId
@@ -220,7 +226,9 @@ class MongoIndexCheckerTest extends JUnitMustMatchers {
     no(Q(ThriftIndexTestModel) where (_.a eqs 1) or (_.where(_.c eqs 3), _.where(_.c eqs 3)))
     yes(Q(ThriftIndexTestModel) where (_.a eqs 1) or (_.iscan(_.c eqs 3), _.iscan(_.c eqs 3)))
     no(Q(ThriftIndexTestModel) where (_.a eqs 1) and (_.b between (2, 2)) or (_.where(_.c eqs 3), _.where(_.c eqs 3)))
-    yes(Q(ThriftIndexTestModel) where (_.a eqs 1) iscan (_.b between (2, 2)) or (_.iscan(_.c eqs 3), _.iscan(_.c eqs 3)))
+    yes(
+      Q(ThriftIndexTestModel) where (_.a eqs 1) iscan (_.b between (2, 2)) or (_.iscan(_.c eqs 3), _.iscan(_.c eqs 3))
+    )
     yes(Q(ThriftIndexTestModel) where (_.a eqs 1) or (_.where(_.b eqs 2), _.where(_.b eqs 2)) and (_.c eqs 3))
     no(Q(ThriftIndexTestModel) where (_.a eqs 1) or (_.where(_.b eqs 2), _.where(_.b > 2)) and (_.c eqs 3))
     no(Q(ThriftIndexTestModel) where (_.a eqs 1) or (_.where(_.b eqs 2), _.iscan(_.b > 2)) and (_.c eqs 3))

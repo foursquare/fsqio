@@ -7,7 +7,7 @@ package io.fsq.spindle.codegen.binary
 import scala.collection.mutable
 
 /* Helper class storing the timing information for each block in BlockTimer. */
-class BlockDets () {
+class BlockDets() {
   var totalTimeNanos: Long = 0
   var calls: Int = 0
 
@@ -33,7 +33,7 @@ class BlockTimer {
   /*
   Call once before [[render]] to close your final block. Safe to call multiple times.
   Used internally by [[start]].
-  */
+   */
   def stop(): Unit = {
     val now: Long = System.nanoTime()
     if (currentName != null) {

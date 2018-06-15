@@ -2,7 +2,7 @@
 
 package io.fsq.exceptionator.model.io
 
-import net.liftweb.json.{JArray, JValue, render}
+import net.liftweb.json.{render, JArray, JValue}
 
 object UserFilterView {
   def pretty(filters: List[UserFilterView]) = {

@@ -12,8 +12,7 @@ import scala.collection.JavaConverters._
  or an autocomplete request, and handing it off to the appropriate logic loop.
  */
 
-class GeocodeRequestDispatcher(
-  store: GeocodeStorageReadService) {
+class GeocodeRequestDispatcher(store: GeocodeStorageReadService) {
 
   def geocode(req: GeocodeRequest): GeocodeResponse = {
     val logger = new MemoryLogger(req)

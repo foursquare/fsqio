@@ -6,7 +6,6 @@ import io.fsq.rogue.Query
 import org.bson.{BsonDocument, BsonInt32, BsonString}
 import org.bson.conversions.Bson
 
-
 /** A utility helper to build various query documents used by MongoClientAdapter and
   * elsewhere. */
 object MongoBuilder {

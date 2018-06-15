@@ -7,8 +7,16 @@ import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.core.YahooWoeTypes
 import io.fsq.twofishes.gen._
-import io.fsq.twofishes.model.gen.{ThriftBoundingBox, ThriftBoundingBoxProxy, ThriftDisplayName,
-    ThriftDisplayNameProxy, ThriftGeocodeRecord, ThriftGeocodeRecordProxy, ThriftPoint, ThriftPointProxy}
+import io.fsq.twofishes.model.gen.{
+  ThriftBoundingBox,
+  ThriftBoundingBoxProxy,
+  ThriftDisplayName,
+  ThriftDisplayNameProxy,
+  ThriftGeocodeRecord,
+  ThriftGeocodeRecordProxy,
+  ThriftPoint,
+  ThriftPointProxy
+}
 import io.fsq.twofishes.util.StoredFeatureId
 import java.nio.ByteBuffer
 import org.apache.thrift.{TDeserializer, TSerializer}
@@ -156,8 +164,9 @@ class GeocodeRecord(
     new GeocodeRecord(underlying.toBuilder.rawAttributes(serializedAttributesOpt).result())
   }
 
-  def featureId: StoredFeatureId = StoredFeatureId.fromLong(id).getOrElse(
-    throw new RuntimeException("can't convert %s to a StoredFeatureId".format(id)))
+  def featureId: StoredFeatureId = StoredFeatureId
+    .fromLong(id)
+    .getOrElse(throw new RuntimeException("can't convert %s to a StoredFeatureId".format(id)))
 
   def allIds = (List(id) ++ ids).distinct
   def featureIds: List[StoredFeatureId] = allIds.flatMap(StoredFeatureId.fromLong)
@@ -182,17 +191,21 @@ class GeocodeRecord(
       // tilde and caron to breve
       "Ã" -> "Ă",
       "Ǎ" -> "Ă"
-    ).flatMap({case (from, to) => {
-      List(
-        from.toLowerCase -> to.toLowerCase,
-        from.toUpperCase -> to.toUpperCase
-      )
-    }})
+    ).flatMap({
+      case (from, to) => {
+        List(
+          from.toLowerCase -> to.toLowerCase,
+          from.toUpperCase -> to.toUpperCase
+        )
+      }
+    })
 
     var newS = s
-    romanianTranslationTable.foreach({case (from, to) => {
-      newS = newS.replace(from, to)
-    }})
+    romanianTranslationTable.foreach({
+      case (from, to) => {
+        newS = newS.replace(from, to)
+      }
+    })
     newS
   }
 
@@ -218,10 +231,12 @@ class GeocodeRecord(
           println("incorrect bounds %s -> %s".format(currentBounds, finalBounds))
         }
 
-        geometryBuilder.bounds(GeocodeBoundingBox(
-          GeocodePoint(finalBounds._1, finalBounds._2),
-          GeocodePoint(finalBounds._3, finalBounds._4)
-        ))
+        geometryBuilder.bounds(
+          GeocodeBoundingBox(
+            GeocodePoint(finalBounds._1, finalBounds._2),
+            GeocodePoint(finalBounds._3, finalBounds._4)
+          )
+        )
       })
     }
 
@@ -240,10 +255,12 @@ class GeocodeRecord(
         println("incorrect bounds %s -> %s".format(currentBounds, finalBounds))
       }
 
-      geometryBuilder.displayBounds(GeocodeBoundingBox(
-        GeocodePoint(finalBounds._1, finalBounds._2),
-        GeocodePoint(finalBounds._3, finalBounds._4)
-      ))
+      geometryBuilder.displayBounds(
+        GeocodeBoundingBox(
+          GeocodePoint(finalBounds._1, finalBounds._2),
+          GeocodePoint(finalBounds._3, finalBounds._4)
+        )
+      )
     })
 
     polygonOption.foreach(poly => {
@@ -254,10 +271,12 @@ class GeocodeRecord(
 
       val envelope = g.getEnvelopeInternal()
 
-      geometryBuilder.bounds(GeocodeBoundingBox(
-        GeocodePoint(envelope.getMaxY(), envelope.getMaxX()),
-        GeocodePoint(envelope.getMinY(), envelope.getMinX())
-      ))
+      geometryBuilder.bounds(
+        GeocodeBoundingBox(
+          GeocodePoint(envelope.getMaxY(), envelope.getMaxX()),
+          GeocodePoint(envelope.getMinY(), envelope.getMinX())
+        )
+      )
     })
 
     val allNames: Seq[ThriftDisplayName] = {
@@ -285,18 +304,20 @@ class GeocodeRecord(
 
     var finalNames = nameCandidates
       .groupBy(n => "%s%s".format(n.lang, n.name))
-      .flatMap({case (k, values) => {
-        var allFlags = values.flatMap(_.flags)
+      .flatMap({
+        case (k, values) => {
+          var allFlags = values.flatMap(_.flags)
 
-        // If we collapsed multiple names, and not all of them had ALIAS,
-        // then we should strip off that flag because some other entry told
-        // us it didn't deserve to be ranked down
-        if (values.size > 1 && values.exists(n => !n.flags.has(FeatureNameFlags.ALIAS))) {
-          allFlags = allFlags.filterNot(_ =? FeatureNameFlags.ALIAS)
+          // If we collapsed multiple names, and not all of them had ALIAS,
+          // then we should strip off that flag because some other entry told
+          // us it didn't deserve to be ranked down
+          if (values.size > 1 && values.exists(n => !n.flags.has(FeatureNameFlags.ALIAS))) {
+            allFlags = allFlags.filterNot(_ =? FeatureNameFlags.ALIAS)
+          }
+
+          values.headOption.map(_.copy(flags = allFlags.distinct))
         }
-
-        values.headOption.map(_.copy(flags = allFlags.distinct))
-      }})
+      })
       .map(n => {
         if (n.lang =? "ro") {
           n.copy(

@@ -13,35 +13,30 @@ import org.geotools.feature.simple.SimpleFeatureTypeImpl
 import org.opengis.feature.`type`.{AttributeDescriptor, AttributeType}
 import scala.collection.JavaConverters._
 
-object ShapefileSimplifier{
-  val defaultLevels = Array(1000,10,4,4)
+object ShapefileSimplifier {
+  val defaultLevels = Array(1000, 10, 4, 4)
 
   object Coords extends Enumeration {
-      type Coords = Value
-      val BottomLeft, BottomRight, TopRight, TopLeft = Value
+    type Coords = Value
+    val BottomLeft, BottomRight, TopRight, TopLeft = Value
   }
-
 
   def simplify(node: ShapeTrieNode, levels: Array[Int]) = {
     gridifyList(node)
 
     def gridifyList(node: ShapeTrieNode): Unit = {
 
-
       val nLongs = levels(node.nodeLevel)
       val nLats = levels(node.nodeLevel)
-      val longChunk = node.nodeBounds.width/nLongs
-      val latChunk = node.nodeBounds.height/nLats
+      val longChunk = node.nodeBounds.width / nLongs
+      val latChunk = node.nodeBounds.height / nLats
 
       def toIndex(coord: Coordinate): (Int, Int) = {
-        ( ((coord.x - node.nodeBounds.minLong) / longChunk).toInt,
-          ((coord.y - node.nodeBounds.minLat)  / latChunk ).toInt )
+        (((coord.x - node.nodeBounds.minLong) / longChunk).toInt, ((coord.y - node.nodeBounds.minLat) / latChunk).toInt)
       }
-
 
       // initialize subGrid
       node.makeSubGrid(levels)
-
 
       // process shapes into sub-shapes by intersecting the shapes with the grid
       // this greatly reduces the # of points per shape, and contains(lat,lng)
@@ -61,10 +56,10 @@ object ShapefileSimplifier{
         val mxLg = if (maxLongIdx >= nLongs) nLongs - 1 else maxLongIdx
         val mxLt = if (maxLatIdx >= nLats) nLats - 1 else maxLatIdx
 
-        for{
+        for {
           longIdx <- minLongIdx to mxLg
-          latIdx <- minLatIdx to mxLt}
-        {
+          latIdx <- minLatIdx to mxLt
+        } {
           val cell = node.subGrid.get(longIdx)(latIdx)
           // Note: may not actually intersect because the shape's envelope is an
           // over approximation of the shape.  We may have found a nook
@@ -96,8 +91,8 @@ object ShapefileSimplifier{
 
       for {
         longIdx <- 0 until nLongs
-        latIdx <- 0 until nLats}
-      {
+        latIdx <- 0 until nLats
+      } {
         val cell = node.subGrid.get(longIdx)(latIdx)
         gridifyList(cell)
       }
@@ -106,14 +101,14 @@ object ShapefileSimplifier{
     }
   }
 
-  def saveSimplifiedFeatures(featureStore: AbstractDataStore,  world: ShapeTrieNode) = {
+  def saveSimplifiedFeatures(featureStore: AbstractDataStore, world: ShapeTrieNode) = {
     val transaction = new DefaultTransaction("addShapes")
     val schema = featureStore.getSchema(featureStore.getNames.get(0))
     val writer = featureStore.getFeatureWriterAppend(schema.getTypeName.asInstanceOf[String], transaction)
 
     def addFeature(poly: Geometry, tz: String, path: String) = {
       val feat = writer.next()
-      feat.setAttributes(Array[Object](poly,tz,path))
+      feat.setAttributes(Array[Object](poly, tz, path))
       writer.write()
     }
 
@@ -123,9 +118,10 @@ object ShapefileSimplifier{
       case None =>
         cell.subGrid match {
           case Some(grid) => {
-             for{ longIdx <- 0 until cell.subGridSize._1
-                  latIdx  <- 0 until cell.subGridSize._2 }
-                    enumerateFeatures(grid(longIdx)(latIdx), (path + longIdx + "," + latIdx + ";"))
+            for {
+              longIdx <- 0 until cell.subGridSize._1
+              latIdx <- 0 until cell.subGridSize._2
+            } enumerateFeatures(grid(longIdx)(latIdx), (path + longIdx + "," + latIdx + ";"))
           }
           case None => cell.subList.foreach(keyShape => addFeature(keyShape.shape, keyShape.keyValue.get, path))
         }
@@ -138,20 +134,22 @@ object ShapefileSimplifier{
 
   }
 
-  def createSimplifiedFeatureStore( simplified: File,
-                                    originalSource: SimpleFeatureSource,
-                                    keyAttribute: String,
-                                    simplifiedKeyAttribute: String,
-                                    levels: Array[Int]): AbstractDataStore = {
+  def createSimplifiedFeatureStore(
+    simplified: File,
+    originalSource: SimpleFeatureSource,
+    keyAttribute: String,
+    simplifiedKeyAttribute: String,
+    levels: Array[Int]
+  ): AbstractDataStore = {
     // Building Datasources:
     // http://docs.geotools.org/stable/userguide/examples/crslab.html
     // Attrs/Features:
     // http://docs.geotools.org/latest/userguide/library/main/feature.html
     val storeFactory: DataStoreFactorySpi = new ShapefileDataStoreFactory()
-    val create = Map[String,java.io.Serializable]( "url" -> simplified.toURI.toURL)
+    val create = Map[String, java.io.Serializable]("url" -> simplified.toURI.toURL)
     val saveStore = storeFactory.createNewDataStore(create.asJava)
     val oldSchema = originalSource.getSchema
-    val descriptorList:java.util.List[AttributeDescriptor] = new java.util.ArrayList[AttributeDescriptor]()
+    val descriptorList: java.util.List[AttributeDescriptor] = new java.util.ArrayList[AttributeDescriptor]()
     var index: Int = 0
     descriptorList.add(oldSchema.getGeometryDescriptor)
 
@@ -165,11 +163,12 @@ object ShapefileSimplifier{
 
     val indexAttribute = ShapefileGeo.indexAttributePrefix + levels.mkString("_")
     if (indexAttribute.length > 10) {
-      throw new IllegalArgumentException("Stringification of levels is too long"+
-        " for DBF format. Index "+indexAttribute+
-        " must be less than or equal to length 10")
+      throw new IllegalArgumentException(
+        "Stringification of levels is too long" +
+          " for DBF format. Index " + indexAttribute +
+          " must be less than or equal to length 10"
+      )
     }
-
 
     // Finally, add the new index parameter
     val indexTB = new AttributeTypeBuilder()
@@ -178,13 +177,15 @@ object ShapefileSimplifier{
     indexTB.setNillable(false)
     descriptorList.add(indexTB.buildDescriptor(indexAttribute))
 
-    val newSchema = new SimpleFeatureTypeImpl(new NameImpl(simplified.getName),
-                                              descriptorList,
-                                              oldSchema.getGeometryDescriptor,
-                                              oldSchema.isAbstract,
-                                              oldSchema.getRestrictions,
-                                              oldSchema.getSuper,
-                                              null)
+    val newSchema = new SimpleFeatureTypeImpl(
+      new NameImpl(simplified.getName),
+      descriptorList,
+      oldSchema.getGeometryDescriptor,
+      oldSchema.isAbstract,
+      oldSchema.getRestrictions,
+      oldSchema.getSuper,
+      null
+    )
     saveStore.createSchema(newSchema)
     saveStore.asInstanceOf[AbstractDataStore]
   }
@@ -194,31 +195,24 @@ object ShapefileSimplifier{
     dataStore.getFeatureSource()
   }
 
-
-  def loadOriginal( featureSource: SimpleFeatureSource,
-                    keyAttribute: String,
-                    keyMap: Option[Map[String, String]]) = {
+  def loadOriginal(featureSource: SimpleFeatureSource, keyAttribute: String, keyMap: Option[Map[String, String]]) = {
     // determine the key, index, attribute names, and the number and size of the index levels
     if (featureSource.getSchema.getDescriptor(keyAttribute) == null)
-      throw new IllegalArgumentException("Schema has no attribute named \""+keyAttribute+"\"")
+      throw new IllegalArgumentException("Schema has no attribute named \"" + keyAttribute + "\"")
 
     // build the world
     val bounds = featureSource.getInfo.getBounds
-    val world = new ShapeTrieNode( 0, GeoBounds(bounds.getMinX,
-                                                bounds.getMinY,
-                                                bounds.getWidth,
-                                                bounds.getHeight), true)
+    val world = new ShapeTrieNode(0, GeoBounds(bounds.getMinX, bounds.getMinY, bounds.getWidth, bounds.getHeight), true)
     val iterator = featureSource.getFeatures.features
 
-    try{
+    try {
       while (iterator.hasNext) {
         val feature = iterator.next()
         val sourceGeometry = feature.getDefaultGeometry().asInstanceOf[Geometry]
         val origKeyValue = feature.getAttribute(keyAttribute).toString
         val keyValue = keyMap match {
           case Some(map) => {
-            map.getOrElse(origKeyValue,
-                          throw new IllegalArgumentException("Can't find "+origKeyValue+" in map"))
+            map.getOrElse(origKeyValue, throw new IllegalArgumentException("Can't find " + origKeyValue + " in map"))
           }
           case None => origKeyValue
         }
@@ -231,33 +225,34 @@ object ShapefileSimplifier{
     world
   }
 
-  def doSimplification( original: File,
-                        simplified: File,
-                        keyAttribute: String,
-                        levels: Array[Int],
-                        keyMap: Option[Map[String, String]],
-                        newKeyAttribute: Option[String]){
+  def doSimplification(
+    original: File,
+    simplified: File,
+    keyAttribute: String,
+    levels: Array[Int],
+    keyMap: Option[Map[String, String]],
+    newKeyAttribute: Option[String]
+  ) {
     val simplifiedKeyAttribute = newKeyAttribute.getOrElse(keyAttribute)
     val originalSource = getFeatureSource(original)
     val world = loadOriginal(originalSource, keyAttribute, keyMap)
     simplify(world, levels)
 
-    val featureStore = createSimplifiedFeatureStore(simplified,
-                                                    originalSource,
-                                                    keyAttribute,
-                                                    simplifiedKeyAttribute,
-                                                    levels)
+    val featureStore =
+      createSimplifiedFeatureStore(simplified, originalSource, keyAttribute, simplifiedKeyAttribute, levels)
     saveSimplifiedFeatures(featureStore, world)
   }
 
   def main(args: Array[String]) = {
-    if (args.length < 3){
+    if (args.length < 3) {
       println("Error: you didn't specify the correct number of parameters!")
-      println("run-class io.fsq.batch.ShapefileSimplifier \n"+
-        "\t<original-shapefile.shp>\n"+
-        "\t<simplified-shapefile.shp>\n"+
-        "\t<key-name>\n"+
-        "\t[underscore-separated-levels]")
+      println(
+        "run-class io.fsq.batch.ShapefileSimplifier \n" +
+          "\t<original-shapefile.shp>\n" +
+          "\t<simplified-shapefile.shp>\n" +
+          "\t<key-name>\n" +
+          "\t[underscore-separated-levels]"
+      )
       println("Example:")
       println("run-class io.fsq.batch.ShapefileSimplifier tz_world.shp new/4sq_tz.shp TZID 40_2_2_2")
       System.exit(1)
@@ -267,13 +262,13 @@ object ShapefileSimplifier{
     val simplified = new File(args(1))
     val keyAttribute = args(2)
 
-    if (!original.exists){
-      println(args(0)+" not found!")
+    if (!original.exists) {
+      println(args(0) + " not found!")
       System.exit(1)
     }
 
-    if (simplified.exists){
-      println(args(1)+" already exists! Too scared to overwrite.")
+    if (simplified.exists) {
+      println(args(1) + " already exists! Too scared to overwrite.")
       System.exit(1)
     }
 

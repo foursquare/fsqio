@@ -13,7 +13,7 @@ object LiftQueryHelpers {
     val DBObjectClass = classOf[DBObject]
 
     def deserialize(implicit formats: Formats): PartialFunction[(TypeInfo, JValue), DBObject] = {
-      case (TypeInfo(klass, _), json : JObject) if DBObjectClass.isAssignableFrom(klass) =>
+      case (TypeInfo(klass, _), json: JObject) if DBObjectClass.isAssignableFrom(klass) =>
         JObjectParser.parse(json)
     }
 

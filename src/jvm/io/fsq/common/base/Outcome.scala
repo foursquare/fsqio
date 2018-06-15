@@ -3,11 +3,11 @@
 package io.fsq.common.base
 
 /**
- * Represents the outcome of an action where an action results in the disjoint union of two states: success
- * or failure. The only instances of [[io.fsq.base.Outcome]] are [[io.fsq.base.Success]] and
- * [[io.fsq.base.Failure]]. By default, [[io.fsq.base.Outcome]] operates as a monad over the
- * successful state.
- */
+  * Represents the outcome of an action where an action results in the disjoint union of two states: success
+  * or failure. The only instances of [[io.fsq.base.Outcome]] are [[io.fsq.base.Success]] and
+  * [[io.fsq.base.Failure]]. By default, [[io.fsq.base.Outcome]] operates as a monad over the
+  * successful state.
+  */
 sealed trait Outcome[+S, +F] {
   def isSuccess: Boolean
   def isFailure: Boolean
@@ -54,15 +54,17 @@ object Outcome {
   }
 
   def apply[T](f: => T): Outcome[T, String] = {
-    try { Success(f) } catch {
+    try {
+      Success(f)
+    } catch {
       case ex: Exception => Failure(ex.getMessage)
     }
   }
 }
 
 /**
- * A successful outcome, instead of a [[io.fsq.base.Failure]].
- */
+  * A successful outcome, instead of a [[io.fsq.base.Failure]].
+  */
 final case class Success[+S, +F](v: S) extends Outcome[S, F] {
   override def isSuccess = true
   override def isFailure = false
@@ -81,12 +83,13 @@ final case class Success[+S, +F](v: S) extends Outcome[S, F] {
 
   override def flatten[T, FF >: F](implicit asOutcome: (S) => Outcome[T, FF]): Outcome[T, FF] = asOutcome(v)
   override def rescue[SS >: S, FF](f: F => Outcome[SS, FF]): Outcome[SS, FF] = Success(v)
-  override def filter[FF >: F](f: S => Boolean, failure: FF): Outcome[S, FF] = if (f(v)) Success(v) else Failure(failure)
+  override def filter[FF >: F](f: S => Boolean, failure: FF): Outcome[S, FF] =
+    if (f(v)) Success(v) else Failure(failure)
 }
 
 /**
- * A failed outcome, instead of a [[io.fsq.base.Success]].
- */
+  * A failed outcome, instead of a [[io.fsq.base.Success]].
+  */
 final case class Failure[+S, +F](v: F) extends Outcome[S, F] {
   override def isSuccess = false
   override def isFailure = true
@@ -101,7 +104,7 @@ final case class Failure[+S, +F](v: F) extends Outcome[S, F] {
 
   override def map[T](f: S => T): Outcome[T, F] = Failure(v)
   override def flatMap[T, FF >: F](f: S => Outcome[T, FF]) = Failure(v)
-  override def foreach[T](f: S => T): Unit = { /* pass */  }
+  override def foreach[T](f: S => T): Unit = { /* pass */ }
 
   override def flatten[T, FF >: F](implicit asOutcome: (S) => Outcome[T, FF]): Outcome[T, FF] = Failure(v)
   override def rescue[SS >: S, FF](f: F => Outcome[SS, FF]): Outcome[SS, FF] = f(v)
@@ -109,8 +112,8 @@ final case class Failure[+S, +F](v: F) extends Outcome[S, F] {
 }
 
 /**
- * Projects an [[io.fsq.base.Outcome]] as a monad.
- */
+  * Projects an [[io.fsq.base.Outcome]] as a monad.
+  */
 final case class FailureProjection[+S, +F](underlying: Outcome[S, F]) {
   def toOption: Option[F] = underlying match {
     case Success(_) => None

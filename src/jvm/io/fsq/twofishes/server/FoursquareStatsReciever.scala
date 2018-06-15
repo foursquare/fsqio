@@ -3,17 +3,16 @@
 package io.fsq.twofishes.server
 
 import com.twitter.finagle.stats.{Counter, Stat, StatsReceiverWithCumulativeGauges}
-import com.twitter.ostrich.stats.{Stats, StatsProvider}
+import com.twitter.ostrich.stats.Stats
 
 /**
- * An adapter from our stats-gathering interface to finagle's StatsReceiver interface.
- *
- * Note that our stats-gathering interface is just an ostrich StatsProvider, and Finagle already comes with an
- * OstrichStatsReceiver. Unfortunately, however, that class talks directly to the global Stats object, and
- * we may want to override with a custom StatsProvider.
- */
-class FoursquareStatsReceiver(prefix: List[String] = Nil)
-        extends StatsReceiverWithCumulativeGauges {
+  * An adapter from our stats-gathering interface to finagle's StatsReceiver interface.
+  *
+  * Note that our stats-gathering interface is just an ostrich StatsProvider, and Finagle already comes with an
+  * OstrichStatsReceiver. Unfortunately, however, that class talks directly to the global Stats object, and
+  * we may want to override with a custom StatsProvider.
+  */
+class FoursquareStatsReceiver(prefix: List[String] = Nil) extends StatsReceiverWithCumulativeGauges {
 
   val statsProvider = Stats
   val repr = statsProvider

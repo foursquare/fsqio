@@ -5,8 +5,19 @@ package io.fsq.spindle.codegen.binary
 import io.fsq.common.scala.Identity._
 import io.fsq.spindle.__shaded_for_spindle_bootstrap__.runtime.Annotations
 import io.fsq.spindle.codegen.parser.{ParserException, ThriftParser}
-import io.fsq.spindle.codegen.runtime.{BitfieldRef, CodegenException, EnhancedTypeRef, EnhancedTypes, ProgramSource,
-    RenderJson, ScalaProgram, Scope, TypeDeclaration, TypeDeclarationResolver, TypeReference}
+import io.fsq.spindle.codegen.runtime.{
+  BitfieldRef,
+  CodegenException,
+  EnhancedTypeRef,
+  EnhancedTypes,
+  ProgramSource,
+  RenderJson,
+  ScalaProgram,
+  Scope,
+  TypeDeclaration,
+  TypeDeclarationResolver,
+  TypeReference
+}
 import java.io.{File, FileWriter, IOException, PrintWriter}
 import org.fusesource.scalate.{RenderContext, TemplateEngine}
 import scala.annotation.tailrec
@@ -20,7 +31,7 @@ object Info {
 
 case class ThriftCodegenConfig(
   input: Seq[File] = Nil,
-  template: String = "",  // will be filled in since this is a required option
+  template: String = "", // will be filled in since this is a required option
   javaTemplate: Option[String] = None,
   includes: Option[Seq[File]] = None,
   namespaceOut: Option[File] = None,
@@ -58,8 +69,10 @@ object ThriftCodegenConfig {
         })
 
       opt[File]("namespace_out")
-        .text("Root of the output namespace hierarchy. We add the intermediate directory structure there as needed. "
-          + "Required when compiling multiple files or setting --write_annotations_json.")
+        .text(
+          "Root of the output namespace hierarchy. We add the intermediate directory structure there as needed. "
+            + "Required when compiling multiple files or setting --write_annotations_json."
+        )
         .action((v, c) => c.copy(namespaceOut = Some(v)))
 
       opt[File]("working_dir")
@@ -81,8 +94,10 @@ object ThriftCodegenConfig {
         .action((v, c) => c.copy(input = c.input :+ v))
 
       opt[Boolean]("write_annotations_json")
-        .text("create *.annotations.json in $namespace_out/annotations, "
-          + "mapping generated class name to annotations from thrift IDL")
+        .text(
+          "create *.annotations.json in $namespace_out/annotations, "
+            + "mapping generated class name to annotations from thrift IDL"
+        )
         .action((_, c) => c.copy(writeAnnotationsJson = true))
     }
 
@@ -93,13 +108,16 @@ object ThriftCodegenConfig {
 case class InputInfo(
   sources: Seq[ProgramSource],
   types: Map[ProgramSource, Map[String, TypeDeclaration]],
-  enhanced: EnhancedTypes) {}
+  enhanced: EnhancedTypes
+) {}
 
 object ThriftCodegen {
   def main(_args: Array[String]): Unit = {
-    val args = ThriftCodegenConfig.parse(_args).getOrElse({
-      sys.exit(1)
-    })
+    val args = ThriftCodegenConfig
+      .parse(_args)
+      .getOrElse({
+        sys.exit(1)
+      })
 
     val timer = new BlockTimer
     timer.start("compile")
@@ -118,7 +136,8 @@ object ThriftCodegen {
           args.workingDir,
           "java",
           args.allowReload,
-          args.writeAnnotationsJson)
+          args.writeAnnotationsJson
+        )
       })
       compile(
         info,
@@ -130,7 +149,8 @@ object ThriftCodegen {
         args.workingDir,
         args.extension.getOrElse("scala"),
         args.allowReload,
-        args.writeAnnotationsJson)
+        args.writeAnnotationsJson
+      )
     } catch {
       // TODO(awinter): won't this print without catching the error?
       case e: CodegenException =>
@@ -141,16 +161,16 @@ object ThriftCodegen {
   }
 
   def compile(
-      info: InputInfo,
-      timer: BlockTimer,
-      templatePath: String,
-      inputFiles: Seq[File],
-      includePaths: Seq[File],
-      namespaceOutputPath: Option[File],
-      workingDirPath: Option[File],
-      extension: String,
-      allowReload: Boolean,
-      writeAnnotationsJson: Boolean
+    info: InputInfo,
+    timer: BlockTimer,
+    templatePath: String,
+    inputFiles: Seq[File],
+    includePaths: Seq[File],
+    namespaceOutputPath: Option[File],
+    workingDirPath: Option[File],
+    extension: String,
+    allowReload: Boolean,
+    writeAnnotationsJson: Boolean
   ): Unit = {
     val engine = new TemplateEngine(Nil, "") {
       override protected def createRenderContext(uri: String, out: PrintWriter): RenderContext = {
@@ -170,7 +190,9 @@ object ThriftCodegen {
             ScalaProgram(source, info.types, info.enhanced)
           } catch {
             case e: CodegenException =>
-              throw new CodegenException("Error generating code for file %s:\n%s".format(source.file.toString, e.getMessage))
+              throw new CodegenException(
+                "Error generating code for file %s:\n%s".format(source.file.toString, e.getMessage)
+              )
           }
 
         //val extraPath = pkg.map(_.split('.').mkString(File.separator, File.separator, "")).getOrElse("")
@@ -206,16 +228,14 @@ object ThriftCodegen {
         timer.start("layout")
         // TODO(awinter): check that TemplateEngine is checking return codes from PrintWriter
         val args =
-          Map(
-            "program" -> program,
-            "source" -> source,
-            "templatePath" -> templatePath,
-            "version" -> Info.version)
+          Map("program" -> program, "source" -> source, "templatePath" -> templatePath, "version" -> Info.version)
         try {
           engine.layout(templatePath, out, args)
         } catch {
           case e: CodegenException =>
-            throw new CodegenException("Error generating code for file %s:\n%s".format(source.file.toString, e.getMessage))
+            throw new CodegenException(
+              "Error generating code for file %s:\n%s".format(source.file.toString, e.getMessage)
+            )
         } finally {
           if (out.checkError()) {
             throw new IOException("error in PrintWriter")
@@ -249,14 +269,22 @@ object ThriftCodegen {
         annots.get("enhanced_types").map(value => EnhancedTypeRef(value, ref))
       } else if (annots.contains("bitfield_struct")) {
         for (structName <- annots.get("bitfield_struct")) yield {
-          val typeDeclaration = scope.getOrElse(structName,
-            throw new CodegenException("Could not find struct referenced in bitfield annotation with name: %s".format(structName)))
+          val typeDeclaration = scope.getOrElse(
+            structName,
+            throw new CodegenException(
+              "Could not find struct referenced in bitfield annotation with name: %s".format(structName)
+            )
+          )
           BitfieldRef(typeDeclaration.name, ref, true)
         }
       } else if (annots.contains("bitfield_struct_no_setbits")) {
         for (structName <- annots.get("bitfield_struct_no_setbits")) yield {
-          val typeDeclaration = scope.getOrElse(structName,
-            throw new CodegenException("Could not find struct referenced in bitfield annotation with name: %s".format(structName)))
+          val typeDeclaration = scope.getOrElse(
+            structName,
+            throw new CodegenException(
+              "Could not find struct referenced in bitfield annotation with name: %s".format(structName)
+            )
+          )
           BitfieldRef(typeDeclaration.name, ref, false)
         }
       } else {
@@ -268,7 +296,7 @@ object ThriftCodegen {
     val sources = parsePrograms(inputFiles, includePaths)
     val typeDeclarations = declarationResolver.resolveAllTypeDeclarations(sources)
     InputInfo(sources, typeDeclarations, enhancedTypes)
- }
+  }
 
   def parsePrograms(toParse: Seq[File], includePaths: Seq[File]): Seq[ProgramSource] = {
     try {
@@ -282,9 +310,9 @@ object ThriftCodegen {
   /* parse thrift @param _toParse. recurse over included dependencies. don't follow cycles. */
   @tailrec
   final def recursiveParsePrograms(
-      parsed: Seq[ProgramSource],
-      _toParse: Seq[File],
-      includePaths: Seq[File]
+    parsed: Seq[ProgramSource],
+    _toParse: Seq[File],
+    includePaths: Seq[File]
   ): Seq[ProgramSource] = {
     if (_toParse.isEmpty) {
       parsed

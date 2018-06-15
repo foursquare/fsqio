@@ -10,7 +10,6 @@ import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
 import org.bson.codecs.configuration.CodecRegistry
 
-
 /** A collection factory for lift models.
   *
   * Example usage:
@@ -27,12 +26,12 @@ class LiftMongoCollectionFactory[
 ](
   clientManager: MongoClientManager[MongoClient, MongoDatabase, MongoCollection]
 ) extends MongoCollectionFactory[
-  MongoCollection,
-  Object,
-  BasicDBObject,
-  MongoRecord[_] with MongoMetaRecord[_],
-  MongoRecord[_]
-] {
+    MongoCollection,
+    Object,
+    BasicDBObject,
+    MongoRecord[_] with MongoMetaRecord[_],
+    MongoRecord[_]
+  ] {
 
   override def documentClass: Class[BasicDBObject] = classOf[BasicDBObject]
 

@@ -36,25 +36,24 @@
 package io.fsq.spindle.__shaded_for_spindle_bootstrap__.runtime
 
 /** An implementation of Austin Appleby's MurmurHash 3.0 algorithm
- *  (32 bit version); reference: http://code.google.com/p/smhasher
- *
- *  This is the hash used by collections and case classes (including
- *  tuples).
- *
- *  @author  Rex Kerr
- *  @version 2.9
- *  @since   2.9
- */
-
+  *  (32 bit version); reference: http://code.google.com/p/smhasher
+  *
+  *  This is the hash used by collections and case classes (including
+  *  tuples).
+  *
+  *  @author  Rex Kerr
+  *  @version 2.9
+  *  @since   2.9
+  */
 import java.lang.Integer.{rotateLeft => rotl}
 import scala.collection.Iterator
 
 /** A class designed to generate well-distributed non-cryptographic
- *  hashes.  It is designed to be passed to a collection's foreach method,
- *  or can take individual hash values with append.  Its own hash code is
- *  set equal to the hash code of whatever it is hashing.
- */
-class MurmurHash[@specialized(Int,Long,Float,Double) T](seed: Int) extends (T => Unit) {
+  *  hashes.  It is designed to be passed to a collection's foreach method,
+  *  or can take individual hash values with append.  Its own hash code is
+  *  set equal to the hash code of whatever it is hashing.
+  */
+class MurmurHash[@specialized(Int, Long, Float, Double) T](seed: Int) extends (T => Unit) {
   import MurmurHash._
 
   private var h = startHash(seed)
@@ -73,7 +72,7 @@ class MurmurHash[@specialized(Int,Long,Float,Double) T](seed: Int) extends (T =>
 
   /** Incorporate the hash value of one item. */
   def apply(t: T) {
-    h = extendHash(h,t.##,c,k)
+    h = extendHash(h, t.##, c, k)
     c = nextMagicA(c)
     k = nextMagicB(k)
     hashed = false
@@ -81,7 +80,7 @@ class MurmurHash[@specialized(Int,Long,Float,Double) T](seed: Int) extends (T =>
 
   /** Incorporate a known hash value. */
   def append(i: Int) {
-    h = extendHash(h,i,c,k)
+    h = extendHash(h, i, c, k)
     c = nextMagicA(c)
     k = nextMagicB(k)
     hashed = false
@@ -99,14 +98,13 @@ class MurmurHash[@specialized(Int,Long,Float,Double) T](seed: Int) extends (T =>
 }
 
 /** An object designed to generate well-distributed non-cryptographic
- *  hashes.  It is designed to hash a collection of integers; along with
- *  the integers to hash, it generates two magic streams of integers to
- *  increase the distribution of repetitive input sequences.  Thus,
- *  three methods need to be called at each step (to start and to
- *  incorporate a new integer) to update the values.  Only one method
- *  needs to be called to finalize the hash.
- */
-
+  *  hashes.  It is designed to hash a collection of integers; along with
+  *  the integers to hash, it generates two magic streams of integers to
+  *  increase the distribution of repetitive input sequences.  Thus,
+  *  three methods need to be called at each step (to start and to
+  *  incorporate a new integer) to update the values.  Only one method
+  *  needs to be called to finalize the hash.
+  */
 object MurmurHash {
   // Magic values used for MurmurHash's 32 bit hash.
   // Don't change these without consulting a hashing expert!
@@ -141,26 +139,26 @@ object MurmurHash {
   def startMagicB = hiddenMagicB
 
   /** Incorporates a new value into an existing hash.
-   *
-   *  @param   hash    the prior hash value
-   *  @param  value    the new value to incorporate
-   *  @param magicA    a magic integer from the stream
-   *  @param magicB    a magic integer from a different stream
-   *  @return          the updated hash value
-   */
+    *
+    *  @param   hash    the prior hash value
+    *  @param  value    the new value to incorporate
+    *  @param magicA    a magic integer from the stream
+    *  @param magicB    a magic integer from a different stream
+    *  @return          the updated hash value
+    */
   def extendHash(hash: Int, value: Int, magicA: Int, magicB: Int) = {
-    (hash ^ rotl(value*magicA,11)*magicB)*3 + visibleMixer
+    (hash ^ rotl(value * magicA, 11) * magicB) * 3 + visibleMixer
   }
 
   /** Given a magic integer from the first stream, compute the next */
-  def nextMagicA(magicA: Int) = magicA*5 + hiddenMixerA
+  def nextMagicA(magicA: Int) = magicA * 5 + hiddenMixerA
 
   /** Given a magic integer from the second stream, compute the next */
-  def nextMagicB(magicB: Int) = magicB*5 + hiddenMixerB
+  def nextMagicB(magicB: Int) = magicB * 5 + hiddenMixerB
 
   /** Once all hashes have been incorporated, this performs a final mixing */
   def finalizeHash(hash: Int) = {
-    var i = (hash ^ (hash>>>16))
+    var i = (hash ^ (hash >>> 16))
     i *= finalMixer1
     i ^= (i >>> 13)
     i *= finalMixer2
@@ -189,23 +187,23 @@ object MurmurHash {
     var c = hiddenMagicA
     var k = hiddenMagicB
     var j = 0
-    while (j+1 < s.length) {
-      val i = (s.charAt(j)<<16) + s.charAt(j+1);
-      h = extendHash(h,i,c,k)
+    while (j + 1 < s.length) {
+      val i = (s.charAt(j) << 16) + s.charAt(j + 1);
+      h = extendHash(h, i, c, k)
       c = nextMagicA(c)
       k = nextMagicB(k)
       j += 2
     }
-    if (j < s.length) h = extendHash(h,s.charAt(j),c,k)
+    if (j < s.length) h = extendHash(h, s.charAt(j), c, k)
     finalizeHash(h)
   }
 
   /** Compute a hash that is symmetric in its arguments--that is,
-   *  where the order of appearance of elements does not matter.
-   *  This is useful for hashing sets, for example.
-   */
+    *  where the order of appearance of elements does not matter.
+    *  This is useful for hashing sets, for example.
+    */
   def symmetricHash[T](xs: collection.TraversableOnce[T], seed: Int) = {
-    var a,b,n = 0
+    var a, b, n = 0
     var c = 1
     xs.seq.foreach(i => {
       val h = i.##

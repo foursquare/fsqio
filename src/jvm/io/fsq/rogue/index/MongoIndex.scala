@@ -5,14 +5,15 @@ package io.fsq.rogue.index
 import io.fsq.field.Field
 import scala.collection.immutable.ListMap
 
-
 trait UntypedMongoIndex {
   def asListMap: ListMap[String, Any]
 
   override def toString(): String = {
-    asListMap.map({
-      case (fieldName, modifier) => s"$fieldName:$modifier"
-    }).mkString(", ")
+    asListMap
+      .map({
+        case (fieldName, modifier) => s"$fieldName:$modifier"
+      })
+      .mkString(", ")
   }
 }
 

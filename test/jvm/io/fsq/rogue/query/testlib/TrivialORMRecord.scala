@@ -5,7 +5,6 @@ package io.fsq.rogue.query.testlib
 import io.fsq.rogue.connection.MongoIdentifier
 import org.bson.Document
 
-
 /** A trivial ORM layer that implements the interfaces rogue needs. The goal is to make
   * sure that rogue-core works without the assistance of rogue-lift. Ideally this would be
   * even smaller; as it is, there is still some code copied from the Lift implementations.

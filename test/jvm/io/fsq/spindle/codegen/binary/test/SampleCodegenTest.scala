@@ -30,15 +30,23 @@ class CodegenSampleTest {
     val originalContextClassLoader = thread.getContextClassLoader
     thread.setContextClassLoader(getClass.getClassLoader)
     try {
-      ThriftCodegen.main(Array(
-        "--template", "src/resources/io/fsq/ssp/codegen/scala/record.ssp",
-        "--java_template", "src/resources/io/fsq/ssp/codegen/javagen/record.ssp",
-        "--extension", "scala",
-        "--thrift_include", "src/thrift",
-        "--namespace_out", outDir.getRoot.getAbsolutePath,
-        "--working_dir", workingDir.getRoot.getAbsolutePath,
-        "test/jvm/io/fsq/spindle/codegen/binary/test/gen/test_programs.thrift"
-      ))
+      ThriftCodegen.main(
+        Array(
+          "--template",
+          "src/resources/io/fsq/ssp/codegen/scala/record.ssp",
+          "--java_template",
+          "src/resources/io/fsq/ssp/codegen/javagen/record.ssp",
+          "--extension",
+          "scala",
+          "--thrift_include",
+          "src/thrift",
+          "--namespace_out",
+          outDir.getRoot.getAbsolutePath,
+          "--working_dir",
+          workingDir.getRoot.getAbsolutePath,
+          "test/jvm/io/fsq/spindle/codegen/binary/test/gen/test_programs.thrift"
+        )
+      )
     } finally {
       thread.setContextClassLoader(originalContextClassLoader)
     }

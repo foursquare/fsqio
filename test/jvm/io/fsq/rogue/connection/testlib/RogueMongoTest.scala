@@ -2,17 +2,24 @@
 
 package io.fsq.rogue.connection.testlib
 
-import com.mongodb.{ConnectionString, MongoClient => BlockingMongoClient, MongoClientOptions, MongoClientURI,
-    ServerAddress}
-import com.mongodb.async.client.{MongoClient => AsyncMongoClient, MongoClientSettings,
-    MongoClients => AsyncMongoClients}
+import com.mongodb.{
+  ConnectionString,
+  MongoClient => BlockingMongoClient,
+  MongoClientOptions,
+  MongoClientURI,
+  ServerAddress
+}
+import com.mongodb.async.client.{
+  MongoClient => AsyncMongoClient,
+  MongoClientSettings,
+  MongoClients => AsyncMongoClients
+}
 import com.mongodb.connection.ClusterSettings
 import com.mongodb.connection.netty.NettyStreamFactoryFactory
 import io.netty.channel.nio.NioEventLoopGroup
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.JavaConversions.{asScalaBuffer, bufferAsJavaList}
-
 
 object RogueMongoTest {
 
@@ -36,15 +43,18 @@ object RogueMongoTest {
       MongoClientSettings.builder
         .codecRegistry(
           codecRegistry
-        ).clusterSettings(
+        )
+        .clusterSettings(
           ClusterSettings.builder
             .applyConnectionString(connectionString)
             .build()
-        ).streamFactoryFactory(
+        )
+        .streamFactoryFactory(
           NettyStreamFactoryFactory.builder
             .eventLoopGroup(nettyEventLoop)
             .build()
-        ).build()
+        )
+        .build()
     }
 
     AsyncMongoClients.create(settings)
@@ -53,11 +63,14 @@ object RogueMongoTest {
   def buildBlockingMongoClient(mongoAddress: String): BlockingMongoClient = {
     val mongoClientURI = new MongoClientURI(mongoAddress)
 
-    val hostServerAddresses = mongoClientURI.getHosts.map(hostString => hostString.split(':') match {
-      case Array(host, port) => new ServerAddress(host, port.toInt)
-      case Array(host) => new ServerAddress(host)
-      case _ => throw new IllegalArgumentException(s"Malformed host string: $hostString")
-    })
+    val hostServerAddresses = mongoClientURI.getHosts.map(
+      hostString =>
+        hostString.split(':') match {
+          case Array(host, port) => new ServerAddress(host, port.toInt)
+          case Array(host) => new ServerAddress(host)
+          case _ => throw new IllegalArgumentException(s"Malformed host string: $hostString")
+        }
+    )
 
     val clientOptions = {
       new MongoClientOptions.Builder(mongoClientURI.getOptions)

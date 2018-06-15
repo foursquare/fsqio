@@ -20,7 +20,13 @@ object QueryHelpers {
     def logCounter(name: String, count: Int = 1): Unit
     def log(query: Query[_, _, _], instanceName: String, msg: => String, timeMillis: Long): Unit
     def onExecuteQuery[T](query: Query[_, _, _], instanceName: String, msg: => String, func: => T): T
-    def onExecuteWriteCommand[T](operationName: String, collectionName: String, instanceName: String, msg: => String, func: => T): T
+    def onExecuteWriteCommand[T](
+      operationName: String,
+      collectionName: String,
+      instanceName: String,
+      msg: => String,
+      func: => T
+    ): T
     def warn(query: Query[_, _, _], msg: => String): Unit
   }
 
@@ -28,7 +34,13 @@ object QueryHelpers {
     override def logCounter(name: String, count: Int = 1): Unit = ()
     override def log(query: Query[_, _, _], instanceName: String, msg: => String, timeMillis: Long) {}
     override def onExecuteQuery[T](query: Query[_, _, _], instanceName: String, msg: => String, func: => T): T = func
-    override def onExecuteWriteCommand[T](operationName: String, collectionName: String, instanceName: String, msg: => String, func: => T): T = func
+    override def onExecuteWriteCommand[T](
+      operationName: String,
+      collectionName: String,
+      instanceName: String,
+      msg: => String,
+      func: => T
+    ): T = func
     override def logIndexMismatch(query: Query[_, _, _], msg: => String) {}
     override def logIndexHit(query: Query[_, _, _], index: UntypedMongoIndex) {}
     override def warn(query: Query[_, _, _], msg: => String) {}
@@ -51,7 +63,10 @@ object QueryHelpers {
     override def validateRadius(d: Degrees) = d
     override def validateQuery[M](query: Query[M, _, _], indexes: Option[Seq[UntypedMongoIndex]]) {}
     override def validateModify[M](modify: ModifyQuery[M, _], indexes: Option[Seq[UntypedMongoIndex]]) {} // todo possibly validate for update without upsert, yet setOnInsert present -- ktoso
-    override def validateFindAndModify[M, R](modify: FindAndModifyQuery[M, R], indexes: Option[Seq[UntypedMongoIndex]]) {}
+    override def validateFindAndModify[M, R](
+      modify: FindAndModifyQuery[M, R],
+      indexes: Option[Seq[UntypedMongoIndex]]
+    ) {}
   }
 
   object NoopQueryValidator extends DefaultQueryValidator
@@ -82,12 +97,13 @@ object QueryHelpers {
 
   class DefaultQueryConfig extends QueryConfig {
     override def defaultWriteConcern: WriteConcern = WriteConcern.ACKNOWLEDGED
+
     /**
-     * Batch size to set on the underlying DBCursor.
-     * None = take value from the query if specified
-     * Some(None) = never set batch size on the cursor
-     * Some(Some(n)) = always set batch size to n
-     */
+      * Batch size to set on the underlying DBCursor.
+      * None = take value from the query if specified
+      * Some(None) = never set batch size on the cursor
+      * Some(Some(n)) = always set batch size to n
+      */
     override def cursorBatchSize: Option[Option[Int]] = None
     override def maxTimeMSOpt(configName: String): Option[Long] = None
   }

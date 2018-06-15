@@ -46,4 +46,3 @@ class StackElementTest {
     assertEquals("testImplicit", secondRef.getMethodName)
   }
 }
-

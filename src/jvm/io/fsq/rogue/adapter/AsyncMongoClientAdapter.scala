@@ -6,8 +6,15 @@ import com.mongodb.{Block, DuplicateKeyException, ErrorCategory, MongoNamespace,
 import com.mongodb.async.{AsyncBatchCursor, SingleResultCallback}
 import com.mongodb.async.client.{FindIterable, MongoCollection}
 import com.mongodb.bulk.BulkWriteResult
-import com.mongodb.client.model.{BulkWriteOptions, CountOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions,
-    IndexModel, UpdateOptions, WriteModel}
+import com.mongodb.client.model.{
+  BulkWriteOptions,
+  CountOptions,
+  FindOneAndDeleteOptions,
+  FindOneAndUpdateOptions,
+  IndexModel,
+  UpdateOptions,
+  WriteModel
+}
 import com.mongodb.client.result.{DeleteResult, UpdateResult}
 import io.fsq.common.scala.Identity._
 import io.fsq.rogue.{Iter, Query, RogueException}
@@ -20,7 +27,6 @@ import org.bson.conversions.Bson
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
-
 
 object AsyncMongoClientAdapter {
   type CollectionFactory[
@@ -48,9 +54,10 @@ class AsyncMongoClientAdapter[
   callbackFactory: MongoCallbackFactory[Result],
   queryHelpers: QueryUtilities[Result]
 ) extends MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, Result](
-  collectionFactory,
-  queryHelpers
-) with MongoCallback.Implicits {
+    collectionFactory,
+    queryHelpers
+  )
+  with MongoCallback.Implicits {
 
   type Cursor = FindIterable[Document]
 
@@ -72,22 +79,24 @@ class AsyncMongoClientAdapter[
       _ match {
         case Success(value) => wrapResult(value)
 
-        case Failure(rogueException: RogueException) => Option(rogueException.getCause) match {
-          case Some(_: DuplicateKeyException) => {
-            queryHelpers.logger.logCounter("rogue.adapter.upsert.DuplicateKeyException")
-            upsert
-          }
-
-          case Some(mwe: MongoWriteException) => mwe.getError.getCategory match {
-            case ErrorCategory.DUPLICATE_KEY => {
-              queryHelpers.logger.logCounter("rogue.adapter.upsert.MongoWriteException-DUPLICATE_KEY")
+        case Failure(rogueException: RogueException) =>
+          Option(rogueException.getCause) match {
+            case Some(_: DuplicateKeyException) => {
+              queryHelpers.logger.logCounter("rogue.adapter.upsert.DuplicateKeyException")
               upsert
             }
-            case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw rogueException
-          }
 
-          case _ => wrapResult(throw rogueException)
-        }
+            case Some(mwe: MongoWriteException) =>
+              mwe.getError.getCategory match {
+                case ErrorCategory.DUPLICATE_KEY => {
+                  queryHelpers.logger.logCounter("rogue.adapter.upsert.MongoWriteException-DUPLICATE_KEY")
+                  upsert
+                }
+                case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw rogueException
+              }
+
+            case _ => wrapResult(throw rogueException)
+          }
 
         case Failure(other) => wrapResult(throw other)
       }
@@ -115,13 +124,14 @@ class AsyncMongoClientAdapter[
 
         resultTry match {
           case Success(value) => wrapResult(value)
-          case Failure(exception: Exception) => wrapResult(
-            throw new RogueException(
-              s"Mongo query on $instanceName [${descriptionFunc()}] failed after $timeMs ms",
-              exception
+          case Failure(exception: Exception) =>
+            wrapResult(
+              throw new RogueException(
+                s"Mongo query on $instanceName [${descriptionFunc()}] failed after $timeMs ms",
+                exception
+              )
             )
-          )
-          case Failure(other) => wrapResult(throw other)  // we only encode Exceptions
+          case Failure(other) => wrapResult(throw other) // we only encode Exceptions
         }
       }
     )
@@ -214,13 +224,14 @@ class AsyncMongoClientAdapter[
 
           while (continue && iterator.hasNext) {
             Try(deserializer(iterator.next())) match {
-              case Success(record) => handler(iterState, Iter.Item(record)) match {
-                case Iter.Continue(newIterState) => iterState = newIterState
-                case Iter.Return(finalState) => {
-                  resultCallback.onResult(finalState, null)
-                  continue = false
+              case Success(record) =>
+                handler(iterState, Iter.Item(record)) match {
+                  case Iter.Continue(newIterState) => iterState = newIterState
+                  case Iter.Return(finalState) => {
+                    resultCallback.onResult(finalState, null)
+                    continue = false
+                  }
                 }
-              }
               case Failure(exception: Exception) => {
                 resultCallback.onResult(handler(iterState, Iter.Error(exception)).state, null)
                 continue = false
@@ -274,15 +285,16 @@ class AsyncMongoClientAdapter[
             case Success(Seq()) => {
               resultCallback.onResult(handler(iterState, Iter.EOF).state, null)
             }
-            case Success(records) => handler(iterState, Iter.Item(records)) match {
-              case Iter.Continue(newIterState) => {
-                iterState = newIterState
-                batchCursor.next(this)
+            case Success(records) =>
+              handler(iterState, Iter.Item(records)) match {
+                case Iter.Continue(newIterState) => {
+                  iterState = newIterState
+                  batchCursor.next(this)
+                }
+                case Iter.Return(finalState) => {
+                  resultCallback.onResult(finalState, null)
+                }
               }
-              case Iter.Return(finalState) => {
-                resultCallback.onResult(finalState, null)
-              }
-            }
             case Failure(exception: Exception) => {
               resultCallback.onResult(handler(iterState, Iter.Error(exception)).state, null)
             }

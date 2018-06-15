@@ -31,13 +31,15 @@ class BaseUnmatchedPolygonFeatureMatchingIntermediateJob(
 
   def doRewrites(names: Seq[String]): Seq[String] = {
     val nameSet = new scala.collection.mutable.HashSet[String]()
-    nameRewritesMap.foreach({case(from, toList) => {
-      names.foreach(name => {
-        toList.foreach(to => {
-          nameSet += from.replaceAllIn(name, to)
+    nameRewritesMap.foreach({
+      case (from, toList) => {
+        names.foreach(name => {
+          toList.foreach(to => {
+            nameSet += from.replaceAllIn(name, to)
+          })
         })
-      })
-    }})
+      }
+    })
     nameSet ++= names.map(_.replace("ß", "ss"))
     nameSet.toSeq
   }
@@ -94,18 +96,25 @@ class BaseUnmatchedPolygonFeatureMatchingIntermediateJob(
       })
     })
 
-    if (scores.nonEmpty) { scores.max.toInt } else { 0 }
+    if (scores.nonEmpty) {
+      scores.max.toInt
+    } else {
+      0
+    }
   }
 
   def getBestMatchIds(polygon: PolygonMatchingValue, candidates: Seq[PolygonMatchingValue]): Seq[Long] = {
-    val scores: Seq[(Int, Long)] = candidates.map(candidate => {
-      (scoreMatch(polygon.names, candidate.names) -> candidate.featureIdOption.getOrElse(0L))
-    }).filter({case (score: Int, featureId: Long) => score > 95}).toSeq
+    val scores: Seq[(Int, Long)] = candidates
+      .map(candidate => {
+        (scoreMatch(polygon.names, candidate.names) -> candidate.featureIdOption.getOrElse(0L))
+      })
+      .filter({ case (score: Int, featureId: Long) => score > 95 })
+      .toSeq
 
-    val scoresMap = scores.groupBy({case (score: Int, featureId: Long) => score})
+    val scoresMap = scores.groupBy({ case (score: Int, featureId: Long) => score })
 
     if (scoresMap.nonEmpty) {
-      scoresMap(scoresMap.keys.max).map({case (score: Int, featureId: Long) => featureId})
+      scoresMap(scoresMap.keys.max).map({ case (score: Int, featureId: Long) => featureId })
     } else {
       Nil
     }
@@ -127,27 +136,35 @@ class BaseUnmatchedPolygonFeatureMatchingIntermediateJob(
       .result
     (polygonId -> matchingValue)
   }).group
-    // 2. then filter down to features which match at best preferenceLevel
-    .toList
-    .mapValues({featureMatches: List[PolygonMatchingValue] => {
-      val preferenceMap = featureMatches.groupBy(_.polygonWoeTypePreferenceLevelOption.getOrElse(0))
-      val matchesAtBestLevel = preferenceMap(preferenceMap.keys.min)
-      PolygonMatchingValues(matchesAtBestLevel)
-    }})
-    // 3. flip feature and polygonIds
-    .flatMap({case (polygonId: Long, featureMatches: PolygonMatchingValues) => {
-      for {
-        featureMatch <- featureMatches.values
-        featureId <- featureMatch.featureIdOption
-      } yield {
-        val matchingValue = PolygonMatchingValue.newBuilder
-          .polygonId(polygonId)
-          .result
-        (new LongWritable(featureId) -> matchingValue)
+  // 2. then filter down to features which match at best preferenceLevel
+  .toList
+    .mapValues({ featureMatches: List[PolygonMatchingValue] =>
+      {
+        val preferenceMap = featureMatches.groupBy(_.polygonWoeTypePreferenceLevelOption.getOrElse(0))
+        val matchesAtBestLevel = preferenceMap(preferenceMap.keys.min)
+        PolygonMatchingValues(matchesAtBestLevel)
       }
-    }})
+    })
+    // 3. flip feature and polygonIds
+    .flatMap({
+      case (polygonId: Long, featureMatches: PolygonMatchingValues) => {
+        for {
+          featureMatch <- featureMatches.values
+          featureId <- featureMatch.featureIdOption
+        } yield {
+          val matchingValue = PolygonMatchingValue.newBuilder
+            .polygonId(polygonId)
+            .result
+          (new LongWritable(featureId) -> matchingValue)
+        }
+      }
+    })
     // 4. finally group by featureId and pick highest valued polygonId
     .group
     .maxBy(_.polygonIdOption.getOrElse(0L))
-    .write(TypedSink[(LongWritable, PolygonMatchingValue)](SpindleSequenceFileSource[LongWritable, PolygonMatchingValue](outputPath)))
+    .write(
+      TypedSink[(LongWritable, PolygonMatchingValue)](
+        SpindleSequenceFileSource[LongWritable, PolygonMatchingValue](outputPath)
+      )
+    )
 }

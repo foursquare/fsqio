@@ -5,11 +5,31 @@ import com.google.common.geometry.S2CellId
 import com.vividsolutions.jts.geom.{Geometry, Point}
 import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory
 import com.vividsolutions.jts.io.{WKBWriter, WKTReader}
-import io.fsq.twofishes.gen.{CellGeometry, EditType, FeatureGeometry, FeatureName, FeatureNameFlags,
-    FeatureNameFlagsListEdit, FeatureNameListEdit, GeocodeFeature, GeocodeFeatureAttributes, GeocodePoint,
-    GeocodeServingFeature, LongListEdit, ScoringFeatures, StringListEdit}
-import io.fsq.twofishes.util.{GeometryCleanupUtils, GeometryUtils, NameNormalizer, RevGeoConstants,
-    S2CoveringConstants, ShapefileS2Util, StoredFeatureId}
+import io.fsq.twofishes.gen.{
+  CellGeometry,
+  EditType,
+  FeatureGeometry,
+  FeatureName,
+  FeatureNameFlags,
+  FeatureNameFlagsListEdit,
+  FeatureNameListEdit,
+  GeocodeFeature,
+  GeocodeFeatureAttributes,
+  GeocodePoint,
+  GeocodeServingFeature,
+  LongListEdit,
+  ScoringFeatures,
+  StringListEdit
+}
+import io.fsq.twofishes.util.{
+  GeometryCleanupUtils,
+  GeometryUtils,
+  NameNormalizer,
+  RevGeoConstants,
+  S2CoveringConstants,
+  ShapefileS2Util,
+  StoredFeatureId
+}
 import java.nio.ByteBuffer
 import org.geotools.geojson.geom.GeometryJSON
 import org.slf4s.Logging
@@ -18,9 +38,9 @@ class ConcreteHotfixStorageService(
   source: HotfixSource,
   underlying: GeocodeStorageReadService
 ) extends HotfixStorageService
-    with Logging
-    with S2CoveringConstants
-    with RevGeoConstants {
+  with Logging
+  with S2CoveringConstants
+  with RevGeoConstants {
   var idsToAddByName = Map.empty[String, Seq[StoredFeatureId]]
   var idsToRemoveByName = Map.empty[String, Seq[StoredFeatureId]]
   var idsToAddByNamePrefix = Map.empty[String, Seq[StoredFeatureId]]
@@ -72,7 +92,10 @@ class ConcreteHotfixStorageService(
     listCopy
   }
 
-  def processFeatureNameFlagsListEdits(list: Seq[FeatureNameFlags], edits: Seq[FeatureNameFlagsListEdit]): Seq[FeatureNameFlags] = {
+  def processFeatureNameFlagsListEdits(
+    list: Seq[FeatureNameFlags],
+    edits: Seq[FeatureNameFlagsListEdit]
+  ): Seq[FeatureNameFlags] = {
     var listCopy = list
     edits.foreach(edit => {
       edit.editType match {
@@ -111,7 +134,11 @@ class ConcreteHotfixStorageService(
     }
   }
 
-  def processFeatureNameListEdits(id: StoredFeatureId, list: Seq[FeatureName], edits: Seq[FeatureNameListEdit]): Seq[FeatureName] = {
+  def processFeatureNameListEdits(
+    id: StoredFeatureId,
+    list: Seq[FeatureName],
+    edits: Seq[FeatureNameListEdit]
+  ): Seq[FeatureName] = {
     var listCopy = list
     edits.foreach(edit => {
       edit.editType match {
@@ -201,20 +228,23 @@ class ConcreteHotfixStorageService(
         deletedPolygonFeatureLongIds += edit.longId
       } else {
         val servingFeatureMutableOpt = edit.editType match {
-          case EditType.Add => Some(
-            GeocodeServingFeature.newBuilder
-              .longId(edit.longId)
-              // set canGeocode to true otherwise it defeats the purpose of adding a feature
-              .scoringFeatures(ScoringFeatures.newBuilder.canGeocode(true).result)
-              .feature(
-                GeocodeFeature.newBuilder
-                  .longId(edit.longId)
-                  .cc("")
-                  .geometry(FeatureGeometry.newBuilder.center(GeocodePoint(0.0, 0.0)).result)
-                  .result
-              )
-              .resultMutable)
-          case EditType.Modify => for {
+          case EditType.Add =>
+            Some(
+              GeocodeServingFeature.newBuilder
+                .longId(edit.longId)
+                // set canGeocode to true otherwise it defeats the purpose of adding a feature
+                .scoringFeatures(ScoringFeatures.newBuilder.canGeocode(true).result)
+                .feature(
+                  GeocodeFeature.newBuilder
+                    .longId(edit.longId)
+                    .cc("")
+                    .geometry(FeatureGeometry.newBuilder.center(GeocodePoint(0.0, 0.0)).result)
+                    .result
+                )
+                .resultMutable
+            )
+          case EditType.Modify =>
+            for {
               id <- StoredFeatureId.fromLong(edit.longId)
               (resultId, feature) <- underlying.getByFeatureIds(List(id)).toList.headOption
             } yield {
@@ -237,7 +267,8 @@ class ConcreteHotfixStorageService(
           if (edit.extraRelationsEditsIsSet) {
             val extraRelations = processLongListEdits(
               servingFeatureMutable.scoringFeatures.extraRelationIds,
-              edit.extraRelationsEditsOrThrow)
+              edit.extraRelationsEditsOrThrow
+            )
             servingFeatureMutable.scoringFeatures_=({
               servingFeatureMutable.scoringFeatures.toBuilder
                 .extraRelationIds(extraRelations)
@@ -274,13 +305,11 @@ class ConcreteHotfixStorageService(
 
           // urlsEdits
           if (edit.urlsEditsIsSet) {
-            val urls = processStringListEdits(
-              if (featureMutable.attributesIsSet) {
-                featureMutable.attributesOrThrow.urls
-              } else {
-                Nil
-              },
-              edit.urlsEditsOrThrow)
+            val urls = processStringListEdits(if (featureMutable.attributesIsSet) {
+              featureMutable.attributesOrThrow.urls
+            } else {
+              Nil
+            }, edit.urlsEditsOrThrow)
             featureMutable.attributes_=({
               val attributesBuilder = if (featureMutable.attributesIsSet) {
                 featureMutable.attributesOrThrow.toBuilder
@@ -358,30 +387,47 @@ class ConcreteHotfixStorageService(
               setHasPolyRankingFeature(true)
               geometryMutable.source_=("hotfix")
 
-              val s2Covering = GeometryUtils.s2PolygonCovering(
-                geometry, minS2LevelForS2Covering, maxS2LevelForS2Covering,
-                levelMod = Some(defaultLevelModForS2Covering),
-                maxCellsHintWhichMightBeIgnored = Some(defaultMaxCellsHintForS2Covering)
-              ).toList.map(_.id())
+              val s2Covering = GeometryUtils
+                .s2PolygonCovering(
+                  geometry,
+                  minS2LevelForS2Covering,
+                  maxS2LevelForS2Covering,
+                  levelMod = Some(defaultLevelModForS2Covering),
+                  maxCellsHintWhichMightBeIgnored = Some(defaultMaxCellsHintForS2Covering)
+                )
+                .toList
+                .map(_.id())
               s2CoveringIndex = s2CoveringIndex + (edit.longId -> s2Covering)
 
-              val s2Interior = GeometryUtils.s2PolygonCovering(
-                geometry, minS2LevelForS2Covering, maxS2LevelForS2Covering,
-                levelMod = Some(defaultLevelModForS2Covering),
-                maxCellsHintWhichMightBeIgnored = Some(defaultMaxCellsHintForS2Covering),
-                interior = true
-              ).toList.map(_.id())
+              val s2Interior = GeometryUtils
+                .s2PolygonCovering(
+                  geometry,
+                  minS2LevelForS2Covering,
+                  maxS2LevelForS2Covering,
+                  levelMod = Some(defaultLevelModForS2Covering),
+                  maxCellsHintWhichMightBeIgnored = Some(defaultMaxCellsHintForS2Covering),
+                  interior = true
+                )
+                .toList
+                .map(_.id())
               s2InteriorIndex = s2InteriorIndex + (edit.longId -> s2Interior)
 
               val s2CoveringForRevGeo = GeometryUtils.s2PolygonCovering(
-                geometry, minS2LevelForRevGeo, maxS2LevelForRevGeo,
+                geometry,
+                minS2LevelForRevGeo,
+                maxS2LevelForRevGeo,
                 levelMod = Some(defaultLevelModForRevGeo),
                 maxCellsHintWhichMightBeIgnored = Some(defaultMaxCellsHintForRevGeo)
               )
 
               s2CoveringForRevGeo.foreach((cellId: S2CellId) => {
                 val cellGeometry = if (geometry.isInstanceOf[Point]) {
-                  CellGeometry(ByteBuffer.wrap(wkbWriter.write(geometry)), featureMutable.woeType, full = false, edit.longId)
+                  CellGeometry(
+                    ByteBuffer.wrap(wkbWriter.write(geometry)),
+                    featureMutable.woeType,
+                    full = false,
+                    edit.longId
+                  )
                 } else {
                   val shape = geometry.buffer(0)
                   val preparedShape = PreparedGeometryFactory.prepare(shape)
@@ -400,7 +446,12 @@ class ConcreteHotfixStorageService(
                     } else {
                       intersection
                     }
-                    CellGeometry(ByteBuffer.wrap(wkbWriter.write(geomToIndex)), featureMutable.woeType, full = false, edit.longId)
+                    CellGeometry(
+                      ByteBuffer.wrap(wkbWriter.write(geomToIndex)),
+                      featureMutable.woeType,
+                      full = false,
+                      edit.longId
+                    )
                   }
                 }
                 addCellGeometryToS2Index(cellId.id(), cellGeometry)

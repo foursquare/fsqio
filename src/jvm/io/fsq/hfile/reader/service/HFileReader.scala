@@ -14,6 +14,6 @@ trait HFileReader {
   def getTrailerInfo(): String
   def indexSize: Long
   def length(): Long
-  def loadFileInfo(): java.util.Map[Array[Byte],Array[Byte]]
+  def loadFileInfo(): java.util.Map[Array[Byte], Array[Byte]]
   def isClosed(): Boolean
 }

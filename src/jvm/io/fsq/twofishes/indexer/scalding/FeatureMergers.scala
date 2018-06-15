@@ -24,13 +24,15 @@ object FeatureMergers {
           boost = boosts.scoringFeatures.boostOrNull,
           parentIds = parents.scoringFeatures.parentIdsOrNull,
           // hasPoly
-          extraRelationIds = extraRelations.scoringFeatures.extraRelationIdsOrNull),
+          extraRelationIds = extraRelations.scoringFeatures.extraRelationIdsOrNull
+        ),
         feature = bboxes.feature.copy(
-          geometry = bboxes.feature.geometryOrThrow.copy(
-            displayBounds = displayBboxes.feature.geometryOrThrow.displayBoundsOrNull),// wkbGeometry, source
+          geometry = bboxes.feature.geometryOrThrow
+            .copy(displayBounds = displayBboxes.feature.geometryOrThrow.displayBoundsOrNull), // wkbGeometry, source
           ids = concordances.feature.idsOrNull,
           names = altNames.feature.namesOrNull,
-          slug = slugs.feature.slugOrNull),
+          slug = slugs.feature.slugOrNull
+        ),
         slugs = slugs.slugsOrNull
       )
     }
@@ -46,9 +48,7 @@ object FeatureMergers {
       val names = features(2)
 
       ignores.copy(
-        feature = ignores.feature.copy(
-          geometry = moves.feature.geometryOrThrow,
-          names = names.feature.namesOrNull)
+        feature = ignores.feature.copy(geometry = moves.feature.geometryOrThrow, names = names.feature.namesOrNull)
       )
     }
   }
@@ -62,8 +62,7 @@ object FeatureMergers {
       val attributes = features(1)
 
       polygons.copy(
-        feature = polygons.feature.copy(
-          attributes = attributes.feature.attributesOrNull)
+        feature = polygons.feature.copy(attributes = attributes.feature.attributesOrNull)
       )
     }
   }

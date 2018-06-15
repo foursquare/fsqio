@@ -2,8 +2,12 @@
 
 package io.fsq.spindle.codegen.parser.test
 
-import io.fsq.spindle.__shaded_for_spindle_bootstrap__.descriptors.{Annotation, Program, SimpleBaseType,
-    SimpleContainerType}
+import io.fsq.spindle.__shaded_for_spindle_bootstrap__.descriptors.{
+  Annotation,
+  Program,
+  SimpleBaseType,
+  SimpleContainerType
+}
 import io.fsq.spindle.codegen.parser.{ParserException, ThriftParser}
 import org.junit.Assert.{assertEquals, assertTrue}
 import org.junit.Test
@@ -44,9 +48,13 @@ class ThriftParserTest {
     val program = ThriftParser.parseProgram(base + "/parse_const.thrift")
 
     assertEquals(program.constants.size, 31)
-    assertTrue(program.constants.slice(0, 4).forall(const => {
-      idToSimpleBaseType(const.typeId, program) == SimpleBaseType.I32
-    }))
+    assertTrue(
+      program.constants
+        .slice(0, 4)
+        .forall(const => {
+          idToSimpleBaseType(const.typeId, program) == SimpleBaseType.I32
+        })
+    )
     assertEquals(idToSimpleBaseType(program.constants()(4).typeId, program), SimpleBaseType.STRING)
     assertEquals(idToSimpleBaseType(program.constants()(5).typeId, program), SimpleBaseType.BINARY)
     assertEquals(idToSimpleBaseType(program.constants()(6).typeId, program), SimpleBaseType.BOOL)
@@ -55,23 +63,41 @@ class ThriftParserTest {
     assertEquals(idToSimpleBaseType(program.constants()(9).typeId, program), SimpleBaseType.I32)
     assertEquals(idToSimpleBaseType(program.constants()(10).typeId, program), SimpleBaseType.I64)
     assertEquals(idToSimpleBaseType(program.constants()(11).typeId, program), SimpleBaseType.DOUBLE)
-    assertTrue(program.constants.slice(12, 15).forall(const => {
-      idToSimpleBaseType(const.typeId, program) == SimpleBaseType.STRING
-    }))
+    assertTrue(
+      program.constants
+        .slice(12, 15)
+        .forall(const => {
+          idToSimpleBaseType(const.typeId, program) == SimpleBaseType.STRING
+        })
+    )
     assertEquals(idToBaseTypeAnnotations(program.constants()(12).typeId, program).size, 0)
     assertEquals(idToBaseTypeAnnotations(program.constants()(13).typeId, program).size, 1)
     assertEquals(idToBaseTypeAnnotations(program.constants()(14).typeId, program).size, 2)
-    assertTrue(program.constants.slice(15, 21).forall(const => {
-      idToSimpleContainerType(const.typeId, program).listTypeIsSet
-    }))
-    assertTrue(program.constants.slice(21, 23).forall(const => {
-      idToSimpleContainerType(const.typeId, program).setTypeIsSet
-    }))
-    assertTrue(program.constants.slice(23, 30).forall(const => {
-      idToSimpleContainerType(const.typeId, program).mapTypeIsSet
-    }))
+    assertTrue(
+      program.constants
+        .slice(15, 21)
+        .forall(const => {
+          idToSimpleContainerType(const.typeId, program).listTypeIsSet
+        })
+    )
+    assertTrue(
+      program.constants
+        .slice(21, 23)
+        .forall(const => {
+          idToSimpleContainerType(const.typeId, program).setTypeIsSet
+        })
+    )
+    assertTrue(
+      program.constants
+        .slice(23, 30)
+        .forall(const => {
+          idToSimpleContainerType(const.typeId, program).mapTypeIsSet
+        })
+    )
     assertEquals(
-      program.typeRegistry.idToType()(program.constants()(30).typeId).simpleType.typerefOrThrow.typeAlias, "myint")
+      program.typeRegistry.idToType()(program.constants()(30).typeId).simpleType.typerefOrThrow.typeAlias,
+      "myint"
+    )
   }
 
   @Test

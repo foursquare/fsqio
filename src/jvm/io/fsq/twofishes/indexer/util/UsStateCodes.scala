@@ -124,7 +124,7 @@ object UsStateCodes {
     "VI" -> "Virgin Islands"
   )
 
-  val stateToCodeMap = stateMap.map({case (k, v) => (v.toLowerCase, k)}).toMap
+  val stateToCodeMap = stateMap.map({ case (k, v) => (v.toLowerCase, k) }).toMap
   val stateAbbreviations = stateMap.keys.toList
 
   def stateCodeFromName(name: String): Option[String] = {
@@ -135,5 +135,3 @@ object UsStateCodes {
     }
   }
 }
-
-

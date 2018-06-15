@@ -11,14 +11,14 @@ import org.apache.hadoop.io.{BytesWritable, Writable}
 import org.apache.hadoop.io.SequenceFile.Reader
 
 object IndexOutputType extends Enumeration {
-  val HFILE_OUTPUT,
-      MAPFILE_OUTPUT = Value
+  val HFILE_OUTPUT, MAPFILE_OUTPUT = Value
 }
 
 case class IndexerOptions(
   outputType: IndexOutputType.Value,
   info: Map[String, String] = Map.empty,
-  mapFileIndexInterval: Option[Int] = None)
+  mapFileIndexInterval: Option[Int] = None
+)
 
 class BaseIndexer[
   ScaldingK <: Writable: Manifest,
@@ -58,7 +58,7 @@ class BaseIndexer[
 
     while (reader.next(key, value)) {
       processor(key, thriftConverter.deserialize(value.getBytes))
-        .foreach({case (indexKey, indexValue) => writer.append(indexKey, indexValue)})
+        .foreach({ case (indexKey, indexValue) => writer.append(indexKey, indexValue) })
     }
     writer.close()
   }

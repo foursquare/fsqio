@@ -44,8 +44,6 @@ class EnhancedTypesTest(tproto: String) {
 
     roundTripTest(src, ObjectIdFields.createRawRecord)
   }
-
-
   @Test
   def bsonObjectFields(): Unit = {
     val bso = new BasicBSONObject()
@@ -67,13 +65,18 @@ class EnhancedTypesTest(tproto: String) {
   def uuidFields(): Unit = {
     val src = UUIDFields.newBuilder
       .qux(UUID.fromString("cba096a8-2e96-4668-9308-3086591201a7"))
-      .quux(Vector(
-        UUID.fromString("14edb439-75e3-4cd8-9175-b4460815670e"),
-        UUID.fromString("d86405f4-0003-44af-96d9-22368e53f116")
-      ))
-      .norf(Map(
-        "A" -> UUID.fromString("31b0db7d-2de7-4aa7-b3c1-a07d649f5770"),
-        "B" -> UUID.fromString("9a3685fd-b2ef-4401-b9bc-c1849c280499")))
+      .quux(
+        Vector(
+          UUID.fromString("14edb439-75e3-4cd8-9175-b4460815670e"),
+          UUID.fromString("d86405f4-0003-44af-96d9-22368e53f116")
+        )
+      )
+      .norf(
+        Map(
+          "A" -> UUID.fromString("31b0db7d-2de7-4aa7-b3c1-a07d649f5770"),
+          "B" -> UUID.fromString("9a3685fd-b2ef-4401-b9bc-c1849c280499")
+        )
+      )
       .result()
 
     roundTripTest(src, UUIDFields.createRawRecord)
@@ -94,4 +97,3 @@ object EnhancedTypesTest {
     ).asJava
   }
 }
-

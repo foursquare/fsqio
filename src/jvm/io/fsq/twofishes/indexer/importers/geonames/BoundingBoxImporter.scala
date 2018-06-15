@@ -18,41 +18,45 @@ object BoundingBoxTsvImporter extends Logging {
   def parse(filenames: List[File]): HashMap[StoredFeatureId, BoundingBox] = {
     val map = new HashMap[StoredFeatureId, BoundingBox]
     filenames.foreach(file => {
-     log.info("processing bounding box file %s".format(file))
+      log.info("processing bounding box file %s".format(file))
       val lines = scala.io.Source.fromFile(file).getLines
-      lines.filterNot(_.startsWith("#")).foreach(line => {
-        val parts = line.split("[\t ]")
-        // 0: geonameid
-        // 1->5:       // west, south, east, north
-        if (parts.size != 5) {
-          log.error("wrong # of parts: %d vs %d in %s".format(parts.size, 5, line))
-        } else {
-          try {
-            val id = parts(0)
-            val w = parts(1).toDouble
-            val s = parts(2).toDouble
-            val e = parts(3).toDouble
-            val n = parts(4).toDouble
-            StoredFeatureId.fromHumanReadableString(id, Some(GeonamesNamespace)) match {
-              case Some(fid) => {
-                map(fid) = BoundingBox(Point(n, e), Point(s, w))
-                log.debug("bbox %s %s".format(fid, parts.drop(1).mkString(",")))
+      lines
+        .filterNot(_.startsWith("#"))
+        .foreach(line => {
+          val parts = line.split("[\t ]")
+          // 0: geonameid
+          // 1->5:       // west, south, east, north
+          if (parts.size != 5) {
+            log.error("wrong # of parts: %d vs %d in %s".format(parts.size, 5, line))
+          } else {
+            try {
+              val id = parts(0)
+              val w = parts(1).toDouble
+              val s = parts(2).toDouble
+              val e = parts(3).toDouble
+              val n = parts(4).toDouble
+              StoredFeatureId.fromHumanReadableString(id, Some(GeonamesNamespace)) match {
+                case Some(fid) => {
+                  map(fid) = BoundingBox(Point(n, e), Point(s, w))
+                  log.debug("bbox %s %s".format(fid, parts.drop(1).mkString(",")))
+                }
+                case None => log.error("%s: couldn't parse into StoredFeatureId".format(line))
               }
-              case None => log.error("%s: couldn't parse into StoredFeatureId".format(line))
+            } catch {
+              case e: Throwable =>
+                log.error("%s: %s".format(line, e))
             }
-          } catch {
-            case e: Throwable =>
-            log.error("%s: %s".format(line, e))
           }
-        }
-      })
+        })
     })
     map
   }
 
   def batchUpdate(filenames: List[File], store: GeocodeStorageWriteService) = {
-    parse(filenames).foreach({case (fid, bbox) => {
-      store.addBoundingBoxToRecord(bbox, fid)
-    }})
+    parse(filenames).foreach({
+      case (fid, bbox) => {
+        store.addBoundingBoxToRecord(bbox, fid)
+      }
+    })
   }
 }

@@ -6,7 +6,6 @@ import com.mongodb.async.SingleResultCallback
 import io.fsq.common.scala.Identity._
 import scala.util.{Failure, Success, Try}
 
-
 object MongoCallback {
   trait Implicits {
     implicit def scalaLongToJavaLong[Result[_]](

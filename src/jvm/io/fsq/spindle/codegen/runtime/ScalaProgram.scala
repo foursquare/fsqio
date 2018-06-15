@@ -5,9 +5,9 @@ package io.fsq.spindle.codegen.runtime
 import io.fsq.spindle.__shaded_for_spindle_bootstrap__.descriptors.{Program, ProgramProxy}
 
 class ScalaProgram(
-    override val underlying: Program,
-    val scope: Map[String, TypeDeclaration],
-    val enhancedTypes: EnhancedTypes
+  override val underlying: Program,
+  val scope: Map[String, TypeDeclaration],
+  val enhancedTypes: EnhancedTypes
 ) extends ProgramProxy {
   def pkg: Option[String] = {
     val sc = underlying.namespaces.find(_.language == "scala")
@@ -30,9 +30,9 @@ class ScalaProgram(
 
 object ScalaProgram {
   def apply(
-      program: ProgramSource,
-      typeDeclarations: Map[ProgramSource, Map[String, TypeDeclaration]],
-      enhancedTypes: EnhancedTypes
+    program: ProgramSource,
+    typeDeclarations: Map[ProgramSource, Map[String, TypeDeclaration]],
+    enhancedTypes: EnhancedTypes
   ): ScalaProgram = {
     new ScalaProgram(program.tree, Scope.scopeFor(program, typeDeclarations), enhancedTypes)
   }

@@ -53,9 +53,10 @@ object Serde {
       buf.array()
     }
     override def fromBytes(bytes: Array[Byte]): Seq[ObjectId] = {
-      0.until(bytes.length / 12).map(i => {
-        new ObjectId(Arrays.copyOfRange(bytes, i * 12, (i + 1) * 12))
-      })
+      0.until(bytes.length / 12)
+        .map(i => {
+          new ObjectId(Arrays.copyOfRange(bytes, i * 12, (i + 1) * 12))
+        })
     }
   }
 
@@ -65,8 +66,9 @@ object Serde {
     override def toBytes(t: StoredFeatureId): Array[Byte] = impl.toBytes(t.longId)
     override def fromBytes(bytes: Array[Byte]): StoredFeatureId = {
       val id = impl.fromBytes(bytes)
-      StoredFeatureId.fromLong(id).getOrElse(
-        throw new RuntimeException("couldn't deserialize StoredFeatureId from %s".format(id)))
+      StoredFeatureId
+        .fromLong(id)
+        .getOrElse(throw new RuntimeException("couldn't deserialize StoredFeatureId from %s".format(id)))
     }
   }
 
@@ -78,9 +80,12 @@ object Serde {
     }
     override def fromBytes(bytes: Array[Byte]): Seq[StoredFeatureId] = {
       val ids = impl.fromBytes(bytes)
-      ids.map(id =>
-        StoredFeatureId.fromLong(id).getOrElse(
-          throw new RuntimeException("couldn't deserialize StoredFeatureId from %s".format(id))))
+      ids.map(
+        id =>
+          StoredFeatureId
+            .fromLong(id)
+            .getOrElse(throw new RuntimeException("couldn't deserialize StoredFeatureId from %s".format(id)))
+      )
     }
   }
 
@@ -100,8 +105,8 @@ object Serde {
     override def fromBytes(bytes: Array[Byte]): Array[Byte] = bytes
   }
 
-  case class ThriftSerde[T <: TBase[_ <: TBase[_ <: AnyRef, _ <: TFieldIdEnum], _ <: TFieldIdEnum]](
-      factory: () => T) extends Serde[T] {
+  case class ThriftSerde[T <: TBase[_ <: TBase[_ <: AnyRef, _ <: TFieldIdEnum], _ <: TFieldIdEnum]](factory: () => T)
+    extends Serde[T] {
     val protFactory = new TCompactProtocol.Factory
 
     def toBytes(t: T): Array[Byte] = {
@@ -125,29 +130,31 @@ sealed abstract class Index[K, V](val filename: String, val keySerde: Serde[K], 
 }
 
 object Indexes {
-  case object GeometryIndex extends Index[StoredFeatureId, Geometry](
-    "geometry", Serde.StoredFeatureIdSerde, Serde.GeometrySerde)
+  case object GeometryIndex
+    extends Index[StoredFeatureId, Geometry]("geometry", Serde.StoredFeatureIdSerde, Serde.GeometrySerde)
 
-  case object S2CoveringIndex extends Index[StoredFeatureId, Seq[Long]](
-    "s2_covering", Serde.StoredFeatureIdSerde, Serde.LongListSerde)
+  case object S2CoveringIndex
+    extends Index[StoredFeatureId, Seq[Long]]("s2_covering", Serde.StoredFeatureIdSerde, Serde.LongListSerde)
 
-  case object S2InteriorIndex extends Index[StoredFeatureId, Seq[Long]](
-    "s2_interior", Serde.StoredFeatureIdSerde, Serde.LongListSerde)
+  case object S2InteriorIndex
+    extends Index[StoredFeatureId, Seq[Long]]("s2_interior", Serde.StoredFeatureIdSerde, Serde.LongListSerde)
 
-  case object FeatureIndex extends Index[StoredFeatureId, GeocodeServingFeature](
-    "features", Serde.StoredFeatureIdSerde, Serde.ThriftSerde(() => new RawGeocodeServingFeature))
+  case object FeatureIndex
+    extends Index[StoredFeatureId, GeocodeServingFeature](
+      "features",
+      Serde.StoredFeatureIdSerde,
+      Serde.ThriftSerde(() => new RawGeocodeServingFeature)
+    )
 
-  case object IdMappingIndex extends Index[String, StoredFeatureId](
-    "id-mapping", Serde.StringSerde, Serde.StoredFeatureIdSerde)
+  case object IdMappingIndex
+    extends Index[String, StoredFeatureId]("id-mapping", Serde.StringSerde, Serde.StoredFeatureIdSerde)
 
-  case object S2Index extends Index[Long, CellGeometries](
-    "s2_index", Serde.LongSerde, Serde.ThriftSerde(() => new RawCellGeometries))
+  case object S2Index
+    extends Index[Long, CellGeometries]("s2_index", Serde.LongSerde, Serde.ThriftSerde(() => new RawCellGeometries))
 
-  case object PrefixIndex extends Index[String, Seq[StoredFeatureId]](
-    "prefix_index", Serde.StringSerde, Serde.StoredFeatureIdListSerde)
+  case object PrefixIndex
+    extends Index[String, Seq[StoredFeatureId]]("prefix_index", Serde.StringSerde, Serde.StoredFeatureIdListSerde)
 
-  case object NameIndex extends Index[String, Seq[StoredFeatureId]](
-    "name_index.hfile", Serde.StringSerde, Serde.StoredFeatureIdListSerde)
+  case object NameIndex
+    extends Index[String, Seq[StoredFeatureId]]("name_index.hfile", Serde.StringSerde, Serde.StoredFeatureIdListSerde)
 }
-
-

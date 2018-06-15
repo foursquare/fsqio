@@ -28,7 +28,7 @@ class FidMap(preload: Boolean) extends DurationUtils {
               fidMap(id) = Some(geocodeRecord.featureId)
             })
             i += 1
-            if (i % (100*1000) == 0) {
+            if (i % (100 * 1000) == 0) {
               log.info("preloaded %d/%d fids".format(i, total))
             }
             Iter.Continue(())
@@ -45,9 +45,11 @@ class FidMap(preload: Boolean) extends DurationUtils {
       fidMap.getOrElse(fid, None)
     } else {
       if (!fidMap.contains(fid)) {
-        val longidOpt = executor.fetchOne(
-          Q(ThriftGeocodeRecord).where(_.id eqs fid.longId).select(_.id)
-        ).flatten
+        val longidOpt = executor
+          .fetchOne(
+            Q(ThriftGeocodeRecord).where(_.id eqs fid.longId).select(_.id)
+          )
+          .flatten
         fidMap(fid) = longidOpt.flatMap(StoredFeatureId.fromLong _)
         if (longidOpt.isEmpty) {
           //println("missing fid: %s".format(fid))

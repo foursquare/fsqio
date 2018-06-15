@@ -29,14 +29,14 @@ class DataBlock(
       prevOffset = currOffset
       currOffset = uncompressedBuffer.position
       compareResult = compareWithKeyAndMoveForward(inputKey, currOffset, uncompressedBuffer)
-    } while( uncompressedBuffer.position < uncompressedBuffer.limit && compareResult > 0)
+    } while (uncompressedBuffer.position < uncompressedBuffer.limit && compareResult > 0)
 
     // logger.debug(s"compareResult = $compareResult currOffset = $currOffset prevOffset = $prevOffset uncompressedBuffer.position = ${uncompressedBuffer.position} uncompressedBuffer.limit = ${uncompressedBuffer.limit}")
     // For an exact match, currOffset points to an entry with the same key as the inputKey.
     if (compareResult == 0) {
       (currOffset, true)
     } else if (compareResult > 0) {
-    // If compareResult>0, we've reached the end of the block, and need to return a pointer to the last key in the block.
+      // If compareResult>0, we've reached the end of the block, and need to return a pointer to the last key in the block.
       (currOffset, false)
     } else { // (compareResult<0
       // Otherwise we need to rewind to the previous kv pair.
@@ -45,12 +45,12 @@ class DataBlock(
   }
 
   /**
-   * Find closest offset where splitKey <= key[offset]
-   * Returns -1 if splitKey < first key in this block.
-   * splitKey is treated as one byteBuffer formed by sequential concatenation of all the byte buffers.
-   * This function is essentially providing same functionality as the above except it takes the input byte buffer
-   * in multiple chunks.
-   */
+    * Find closest offset where splitKey <= key[offset]
+    * Returns -1 if splitKey < first key in this block.
+    * splitKey is treated as one byteBuffer formed by sequential concatenation of all the byte buffers.
+    * This function is essentially providing same functionality as the above except it takes the input byte buffer
+    * in multiple chunks.
+    */
   def getClosestKeyOffset(
     splitKey: Seq[ByteBuffer],
     uncompressedBuffer: ByteBuffer,
@@ -65,14 +65,14 @@ class DataBlock(
       prevOffset = currOffset
       currOffset = uncompressedBuffer.position
       compareResult = compareWithKeyAndMoveForward(splitKey, currOffset, uncompressedBuffer)
-    } while( uncompressedBuffer.position < uncompressedBuffer.limit && compareResult > 0)
+    } while (uncompressedBuffer.position < uncompressedBuffer.limit && compareResult > 0)
 
     // logger.debug(s"compareResult = $compareResult currOffset = $currOffset prevOffset = $prevOffset uncompressedBuffer.position = ${uncompressedBuffer.position} uncompressedBuffer.limit = ${uncompressedBuffer.limit}")
     // For an exact match, currOffset points to an entry with the same key as the splitKey.
     if (compareResult == 0) {
       (currOffset, true)
     } else if (compareResult > 0) {
-    // If compareResult>0, we've reached the end of the block, and need to return a pointer to the last key in the block.
+      // If compareResult>0, we've reached the end of the block, and need to return a pointer to the last key in the block.
       (currOffset, false)
     } else { // (compareResult<0
       // Otherwise we need to rewind to the previous kv pair.
@@ -117,8 +117,12 @@ class DataBlock(
     val valLen = uncompressedBuffer.getInt()
     uncompressedBuffer.position(uncompressedBuffer.position + keyLen + valLen)
 
-    if (uncompressedBuffer.position == uncompressedBuffer.limit) { offset  } // end of DataBlock
-    else { uncompressedBuffer.position }
+    if (uncompressedBuffer.position == uncompressedBuffer.limit) {
+      offset
+    } // end of DataBlock
+    else {
+      uncompressedBuffer.position
+    }
   }
 
   // positions uncompressedBuffer at the start of the next key/value pair
@@ -160,57 +164,59 @@ class DataBlock(
     value
   }
 
-
   // BUFFER ----------------------------------------------------------------------------------------
-  def resetBuffer(): ByteBuffer =  { synchronized {
-    accessLogger.map(al => Stats.time("cachesim.enqueue") { al.access(index) })
-    buffer.position(0)
-    val uncompressedBuffer =
-      if (compressionCodec =? 3) {
-        val uncompressedBuffer = if (buffer.isDirect) {
-          // The data needs to be uncompressed into a direct buffer because the source is a direct buffer
-          ByteBuffer.allocateDirect(uncompressedSize)
-        } else {
-          ByteBuffer.allocate(uncompressedSize)
-        }
-
-        while (uncompressedBuffer.position < uncompressedSize) {
-          buffer.limit(buffer.position() + 4)
-          val originalBlockSize = buffer.getInt()
-          var bytesReadInThisBlock = 0
-          while (bytesReadInThisBlock < originalBlockSize) {
-            buffer.limit(buffer.position() + 4)
-            val compressedSize = buffer.getInt()
-            buffer.limit(buffer.position() + compressedSize)
-            val size = if (buffer.isDirect) {
-              Snappy.uncompress(buffer, uncompressedBuffer)
-            } else {
-              Snappy.rawUncompress(
-                buffer.array,
-                buffer.arrayOffset + buffer.position,
-                buffer.remaining,
-                uncompressedBuffer.array,
-                uncompressedBuffer.arrayOffset + uncompressedBuffer.position
-              )
-            }
-            buffer.position(buffer.position + compressedSize)
-            uncompressedBuffer.position(uncompressedBuffer.position + size)
-            bytesReadInThisBlock += size
+  def resetBuffer(): ByteBuffer = {
+    synchronized {
+      accessLogger.map(al => Stats.time("cachesim.enqueue") { al.access(index) })
+      buffer.position(0)
+      val uncompressedBuffer =
+        if (compressionCodec =? 3) {
+          val uncompressedBuffer = if (buffer.isDirect) {
+            // The data needs to be uncompressed into a direct buffer because the source is a direct buffer
+            ByteBuffer.allocateDirect(uncompressedSize)
+          } else {
+            ByteBuffer.allocate(uncompressedSize)
           }
+
+          while (uncompressedBuffer.position < uncompressedSize) {
+            buffer.limit(buffer.position() + 4)
+            val originalBlockSize = buffer.getInt()
+            var bytesReadInThisBlock = 0
+            while (bytesReadInThisBlock < originalBlockSize) {
+              buffer.limit(buffer.position() + 4)
+              val compressedSize = buffer.getInt()
+              buffer.limit(buffer.position() + compressedSize)
+              val size = if (buffer.isDirect) {
+                Snappy.uncompress(buffer, uncompressedBuffer)
+              } else {
+                Snappy.rawUncompress(
+                  buffer.array,
+                  buffer.arrayOffset + buffer.position,
+                  buffer.remaining,
+                  uncompressedBuffer.array,
+                  uncompressedBuffer.arrayOffset + uncompressedBuffer.position
+                )
+              }
+              buffer.position(buffer.position + compressedSize)
+              uncompressedBuffer.position(uncompressedBuffer.position + size)
+              bytesReadInThisBlock += size
+            }
+          }
+          uncompressedBuffer.flip
+          assert(
+            uncompressedBuffer.remaining == uncompressedSize,
+            s"uncompressedBuffer.remaining of ${uncompressedBuffer.remaining} does not equal uncompressedSize of ${uncompressedSize} for block ${index}"
+          )
+          uncompressedBuffer
+        } else {
+          val uncompressedBuffer = buffer.slice
+          uncompressedBuffer.limit(uncompressedSize)
+          uncompressedBuffer
         }
-        uncompressedBuffer.flip
-        assert(uncompressedBuffer.remaining == uncompressedSize,
-          s"uncompressedBuffer.remaining of ${uncompressedBuffer.remaining} does not equal uncompressedSize of ${uncompressedSize} for block ${index}")
-        uncompressedBuffer
-      } else {
-        val uncompressedBuffer = buffer.slice
-        uncompressedBuffer.limit(uncompressedSize)
-        uncompressedBuffer
-      }
-    // +8 in order to skip the magic header
-    uncompressedBuffer.position(8)
-    uncompressedBuffer
-  }
+      // +8 in order to skip the magic header
+      uncompressedBuffer.position(8)
+      uncompressedBuffer
+    }
   }
 
   // checks for magic which signals the start of the DataBlock

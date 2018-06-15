@@ -8,7 +8,6 @@ import org.bson.codecs.configuration.CodecRegistry
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.collection.concurrent.{Map => ConcurrentMap}
 
-
 /** Manages mongo connections and provides access to the client objects. This class is
   * modeled after lift's MongoDB singleton, but in a way that abstracts out the type of
   * client used (async vs blocking). Users must implement closeClient, getCodecRegistry,

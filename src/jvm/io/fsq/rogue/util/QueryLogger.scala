@@ -5,7 +5,6 @@ package io.fsq.rogue.util
 import io.fsq.rogue.{IndexCheckerLogger, Query}
 import io.fsq.rogue.index.UntypedMongoIndex
 
-
 trait QueryLogger[Result[_]] extends IndexCheckerLogger {
   def logCounter(name: String, count: Int = 1): Unit
 

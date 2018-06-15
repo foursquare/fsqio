@@ -10,7 +10,7 @@ import org.junit.{Assert => A, Test}
 
 class FuturesTest {
   @Test
-  def testWhere(): Unit =  {
+  def testWhere(): Unit = {
     A.assertEquals(None, Await.result(Futures.where(false, Future.exception(new Exception("Shouldn't be executed")))))
     A.assertEquals(None, Await.result(Futures.where(false, Future { A.fail("should not be called") })))
     A.assertEquals(None, Await.result(Futures.where(false, Future.value(4))))
@@ -18,9 +18,9 @@ class FuturesTest {
   }
 
   @Test
-  def testGroupedCollect(): Unit =  {
-    val params = Vector(1,2,3,4,5,6,7,8)
-    val results = Vector("1","2","3","4","5","6","7","8")
+  def testGroupedCollect(): Unit = {
+    val params = Vector(1, 2, 3, 4, 5, 6, 7, 8)
+    val results = Vector("1", "2", "3", "4", "5", "6", "7", "8")
 
     for {
       size <- Vector(1, 3, 7, 7, 8, 9, 20)
@@ -41,8 +41,10 @@ class FuturesTest {
 
       A.assertEquals(results.map(Return(_)), Await.result(Futures.groupedTry(params, size)(execute)))
       A.assertEquals(results.take(4).map(Return(_)), Await.result(Futures.groupedTry(params.take(4), size)(throwsOn5)))
-      A.assertEquals((results.take(4).map(Return(_)) ++ Vector(Throw(whoops)) ++ results.drop(5).map(Return(_))),
-        Await.result(Futures.groupedTry(params, size)(throwsOn5)))
+      A.assertEquals(
+        (results.take(4).map(Return(_)) ++ Vector(Throw(whoops)) ++ results.drop(5).map(Return(_))),
+        Await.result(Futures.groupedTry(params, size)(throwsOn5))
+      )
 
       var executes = 0
       def executeWithSideEffects(i: Int) = { executes += 1; execute(i).unit }
@@ -66,7 +68,7 @@ class FuturesTest {
 
   @Test
   def testConcurrentGroupedCollect(): Unit = {
-    val params = Vector(1,2,3,4,5,6,7,8)
+    val params = Vector(1, 2, 3, 4, 5, 6, 7, 8)
     val concurrency = 3
 
     val concurrencyLatch = new CountDownLatch(concurrency)
@@ -78,16 +80,19 @@ class FuturesTest {
     val blockingBarrier = new CyclicBarrier(2)
 
     val completedF = Futures.groupedExecute(params, concurrency)(param => {
-      FuturePool.interruptibleUnboundedPool({
-        extraConcurrencyLatch.countDown()
-        concurrencyLatch.countDown()
-        if (param =? blockingParam) {
-          blockingBarrier.await()
-        }
-        runLatch.await()
-      }).onSuccess(_ => {
-        successLatch.countDown()
-      }).unit
+      FuturePool
+        .interruptibleUnboundedPool({
+          extraConcurrencyLatch.countDown()
+          concurrencyLatch.countDown()
+          if (param =? blockingParam) {
+            blockingBarrier.await()
+          }
+          runLatch.await()
+        })
+        .onSuccess(_ => {
+          successLatch.countDown()
+        })
+        .unit
     })
 
     // verify expected concurrency

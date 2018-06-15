@@ -6,8 +6,8 @@ import com.twitter.util.{Closable, Event, Var, Witness}
 import io.fsq.common.scala.Lists.Implicits._
 
 /**
- * An [[com.twitter.util.Event]] that only notifies if the observed value actually changes.
- */
+  * An [[com.twitter.util.Event]] that only notifies if the observed value actually changes.
+  */
 class StableEvent[T](sourceEvent: Event[T]) extends Event[T] {
   override def register(w: Witness[T]): Closable = {
     val witness = new Witness[T] {
@@ -28,9 +28,10 @@ class StableEvent[T](sourceEvent: Event[T]) extends Event[T] {
 }
 
 object StableVar {
+
   /**
-   * Create a Var[T] from `source` that only reports changes if the observed value actually changes.
-   */
+    * Create a Var[T] from `source` that only reports changes if the observed value actually changes.
+    */
   def apply[T](init: T, source: Var[T]): Var[T] = {
     Var(init, new StableEvent(source.changes))
   }

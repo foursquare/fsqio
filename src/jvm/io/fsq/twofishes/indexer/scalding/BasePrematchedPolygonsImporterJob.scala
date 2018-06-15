@@ -30,5 +30,9 @@ class BasePrematchedPolygonsImporterJob(
     (new LongWritable(featureId) -> matchingValue)
   }).group
     .maxBy(_.polygonIdOption.getOrElse(0L))
-    .write(TypedSink[(LongWritable, PolygonMatchingValue)](SpindleSequenceFileSource[LongWritable, PolygonMatchingValue](outputPath)))
+    .write(
+      TypedSink[(LongWritable, PolygonMatchingValue)](
+        SpindleSequenceFileSource[LongWritable, PolygonMatchingValue](outputPath)
+      )
+    )
 }

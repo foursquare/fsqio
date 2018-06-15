@@ -67,86 +67,97 @@ trait StructField[ER <: Record[ER], EM <: MetaRecord[ER, EM]] extends UntypedStr
 }
 
 case class OptionalFieldDescriptor[F, R <: Record[R], M <: MetaRecord[R, M]](
-    override val name: String,
-    override val longName: String,
-    override val id: Int,
-    override val annotations: Map[String, String],
-    override val owner: M,
-    override val getter: R => Option[F],
-    override val setterRaw: (MutableRecord[R], F) => Unit,
-    override val unsetterRaw: MutableRecord[R] => Unit,
-    override val manifest: Manifest[F]
-) extends OptionalField[F, M] with FieldDescriptor[F, R, M]
+  override val name: String,
+  override val longName: String,
+  override val id: Int,
+  override val annotations: Map[String, String],
+  override val owner: M,
+  override val getter: R => Option[F],
+  override val setterRaw: (MutableRecord[R], F) => Unit,
+  override val unsetterRaw: MutableRecord[R] => Unit,
+  override val manifest: Manifest[F]
+) extends OptionalField[F, M]
+  with FieldDescriptor[F, R, M]
 
 case class ForeignKeyFieldDescriptor[F, R <: Record[R], M <: MetaRecord[R, M]](
-    override val name: String,
-    override val longName: String,
-    override val id: Int,
-    override val annotations: Map[String, String],
-    override val owner: M,
-    override val getter: R => Option[F],
-    override val setterRaw: (MutableRecord[R], F) => Unit,
-    override val unsetterRaw: MutableRecord[R] => Unit,
-    override val objSetter: (R, SemitypedHasPrimaryKey[F]) => Unit,
-    override val objGetter: (R, UntypedMetaRecord) => Option[UntypedRecord with SemitypedHasPrimaryKey[F]],
-    override val unsafeObjGetter: Any => Option[Any],
-    override val alternateObjSetter: (R, AnyRef) => Unit,
-    override val alternateObjGetter: R => Option[AnyRef],
-    override val manifest: Manifest[F]
-) extends OptionalField[F, M] with FieldDescriptor[F, R, M] with ForeignKeyField[F, R]
+  override val name: String,
+  override val longName: String,
+  override val id: Int,
+  override val annotations: Map[String, String],
+  override val owner: M,
+  override val getter: R => Option[F],
+  override val setterRaw: (MutableRecord[R], F) => Unit,
+  override val unsetterRaw: MutableRecord[R] => Unit,
+  override val objSetter: (R, SemitypedHasPrimaryKey[F]) => Unit,
+  override val objGetter: (R, UntypedMetaRecord) => Option[UntypedRecord with SemitypedHasPrimaryKey[F]],
+  override val unsafeObjGetter: Any => Option[Any],
+  override val alternateObjSetter: (R, AnyRef) => Unit,
+  override val alternateObjGetter: R => Option[AnyRef],
+  override val manifest: Manifest[F]
+) extends OptionalField[F, M]
+  with FieldDescriptor[F, R, M]
+  with ForeignKeyField[F, R]
 
 case class ForeignKeySeqFieldDescriptor[F, R <: Record[R], M <: MetaRecord[R, M]](
-    override val name: String,
-    override val longName: String,
-    override val id: Int,
-    override val annotations: Map[String, String],
-    override val owner: M,
-    override val getter: R => Option[Seq[F]],
-    override val setterRaw: (MutableRecord[R], Seq[F]) => Unit,
-    override val unsetterRaw: MutableRecord[R] => Unit,
-    override val objSetter: (R, Seq[SemitypedHasPrimaryKey[F]]) => Unit,
-    override val objGetter: (R, UntypedMetaRecord) => Option[Seq[UntypedRecord with SemitypedHasPrimaryKey[F]]],
-    override val unsafeObjGetter: Any => Option[Seq[Any]],
-    override val alternateObjSetter: (R, Seq[AnyRef]) => Unit,
-    override val alternateObjGetter: R => Option[Seq[AnyRef]],
-    override val manifest: Manifest[Seq[F]]
-) extends OptionalField[Seq[F], M] with FieldDescriptor[Seq[F], R, M] with ForeignKeySeqField[F, R]
+  override val name: String,
+  override val longName: String,
+  override val id: Int,
+  override val annotations: Map[String, String],
+  override val owner: M,
+  override val getter: R => Option[Seq[F]],
+  override val setterRaw: (MutableRecord[R], Seq[F]) => Unit,
+  override val unsetterRaw: MutableRecord[R] => Unit,
+  override val objSetter: (R, Seq[SemitypedHasPrimaryKey[F]]) => Unit,
+  override val objGetter: (R, UntypedMetaRecord) => Option[Seq[UntypedRecord with SemitypedHasPrimaryKey[F]]],
+  override val unsafeObjGetter: Any => Option[Seq[Any]],
+  override val alternateObjSetter: (R, Seq[AnyRef]) => Unit,
+  override val alternateObjGetter: R => Option[Seq[AnyRef]],
+  override val manifest: Manifest[Seq[F]]
+) extends OptionalField[Seq[F], M]
+  with FieldDescriptor[Seq[F], R, M]
+  with ForeignKeySeqField[F, R]
 
 case class BitfieldFieldDescriptor[F, R <: Record[R], M <: MetaRecord[R, M], FR <: Record[FR], FM <: MetaRecord[FR, FM]](
-    override val name: String,
-    override val longName: String,
-    override val id: Int,
-    override val annotations: Map[String, String],
-    override val owner: M,
-    override val getter: R => Option[F],
-    override val setterRaw: (MutableRecord[R], F) => Unit,
-    override val unsetterRaw: MutableRecord[R] => Unit,
-    override val structMeta: FM,
-    override val manifest: Manifest[F]
-) extends OptionalField[F, M] with FieldDescriptor[F, R, M] with BitfieldField[FR, FM]
+  override val name: String,
+  override val longName: String,
+  override val id: Int,
+  override val annotations: Map[String, String],
+  override val owner: M,
+  override val getter: R => Option[F],
+  override val setterRaw: (MutableRecord[R], F) => Unit,
+  override val unsetterRaw: MutableRecord[R] => Unit,
+  override val structMeta: FM,
+  override val manifest: Manifest[F]
+) extends OptionalField[F, M]
+  with FieldDescriptor[F, R, M]
+  with BitfieldField[FR, FM]
 
 case class StructFieldDescriptor[R <: Record[R], M <: MetaRecord[R, M], ER <: Record[ER], EM <: MetaRecord[ER, EM]](
-    override val name: String,
-    override val longName: String,
-    override val id: Int,
-    override val annotations: Map[String, String],
-    override val owner: M,
-    override val getter: R => Option[ER],
-    override val setterRaw: (MutableRecord[R], ER) => Unit,
-    override val unsetterRaw: MutableRecord[R] => Unit,
-    override val structMeta: EM,
-    override val manifest: Manifest[ER]
-) extends OptionalField[ER, M] with FieldDescriptor[ER, R, M] with StructField[ER, EM]
+  override val name: String,
+  override val longName: String,
+  override val id: Int,
+  override val annotations: Map[String, String],
+  override val owner: M,
+  override val getter: R => Option[ER],
+  override val setterRaw: (MutableRecord[R], ER) => Unit,
+  override val unsetterRaw: MutableRecord[R] => Unit,
+  override val structMeta: EM,
+  override val manifest: Manifest[ER]
+) extends OptionalField[ER, M]
+  with FieldDescriptor[ER, R, M]
+  with StructField[ER, EM]
 
 case class ExceptionFieldDescriptor[R <: Record[R], M <: MetaRecord[R, M], ER <: Record[ER], EM <: MetaRecord[ER, EM], E <: RuntimeException with ER](
-    override val name: String,
-    override val longName: String,
-    override val id: Int,
-    override val annotations: Map[String, String],
-    override val owner: M,
-    override val getter: R => Option[E],
-    override val setterRaw: (MutableRecord[R], E) => Unit,
-    override val unsetterRaw: MutableRecord[R] => Unit,
-    override val structMeta: EM,
-    override val manifest: Manifest[E]
-) extends OptionalField[E, M] with FieldDescriptor[E, R, M] with StructField[ER, EM]
+  override val name: String,
+  override val longName: String,
+  override val id: Int,
+  override val annotations: Map[String, String],
+  override val owner: M,
+  override val getter: R => Option[E],
+  override val setterRaw: (MutableRecord[R], E) => Unit,
+  override val unsetterRaw: MutableRecord[R] => Unit,
+  override val structMeta: EM,
+  override val manifest: Manifest[E]
+) extends OptionalField[E, M]
+  with FieldDescriptor[E, R, M]
+  with StructField[ER, EM]

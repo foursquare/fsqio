@@ -12,10 +12,9 @@ import org.apache.thrift.{TBaseHelper, TException}
 import org.apache.thrift.protocol.{TField, TList, TMap, TMessage, TProtocol, TProtocolFactory, TSet, TStruct, TType}
 import org.apache.thrift.transport.TTransport
 
-
 object TBSONBinaryProtocol {
   // Are only read, never written, so can be used concurrently.
-  val ANONYMOUS_MESSAGE  = new TMessage()
+  val ANONYMOUS_MESSAGE = new TMessage()
   val ANONYMOUS_STRUCT = new TStruct()
   val NO_MORE_FIELDS = new TField("", TType.STOP, 0)
   val ERROR_KEY = "$err"
@@ -32,18 +31,18 @@ object TBSONBinaryProtocol {
 }
 
 /**
- * Thrift protocol to decode binary bson
- * Not thread safe, but can be reused assuming prior full successful reads
- * use setSource(InputStream) before passing into read method
- *
- * This only implements the read methods. Write methods will throw UnsupportedOperationException
- */
+  * Thrift protocol to decode binary bson
+  * Not thread safe, but can be reused assuming prior full successful reads
+  * use setSource(InputStream) before passing into read method
+  *
+  * This only implements the read methods. Write methods will throw UnsupportedOperationException
+  */
 class TBSONBinaryProtocol() extends TProtocol(null) {
 
   private var inputStream: InputStream = null
   // used as intermediate copy buffer for field names and strings
   private val buffer = new ByteStringBuilder(32)
-  
+
   private val readStack = new Stack[ReadState]
 
   private var _errorMessage: String = null
@@ -105,15 +104,13 @@ class TBSONBinaryProtocol() extends TProtocol(null) {
   }
 
   /**
-   * Reading methods.
-   */
-
+    * Reading methods.
+    */
   def readMessageBegin(): TMessage = {
     TBSONBinaryProtocol.ANONYMOUS_MESSAGE
   }
 
-  def readMessageEnd(): Unit = {
-  }
+  def readMessageEnd(): Unit = {}
 
   def readStructBegin(): TStruct = {
     if (readStack.size == 0) {
@@ -146,8 +143,7 @@ class TBSONBinaryProtocol() extends TProtocol(null) {
     findNonNullField
   }
 
-  def readFieldEnd(): Unit = {
-  }
+  def readFieldEnd(): Unit = {}
 
   def readMapBegin(): TMap = {
     val mapReadState = currentState().readMap()
@@ -241,9 +237,8 @@ class TBSONBinaryProtocol() extends TProtocol(null) {
   }
 
   /**
-   * Writing methods.
-   */
-
+    * Writing methods.
+    */
   def writeMessageBegin(message: TMessage) = throw new UnsupportedOperationException()
 
   def writeMessageEnd(): Unit = throw new UnsupportedOperationException()

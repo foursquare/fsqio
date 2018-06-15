@@ -6,10 +6,9 @@ import net.liftweb.mongodb.record.MongoRecord
 import net.liftweb.mongodb.record.field.ObjectIdField
 import org.bson.types.ObjectId
 
-
 /**
-* Mix this into a Record to add an ObjectIdField
-*/
+  * Mix this into a Record to add an ObjectIdField
+  */
 trait ObjectIdKey[OwnerType <: MongoRecord[OwnerType]] {
   self: OwnerType =>
 

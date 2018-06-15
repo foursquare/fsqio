@@ -7,7 +7,6 @@ import org.apache.thrift.TBase
 import org.apache.thrift.protocol.{TField, TProtocol, TStruct, TType}
 import org.apache.thrift.transport.TMemoryInputTransport
 
-
 // Some protocols are "robust", i.e., they have complete field id and type information on the wire.
 // Others are not. For example, TBSONProtocol is not robust: it uses field names instead of ids on
 // the wire, and it represents an i16 as an i32, because BSON has no 16-bit integer type.
@@ -26,7 +25,6 @@ import org.apache.thrift.transport.TMemoryInputTransport
 //                with the name of P1, so we know how to interpret the blob) as the value of a "magic" field in P2.
 //                Since we read the fields using P1, we can safely write them using P1. However when the P2 stream
 //                is later read back in, we need some special handling to unravel the blob.
-
 
 object UnknownFieldsBlob {
   // The name and identifier of the magic field. We rely on the following to avoid collisions:
@@ -66,13 +64,12 @@ object UnknownFieldsBlob {
     iprot.readFieldBegin()
     val buf: ByteBuffer = iprot.readBinary()
     iprot.readFieldEnd()
-    iprot.readFieldBegin()  // Consume the field stop.
+    iprot.readFieldBegin() // Consume the field stop.
     iprot.readStructEnd()
 
     new UnknownFieldsBlob(protocolName, buf)
   }
 }
-
 
 // A set of unknown fields, serialized as a blob using some protocol.
 class UnknownFieldsBlob(protocolName: String, contents: ByteBuffer) {

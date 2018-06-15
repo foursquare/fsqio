@@ -63,13 +63,15 @@ class BaseAlternateNamesJoinIntermediateJob(
 
       def doRewrites(names: Seq[String]): Seq[String] = {
         val nameSet = new scala.collection.mutable.HashSet[String]()
-        nameRewritesMap.foreach({case(from, toList) => {
-          names.foreach(name => {
-            toList.foreach(to => {
-              nameSet += from.replaceAllIn(name, to)
+        nameRewritesMap.foreach({
+          case (from, toList) => {
+            names.foreach(name => {
+              toList.foreach(to => {
+                nameSet += from.replaceAllIn(name, to)
+              })
             })
-          })
-        }})
+          }
+        })
         nameSet ++= names.map(_.replace("ß", "ss"))
         nameSet.toSeq
       }
@@ -108,11 +110,9 @@ class BaseAlternateNamesJoinIntermediateJob(
       def rewriteNames(names: Seq[String]): (Seq[String], Seq[String]) = {
         val deleteModifiedNames: Seq[String] = names.flatMap(doDelete)
 
-        val deaccentedNames = names.map(NameNormalizer.deaccent).filterNot(n =>
-          names.contains(n))
+        val deaccentedNames = names.map(NameNormalizer.deaccent).filterNot(n => names.contains(n))
 
-        val rewrittenNames = doRewrites(names ++ deleteModifiedNames).filterNot(n =>
-          names.contains(n))
+        val rewrittenNames = doRewrites(names ++ deleteModifiedNames).filterNot(n => names.contains(n))
 
         (deaccentedNames, (deleteModifiedNames ++ rewrittenNames).distinct)
       }
@@ -132,10 +132,10 @@ class BaseAlternateNamesJoinIntermediateJob(
         names.map(n => {
           val finalFlags = originalFlags ++
             (if (isLocalLang()) {
-              Seq(FeatureNameFlags.LOCAL_LANG)
-            } else {
-              Nil
-            })
+               Seq(FeatureNameFlags.LOCAL_LANG)
+             } else {
+               Nil
+             })
           buildFeatureName(n, finalFlags)
         })
       }
@@ -178,17 +178,21 @@ class BaseAlternateNamesJoinIntermediateJob(
         // tilde and caron to breve
         "Ã" -> "Ă",
         "Ǎ" -> "Ă"
-      ).flatMap({case (from, to) => {
-        List(
-          from.toLowerCase -> to.toLowerCase,
-          from.toUpperCase -> to.toUpperCase
-        )
-      }})
+      ).flatMap({
+        case (from, to) => {
+          List(
+            from.toLowerCase -> to.toLowerCase,
+            from.toUpperCase -> to.toUpperCase
+          )
+        }
+      })
 
       var newS = s
-      romanianTranslationTable.foreach({case (from, to) => {
-        newS = newS.replace(from, to)
-      }})
+      romanianTranslationTable.foreach({
+        case (from, to) => {
+          newS = newS.replace(from, to)
+        }
+      })
       newS
     }
 
@@ -224,103 +228,122 @@ class BaseAlternateNamesJoinIntermediateJob(
     fixedNames
   }
 
-  val joined = features.leftJoin(altNames)
-    .map({case (k: LongWritable, (f: GeocodeServingFeature, altNamesOpt: Option[FeatureNames])) => {
-      altNamesOpt match {
-        case Some(altNamesContainer) => {
-          val woeType = f.feature.woeTypeOption.getOrElse(YahooWoeType.UNKNOWN)
-          val cc = f.feature.ccOrThrow
+  val joined = features
+    .leftJoin(altNames)
+    .map({
+      case (k: LongWritable, (f: GeocodeServingFeature, altNamesOpt: Option[FeatureNames])) => {
+        altNamesOpt match {
+          case Some(altNamesContainer) => {
+            val woeType = f.feature.woeTypeOption.getOrElse(YahooWoeType.UNKNOWN)
+            val cc = f.feature.ccOrThrow
 
-          val altNames = altNamesContainer.names
-          val featureNames = f.feature.names
+            val altNames = altNamesContainer.names
+            val featureNames = f.feature.names
 
-          // primary name on feature was added as english preferred
-          val primaryName = featureNames.find(featureName =>
-            featureName.lang == "en" && featureName.flags.contains(FeatureNameFlags.PREFERRED)
-          ).get
+            // primary name on feature was added as english preferred
+            val primaryName = featureNames
+              .find(featureName => featureName.lang == "en" && featureName.flags.contains(FeatureNameFlags.PREFERRED))
+              .get
 
-          // start by unconditionally adding non-primary names from feature
-          var finalNames = featureNames.filterNot(_ == primaryName)
+            // start by unconditionally adding non-primary names from feature
+            var finalNames = featureNames.filterNot(_ == primaryName)
 
-          // next, if this is a country, add its english name as preferred colloquial
-          if (woeType == YahooWoeType.COUNTRY) {
-            countryNameMap.get(cc).foreach(name =>
+            // next, if this is a country, add its english name as preferred colloquial
+            if (woeType == YahooWoeType.COUNTRY) {
+              countryNameMap
+                .get(cc)
+                .foreach(
+                  name =>
+                    finalNames ++= processFeatureName(
+                      cc,
+                      woeType,
+                      lang = "en",
+                      name = name,
+                      flags = Seq(FeatureNameFlags.PREFERRED, FeatureNameFlags.COLLOQUIAL)
+                    )
+                )
+            }
+
+            val preferredEnglishAltName =
+              altNames.find(altName => altName.lang == "en" && altName.flags.contains(FeatureNameFlags.PREFERRED))
+            val hasEnglishAltName = altNames.exists(_.lang == "en")
+            val hasPreferredEnglishAltName = preferredEnglishAltName.isDefined
+            val hasNonPreferredEnglishAltNameIdenticalToFeatureName = altNames.exists(
+              altName =>
+                altName.lang == "en" && !altName.flags
+                  .contains(FeatureNameFlags.PREFERRED) && altName.name == primaryName.name
+            )
+
+            // consider using the primary feature name from geonames as an english name:
+            // skip: if an identical preferred english alt name exists
+            // add as preferred:
+            //    if no english alt name exists OR
+            //    no preferred english alt name exists BUT an identical non-preferred english name exists
+            // add as non-preferred otherwise
+            if (!preferredEnglishAltName.exists(_.name == primaryName.name)) {
               finalNames ++= processFeatureName(
                 cc,
                 woeType,
                 lang = "en",
-                name = name,
-                flags = Seq(FeatureNameFlags.PREFERRED, FeatureNameFlags.COLLOQUIAL))
-            )
-          }
+                name = primaryName.name,
+                flags =
+                  if (!hasEnglishAltName || (!hasPreferredEnglishAltName && hasNonPreferredEnglishAltNameIdenticalToFeatureName)) {
+                    Seq(FeatureNameFlags.PREFERRED)
+                  } else {
+                    Nil
+                  }
+              )
+            }
 
-          val preferredEnglishAltName = altNames.find(altName =>
-            altName.lang == "en" && altName.flags.contains(FeatureNameFlags.PREFERRED)
-          )
-          val hasEnglishAltName = altNames.exists(_.lang == "en")
-          val hasPreferredEnglishAltName = preferredEnglishAltName.isDefined
-          val hasNonPreferredEnglishAltNameIdenticalToFeatureName = altNames.exists(altName =>
-            altName.lang == "en" && !altName.flags.contains(FeatureNameFlags.PREFERRED) && altName.name == primaryName.name
-          )
+            // process and add alternate names
+            val processedAltNames = altNames.flatMap(altName => {
+              processFeatureName(cc, woeType, altName)
+            })
+            val (deaccentedFeatureNames, nonDeaccentedFeatureNames) =
+              processedAltNames.partition(n => n.flags.contains(FeatureNameFlags.DEACCENT))
+            val nonDeaccentedNames: Set[String] = nonDeaccentedFeatureNames.map(_.name).toSet
+            finalNames ++= nonDeaccentedFeatureNames
+            finalNames ++= deaccentedFeatureNames.filterNot(n => nonDeaccentedNames.contains(n.name))
 
-          // consider using the primary feature name from geonames as an english name:
-          // skip: if an identical preferred english alt name exists
-          // add as preferred:
-          //    if no english alt name exists OR
-          //    no preferred english alt name exists BUT an identical non-preferred english name exists
-          // add as non-preferred otherwise
-          if (!preferredEnglishAltName.exists(_.name == primaryName.name)) {
-            finalNames ++= processFeatureName(
-              cc,
-              woeType,
-              lang = "en",
-              name = primaryName.name,
-              flags = if (!hasEnglishAltName || (!hasPreferredEnglishAltName && hasNonPreferredEnglishAltNameIdenticalToFeatureName)) {
-                Seq(FeatureNameFlags.PREFERRED)
-              } else {
-                Nil
-              })
-          }
+            // apply all one-off language/country specific fixes
+            finalNames = applyOneOffFixes(finalNames, cc)
 
-          // process and add alternate names
-          val processedAltNames = altNames.flatMap(altName => {
-            processFeatureName(cc, woeType, altName)
-          })
-          val (deaccentedFeatureNames, nonDeaccentedFeatureNames) = processedAltNames.partition(n => n.flags.contains(FeatureNameFlags.DEACCENT))
-          val nonDeaccentedNames: Set[String] = nonDeaccentedFeatureNames.map(_.name).toSet
-          finalNames ++= nonDeaccentedFeatureNames
-          finalNames ++= deaccentedFeatureNames.filterNot(n => nonDeaccentedNames.contains(n.name))
-
-          // apply all one-off language/country specific fixes
-          finalNames = applyOneOffFixes(finalNames, cc)
-
-          // merge flags of dupes in same language
-          finalNames  = finalNames.groupBy(n => (n.lang, n.name)).toSeq
-            .map({case ((lang, name), featureNames) => {
-              val combinedFlags = featureNames.map(_.flags).flatten.distinct
-              // If we collapsed multiple names, and not all of them had ALIAS,
-              // then we should strip off that flag because some other entry told
-              // us it didn't deserve to be ranked down
-              val finalFlags =
-                if (featureNames.size > 1 &&
-                    featureNames.exists(n => !n.flags.has(FeatureNameFlags.ALIAS))) {
-                  combinedFlags.filterNot(_ == FeatureNameFlags.ALIAS)
-                } else {
-                  combinedFlags
+            // merge flags of dupes in same language
+            finalNames = finalNames
+              .groupBy(n => (n.lang, n.name))
+              .toSeq
+              .map({
+                case ((lang, name), featureNames) => {
+                  val combinedFlags = featureNames.map(_.flags).flatten.distinct
+                  // If we collapsed multiple names, and not all of them had ALIAS,
+                  // then we should strip off that flag because some other entry told
+                  // us it didn't deserve to be ranked down
+                  val finalFlags =
+                    if (featureNames.size > 1 &&
+                        featureNames.exists(n => !n.flags.has(FeatureNameFlags.ALIAS))) {
+                      combinedFlags.filterNot(_ == FeatureNameFlags.ALIAS)
+                    } else {
+                      combinedFlags
+                    }
+                  FeatureName.newBuilder
+                    .lang(lang)
+                    .name(name)
+                    .flags(finalFlags)
+                    .result
                 }
-              FeatureName.newBuilder
-                .lang(lang)
-                .name(name)
-                .flags(finalFlags)
-                .result
-            }})
+              })
 
-          (k -> f.copy(feature = f.feature.copy(names = finalNames)))
+            (k -> f.copy(feature = f.feature.copy(names = finalNames)))
+          }
+          case None =>
+            (k -> f)
         }
-        case None =>
-          (k -> f)
-      }}
-  })
+      }
+    })
 
-  joined.write(TypedSink[(LongWritable, GeocodeServingFeature)](SpindleSequenceFileSource[LongWritable, GeocodeServingFeature](outputPath)))
+  joined.write(
+    TypedSink[(LongWritable, GeocodeServingFeature)](
+      SpindleSequenceFileSource[LongWritable, GeocodeServingFeature](outputPath)
+    )
+  )
 }

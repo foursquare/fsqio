@@ -15,10 +15,17 @@ import scala.collection.immutable.Map
   */
 object Lists {
   trait Implicits {
-    implicit def immutable2FSIntellijMap[A, B](m: Map[A, B]): FSIntellijMap[A, B, Map[A, B], Map] = new FSIntellijMap[A, B, Map[A, B], Map](m, Map)
+    implicit def immutable2FSIntellijMap[A, B](m: Map[A, B]): FSIntellijMap[A, B, Map[A, B], Map] =
+      new FSIntellijMap[A, B, Map[A, B], Map](m, Map)
     implicit def iterable2FSIntellij[T](xs: Iterable[T]): FSIntellijIterable[T] = new FSIntellijIterable[T](xs)
     implicit def seq2FSIntellijSeq[T](xs: Seq[T]): FSIntellijSeq[T] = new FSIntellijSeq[T](xs)
-    implicit def mutable2FSIntellijMap[A, B](m: scala.collection.mutable.Map[A, B]): FSIntellijMap[A, B, scala.collection.mutable.Map[A, B], scala.collection.mutable.Map] = new FSIntellijMap[A, B, scala.collection.mutable.Map[A, B], scala.collection.mutable.Map](m, scala.collection.mutable.Map)
+    implicit def mutable2FSIntellijMap[A, B](
+      m: scala.collection.mutable.Map[A, B]
+    ): FSIntellijMap[A, B, scala.collection.mutable.Map[A, B], scala.collection.mutable.Map] =
+      new FSIntellijMap[A, B, scala.collection.mutable.Map[A, B], scala.collection.mutable.Map](
+        m,
+        scala.collection.mutable.Map
+      )
     implicit def option2FSIntellijOption[T](xs: Option[T]): FSIntellijOption[T] = new FSIntellijOption[T](xs)
     implicit def set2FSIntellijSet[T](xs: Set[T]): FSIntellijSet[T] = new FSIntellijSet[T](xs)
 
@@ -58,7 +65,7 @@ class FSIntellijIterable[T](xs: Iterable[T]) {
   def sample(n: Int): Seq[T] = ???
   def sumBy[B](f: T => B)(implicit num: Numeric[B]): B = ???
   def shuffled(implicit bf: CanBuildFrom[TraversableOnce[T], T, TraversableOnce[T]]): Seq[T] = ???
-  def sortByDesc[B](f: T => B)(implicit ord: Ordering[B]): Seq[T]= ???
+  def sortByDesc[B](f: T => B)(implicit ord: Ordering[B]): Seq[T] = ???
   def sortedDesc[B >: T](implicit ord: Ordering[B]): Seq[T] = ???
   def topN(size: Int)(implicit ord: Ordering[T]): Seq[T] = ???
   def toListBy[U](f: T => U): List[U] = ???
@@ -94,13 +101,20 @@ class FSIntellijOption[T](val opt: Option[T]) extends AnyVal {
   def unzipped[T1, T2](implicit asPair: (T) => (T1, T2)): (Option[T1], Option[T2]) = ???
 }
 
-class FSIntellijMap[A, B, This <: scala.collection.Map[A, B] with scala.collection.MapLike[A, B, This], CC[X, Y] <: scala.collection.Map[X, Y] with scala.collection.MapLike[X, Y, CC[X, Y]]](
+class FSIntellijMap[A, B, This <: scala.collection.Map[A, B] with scala.collection.MapLike[A, B, This], CC[X, Y] <: scala.collection.Map[
+  X,
+  Y
+] with scala.collection.MapLike[X, Y, CC[X, Y]]](
   m: This,
   factory: MapFactory[CC]
 )(
-  implicit ev1: CC[A, B] =:= This, ev2: This =:= CC[A, B]
+  implicit ev1: CC[A, B] =:= This,
+  ev2: This =:= CC[A, B]
 ) {
-  def invert[DD[X] <: Traversable[X], B1](implicit traversable: B => DD[B1], cbf: CanBuildFrom[DD[B1], A, DD[A]]): CC[B1, DD[A]] = ???
+  def invert[DD[X] <: Traversable[X], B1](
+    implicit traversable: B => DD[B1],
+    cbf: CanBuildFrom[DD[B1], A, DD[A]]
+  ): CC[B1, DD[A]] = ???
   def flattenValues[B1](implicit option: B => Option[B1]): CC[A, B1] = ???
   def mappedValues[C](f: B => C): CC[A, C] = ???
   def flatMapValues[C](f: B => Option[C]): CC[A, C] = ???

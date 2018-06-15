@@ -10,10 +10,13 @@ class OrderedParseGroupMerger(parses: Seq[Parse[Sorted]], groups: Seq[OrderedPar
   def merge() = {
     var uniqueFeatureIds: Set[Long] = Set.empty
     val finalParsesFromGroups = groups.flatMap(group => {
-      val finalParses = parses.sorted(group.ranker).filter(r => {
-        (r.finalScore >= group.scoreCutoff.getOrElse(Int.MinValue) &&
-         !uniqueFeatureIds.has(r.primaryFeature.fmatch.longId))
-      }).take(group.limit.getOrElse(Int.MaxValue))
+      val finalParses = parses
+        .sorted(group.ranker)
+        .filter(r => {
+          (r.finalScore >= group.scoreCutoff.getOrElse(Int.MinValue) &&
+            !uniqueFeatureIds.has(r.primaryFeature.fmatch.longId))
+        })
+        .take(group.limit.getOrElse(Int.MaxValue))
 
       uniqueFeatureIds = uniqueFeatureIds ++ finalParses.map(_.primaryFeature.fmatch.longId)
       finalParses

@@ -8,10 +8,10 @@ import java.nio.charset.StandardCharsets
 import org.apache.thrift.TException
 
 /**
- * Where all the parsing work is done
- * There are three types of objects that that be nested within each other: Struct, Map, and List
- * There's an associated implementation of ReadState for each one
- */
+  * Where all the parsing work is done
+  * There are three types of objects that that be nested within each other: Struct, Map, and List
+  * There's an associated implementation of ReadState for each one
+  */
 trait ReadState {
   def readI32(): Int
   def readI64(): Long
@@ -26,17 +26,17 @@ trait ReadState {
   def lastFieldName: String
 }
 
-/** 
- * Helper functions for parsing out sub objects
- */
+/**
+  * Helper functions for parsing out sub objects
+  */
 object ReadState {
 
   /**
-   * TProtocol requires that an item count be returned when Maps, Lists or Sets are first encountered
-   * so we need to greedily parse out the contents of those collections in order to get the count
-   *
-   * returns a tuple of (bytesRead, bsonValueType, items)
-   */
+    * TProtocol requires that an item count be returned when Maps, Lists or Sets are first encountered
+    * so we need to greedily parse out the contents of those collections in order to get the count
+    *
+    * returns a tuple of (bytesRead, bsonValueType, items)
+    */
   def bsonToTuples[T](
     inputStream: InputStream,
     buffer: ByteStringBuilder,
@@ -104,8 +104,8 @@ object ReadState {
 }
 
 /**
- * stores parsing state for a Bson Document
- */
+  * stores parsing state for a Bson Document
+  */
 class StructReadState(inputStream: InputStream, buffer: ByteStringBuilder) extends ReadState {
   val totalBytes = StreamHelper.readInt(inputStream) - 4
   if (totalBytes < 0) {
@@ -130,15 +130,15 @@ class StructReadState(inputStream: InputStream, buffer: ByteStringBuilder) exten
     bytesRead += 4
     StreamHelper.readInt(inputStream)
   }
-  
+
   private def _readByte(): Byte = {
     bytesRead += 1
     inputStream.read().toByte
   }
 
   /**
-   * Fully read bytes for structs or maps nested in maps or lists
-   */
+    * Fully read bytes for structs or maps nested in maps or lists
+    */
   def readSubStream(): BranchingInputStream = {
     def enforceSize(size: Int) {
       bytesRead += size
@@ -193,7 +193,9 @@ class StructReadState(inputStream: InputStream, buffer: ByteStringBuilder) exten
       throw new TException(s"Exepected null byte in readEnd, but got $nullByte.")
     }
     if (bytesRead != totalBytes) {
-      throw new TException(s"readEnd called before struct fully read. Still have ${totalBytes - bytesRead} bytes remaining")
+      throw new TException(
+        s"readEnd called before struct fully read. Still have ${totalBytes - bytesRead} bytes remaining"
+      )
     }
   }
 
@@ -287,8 +289,8 @@ class StructReadState(inputStream: InputStream, buffer: ByteStringBuilder) exten
 }
 
 /**
- * used by List and Map sub collections
- */
+  * used by List and Map sub collections
+  */
 abstract class CollectionReadState[T](
   allItems: Vector[T],
   buffer: ByteStringBuilder,
@@ -339,7 +341,7 @@ class MapReadState(
 
   def getCurrentPair(): (String, Any) = {
     readCounter += 1
-    val pair = allItems( (readCounter - 1) / 2)
+    val pair = allItems((readCounter - 1) / 2)
     lastFieldName = pair._1
     pair
   }

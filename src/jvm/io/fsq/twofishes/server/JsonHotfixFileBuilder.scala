@@ -10,7 +10,7 @@ import org.apache.thrift.TSerializer
 object JsonHotfixFileBuilder {
   // build individual objects here and run build-hotfix-file.py to produce json file
   // DO NOT push commits with changes to this list back to twofishes
-/* example: adding UES name to Upper East Side
+  /* example: adding UES name to Upper East Side
     GeocodeServingFeatureEdit.newBuilder
       .editType(EditType.Modify)
       .longId(72057594044543258L)
@@ -26,11 +26,10 @@ object JsonHotfixFileBuilder {
         .result()
       ))
       .result()
-*/
-
+   */
 
   val edits: List[GeocodeServingFeatureEdit] = List(
-  )
+    )
 
   val editsWrapper = GeocodeServingFeatureEdits(edits)
 

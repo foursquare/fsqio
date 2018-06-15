@@ -43,13 +43,14 @@ object AlternateNamesReader extends SimplePrintLogger {
     val alternateNamesMap = new HashMap[StoredFeatureId, List[AlternateNameEntry]]
     filenames.foreach(filename => {
       val lines = scala.io.Source.fromFile(new File(filename)).getLines
-      lines.zipWithIndex.foreach({case (line, index) => {
-        if (index % 100000 == 0) {
-          logger.info("imported %d alternateNames from %s so far".format(index, filename))
-        }
+      lines.zipWithIndex.foreach({
+        case (line, index) => {
+          if (index % 100000 == 0) {
+            logger.info("imported %d alternateNames from %s so far".format(index, filename))
+          }
 
-        val parts = line.split("\t").toList
-        if (parts.size < 3) {
+          val parts = line.split("\t").toList
+          if (parts.size < 3) {
             logger.error("line %d didn't have 4 parts: %s -- %s".format(index, line, parts.mkString(",")))
           } else {
             val nameid = parts(0)
@@ -63,21 +64,24 @@ object AlternateNamesReader extends SimplePrintLogger {
               val isColloquial = parts.lift(6).exists(_ == "1")
               val isHistoric = parts.lift(7).exists(_ == "1")
 
-              StoredFeatureId.fromHumanReadableString(geonameid, Some(GeonamesNamespace)).foreach(fid => {
-                val names = alternateNamesMap.getOrElseUpdate(fid, Nil)
-                alternateNamesMap(fid) = AlternateNameEntry(
-                  nameId = nameid,
-                  name = name,
-                  lang = lang,
-                  isPrefName = isPrefName,
-                  isShortName = isShortName,
-                  isColloquial = isColloquial,
-                  isHistoric = isHistoric
-                ) :: names
-              })
+              StoredFeatureId
+                .fromHumanReadableString(geonameid, Some(GeonamesNamespace))
+                .foreach(fid => {
+                  val names = alternateNamesMap.getOrElseUpdate(fid, Nil)
+                  alternateNamesMap(fid) = AlternateNameEntry(
+                    nameId = nameid,
+                    name = name,
+                    lang = lang,
+                    isPrefName = isPrefName,
+                    isShortName = isShortName,
+                    isColloquial = isColloquial,
+                    isHistoric = isHistoric
+                  ) :: names
+                })
             }
+          }
         }
-      }})
+      })
     })
     alternateNamesMap
   }

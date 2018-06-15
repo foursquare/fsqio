@@ -17,11 +17,24 @@ import io.fsq.twofishes.country.CountryInfo
 import io.fsq.twofishes.gen._
 import io.fsq.twofishes.indexer.mongo.{GeocodeStorageWriteService, IndexerQueryExecutor, PolygonIndex}
 import io.fsq.twofishes.indexer.mongo.RogueImplicits._
-import io.fsq.twofishes.indexer.util.{DisplayName, FsqSimpleFeature, GeoJsonIterator, GeocodeRecord, ShapeIterator,
-    ShapefileIterator}
+import io.fsq.twofishes.indexer.util.{
+  DisplayName,
+  FsqSimpleFeature,
+  GeoJsonIterator,
+  GeocodeRecord,
+  ShapeIterator,
+  ShapefileIterator
+}
 import io.fsq.twofishes.model.gen.{ThriftGeocodeRecord, ThriftPolygonIndex, ThriftRevGeoIndex}
-import io.fsq.twofishes.util.{AdHocId, DurationUtils, FeatureNamespace, GeonamesNamespace, Helpers, NameNormalizer,
-    StoredFeatureId}
+import io.fsq.twofishes.util.{
+  AdHocId,
+  DurationUtils,
+  FeatureNamespace,
+  GeonamesNamespace,
+  Helpers,
+  NameNormalizer,
+  StoredFeatureId
+}
 import io.fsq.twofishes.util.Helpers._
 import java.io.{File, FileWriter, Writer}
 import java.nio.charset.Charset
@@ -67,15 +80,18 @@ object PolygonLoader {
   }
 }
 
-case class PolygonMappingConfig (
+case class PolygonMappingConfig(
   nameFields: Map[String, List[String]],
   woeTypes: List[List[String]],
   idField: String,
   source: Option[String]
 ) {
   private val _woeTypes: List[List[YahooWoeType]] = {
-    woeTypes.map(_.map(s => Option(YahooWoeType.findByNameOrNull(s)).getOrElse(
-      throw new Exception("Unknown woetype: %s".format(s)))))
+    woeTypes.map(
+      _.map(
+        s => Option(YahooWoeType.findByNameOrNull(s)).getOrElse(throw new Exception("Unknown woetype: %s".format(s)))
+      )
+    )
   }
 
   def getWoeTypes() = _woeTypes
@@ -93,7 +109,7 @@ object PolygonMappingConfig {
     if (file.exists()) {
       val json = scala.io.Source.fromFile(file).getLines.mkString("")
       Some(
-         parse(json).extract[PolygonMappingConfig]
+        parse(json).extract[PolygonMappingConfig]
       )
     } else {
       None
@@ -125,21 +141,32 @@ class PolygonLoader(
     val file = new File(f.getPath() + matchExtension)
     if (file.exists()) {
       val lines = scala.io.Source.fromFile(file).getLines
-      lines.map(line => {
-        val parts = line.split("\t")
-        if (parts.size != 2) {
-          throw new Exception("broken line in %s:\n%s".format(file.getPath(), line))
-        }
-        (
-          parts(0) -> parts(1).split(",").map(geoid => {
-            StoredFeatureId.fromHumanReadableString(geoid, Some(defaultNamespace)).getOrElse(
-              throw new Exception("broken geoid %s in file %s on line: %s".format(
-                geoid, file.getPath(), line
-              ))
-            )
-          }).toList
-        )
-      }).toMap
+      lines
+        .map(line => {
+          val parts = line.split("\t")
+          if (parts.size != 2) {
+            throw new Exception("broken line in %s:\n%s".format(file.getPath(), line))
+          }
+          (
+            parts(0) -> parts(1)
+              .split(",")
+              .map(geoid => {
+                StoredFeatureId
+                  .fromHumanReadableString(geoid, Some(defaultNamespace))
+                  .getOrElse(
+                    throw new Exception(
+                      "broken geoid %s in file %s on line: %s".format(
+                        geoid,
+                        file.getPath(),
+                        line
+                      )
+                    )
+                  )
+              })
+              .toList
+          )
+        })
+        .toMap
     } else {
       Map.empty
     }
@@ -173,7 +200,9 @@ class PolygonLoader(
     geom: Geometry,
     source: String
   ): Unit = {
-    if (geoids.isEmpty) { return }
+    if (geoids.isEmpty) {
+      return
+    }
 
     val polyId = new ObjectId()
     indexPolygon(polyId, geom, source)
@@ -202,7 +231,7 @@ class PolygonLoader(
 
     for {
       (f, index) <- polygonFiles.zipWithIndex
-     } {
+    } {
       if (index % 1000 == 0) {
         System.gc();
       }
@@ -224,8 +253,7 @@ class PolygonLoader(
             val polygon = wkbReader.read(polyData.array())
             val point = featureRecord.center
             if (!polygon.contains(point) && polygon.distance(point) > 0.03) {
-              log.info("bad poly on %s -- %s too far from %s".format(
-                featureRecord.featureId, polygon, point))
+              log.info("bad poly on %s -- %s too far from %s".format(featureRecord.featureId, polygon, point))
 
               executor.updateOne(
                 Q(ThriftGeocodeRecord)
@@ -314,7 +342,11 @@ class PolygonLoader(
       })
     })
 
-    if (scores.nonEmpty) { scores.max.toInt } else { 0 }
+    if (scores.nonEmpty) {
+      scores.max.toInt
+    } else {
+      0
+    }
   }
 
   def hasName(config: PolygonMappingConfig, feature: FsqSimpleFeature): Boolean = {
@@ -326,46 +358,49 @@ class PolygonLoader(
   }
 
   def getNames(config: PolygonMappingConfig, feature: FsqSimpleFeature): Seq[DisplayName] = {
-    config.nameFields.view.flatMap({case (lang, nameFields) => {
-      nameFields.flatMap(nameField => feature.propMap.get(nameField)).filterNot(_.isEmpty).map(name =>
-        DisplayName(lang, name)
-      )
-    }}).toSeq
+    config.nameFields.view
+      .flatMap({
+        case (lang, nameFields) => {
+          nameFields
+            .flatMap(nameField => feature.propMap.get(nameField))
+            .filterNot(_.isEmpty)
+            .map(name => DisplayName(lang, name))
+        }
+      })
+      .toSeq
   }
 
   def getFixedNames(config: PolygonMappingConfig, feature: FsqSimpleFeature) = {
     val originalFeatureNames = getNames(config, feature)
 
-   var featureNames: Seq[DisplayName] = originalFeatureNames
+    var featureNames: Seq[DisplayName] = originalFeatureNames
 
     // some OSM feature names look like A (B), make that into two extra names
     featureNames ++= originalFeatureNames.flatMap(n => {
       // If the name looks like "A (B)"
-      parenNameRegex.findFirstIn(n.name).toList.flatMap(_ => {
-        // split it into "A" and "B"
-        List(
-          DisplayName(n.lang, parenNameRegex.replaceAllIn(n.name, "$1")),
-          DisplayName(n.lang, parenNameRegex.replaceAllIn(n.name, "$2"))
-        )
-      })
+      parenNameRegex
+        .findFirstIn(n.name)
+        .toList
+        .flatMap(_ => {
+          // split it into "A" and "B"
+          List(
+            DisplayName(n.lang, parenNameRegex.replaceAllIn(n.name, "$1")),
+            DisplayName(n.lang, parenNameRegex.replaceAllIn(n.name, "$2"))
+          )
+        })
     })
 
     // Additionally, some names are actually multiple comma separated names,
     // so split those into individual names too
     featureNames = featureNames.flatMap(n => {
-      n.name.split(",").map(_.trim).filterNot(_.isEmpty).map(namePart =>
-        DisplayName(n.lang, namePart)
-      )
+      n.name.split(",").map(_.trim).filterNot(_.isEmpty).map(namePart => DisplayName(n.lang, namePart))
     })
 
     // Additionally, some names are actually multiple slash separated names
     // so split those into individual names too
     featureNames = featureNames.flatMap(n => {
-      n.name.split("/").map(_.trim).filterNot(_.isEmpty).map(namePart =>
-        DisplayName(n.lang, namePart)
-      )
+      n.name.split("/").map(_.trim).filterNot(_.isEmpty).map(namePart => DisplayName(n.lang, namePart))
     })
-
 
     featureNames.filterNot(_.name.isEmpty)
   }
@@ -415,7 +450,8 @@ class PolygonLoader(
           "%s vs %s -- %s vs %s".format(
             candidate.featureId.humanReadableString,
             feature.propMap.get(config.idField).getOrElse("0"),
-            featureNames.map(_.name).flatMap(applyHacks).toSet, candidateNames.flatMap(applyHacks).toSet
+            featureNames.map(_.name).flatMap(applyHacks).toSet,
+            candidateNames.flatMap(applyHacks).toSet
           )
         )
       }
@@ -448,11 +484,14 @@ class PolygonLoader(
     def matchAtWoeType(woeTypes: List[YahooWoeType], withLogging: Boolean = false): Seq[GeocodeRecord] = {
       try {
         val candidates = findMatchCandidates(geometry, woeTypes)
-        val scores: Seq[PolygonMatch] = candidates.map(candidate => {
-          candidatesSeen += 1
-          // println(debugFeature(candidate))
-          scoreMatch(feature, config, candidate, withLogging)
-        }).filter(isGoodEnoughMatch).toList
+        val scores: Seq[PolygonMatch] = candidates
+          .map(candidate => {
+            candidatesSeen += 1
+            // println(debugFeature(candidate))
+            scoreMatch(feature, config, candidate, withLogging)
+          })
+          .filter(isGoodEnoughMatch)
+          .toList
 
         val scoresMap = scores.groupBy(_.nameScore)
 
@@ -477,7 +516,9 @@ class PolygonLoader(
       val acceptableCandidates: List[GeocodeRecord] =
         config.getWoeTypes.view
           .map(woeTypes => matchAtWoeType(woeTypes))
-          .find(_.nonEmpty).toList.flatten
+          .find(_.nonEmpty)
+          .toList
+          .flatten
 
       if (candidatesSeen == 0) {
         log.debug("failed couldn't find any candidates for " + debugFeature(config, feature))
@@ -485,25 +526,30 @@ class PolygonLoader(
         log.debug("failed to match: %s".format(debugFeature(config, feature)))
         matchAtWoeType(config.getAllWoeTypes, withLogging = true)
       } else {
-        log.debug("matched %s %s to %s".format(
-          debugFeature(config, feature),
-          getId(config, feature),
-          acceptableCandidates.map(debugFeature).mkString(", ")
-        ))
+        log.debug(
+          "matched %s %s to %s".format(
+            debugFeature(config, feature),
+            getId(config, feature),
+            acceptableCandidates.map(debugFeature).mkString(", ")
+          )
+        )
       }
 
       acceptableCandidates
     }
 
-
     if (matchingFeatures.isEmpty) {
       Nil
     } else {
       val idStr = matchingFeatures.map(_.featureId.humanReadableString).mkString(",")
-      outputMatchWriter.foreach(_.write("%s\t%s\n".format(
-        feature.propMap.get(config.idField).getOrElse(throw new Exception("missing id")),
-        idStr
-      )))
+      outputMatchWriter.foreach(
+        _.write(
+          "%s\t%s\n".format(
+            feature.propMap.get(config.idField).getOrElse(throw new Exception("missing id")),
+            idStr
+          )
+        )
+      )
       matchingFeatures.map(_.featureId).toList
     }
   }
@@ -531,7 +577,7 @@ class PolygonLoader(
         (GeonamesFeatureColumns.ADMIN1_CODE -> adminCode1)
       )
 
-      val supplementalAttrubs: Map[GeonamesFeatureColumns.Value, String]  = List(
+      val supplementalAttrubs: Map[GeonamesFeatureColumns.Value, String] = List(
         feature.propMap.get("adminCode2").map(c => (GeonamesFeatureColumns.ADMIN2_CODE -> c)),
         feature.propMap.get("adminCode3").map(c => (GeonamesFeatureColumns.ADMIN3_CODE -> c)),
         feature.propMap.get("adminCode4").map(c => (GeonamesFeatureColumns.ADMIN4_CODE -> c)),
@@ -571,36 +617,42 @@ class PolygonLoader(
         id,
         woeType
       )
-      log.info("creating feature for %s in %s".format(
-        debugFeature(config, feature), cc
-      ))
+      log.info(
+        "creating feature for %s in %s".format(
+          debugFeature(config, feature),
+          cc
+        )
+      )
       val geocodeRecord = parser.parseFeature(basicFeature)
       val allNames = getFixedNames(config, feature)
-      val langIdDisplayNames = allNames.map(n => {
-        if (n.lang =? "unk") {
-          n.copy(lang = LanguageDetector.detectLang(cc, n.name))
-        } else {
-          n
-        }
-      }).toList
+      val langIdDisplayNames = allNames
+        .map(n => {
+          if (n.lang =? "unk") {
+            n.copy(lang = LanguageDetector.detectLang(cc, n.name))
+          } else {
+            n
+          }
+        })
+        .toList
 
-      parser.insertGeocodeRecords(List(new GeocodeRecord(geocodeRecord.copy(
-        displayNames = langIdDisplayNames))))
+      parser.insertGeocodeRecords(List(new GeocodeRecord(geocodeRecord.copy(displayNames = langIdDisplayNames))))
       id
     }
 
-    featureOpt.orElse(toFixFeature).orElse({
-      log.error("no id on %s".format(debugFeature(feature)))
-      None
-    })
+    featureOpt
+      .orElse(toFixFeature)
+      .orElse({
+        log.error("no id on %s".format(debugFeature(feature)))
+        None
+      })
   }
 
   def processFeatureIterator(
-      defaultNamespace: FeatureNamespace,
-      features: ShapeIterator,
-      polygonMappingConfig: Option[PolygonMappingConfig],
-      matchingTable: Map[String, Seq[StoredFeatureId]]
-    ) {
+    defaultNamespace: FeatureNamespace,
+    features: ShapeIterator,
+    polygonMappingConfig: Option[PolygonMappingConfig],
+    matchingTable: Map[String, Seq[StoredFeatureId]]
+  ) {
     val fparts = features.file.getName().split("\\.")
     lazy val outputMatchWriter = polygonMappingConfig.map(c => {
       val filename = features.file.getPath() + matchExtension
@@ -615,32 +667,34 @@ class PolygonLoader(
         log.info("processing feature %d in %s".format(index, features.file.getName))
       }
 
-      val fidsFromFileName = fparts.lift(0).flatMap(p => Helpers.TryO(p.toInt.toString))
-        .flatMap(i => StoredFeatureId.fromHumanReadableString(i, Some(defaultNamespace))).toList
+      val fidsFromFileName = fparts
+        .lift(0)
+        .flatMap(p => Helpers.TryO(p.toInt.toString))
+        .flatMap(i => StoredFeatureId.fromHumanReadableString(i, Some(defaultNamespace)))
+        .toList
 
       val source = polygonMappingConfig.flatMap(_.source).getOrElse(features.file.getName())
       val sourceKey = "polygonMatching." + source
 
       val geoidColumnNameToNamespaceMapping =
-        List(
-          "qs_gn_id" -> GeonamesNamespace,
-          "gn_id" -> GeonamesNamespace) ++
-        FeatureNamespace.values.map(namespace => (namespace.name -> namespace))
+        List("qs_gn_id" -> GeonamesNamespace, "gn_id" -> GeonamesNamespace) ++
+          FeatureNamespace.values.map(namespace => (namespace.name -> namespace))
       val geoidsFromFile = for {
-          (columnName, namespace) <- geoidColumnNameToNamespaceMapping
-          values <- feature.propMap.get(columnName).toList
-          value <- values.split(",")
-          if value.nonEmpty
-        } yield {
-          // if value already contains ':' it was human-readable to begin with
-          if (value.indexOf(':') != -1) {
-            value
-          } else {
-            "%s:%s".format(namespace.name, value)
-          }
+        (columnName, namespace) <- geoidColumnNameToNamespaceMapping
+        values <- feature.propMap.get(columnName).toList
+        value <- values.split(",")
+        if value.nonEmpty
+      } yield {
+        // if value already contains ':' it was human-readable to begin with
+        if (value.indexOf(':') != -1) {
+          value
+        } else {
+          "%s:%s".format(namespace.name, value)
         }
+      }
       val fidsFromFile = geoidsFromFile
-        .filterNot(_.isEmpty).map(_.replace(".0", ""))
+        .filterNot(_.isEmpty)
+        .map(_.replace(".0", ""))
         .flatMap(i => StoredFeatureId.fromHumanReadableString(i, Some(defaultNamespace)))
 
       val fids: List[StoredFeatureId] = if (fidsFromFileName.nonEmpty) {

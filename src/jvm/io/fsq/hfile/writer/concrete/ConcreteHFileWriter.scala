@@ -31,10 +31,10 @@ object TrailerBlock extends BlockType {
 
 case class DataBlockIndexEntry(firstKey: Array[Byte], blockOffset: Long, blockDataSize: Int)
 
-class ConcreteHFileWriter(
-    val outputStream: FSDataOutputStream,
-    val blockSize: Int,
-    val compressionName: String) extends HFileWriter with HFileMetadataKeys with Bytes {
+class ConcreteHFileWriter(val outputStream: FSDataOutputStream, val blockSize: Int, val compressionName: String)
+  extends HFileWriter
+  with HFileMetadataKeys
+  with Bytes {
   val comparator: Comparator[Array[Byte]] = UnsignedBytes.lexicographicalComparator()
   val byteOrdering: Ordering[Array[Byte]] = Ordering.fromLessThan[Array[Byte]]((a, b) => comparator.compare(a, b) < 0)
 
@@ -65,17 +65,20 @@ class ConcreteHFileWriter(
       throw new IOException("Key can't be empty")
     }
 
-    lastKeyBuffer.map(lk => {
-      val keyCmp = comparator.compare(lk, key)
-      if (keyCmp > 0) {
-        throw new IOException("Added a key (%s) not lexically larger than previous key (%s)".format(
-          bytesToString(key), bytesToString(lk)))
-      } else if (keyCmp == 0) {
-        true
-      } else {
-        false
-      }
-    }).getOrElse(false)
+    lastKeyBuffer
+      .map(lk => {
+        val keyCmp = comparator.compare(lk, key)
+        if (keyCmp > 0) {
+          throw new IOException(
+            "Added a key (%s) not lexically larger than previous key (%s)".format(bytesToString(key), bytesToString(lk))
+          )
+        } else if (keyCmp == 0) {
+          true
+        } else {
+          false
+        }
+      })
+      .getOrElse(false)
   }
 
   def newCompressingStream(): Unit = {
@@ -106,8 +109,9 @@ class ConcreteHFileWriter(
       blockBeginKey <- blockBeginKeyOpt
       blockBeginOffset <- blockBeginOffsetOpt
     } {
-      dataBlockIndex.append(DataBlockIndexEntry(
-        firstKey = blockBeginKey, blockOffset = blockBeginOffset, blockDataSize = bytesWritten))
+      dataBlockIndex.append(
+        DataBlockIndexEntry(firstKey = blockBeginKey, blockOffset = blockBeginOffset, blockDataSize = bytesWritten)
+      )
     }
     blockBeginKeyOpt = None
     blockBeginOffsetOpt = None
@@ -262,4 +266,3 @@ class ConcreteHFileWriter(
     outputStream.close()
   }
 }
-

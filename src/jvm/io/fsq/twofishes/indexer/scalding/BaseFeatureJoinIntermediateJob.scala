@@ -21,7 +21,7 @@ class BaseFeatureJoinIntermediateJob[
 
   val left = getJobOutputsAsTypedPipe[K, L](leftSources).group
   val right = getJobOutputsAsTypedPipe[K, R](rightSources).group
-  
+
   val joined = joiner(left, right)
 
   joined.write(TypedSink[(K, O)](SpindleSequenceFileSource[K, O](outputPath)))

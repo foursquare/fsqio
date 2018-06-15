@@ -9,14 +9,14 @@ import org.apache.thrift.protocol.{TField, TProtocol, TProtocolUtil, TType}
 case class UnknownField(tfield: TField, value: UValue) {
   // Must override because TField's equals method has the wrong signature. Sigh.
   override def equals(other: Any) = other match {
-    case o: UnknownField => tfield.name == o.tfield.name &&
-                            tfield.id == o.tfield.id &&
-                            tfield.`type` == o.tfield.`type` &&
-                            value == o.value
+    case o: UnknownField =>
+      tfield.name == o.tfield.name &&
+        tfield.id == o.tfield.id &&
+        tfield.`type` == o.tfield.`type` &&
+        value == o.value
     case _ => false
   }
 }
-
 
 // Unknown fields, encountered on the wire during deserialization from the specified protocol.
 // We stash that data away in this hidden data structure inside the record, so we can serialize it out
@@ -30,7 +30,11 @@ case class UnknownField(tfield: TField, value: UValue) {
 // Note: UnknownFields don't participate in equality of the records that contain them.
 // However we do require UnknownFields to have well-defined equality for tests, which is
 // why stashList is a parameter of the case class.
-case class UnknownFields(rec: TBase[_, _] with Record[_], inputProtocolName: String, private var stashList: List[UnknownField] = Nil) {
+case class UnknownFields(
+  rec: TBase[_, _] with Record[_],
+  inputProtocolName: String,
+  private var stashList: List[UnknownField] = Nil
+) {
   private def stash(uf: UnknownField) { stashList = uf :: stashList }
 
   val retiredIds = rec.meta.annotations.getAll("retired_ids").flatMap(_.split(',')).map(_.toShort).toSet
@@ -42,7 +46,7 @@ case class UnknownFields(rec: TBase[_, _] with Record[_], inputProtocolName: Str
     if (outputProtocolName == inputProtocolName ||
         TProtocolInfo.isRobust(inputProtocolName) && TProtocolInfo.isRobust(outputProtocolName)) {
       writeInline(oprot)
-    } else {  // Write as a blob.
+    } else { // Write as a blob.
       val blob = UnknownFieldsBlob.toBlob(this)
       blob.write(oprot)
     }
@@ -68,8 +72,8 @@ case class UnknownFields(rec: TBase[_, _] with Record[_], inputProtocolName: Str
   }
 
   def writeInline(oprot: TProtocol) {
-    stashList.reverse foreach {
-      field: UnknownField => {
+    stashList.reverse foreach { field: UnknownField =>
+      {
         try {
           oprot.writeFieldBegin(field.tfield)
           field.value.write(oprot)
@@ -81,16 +85,18 @@ case class UnknownFields(rec: TBase[_, _] with Record[_], inputProtocolName: Str
               case _ => ""
             }
 
-            RuntimeHelpers.reportError(new RuntimeException(
-              "Failed to stash field %s (%s) in %s record%s: %s".format(
-                field.tfield.name,
-                field.value.getClass.getSimpleName,
-                rec.meta.recordName,
-                id,
-                e.getMessage
-              ),
-              e
-            ))
+            RuntimeHelpers.reportError(
+              new RuntimeException(
+                "Failed to stash field %s (%s) in %s record%s: %s".format(
+                  field.tfield.name,
+                  field.value.getClass.getSimpleName,
+                  rec.meta.recordName,
+                  id,
+                  e.getMessage
+                ),
+                e
+              )
+            )
           }
         }
       }

@@ -1,4 +1,3 @@
-
 package io.fsq.twofishes.indexer.output
 
 import com.vividsolutions.jts.io.WKBReader
@@ -35,16 +34,21 @@ class PolygonIndexer(override val basepath: String, override val fidMap: FidMap)
         case Iter.Item(unwrappedGroup) => {
           val group = unwrappedGroup.map(new GeocodeRecord(_))
           val toFindPolys: Map[Long, ObjectId] = group.filter(f => f.hasPoly).map(r => (r.id, r.polyIdOrThrow)).toMap
-          val polyMap: Map[ObjectId, PolygonIndex] = executor.fetch(
-            Q(ThriftPolygonIndex).where(_.id in toFindPolys.values)
-          ).groupBy(_.id).map({ case (k, v) => (k, new PolygonIndex(v(0))) })
+          val polyMap: Map[ObjectId, PolygonIndex] = executor
+            .fetch(
+              Q(ThriftPolygonIndex).where(_.id in toFindPolys.values)
+            )
+            .groupBy(_.id)
+            .map({ case (k, v) => (k, new PolygonIndex(v(0))) })
           for {
             (f, polygonIndex) <- group.zipWithIndex
             poly <- polyMap.get(f.polyIdOrThrow)
           } {
             if (polygonIndex =? 0) {
-              log.info("PolygonIndexer: outputted %d of %d used polys, %d of %d total polys seen".format(
-                numUsedPolygon, usedPolygonSize, polygonSize, groupIndex * groupSize))
+              log.info(
+                "PolygonIndexer: outputted %d of %d used polys, %d of %d total polys seen"
+                  .format(numUsedPolygon, usedPolygonSize, polygonSize, groupIndex * groupSize)
+              )
             }
             numUsedPolygon += 1
             writer.append(f.featureId, wkbReader.read(poly.polygonOrThrow.array()))

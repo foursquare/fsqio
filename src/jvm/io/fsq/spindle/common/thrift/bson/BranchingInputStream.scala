@@ -5,9 +5,9 @@ package io.fsq.spindle.common.thrift.bson
 import java.io.ByteArrayInputStream
 
 /**
- * version of ByteArrayInputStream that allows streams to be created
- * from backing array without doing any copying
- */
+  * version of ByteArrayInputStream that allows streams to be created
+  * from backing array without doing any copying
+  */
 class BranchingInputStream(
   bytes: Array[Byte],
   offset: Int,

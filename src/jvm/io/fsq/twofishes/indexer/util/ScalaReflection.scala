@@ -7,6 +7,7 @@ import java.lang.reflect.{Field, Method}
 /** Utilities for performing reflection on Scala classes.
   */
 object ScalaReflection {
+
   /** Given a name, return the instance of the singleton object for
     * that name.
     */
@@ -16,18 +17,18 @@ object ScalaReflection {
       case Some(loader) => Class.forName(name + "$", true, loader)
     }
     val moduleGetter = clazz.getDeclaredField("MODULE$")
-    moduleGetter.get(null)  // for static fields, the argument is ignored; pass `null` as recommended by javadoc
+    moduleGetter.get(null) // for static fields, the argument is ignored; pass `null` as recommended by javadoc
   }
 
   /** Get all the superclasses of a given Class
-   */
+    */
   def getAncestors(clazz: Class[_]): Seq[Class[_]] = clazz match {
     case null => Vector.empty
     case c => c +: getAncestors(c.getSuperclass)
   }
 
   /** Get all the methods for a given Class
-   */
+    */
   def getAllMethods(clazz: Class[_]): Seq[Method] = {
     getAncestors(clazz).flatMap(_.getDeclaredMethods)
   }
@@ -37,7 +38,7 @@ object ScalaReflection {
   }
 
   /** Call a private method on any instance with the given arguments
-   */
+    */
   def privateMethodCall(instance: AnyRef)(methodName: String)(_args: Any*): Any = {
     val args = _args.map(_.asInstanceOf[AnyRef])
     val clazz = instance.getClass

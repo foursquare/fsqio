@@ -36,22 +36,23 @@ class SlugIndexer {
       new File("src/jvm/io/fsq/twofishes/indexer/data/computed/slugs.txt"),
       new File("src/jvm/io/fsq/twofishes/indexer/data/private/slugs.txt")
     )
-    files.foreach(file =>
-      if (file.exists) {
-        val fileSource = scala.io.Source.fromFile(file)
-        val lines = fileSource.getLines.toList.filterNot(_.startsWith("#"))
-        lines.map(l => {
-          val parts = l.split("\t")
-          val slug = parts(0)
-          val id = parts(1)
-          val score = parts(2).toInt
-          val deprecated = parts(3).toBoolean
-          slugEntryMap(slug) = SlugEntry(id, score, deprecated = deprecated, permanent = true)
-          if (!deprecated) {
-            idToSlugMap(id) = slug
-          }
-        })
-      }
+    files.foreach(
+      file =>
+        if (file.exists) {
+          val fileSource = scala.io.Source.fromFile(file)
+          val lines = fileSource.getLines.toList.filterNot(_.startsWith("#"))
+          lines.map(l => {
+            val parts = l.split("\t")
+            val slug = parts(0)
+            val id = parts(1)
+            val score = parts(2).toInt
+            val deprecated = parts(3).toBoolean
+            slugEntryMap(slug) = SlugEntry(id, score, deprecated = deprecated, permanent = true)
+            if (!deprecated) {
+              idToSlugMap(id) = slug
+            }
+          })
+        }
     )
     println("read %d slugs".format(slugEntryMap.size))
   }
@@ -59,9 +60,10 @@ class SlugIndexer {
   val parentMap = new HashMap[StoredFeatureId, Option[GeocodeFeature]]
 
   def findFeature(fid: StoredFeatureId): Option[GeocodeServingFeature] = {
-     // TODO: not in love with this talking directly to mongo, please fix
-    val ret = IndexerQueryExecutor.instance.fetchOne(Q(ThriftGeocodeRecord).where(_.id eqs fid.longId)).map(r =>
-      new GeocodeRecord(r).toGeocodeServingFeature)
+    // TODO: not in love with this talking directly to mongo, please fix
+    val ret = IndexerQueryExecutor.instance
+      .fetchOne(Q(ThriftGeocodeRecord).where(_.id eqs fid.longId))
+      .map(r => new GeocodeRecord(r).toGeocodeServingFeature)
     if (ret.isEmpty) {
       println("couldn't find %s".format(fid))
     }
@@ -100,7 +102,7 @@ class SlugIndexer {
         }
       }
     })
-  // println("failed to find any slug")
+    // println("failed to find any slug")
     return None
   }
 
@@ -113,22 +115,25 @@ class SlugIndexer {
       fid <- StoredFeatureId.fromHumanReadableString(id)
       servingFeature <- findFeature(fid)
       if (servingFeature.scoringFeatures.population > 0 ||
-          servingFeature.scoringFeatures.boost > 0 ||
-          servingFeature.feature.geometryOrThrow.wkbGeometryOption.nonEmpty ||
-          servingFeature.feature.woeTypeOption.exists(YahooWoeTypes.isAdminWoeType) ||
-           (servingFeature.feature.attributesOption.exists(_.adm1capOption.exists(a => a)) ||
-            servingFeature.feature.attributesOption.exists(_.adm0capOption.exists(a => a)))
-        )
+        servingFeature.scoringFeatures.boost > 0 ||
+        servingFeature.feature.geometryOrThrow.wkbGeometryOption.nonEmpty ||
+        servingFeature.feature.woeTypeOption.exists(YahooWoeTypes.isAdminWoeType) ||
+        (servingFeature.feature.attributesOption.exists(_.adm1capOption.exists(a => a)) ||
+          servingFeature.feature.attributesOption.exists(_.adm0capOption.exists(a => a))))
     } {
       val parents = servingFeature.scoringFeatures.parentIds
         .flatMap(StoredFeatureId.fromLong _)
-        .flatMap(findParent _).toList
+        .flatMap(findParent _)
+        .toList
       var possibleSlugs = SlugBuilder.makePossibleSlugs(servingFeature.feature, parents)
 
       // if a city is bigger than 2 million people, we'll attempt to use the bare city name as the slug
       // unless it's the US, where I'd rather have consistency of always doing city-state
       if (servingFeature.scoringFeatures.population > 2000000 && servingFeature.feature.ccOrThrow != "US") {
-        possibleSlugs = NameUtils.bestName(servingFeature.feature, Some("en"), false).toList.map(n => SlugBuilder.normalize(n.name)) ++ possibleSlugs
+        possibleSlugs = NameUtils
+          .bestName(servingFeature.feature, Some("en"), false)
+          .toList
+          .map(n => SlugBuilder.normalize(n.name)) ++ possibleSlugs
       }
 
       newSlug = matchSlugs(id, servingFeature, possibleSlugs)
@@ -162,9 +167,7 @@ class SlugIndexer {
     // step 3 -- write new slug file
     println("writing new slug map for %d features".format(slugEntryMap.size))
     val p = new java.io.PrintWriter(new File("src/jvm/io/fsq/twofishes/indexer/data/computed/slugs.txt"))
-    slugEntryMap.keys.toList.sorted.foreach(slug =>
-     p.println("%s\t%s".format(slug, slugEntryMap(slug)))
-    )
+    slugEntryMap.keys.toList.sorted.foreach(slug => p.println("%s\t%s".format(slug, slugEntryMap(slug))))
     p.close()
   }
 

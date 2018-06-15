@@ -4,8 +4,17 @@ package io.fsq.rogue.test
 
 import com.mongodb.{BasicDBObjectBuilder, DB, DBCollection, DBObject, MongoClient, ServerAddress, WriteConcern}
 import io.fsq.field.OptionalField
-import io.fsq.rogue.{DBCollectionFactory, InitialState, MongoJavaDriverAdapter, Query, QueryExecutor, QueryOptimizer,
-    Rogue, RogueReadSerializer, RogueWriteSerializer}
+import io.fsq.rogue.{
+  DBCollectionFactory,
+  InitialState,
+  MongoJavaDriverAdapter,
+  Query,
+  QueryExecutor,
+  QueryOptimizer,
+  Rogue,
+  RogueReadSerializer,
+  RogueWriteSerializer
+}
 import io.fsq.rogue.MongoHelpers.{AndCondition, MongoSelect}
 import io.fsq.rogue.index.UntypedMongoIndex
 import org.junit.{Before, Test}
@@ -28,10 +37,12 @@ object TrivialORM {
   }
 
   lazy val mongoClient = {
-    val (host, port) = Option(System.getProperty("default.mongodb.server")).map({ str =>
-      val arr = str.split(':')
-      (arr(0), arr(1).toInt)
-    }).getOrElse(("localhost", 27017))
+    val (host, port) = Option(System.getProperty("default.mongodb.server"))
+      .map({ str =>
+        val arr = str.split(':')
+        (arr(0), arr(1).toInt)
+      })
+      .getOrElse(("localhost", 27017))
     new MongoClient(new ServerAddress(host, port))
   }
 
@@ -87,18 +98,30 @@ object TrivialORM {
           meta.fromDBObject(dbo).asInstanceOf[R]
       }
     }
-    override protected def writeSerializer(record: Record): RogueWriteSerializer[Record] = new RogueWriteSerializer[Record] {
-      override def toDBObject(record: Record): DBObject = {
-        val meta = record.meta
-        record.meta.toDBObject(record)
+    override protected def writeSerializer(record: Record): RogueWriteSerializer[Record] =
+      new RogueWriteSerializer[Record] {
+        override def toDBObject(record: Record): DBObject = {
+          val meta = record.meta
+          record.meta.toDBObject(record)
+        }
       }
-    }
   }
 
   object Implicits extends Rogue {
     implicit def meta2Query[M <: Meta[R], R](meta: M with Meta[R]): Query[M, R, InitialState] = {
       Query[M, R, InitialState](
-        meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
+        meta,
+        meta.collectionName,
+        None,
+        None,
+        None,
+        None,
+        None,
+        AndCondition(Nil, None),
+        None,
+        None,
+        None
+      )
     }
   }
 }
@@ -117,8 +140,7 @@ object SimpleRecord extends TrivialORM.Meta[SimpleRecord] {
     new SimpleRecord(dbo.get(a.name).asInstanceOf[Int], dbo.get(b.name).asInstanceOf[String])
   }
   override def toDBObject(record: SimpleRecord): DBObject = {
-    (BasicDBObjectBuilder
-      .start
+    (BasicDBObjectBuilder.start
       .add(a.name, record.a)
       .add(b.name, record.b)
       .get)
@@ -138,8 +160,9 @@ class TrivialORMQueryTest extends JUnitMustMatchers {
 
   @Test
   def canBuildQuery: Unit = {
-    (SimpleRecord: Query[SimpleRecord.type, SimpleRecord, InitialState]) .toString() must_== """db.simple_records.find({ })"""
-    SimpleRecord.where(_.a eqs 1)                                        .toString() must_== """db.simple_records.find({ "a" : 1})"""
+    (SimpleRecord: Query[SimpleRecord.type, SimpleRecord, InitialState])
+      .toString() must_== """db.simple_records.find({ })"""
+    SimpleRecord.where(_.a eqs 1).toString() must_== """db.simple_records.find({ "a" : 1})"""
   }
 
   @Test

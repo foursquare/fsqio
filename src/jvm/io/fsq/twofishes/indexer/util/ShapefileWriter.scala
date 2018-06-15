@@ -19,8 +19,6 @@
 // import org.geotools.referencing.crs.DefaultGeographicCRS
 // import org.opengis.feature.simple.SimpleFeatureType
 // import scala.collection.JavaConverters._
-
-
 // object BuildPolygonShapefile {
 //   val TYPE: SimpleFeatureType = DataUtilities.createType("Location",
 //     "location:MultiPolygon:srid=4326," + // <- the geometry attribute: Point type

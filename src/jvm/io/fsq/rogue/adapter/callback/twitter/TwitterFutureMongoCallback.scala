@@ -6,7 +6,6 @@ import com.twitter.util.{Future, Promise, Return, Throw}
 import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
 import scala.util.{Failure, Success, Try}
 
-
 class TwitterFutureMongoCallback[T] extends MongoCallback[Future, T] {
 
   private val promise = new Promise[T]

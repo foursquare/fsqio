@@ -68,7 +68,7 @@ class MMapInputStreamSpec extends FSSpecificationWithJUnit with MatchersImplicit
   }
 
   "should be able to do reads and seeks" in {
-    val (file, buf) = createTempFile(100*1024)
+    val (file, buf) = createTempFile(100 * 1024)
     try {
       val mmapStream = openWithMMap(file)
       val hadoopStream = openWithHadoop(file)
@@ -109,13 +109,13 @@ class MMapInputStreamSpec extends FSSpecificationWithJUnit with MatchersImplicit
   }
 
   "should be able to read across blocks" in {
-    val (file, buf) = createTempFile(100*1024)
+    val (file, buf) = createTempFile(100 * 1024)
     try {
       val mmapStream = openWithMMap(file)
       val hadoopStream = openWithHadoop(file)
       val mmapReadBuf = new Array[Byte](1024)
       val hadoopReadBuf = new Array[Byte](1024)
-      val pos = 64*1024 - 5
+      val pos = 64 * 1024 - 5
 
       mmapStream.getPos must_== 0
       mmapStream.readFully(pos, mmapReadBuf)

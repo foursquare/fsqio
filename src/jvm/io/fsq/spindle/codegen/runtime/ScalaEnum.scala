@@ -43,4 +43,3 @@ class ScalaEnum(override val underlying: Enum) extends EnumProxy with HasAnnotat
     supported
   }
 }
-

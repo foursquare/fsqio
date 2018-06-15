@@ -25,5 +25,9 @@ class BasePolygonIndexBuildIntermediateJob(
   }).group
     .withReducers(1)
     .head
-    .write(TypedSink[(LongWritable, IntermediateDataContainer)](SpindleSequenceFileSource[LongWritable, IntermediateDataContainer](outputPath)))
+    .write(
+      TypedSink[(LongWritable, IntermediateDataContainer)](
+        SpindleSequenceFileSource[LongWritable, IntermediateDataContainer](outputPath)
+      )
+    )
 }

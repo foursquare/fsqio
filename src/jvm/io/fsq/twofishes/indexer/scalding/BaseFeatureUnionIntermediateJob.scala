@@ -13,8 +13,10 @@ class BaseFeatureUnionIntermediateJob(
   args: Args
 ) extends TwofishesIntermediateJob(name, args) {
 
-  getJobOutputsAsTypedPipe[LongWritable, GeocodeServingFeature](sources)
-    .group
-    .head
-    .write(TypedSink[(LongWritable, GeocodeServingFeature)](SpindleSequenceFileSource[LongWritable, GeocodeServingFeature](outputPath)))
+  getJobOutputsAsTypedPipe[LongWritable, GeocodeServingFeature](sources).group.head
+    .write(
+      TypedSink[(LongWritable, GeocodeServingFeature)](
+        SpindleSequenceFileSource[LongWritable, GeocodeServingFeature](outputPath)
+      )
+    )
 }

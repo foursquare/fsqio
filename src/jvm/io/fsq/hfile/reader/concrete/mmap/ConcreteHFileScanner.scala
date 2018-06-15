@@ -111,7 +111,7 @@ class ConcreteHFileScanner(reader: ConcreteHFileReader) extends HFileScanner wit
       }
 
     // special case when the inputKey is smaller than the first key
-    if (compareWithFirstKey < 0 ) {
+    if (compareWithFirstKey < 0) {
       logger.debug("seekToInner: found a key lower than the current key in block %d", startIndex)
       setCurBuffer()
       -1
@@ -139,7 +139,7 @@ class ConcreteHFileScanner(reader: ConcreteHFileReader) extends HFileScanner wit
       }
 
     // special case when the inputKey is smaller than the first key
-    if (compareWithFirstKey < 0 ) {
+    if (compareWithFirstKey < 0) {
       logger.debug("seekToInner: found a key lower than the current key in block %d", startIndex)
       setCurBuffer()
       -1

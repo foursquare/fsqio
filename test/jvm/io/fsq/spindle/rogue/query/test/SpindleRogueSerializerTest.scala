@@ -16,7 +16,6 @@ import org.junit.{Assert, Test}
 import scala.math.max
 import scala.util.Random
 
-
 class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
   val random = new Random(1399660443)
   val writerProtocolFactory = new TBSONObjectProtocol.WriterFactoryForDBObject
@@ -56,7 +55,8 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
             alphanumericString(4) -> random.nextInt,
             alphanumericString(4) -> random.nextInt
           )
-        ).stringListField(
+        )
+        .stringListField(
           Vector.tabulate(5)(_ => alphanumericString(8))
         )
     }
@@ -66,7 +66,8 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         .subrecordField(newTestRecord(nestingDepth - 1))
         .subrecordMapField(
           Vector.tabulate(5)(_ => alphanumericString(8) -> newTestRecord(nestingDepth - 1)).toMap
-        ).subrecordListField(
+        )
+        .subrecordListField(
           Vector.tabulate(5)(_ => newTestRecord(nestingDepth - 1))
         )
     }
@@ -106,9 +107,11 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         field.getter(testRecord),
         serializer.readFromDocument(
           SerdeTestRecord,
-          Q(SerdeTestRecord).select(
-            _ => field
-          ).select
+          Q(SerdeTestRecord)
+            .select(
+              _ => field
+            )
+            .select
         )(
           testDbObject
         )
@@ -121,10 +124,11 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         ),
         serializer.readFromDocument(
           SerdeTestRecord,
-          Q(SerdeTestRecord).select(
-            _.subrecordField
-              .sub.select(_ => field)
-          ).select
+          Q(SerdeTestRecord)
+            .select(
+              _.subrecordField.sub.select(_ => field)
+            )
+            .select
         )(
           testDbObject
         )
@@ -138,10 +142,11 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         ),
         serializer.readFromDocument(
           SerdeTestRecord,
-          Q(SerdeTestRecord).select(
-            _.subrecordListField
-              .sub.select(_ => field)
-          ).select
+          Q(SerdeTestRecord)
+            .select(
+              _.subrecordListField.sub.select(_ => field)
+            )
+            .select
         )(
           testDbObject
         )
@@ -156,11 +161,11 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         ),
         serializer.readFromDocument(
           SerdeTestRecord,
-          Q(SerdeTestRecord).select(
-            _.subrecordField
-              .sub.select(_.subrecordField)
-              .sub.select(_ => field)
-          ).select
+          Q(SerdeTestRecord)
+            .select(
+              _.subrecordField.sub.select(_.subrecordField).sub.select(_ => field)
+            )
+            .select
         )(
           testDbObject
         )
@@ -176,11 +181,11 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         ),
         serializer.readFromDocument(
           SerdeTestRecord,
-          Q(SerdeTestRecord).select(
-            _.subrecordField
-              .sub.select(_.subrecordListField)
-              .sub.select(_ => field)
-          ).select
+          Q(SerdeTestRecord)
+            .select(
+              _.subrecordField.sub.select(_.subrecordListField).sub.select(_ => field)
+            )
+            .select
         )(
           testDbObject
         )
@@ -196,12 +201,11 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         ),
         serializer.readFromDocument(
           SerdeTestRecord,
-          Q(SerdeTestRecord).select(
-            _.subrecordListField
-              .sub.select(_.subrecordField
-                .sub.select(_ => field)
-              )
-          ).select
+          Q(SerdeTestRecord)
+            .select(
+              _.subrecordListField.sub.select(_.subrecordField.sub.select(_ => field))
+            )
+            .select
         )(
           testDbObject
         )
@@ -219,12 +223,11 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         ),
         serializer.readFromDocument(
           SerdeTestRecord,
-          Q(SerdeTestRecord).select(
-            _.subrecordListField
-              .sub.select(_.subrecordListField
-                .sub.select(_ => field)
-              )
-            ).select
+          Q(SerdeTestRecord)
+            .select(
+              _.subrecordListField.sub.select(_.subrecordListField.sub.select(_ => field))
+            )
+            .select
         )(
           testDbObject
         )
@@ -245,10 +248,12 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         case 2 => {
           serializer.readFromDocument(
             SerdeTestRecord,
-            Q(SerdeTestRecord).select(
-              _ => selectedFields(0),
-              _ => selectedFields(1)
-            ).select
+            Q(SerdeTestRecord)
+              .select(
+                _ => selectedFields(0),
+                _ => selectedFields(1)
+              )
+              .select
           )(
             testDbObject
           )
@@ -257,11 +262,13 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         case 3 => {
           serializer.readFromDocument(
             SerdeTestRecord,
-            Q(SerdeTestRecord).select(
-              _ => selectedFields(0),
-              _ => selectedFields(1),
-              _ => selectedFields(2)
-            ).select
+            Q(SerdeTestRecord)
+              .select(
+                _ => selectedFields(0),
+                _ => selectedFields(1),
+                _ => selectedFields(2)
+              )
+              .select
           )(
             testDbObject
           )
@@ -270,12 +277,14 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         case 4 => {
           serializer.readFromDocument(
             SerdeTestRecord,
-            Q(SerdeTestRecord).select(
-              _ => selectedFields(0),
-              _ => selectedFields(1),
-              _ => selectedFields(2),
-              _ => selectedFields(3)
-            ).select
+            Q(SerdeTestRecord)
+              .select(
+                _ => selectedFields(0),
+                _ => selectedFields(1),
+                _ => selectedFields(2),
+                _ => selectedFields(3)
+              )
+              .select
           )(
             testDbObject
           )
@@ -284,13 +293,15 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         case 5 => {
           serializer.readFromDocument(
             SerdeTestRecord,
-            Q(SerdeTestRecord).select(
-              _ => selectedFields(0),
-              _ => selectedFields(1),
-              _ => selectedFields(2),
-              _ => selectedFields(3),
-              _ => selectedFields(4)
-            ).select
+            Q(SerdeTestRecord)
+              .select(
+                _ => selectedFields(0),
+                _ => selectedFields(1),
+                _ => selectedFields(2),
+                _ => selectedFields(3),
+                _ => selectedFields(4)
+              )
+              .select
           )(
             testDbObject
           )
@@ -299,14 +310,16 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         case 6 => {
           serializer.readFromDocument(
             SerdeTestRecord,
-            Q(SerdeTestRecord).select(
-              _ => selectedFields(0),
-              _ => selectedFields(1),
-              _ => selectedFields(2),
-              _ => selectedFields(3),
-              _ => selectedFields(4),
-              _ => selectedFields(5)
-            ).select
+            Q(SerdeTestRecord)
+              .select(
+                _ => selectedFields(0),
+                _ => selectedFields(1),
+                _ => selectedFields(2),
+                _ => selectedFields(3),
+                _ => selectedFields(4),
+                _ => selectedFields(5)
+              )
+              .select
           )(
             testDbObject
           )
@@ -315,15 +328,17 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         case 7 => {
           serializer.readFromDocument(
             SerdeTestRecord,
-            Q(SerdeTestRecord).select(
-              _ => selectedFields(0),
-              _ => selectedFields(1),
-              _ => selectedFields(2),
-              _ => selectedFields(3),
-              _ => selectedFields(4),
-              _ => selectedFields(5),
-              _ => selectedFields(6)
-            ).select
+            Q(SerdeTestRecord)
+              .select(
+                _ => selectedFields(0),
+                _ => selectedFields(1),
+                _ => selectedFields(2),
+                _ => selectedFields(3),
+                _ => selectedFields(4),
+                _ => selectedFields(5),
+                _ => selectedFields(6)
+              )
+              .select
           )(
             testDbObject
           )
@@ -332,16 +347,18 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         case 8 => {
           serializer.readFromDocument(
             SerdeTestRecord,
-            Q(SerdeTestRecord).select(
-              _ => selectedFields(0),
-              _ => selectedFields(1),
-              _ => selectedFields(2),
-              _ => selectedFields(3),
-              _ => selectedFields(4),
-              _ => selectedFields(5),
-              _ => selectedFields(6),
-              _ => selectedFields(7)
-            ).select
+            Q(SerdeTestRecord)
+              .select(
+                _ => selectedFields(0),
+                _ => selectedFields(1),
+                _ => selectedFields(2),
+                _ => selectedFields(3),
+                _ => selectedFields(4),
+                _ => selectedFields(5),
+                _ => selectedFields(6),
+                _ => selectedFields(7)
+              )
+              .select
           )(
             testDbObject
           )
@@ -350,17 +367,19 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         case 9 => {
           serializer.readFromDocument(
             SerdeTestRecord,
-            Q(SerdeTestRecord).select(
-              _ => selectedFields(0),
-              _ => selectedFields(1),
-              _ => selectedFields(2),
-              _ => selectedFields(3),
-              _ => selectedFields(4),
-              _ => selectedFields(5),
-              _ => selectedFields(6),
-              _ => selectedFields(7),
-              _ => selectedFields(8)
-            ).select
+            Q(SerdeTestRecord)
+              .select(
+                _ => selectedFields(0),
+                _ => selectedFields(1),
+                _ => selectedFields(2),
+                _ => selectedFields(3),
+                _ => selectedFields(4),
+                _ => selectedFields(5),
+                _ => selectedFields(6),
+                _ => selectedFields(7),
+                _ => selectedFields(8)
+              )
+              .select
           )(
             testDbObject
           )
@@ -369,18 +388,20 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         case 10 => {
           serializer.readFromDocument(
             SerdeTestRecord,
-            Q(SerdeTestRecord).select(
-              _ => selectedFields(0),
-              _ => selectedFields(1),
-              _ => selectedFields(2),
-              _ => selectedFields(3),
-              _ => selectedFields(4),
-              _ => selectedFields(5),
-              _ => selectedFields(6),
-              _ => selectedFields(7),
-              _ => selectedFields(8),
-              _ => selectedFields(9)
-            ).select
+            Q(SerdeTestRecord)
+              .select(
+                _ => selectedFields(0),
+                _ => selectedFields(1),
+                _ => selectedFields(2),
+                _ => selectedFields(3),
+                _ => selectedFields(4),
+                _ => selectedFields(5),
+                _ => selectedFields(6),
+                _ => selectedFields(7),
+                _ => selectedFields(8),
+                _ => selectedFields(9)
+              )
+              .select
           )(
             testDbObject
           )

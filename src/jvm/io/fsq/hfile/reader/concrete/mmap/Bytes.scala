@@ -11,11 +11,10 @@ import org.apache.hadoop.io.WritableComparator
 
 object Bytes extends Logger {
   def getByteArray(bb: ByteBuffer): Array[Byte] = {
-      val bytes = new Array[Byte](bb.remaining)
-      bb.slice.get(bytes)
-      bytes
+    val bytes = new Array[Byte](bb.remaining)
+    bb.slice.get(bytes)
+    bytes
   }
-
 
   def copyDirectBufferToHeap(bb: ByteBuffer): ByteBuffer = {
     if (bb.isDirect) {
@@ -25,14 +24,16 @@ object Bytes extends Logger {
     }
   }
 
-  def byteBufferToString(bb: ByteBuffer): String = Hex.toHexString(bb, lowerCase=false)
+  def byteBufferToString(bb: ByteBuffer): String = Hex.toHexString(bb, lowerCase = false)
 
   def byteBufferToDecimalString(inputBb: ByteBuffer): String = {
     val bb = inputBb.slice
     val sb = new StringBuilder
-    (0 until bb.limit) foreach {i =>
+    (0 until bb.limit) foreach { i =>
       sb.append(bb.get(i))
-      if (i < bb.limit-1) { sb.append(", ") }
+      if (i < bb.limit - 1) {
+        sb.append(", ")
+      }
     }
     sb.toString
   }
@@ -92,10 +93,10 @@ object Bytes extends Logger {
   }
 
   /**
-   * splitKey is treated as one byte buffer formed by sequential concatenation of all the byte buffers.
-   * This function is essentially providing same functionality as the above except it takes the input byte buffer
-   * in multiple chunks.
-   */
+    * splitKey is treated as one byte buffer formed by sequential concatenation of all the byte buffers.
+    * This function is essentially providing same functionality as the above except it takes the input byte buffer
+    * in multiple chunks.
+    */
   def compare(splitKey: Seq[ByteBuffer], right: ByteBuffer): Int = {
     compare(splitKey, right, right.position, right.remaining)
   }
@@ -118,14 +119,26 @@ object Bytes extends Logger {
 
   def isPrefix(prefix: ByteBuffer, key: ByteBuffer): Boolean = {
     key.remaining >= prefix.remaining &&
-    WritableComparator.compareBytes(prefix.array, prefix.arrayOffset + prefix.position, prefix.remaining,
-      key.array, key.arrayOffset + key.position, prefix.remaining) == 0
+    WritableComparator.compareBytes(
+      prefix.array,
+      prefix.arrayOffset + prefix.position,
+      prefix.remaining,
+      key.array,
+      key.arrayOffset + key.position,
+      prefix.remaining
+    ) == 0
   }
 
   def isSuffix(suffix: ByteBuffer, key: ByteBuffer): Boolean = {
     key.remaining >= suffix.remaining &&
-    WritableComparator.compareBytes(suffix.array, suffix.arrayOffset + suffix.position, suffix.remaining,
-      key.array, key.arrayOffset + key.position + key.remaining - suffix.remaining, suffix.remaining) == 0
+    WritableComparator.compareBytes(
+      suffix.array,
+      suffix.arrayOffset + suffix.position,
+      suffix.remaining,
+      key.array,
+      key.arrayOffset + key.position + key.remaining - suffix.remaining,
+      suffix.remaining
+    ) == 0
   }
 
   object ByteBufferComparatorWithGetLong extends Comparator[ByteBuffer] {
@@ -138,7 +151,7 @@ object Bytes extends Logger {
         leftSlice.limit - rightSlice.limit
       } else {
         var index = 0
-        while (leftSlice.remaining >=8 && rightSlice.remaining >= 8 && leftSlice.getLong == rightSlice.getLong)  {
+        while (leftSlice.remaining >= 8 && rightSlice.remaining >= 8 && leftSlice.getLong == rightSlice.getLong) {
           index += 8
         }
 
@@ -161,14 +174,14 @@ object Bytes extends Logger {
 
     def compare(left: ByteBuffer, right: ByteBuffer, rightPosition: Int, rightRemaining: Int): Int = {
 
-      var end = left.position() + Math.min(left.remaining(), rightRemaining) -1
+      var end = left.position() + Math.min(left.remaining(), rightRemaining) - 1
       var lidx = left.position()
       var ridx = rightPosition
       var compare = 0
 
       while (lidx < end && left.get(lidx) == right.get(ridx)) {
-        lidx+=1
-        ridx+=1
+        lidx += 1
+        ridx += 1
       }
 
       if (lidx <= end && left.get(lidx) != right.get(ridx)) {
@@ -197,10 +210,16 @@ object Bytes extends Logger {
       compare(left, right, right.position, right.remaining)
 
     def compare(left: ByteBuffer, right: ByteBuffer, rightPosition: Int, rightRemaining: Int): Int = {
-      WritableComparator.compareBytes(left.array(), left.arrayOffset + left.position, left.remaining,
-        right.array(), right.arrayOffset + rightPosition, rightRemaining)
+      WritableComparator.compareBytes(
+        left.array(),
+        left.arrayOffset + left.position,
+        left.remaining,
+        right.array(),
+        right.arrayOffset + rightPosition,
+        rightRemaining
+      )
     }
-    
+
     def compare(lefts: Seq[ByteBuffer], right: ByteBuffer, rightPosition: Int, rightRemaining: Int): Int = {
       var res = 0
       var position = rightPosition
@@ -214,7 +233,6 @@ object Bytes extends Logger {
     }
 
   }
-
 
   // Don't use this unless you run into heap size issues. Reflection is slow.
   def freeDirectByteBuffer(buffer: ByteBuffer): Unit = {

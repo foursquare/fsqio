@@ -7,10 +7,8 @@ import com.mongodb.client.{MongoCollection, MongoDatabase}
 import io.fsq.common.scala.Identity._
 import org.bson.codecs.configuration.CodecRegistry
 
-
 /** MongoConnectionManager for the old blocking client. */
-class BlockingMongoClientManager
-extends MongoClientManager[MongoClient, MongoDatabase, MongoCollection] {
+class BlockingMongoClientManager extends MongoClientManager[MongoClient, MongoDatabase, MongoCollection] {
 
   override protected def closeClient(client: MongoClient): Unit = {
     client.close()

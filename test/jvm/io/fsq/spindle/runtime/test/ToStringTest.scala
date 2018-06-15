@@ -42,8 +42,7 @@ class ToStringTest {
   def testNonStringMapKeys() {
     val struct = MapsWithNonStringKeys.newBuilder
       .foo(Map(123 -> "A", 456 -> "B"))
-      .bar(Map(new ObjectId("000102030405060708090a0b") -> 77,
-               new ObjectId("0c0d0e0f1011121314151617") -> 42))
+      .bar(Map(new ObjectId("000102030405060708090a0b") -> 77, new ObjectId("0c0d0e0f1011121314151617") -> 42))
       .baz(Map(KeyStruct("a", 1) -> 123, KeyStruct("b", 2) -> 456))
       .result()
 

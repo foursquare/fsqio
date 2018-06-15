@@ -5,7 +5,6 @@ package io.fsq.rogue.util
 import io.fsq.rogue.IndexCheckerLogger
 import io.fsq.rogue.indexchecker.{IndexChecker, MongoIndexChecker}
 
-
 trait QueryUtilities[Result[_]] {
   def config: QueryConfig
   def indexChecker: IndexChecker

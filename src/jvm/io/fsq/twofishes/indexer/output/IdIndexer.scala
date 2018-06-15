@@ -47,9 +47,13 @@ class IdIndexer(
 
     val writer = buildMapFileWriter(index)
 
-    val sortedEntries = (slugEntries ++ extraIds).distinct.sortWith((a, b) => lexicalSort(a._1, b._1)).foreach({case (k, v) => {
-      writer.append(k, v)
-    }})
+    val sortedEntries = (slugEntries ++ extraIds).distinct
+      .sortWith((a, b) => lexicalSort(a._1, b._1))
+      .foreach({
+        case (k, v) => {
+          writer.append(k, v)
+        }
+      })
 
     writer.close()
   }

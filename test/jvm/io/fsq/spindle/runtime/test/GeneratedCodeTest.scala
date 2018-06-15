@@ -21,13 +21,11 @@ import org.bson.types.ObjectId
 import org.junit.Assert.{assertEquals, assertFalse, assertTrue, fail}
 import org.junit.Test
 
-
 class GeneratedCodeTest {
   private def makePhone(phoneNumberStr: String, phoneType: PhoneType): ContactInfo = {
     val phoneNumberMatch = PhoneNumberUtil.getInstance().findNumbers(phoneNumberStr, "US").iterator().next()
     val phoneNumber =
-      (PhoneNumber
-        .newBuilder
+      (PhoneNumber.newBuilder
         .countryCode(phoneNumberMatch.number.getCountryCode.toShort)
         .areaCode((phoneNumberMatch.number.getNationalNumber / 10000000).toInt)
         .number(phoneNumberMatch.number.getNationalNumber % 10000000)
@@ -37,40 +35,38 @@ class GeneratedCodeTest {
     ContactInfo.newBuilder.phone(phoneNumber).result()
   }
 
-  private def makeStreetAddress(streetAddressStr: String) = {
-
-  }
+  private def makeStreetAddress(streetAddressStr: String) = {}
 
   private def makeEmail(e: String): ContactInfo =
     ContactInfo.newBuilder.email(e).result()
 
   private def makeMovie() = {
     val vinceVaughn =
-      (Actor
-        .newBuilder
+      (Actor.newBuilder
         .details(Person("Vince", "Vaughn", Gender.MALE, List(makeEmail("vincevaughn@fake.com"))))
         .agentDetails(
-          Person("Ari", "Gold", Gender.MALE, List(
-            makePhone("(212) 555 7345", PhoneType.CELL),
-            makeEmail("arig@fake.com"))))
+          Person(
+            "Ari",
+            "Gold",
+            Gender.MALE,
+            List(makePhone("(212) 555 7345", PhoneType.CELL), makeEmail("arig@fake.com"))
+          )
+        )
         .result())
 
     val christineTaylor =
-      (Actor
-        .newBuilder
+      (Actor.newBuilder
         .details(Person("Christine", "Taylor", Gender.FEMALE, List(makeEmail("ctaylor@evenfaker.com"))))
         .result())
 
     val rawsonThurber =
-      (CrewMember
-        .newBuilder
+      (CrewMember.newBuilder
         .details(Person("Rawson", "Thurber", Gender.MALE, Nil))
         .credits(List("Director", "Writer"))
         .result())
 
     val movie =
-      (Movie
-        .newBuilder
+      (Movie.newBuilder
         .id(MovieId(new ObjectId("522e3e9f4b90871874292b48")))
         .name("Dodgeball: A True Underdog Story")
         .lengthMinutes(MinutesId(92L))
@@ -82,14 +78,14 @@ class GeneratedCodeTest {
   }
 
   private def makeTvListingEntry(): MutableTvListingEntry = {
-    (TvListingEntry
-      .newBuilder
+    (TvListingEntry.newBuilder
       .startTime("2012-01-18 20:00:00")
       .endTime("2012-01-18 21:59:59")
-      .content(Content
-        .newBuilder
-        .movie(makeMovie)
-        .result())
+      .content(
+        Content.newBuilder
+          .movie(makeMovie)
+          .result()
+      )
       .resultMutable())
   }
 
@@ -312,13 +308,17 @@ class GeneratedCodeTest {
       .anI64(12345L)
       .aDouble(123.456d)
       .aString("Hello")
-      .aBinary(ByteBuffer.wrap(Array[Byte](1,2,3)))
+      .aBinary(ByteBuffer.wrap(Array[Byte](1, 2, 3)))
       .aStruct(InnerStruct.newBuilder.aString("String").result())
       .aSet(Set("A", "B", "C"))
-      .aList(Vector(1,1,2,3,5,8))
-      .aMap(Map("1" -> InnerStruct.newBuilder.aString("One").result(),
-        "2" -> InnerStruct.newBuilder.aString("Two").result()))
-      .aMyBinary(ByteBuffer.wrap(Array[Byte](4,5,6)))
+      .aList(Vector(1, 1, 2, 3, 5, 8))
+      .aMap(
+        Map(
+          "1" -> InnerStruct.newBuilder.aString("One").result(),
+          "2" -> InnerStruct.newBuilder.aString("Two").result()
+        )
+      )
+      .aMyBinary(ByteBuffer.wrap(Array[Byte](4, 5, 6)))
       .aStructList(Vector(InnerStruct.newBuilder.anInt(1).result(), InnerStruct.newBuilder.anInt(2).result()))
       .result()
     // Trivial case - check that if only 1 is defined, that side is used
@@ -328,13 +328,17 @@ class GeneratedCodeTest {
     val struct2 = TestStruct.newBuilder
       .anI32(12)
       .aString("World")
-      .aBinary(ByteBuffer.wrap(Array[Byte](2,4,6)))
+      .aBinary(ByteBuffer.wrap(Array[Byte](2, 4, 6)))
       .aStruct(InnerStruct.newBuilder.aString("Different String").anInt(42).result())
       .aSet(Set("A", "D", "E"))
-      .aList(Vector(2,3,5,7,11))
-      .aMap(Map("1" -> InnerStruct.newBuilder.aString("NewOne").result(),
-        "3" -> InnerStruct.newBuilder.aString("Three").result()))
-      .aMyBinary(ByteBuffer.wrap(Array[Byte](8,10,12)))
+      .aList(Vector(2, 3, 5, 7, 11))
+      .aMap(
+        Map(
+          "1" -> InnerStruct.newBuilder.aString("NewOne").result(),
+          "3" -> InnerStruct.newBuilder.aString("Three").result()
+        )
+      )
+      .aMyBinary(ByteBuffer.wrap(Array[Byte](8, 10, 12)))
       .aStructList(Vector(InnerStruct.newBuilder.anInt(1).result()))
       .result()
 
@@ -346,17 +350,26 @@ class GeneratedCodeTest {
       .anI64(12345L)
       .aDouble(123.456d)
       .aString("Hello")
-      .aBinary(ByteBuffer.wrap(Array[Byte](1,2,3)))
+      .aBinary(ByteBuffer.wrap(Array[Byte](1, 2, 3)))
       .aStruct(InnerStruct.newBuilder.aString("String").anInt(42).result()) //Merge substructs
       .aSet(Set("A", "B", "C", "D", "E")) //Merge sets
-      .aList(Vector(1,1,2,3,5,8,2,3,5,7,11)) //Concatenate vectors
-      .aMap(Map("1" -> InnerStruct.newBuilder.aString("NewOne").result(), //this++that means values from 2 overwrite(!?)
-        "2" -> InnerStruct.newBuilder.aString("Two").result(),
-        "3" -> InnerStruct.newBuilder.aString("Three").result()))
-      .aMyBinary(ByteBuffer.wrap(Array[Byte](4,5,6)))
+      .aList(Vector(1, 1, 2, 3, 5, 8, 2, 3, 5, 7, 11)) //Concatenate vectors
+      .aMap(
+        Map(
+          "1" -> InnerStruct.newBuilder.aString("NewOne").result(), //this++that means values from 2 overwrite(!?)
+          "2" -> InnerStruct.newBuilder.aString("Two").result(),
+          "3" -> InnerStruct.newBuilder.aString("Three").result()
+        )
+      )
+      .aMyBinary(ByteBuffer.wrap(Array[Byte](4, 5, 6)))
       //Concatenate vectors of structs
-      .aStructList(Vector(InnerStruct.newBuilder.anInt(1).result(), InnerStruct.newBuilder.anInt(2).result(),
-        InnerStruct.newBuilder.anInt(1).result()))
+      .aStructList(
+        Vector(
+          InnerStruct.newBuilder.anInt(1).result(),
+          InnerStruct.newBuilder.anInt(2).result(),
+          InnerStruct.newBuilder.anInt(1).result()
+        )
+      )
       .result()
 
     val OneIntoTwo = TestStruct.newBuilder
@@ -367,17 +380,26 @@ class GeneratedCodeTest {
       .anI64(12345L)
       .aDouble(123.456d)
       .aString("World")
-      .aBinary(ByteBuffer.wrap(Array[Byte](2,4,6)))
+      .aBinary(ByteBuffer.wrap(Array[Byte](2, 4, 6)))
       .aStruct(InnerStruct.newBuilder.aString("Different String").anInt(42).result()) //Merge substructs
       .aSet(Set("A", "B", "C", "D", "E")) //Merge sets
-      .aList(Vector(2,3,5,7,11,1,1,2,3,5,8)) //Concatenate vectors
-      .aMap(Map("1" -> InnerStruct.newBuilder.aString("One").result(), //this++that means values from 1 overwrite(!?)
-        "2" -> InnerStruct.newBuilder.aString("Two").result(),
-        "3" -> InnerStruct.newBuilder.aString("Three").result()))
-      .aMyBinary(ByteBuffer.wrap(Array[Byte](8,10,12)))
+      .aList(Vector(2, 3, 5, 7, 11, 1, 1, 2, 3, 5, 8)) //Concatenate vectors
+      .aMap(
+        Map(
+          "1" -> InnerStruct.newBuilder.aString("One").result(), //this++that means values from 1 overwrite(!?)
+          "2" -> InnerStruct.newBuilder.aString("Two").result(),
+          "3" -> InnerStruct.newBuilder.aString("Three").result()
+        )
+      )
+      .aMyBinary(ByteBuffer.wrap(Array[Byte](8, 10, 12)))
       //Concatenate vectors of structs
-      .aStructList(Vector(InnerStruct.newBuilder.anInt(1).result(), InnerStruct.newBuilder.anInt(1).result(),
-        InnerStruct.newBuilder.anInt(2).result()))
+      .aStructList(
+        Vector(
+          InnerStruct.newBuilder.anInt(1).result(),
+          InnerStruct.newBuilder.anInt(1).result(),
+          InnerStruct.newBuilder.anInt(2).result()
+        )
+      )
       .result()
 
     assertEquals(TwoIntoOne, struct1.deepMergeCopy(struct2))

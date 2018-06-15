@@ -37,18 +37,18 @@ object FHttpRequest {
   // HttpResponse conversions
 
   /**
-   * Extracts the raw contents as a [[com.twitter.io.Buf]].
-   */
+    * Extracts the raw contents as a [[com.twitter.io.Buf]].
+    */
   def asBuf: Response => Buf = res => res.content
 
   /**
-   * Extracts the contents as a String (default for all request methods)
-   */
+    * Extracts the contents as a String (default for all request methods)
+    */
   def asString: Response => String = res => res.contentString
 
   /**
-   * Extracts the contents as a byte array
-   */
+    * Extracts the contents as a byte array
+    */
   def asBytes: Response => Array[Byte] = res => {
     val buffer = res.content
     val bytes = new Array[Byte](buffer.length)
@@ -57,13 +57,13 @@ object FHttpRequest {
   }
 
   /**
-   * Extracts the contents as an input stream
-   */
+    * Extracts the contents as an input stream
+    */
   def asInputStream: Response => java.io.InputStream = res => res.getInputStream
 
   /**
-   * Extracts the contents as XML
-   */
+    * Extracts the contents as XML
+    */
   def asXml: Response => scala.xml.Elem = res => scala.xml.XML.load(asInputStream(res))
 
   def asParams: Response => List[(String, String)] = res => {
@@ -75,22 +75,21 @@ object FHttpRequest {
   def asParamMap: Response => Map[String, String] = res => Map(asParams(res): _*)
 
   /**
-   * Extracts the contents as an oauth Token
-   */
+    * Extracts the contents as an oauth Token
+    */
   def asOAuth1Token: Response => Token = res => {
     val params = asParamMap(res)
     Token(params("oauth_token"), params("oauth_token_secret"))
   }
 
   /**
-   * Returns the original response (convenient because asString is the default extraction type)
-   */
+    * Returns the original response (convenient because asString is the default extraction type)
+    */
   def asResponse: Response => Response = res => res
 
-
   /**
-   * A filter for printing the request and response as it passes through service stack
-   */
+    * A filter for printing the request and response as it passes through service stack
+    */
   object debugFilter extends SimpleFilter[Request, Response] {
     val printMessage: HttpOption = r => {
       println(r)
@@ -111,8 +110,8 @@ object FHttpRequest {
 }
 
 /**
- * An HTTP request
- */
+  * An HTTP request
+  */
 case class FHttpRequest(
   client: FHttpClient,
   uri: String,
@@ -120,16 +119,17 @@ case class FHttpRequest(
   service: Service[Request, Response],
   options: List[FHttpRequest.HttpOption]
 ) {
+
   /**
-   * Adds parameters to the request
-   * @param p The parameters to add
-   */
+    * Adds parameters to the request
+    * @param p The parameters to add
+    */
   def params(p: (String, String)*): FHttpRequest = params(p)
 
   /**
-   * Adds parameters to the request
-   * @param p The parameters to add
-   */
+    * Adds parameters to the request
+    * @param p The parameters to add
+    */
   def params(p: TraversableOnce[(String, String)]): FHttpRequest = {
     // QueryStringEncoder doesn't handle existing params well, so decode first
     val qOld = new QueryStringDecoder(uri)
@@ -139,14 +139,14 @@ case class FHttpRequest(
   }
 
   /**
-   * Sets the content type header of the request
-   * @param contentType The content type
-   */
+    * Sets the content type header of the request
+    * @param contentType The content type
+    */
   def contentType(contentType: String): FHttpRequest = headers(("Content-Type", contentType))
 
   /**
-   * Sets the keep alive header of the request (useful for HTTP 1.0).
-   */
+    * Sets the keep alive header of the request (useful for HTTP 1.0).
+    */
   def keepAlive(isKeepAlive: Boolean): FHttpRequest = {
     option((request: Message) => {
       request.headerMap.put("Connection", if (isKeepAlive) "Keep-alive" else "Close")
@@ -154,48 +154,48 @@ case class FHttpRequest(
   }
 
   /**
-   * Adds headers to the request
-   * @param h The headers to add
-   */
+    * Adds headers to the request
+    * @param h The headers to add
+    */
   def headers(h: (String, String)*): FHttpRequest = headers(h)
 
   /**
-   * Adds headers to the request
-   * @param h The headers to add
-   */
+    * Adds headers to the request
+    * @param h The headers to add
+    */
   def headers(h: TraversableOnce[(String, String)]): FHttpRequest = {
     option((r: Message) => h.foreach(kv => r.headerMap.add(kv._1, kv._2)))
   }
 
   /**
-   * Adds a basic http auth header to the request
-   * @param user The username
-   * @param password The password
-   */
+    * Adds a basic http auth header to the request
+    * @param user The username
+    * @param password The password
+    */
   def auth(user: String, password: String): FHttpRequest = {
     headers(("Authorization", "Basic " + base64(user + ":" + password)))
   }
 
   /**
-   * Adds a filter to the service
-   * @param f the filter to add to the stack
-   */
+    * Adds a filter to the service
+    * @param f the filter to add to the stack
+    */
   def filter(f: Filter[Request, Response, Request, Response]): FHttpRequest = {
     FHttpRequest(client, uri, traceName, f andThen service, options)
   }
 
   /**
-   * Adds a request timeout (using the TimeoutFilter) to the stack.  Applies blocking or future responses.
-   * @param millis The number of milliseconds to wait
-   *
-   * NOTE(jacob): We create our own exception to pass down here, as the default used by
-   *    TimeoutFilter does not include any stack trace information due to the way the
-   *    timeout is implemented (future.within) causing a loss of all useful stack data.
-   *    However, in some cases just having the call stack for this method invocation makes
-   *    debugging significantly easier, so we subclass IndividualRequestTimeoutException
-   *    and attach a useful stack trace to it via a proxied Exception, ensuring the
-   *    service name is set as we do.
-   */
+    * Adds a request timeout (using the TimeoutFilter) to the stack.  Applies blocking or future responses.
+    * @param millis The number of milliseconds to wait
+    *
+    * NOTE(jacob): We create our own exception to pass down here, as the default used by
+    *    TimeoutFilter does not include any stack trace information due to the way the
+    *    timeout is implemented (future.within) causing a loss of all useful stack data.
+    *    However, in some cases just having the call stack for this method invocation makes
+    *    debugging significantly easier, so we subclass IndividualRequestTimeoutException
+    *    and attach a useful stack trace to it via a proxied Exception, ensuring the
+    *    service name is set as we do.
+    */
   def timeout(millis: Int): FHttpRequest = {
     val exception = new IndividualRequestTimeoutException(millis.milliseconds) {
       val creationStackException = new Exception
@@ -207,313 +207,312 @@ case class FHttpRequest(
   }
 
   /**
-   * Adds a debugging filter to print the request and the response.  Can be added multiple times
-   * to inspect the filter transformations
-   */
+    * Adds a debugging filter to print the request and the response.  Can be added multiple times
+    * to inspect the filter transformations
+    */
   def debug(): FHttpRequest = {
     filter(FHttpRequest.debugFilter)
   }
 
   /**
-   * An approximate representation of the full uri: including scheme, sever, port, and params as a string
-   */
+    * An approximate representation of the full uri: including scheme, sever, port, and params as a string
+    */
   def fullUri: String = {
     client.scheme + "://" + client.firstHostPort + uri
   }
 
   /**
-   * Adds a pre-filter transformation to the HttpMessage
-   * @param o A function to transform the HttpMessage
-   */
+    * Adds a pre-filter transformation to the HttpMessage
+    * @param o A function to transform the HttpMessage
+    */
   def option(o: FHttpRequest.HttpOption): FHttpRequest = {
     FHttpRequest(client, uri, traceName, service, o :: options)
   }
 
   /**
-   * Adds a consumer token to the request. The request will be signed with this token
-   * @param consumer The token to add
-   */
+    * Adds a consumer token to the request. The request will be signed with this token
+    * @param consumer The token to add
+    */
   def oauth(consumer: Token): FHttpRequest = oauth(consumer, None, None)
 
   /**
-   * Adds tokens to the request. The request will be signed with both tokens
-   * @param consumer The consumer token
-   * @param token The oauth token
-   */
+    * Adds tokens to the request. The request will be signed with both tokens
+    * @param consumer The consumer token
+    * @param token The oauth token
+    */
   def oauth(consumer: Token, token: Token): FHttpRequest = oauth(consumer, Some(token), None)
 
   /**
-   * Adds tokens to the request. The request will be signed with both tokens
-   * @param consumer The consumer token
-   * @param token The oauth token
-   * @param verifier The verifier parameter (1.0a)
-   */
+    * Adds tokens to the request. The request will be signed with both tokens
+    * @param consumer The consumer token
+    * @param token The oauth token
+    * @param verifier The verifier parameter (1.0a)
+    */
   def oauth(consumer: Token, token: Token, verifier: String): FHttpRequest = {
     oauth(consumer, Some(token), Some(verifier))
   }
 
   protected def oauth(consumer: Token, token: Option[Token], verifier: Option[String]): FHttpRequest = {
     val hostPort = client.firstHostPort.split(":", 2) match {
-      case Array(k,v) => Some(k, v)
+      case Array(k, v) => Some(k, v)
       case _ => None
     }
 
-    filter(new OAuth1Filter(
-      scheme = client.scheme,
-      host = hostPort.get._1,
-      port = hostPort.get._2.toInt,
-      consumer = consumer,
-      token = token,
-      verifier =  verifier
-    ))
+    filter(
+      new OAuth1Filter(
+        scheme = client.scheme,
+        host = hostPort.get._1,
+        port = hostPort.get._2.toInt,
+        consumer = consumer,
+        token = token,
+        verifier = verifier
+      )
+    )
   }
 
   def hasParams: Boolean = uri.indexOf('?') != -1
 
   def paramList: List[(String, String)] = {
-    (new QueryStringDecoder(uri))
-      .getParameters.asScala
+    (new QueryStringDecoder(uri)).getParameters.asScala
       .map(kv => kv._2.asScala.toList.map(v => (kv._1, v)))
       .flatten
       .toList
   }
 
-
   // Response retrieval methods
 
   /**
-   * Issue a non-blocking GET request
-   * @param resMap a function to convert the HttpResponse to the desired response type
-   */
+    * Issue a non-blocking GET request
+    * @param resMap a function to convert the HttpResponse to the desired response type
+    */
   def getFuture[T](resMap: Response => T = FHttpRequest.asString): Future[T] = {
     process(Method.Get, f => f.map(resMap))
   }
 
   /**
-   * Issue a non-blocking POST request
-   * @param data The content to provide in the message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
-  def postFuture[T] (data: Array[Byte], resMap: Response => T): Future[T] = {
+    * Issue a non-blocking POST request
+    * @param data The content to provide in the message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
+  def postFuture[T](data: Array[Byte], resMap: Response => T): Future[T] = {
     prepPost(data).process(Method.Post, f => f.map(resMap))
   }
 
   /**
-   * Issue a non-blocking POST request
-   * @param data The content to provide in the message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
-  def postFuture[T] (data: String = "", resMap: Response => T = FHttpRequest.asString): Future[T] = {
+    * Issue a non-blocking POST request
+    * @param data The content to provide in the message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
+  def postFuture[T](data: String = "", resMap: Response => T = FHttpRequest.asString): Future[T] = {
     postFuture(data.getBytes(FHttpRequest.UTF_8), resMap)
   }
 
   /**
-   * Issue a non-blocking multipart POST request
-   * @param data The parts to provide in the multipart message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
-  def postFuture[T] (data: List[MultiPart], resMap: Response => T): Future[T] = {
+    * Issue a non-blocking multipart POST request
+    * @param data The parts to provide in the multipart message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
+  def postFuture[T](data: List[MultiPart], resMap: Response => T): Future[T] = {
     prepMultipart(data.map(toPart(_))).process(Method.Post, f => f.map(resMap))
   }
 
   /**
-   * Issue a non-blocking PUT request
-   * @param data The content to provide in the message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
-  def putFuture[T] (data: Array[Byte], resMap: Response => T): Future[T] = {
+    * Issue a non-blocking PUT request
+    * @param data The content to provide in the message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
+  def putFuture[T](data: Array[Byte], resMap: Response => T): Future[T] = {
     prepPost(data).process(Method.Put, f => f.map(resMap))
   }
 
   /**
-   * Issue a non-blocking PUT request
-   * @param data The content to provide in the message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
+    * Issue a non-blocking PUT request
+    * @param data The content to provide in the message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
   def putFuture[T](data: String = "", resMap: Response => T = FHttpRequest.asString): Future[T] = {
     putFuture(data.getBytes(FHttpRequest.UTF_8), resMap)
   }
 
   /**
-   * Issue a non-blocking multipart POST request
-   * @param data The parts to provide in the multipart message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
+    * Issue a non-blocking multipart POST request
+    * @param data The parts to provide in the multipart message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
   def putFuture[T](data: List[MultiPart], resMap: Response => T): Future[T] = {
     prepMultipart(data.map(toPart(_))).process(Method.Put, f => f.map(resMap))
   }
 
   /**
-   * Issue a non-blocking HEAD request
-   * @param resMap a function to convert the HttpResponse to the desired response type
-   */
+    * Issue a non-blocking HEAD request
+    * @param resMap a function to convert the HttpResponse to the desired response type
+    */
   def headFuture[T](resMap: Response => T = FHttpRequest.asString): Future[T] = {
     process(Method.Head, f => f.map(resMap))
   }
 
   /**
-   * Issue a non-blocking DELETE request
-   * @param resMap a function to convert the HttpResponse to the desired response type
-   */
+    * Issue a non-blocking DELETE request
+    * @param resMap a function to convert the HttpResponse to the desired response type
+    */
   def deleteFuture[T](resMap: Response => T = FHttpRequest.asString): Future[T] = {
     process(Method.Delete, f => f.map(resMap))
   }
 
-
   // Blocking Option
   /**
-   * Issue a blocking GET request
-   * @param resMap a function to convert the HttpResponse to the desired response type
-   */
+    * Issue a blocking GET request
+    * @param resMap a function to convert the HttpResponse to the desired response type
+    */
   def getOption[T](resMap: Response => T = FHttpRequest.asString): Option[T] = {
     process(Method.Get, block andThen finishOpt).map(resMap)
   }
 
   /**
-   * Issue a blocking POST request
-   * @param data The content to provide in the message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
+    * Issue a blocking POST request
+    * @param data The content to provide in the message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
   def postOption[T](data: Array[Byte], resMap: Response => T): Option[T] = {
     prepPost(data).process(Method.Post, block andThen finishOpt).map(resMap)
   }
 
   /**
-   * Issue a blocking POST request
-   * @param data The content to provide in the message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
+    * Issue a blocking POST request
+    * @param data The content to provide in the message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
   def postOption[T](data: String = "", resMap: Response => T = FHttpRequest.asString): Option[T] = {
     postOption(data.getBytes(FHttpRequest.UTF_8), resMap)
   }
 
   /**
-   * Issue blocking multipart POST request
-   * @param data The parts to provide in the multipart message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
+    * Issue blocking multipart POST request
+    * @param data The parts to provide in the multipart message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
   def postOption[T](data: List[MultiPart], resMap: Response => T): Option[T] =
     prepMultipart(data.map(toPart(_))).process(Method.Post, block andThen finishOpt).map(resMap)
 
   /**
-   * Issue a blocking PUT request
-   * @param data The content to provide in the message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
-  def putOption[T] (data: Array[Byte], resMap: Response => T): Option[T] = {
+    * Issue a blocking PUT request
+    * @param data The content to provide in the message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
+  def putOption[T](data: Array[Byte], resMap: Response => T): Option[T] = {
     prepPost(data).process(Method.Put, block andThen finishOpt).map(resMap)
   }
 
   /**
-   * Issue a blocking PUT request
-   * @param data The content to provide in the message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
-  def putOption[T] (data: String = "", resMap: Response => T = FHttpRequest.asString): Option[T] = {
+    * Issue a blocking PUT request
+    * @param data The content to provide in the message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
+  def putOption[T](data: String = "", resMap: Response => T = FHttpRequest.asString): Option[T] = {
     putOption(data.getBytes(FHttpRequest.UTF_8), resMap)
   }
 
   /**
-   * Issue blocking multipart PUT request
-   * @param data The parts to provide in the multipart message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
+    * Issue blocking multipart PUT request
+    * @param data The parts to provide in the multipart message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
   def putOption[T](data: List[MultiPart], resMap: Response => T): Option[T] = {
     prepMultipart(data.map(toPart(_))).process(Method.Put, block andThen finishOpt).map(resMap)
   }
 
   /**
-   * Issue a blocking HEAD request
-   * @param resMap a function to convert the HttpResponse to the desired response type
-   */
+    * Issue a blocking HEAD request
+    * @param resMap a function to convert the HttpResponse to the desired response type
+    */
   def headOption[T](resMap: Response => T = FHttpRequest.asString): Option[T] = {
     process(Method.Head, block andThen finishOpt).map(resMap)
   }
 
   /**
-   * Issue a blocking DELETE request
-   * @param resMap a function to convert the HttpResponse to the desired response type
-   */
-  def deleteOption[T] (resMap: Response => T = FHttpRequest.asString): Option[T] = {
+    * Issue a blocking DELETE request
+    * @param resMap a function to convert the HttpResponse to the desired response type
+    */
+  def deleteOption[T](resMap: Response => T = FHttpRequest.asString): Option[T] = {
     process(Method.Delete, block andThen finishOpt).map(resMap)
   }
 
   // Blocking Throw
   /**
-   * Issue a blocking GET request and throw on failure
-   * @param resMap a function to convert the HttpResponse to the desired response type
-   */
-  def get_![T] (resMap: Response => T = FHttpRequest.asString): T = {
+    * Issue a blocking GET request and throw on failure
+    * @param resMap a function to convert the HttpResponse to the desired response type
+    */
+  def get_![T](resMap: Response => T = FHttpRequest.asString): T = {
     process(Method.Get, block andThen finishBang andThen resMap)
   }
 
   /**
-   * Issue a blocking POST request and throw on failure
-   * @param data The content to provide in the message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
-  def post_![T] (data: Array[Byte], resMap: Response => T): T = {
+    * Issue a blocking POST request and throw on failure
+    * @param data The content to provide in the message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
+  def post_![T](data: Array[Byte], resMap: Response => T): T = {
     prepPost(data).process(Method.Post, block andThen finishBang andThen resMap)
   }
 
   /**
-   * Issue a blocking POST request and throw on failure
-   * @param data The content to provide in the message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
+    * Issue a blocking POST request and throw on failure
+    * @param data The content to provide in the message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
   def post_![T](data: String = "", resMap: Response => T = FHttpRequest.asString): T = {
     post_!(data.getBytes(FHttpRequest.UTF_8), resMap)
   }
 
   /**
-   * Issue blocking multipart POST request and throw on failure
-   * @param data The parts to provide in the multipart message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
+    * Issue blocking multipart POST request and throw on failure
+    * @param data The parts to provide in the multipart message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
   def post_![T](data: List[MultiPart], resMap: Response => T): T = {
     prepMultipart(data.map(toPart(_))).process(Method.Post, block andThen finishBang andThen resMap)
   }
 
   /**
-   * Issue a blocking PUT request and throw on failure
-   * @param data The content to provide in the message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
-  def put_![T] (data: Array[Byte], resMap: Response => T): T = {
+    * Issue a blocking PUT request and throw on failure
+    * @param data The content to provide in the message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
+  def put_![T](data: Array[Byte], resMap: Response => T): T = {
     prepPost(data).process(Method.Put, block andThen finishBang andThen resMap)
   }
 
   /**
-   * Issue a blocking PUT request and throw on failure
-   * @param data The content to provide in the message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
-  def put_![T] (data: String = "", resMap: Response => T = FHttpRequest.asString): T = {
+    * Issue a blocking PUT request and throw on failure
+    * @param data The content to provide in the message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
+  def put_![T](data: String = "", resMap: Response => T = FHttpRequest.asString): T = {
     put_!(data.getBytes(FHttpRequest.UTF_8), resMap)
   }
 
   /**
-   * Issue blocking multipart PUT request and throw on failure
-   * @param data The parts to provide in the multipart message
-   * @param resMap A function to convert the HttpResponse to the desired response type
-   */
-  def put_![T] (data: List[MultiPart], resMap: Response => T): T = {
+    * Issue blocking multipart PUT request and throw on failure
+    * @param data The parts to provide in the multipart message
+    * @param resMap A function to convert the HttpResponse to the desired response type
+    */
+  def put_![T](data: List[MultiPart], resMap: Response => T): T = {
     prepMultipart(data.map(toPart(_))).process(Method.Put, block andThen finishBang andThen resMap)
   }
 
   /**
-   * Issue a blocking HEAD request and throw on failure
-   * @param resMap a function to convert the HttpResponse to the desired response type
-   */
-  def head_![T] (resMap: Response => T = FHttpRequest.asString): T = {
+    * Issue a blocking HEAD request and throw on failure
+    * @param resMap a function to convert the HttpResponse to the desired response type
+    */
+  def head_![T](resMap: Response => T = FHttpRequest.asString): T = {
     process(Method.Head, block andThen finishBang andThen resMap)
   }
 
   /**
-   * Issue a blocking DELETE request and throw on failure
-   * @param resMap a function to convert the HttpResponse to the desired response type
-   */
-  def delete_![T] (resMap: Response => T = FHttpRequest.asString): T = {
+    * Issue a blocking DELETE request and throw on failure
+    * @param resMap a function to convert the HttpResponse to the desired response type
+    */
+  def delete_![T](resMap: Response => T = FHttpRequest.asString): T = {
     process(Method.Delete, block andThen finishBang andThen resMap)
   }
 
@@ -535,7 +534,7 @@ case class FHttpRequest(
 
   protected val block: Future[Response] => ClientResponseOrException =
     responseFuture => {
-      try{
+      try {
         val r = Await.result(responseFuture)
         ClientResponse[Response](r)
       } catch {
@@ -549,13 +548,14 @@ case class FHttpRequest(
   protected val finishBang: ClientResponseOrException => Response = _ match {
     case ClientResponse(response: Response) => response
     case ClientException(e: DeferredStackTrace) => throw e.withNewStackTrace()
-    case ClientException(e) => e match {
-      case ns: NoStacktrace => {
-        ns.setStackTrace(new Throwable().getStackTrace)
-        throw ns
+    case ClientException(e) =>
+      e match {
+        case ns: NoStacktrace => {
+          ns.setStackTrace(new Throwable().getStackTrace)
+          throw ns
+        }
+        case s => throw s.fillInStackTrace
       }
-      case s => throw s.fillInStackTrace
-    }
   }
 
   protected val finishOpt: ClientResponseOrException => Option[Response] = _ match {
@@ -566,7 +566,7 @@ case class FHttpRequest(
   protected def prepPost(data: Array[Byte]) = {
     // If there is no data, but params,
     // then the params are the data
-    if(data.length == 0 && hasParams) {
+    if (data.length == 0 && hasParams) {
       val qDec = new QueryStringDecoder(uri)
       FHttpRequest(client, qDec.getPath, traceName, service, options)
         .contentType(FHttpRequest.PARAM_TYPE)
@@ -577,24 +577,21 @@ case class FHttpRequest(
   }
 
   protected def toPart(part: MultiPart) = {
-    new FilePart(part.name,
-      new ByteArrayPartSource(part.filename, part.data),
-      part.mime,
-      FHttpRequest.UTF_8.name)
+    new FilePart(part.name, new ByteArrayPartSource(part.filename, part.data), part.mime, FHttpRequest.UTF_8.name)
   }
 
   protected def prepMultipart(parts: List[Part]): FHttpRequest = {
-    if(hasParams) {
+    if (hasParams) {
       val qDec = new QueryStringDecoder(uri)
       return FHttpRequest(client, qDec.getPath, traceName, service, options)
-        .prepMultipart(paramList.map(p =>
-           new StringPart(p._1, p._2, FHttpRequest.UTF_8.name)) ::: parts)
+        .prepMultipart(paramList.map(p => new StringPart(p._1, p._2, FHttpRequest.UTF_8.name)) ::: parts)
     }
     val mpr = new MultipartRequestEntity(parts.toArray, FHttpRequest.MULTIPART_PARAMS)
     val request = RequestBuilder()
-    val os = new ChannelBufferOutputStream( new DefaultChannelConfig()
-                                            .getBufferFactory
-                                            .getBuffer(mpr.getContentLength.toInt))
+    val os = new ChannelBufferOutputStream(
+      new DefaultChannelConfig().getBufferFactory
+        .getBuffer(mpr.getContentLength.toInt)
+    )
     mpr.writeRequest(os)
     prepData(os.buffer.toByteBuffer.array)
       .contentType("multipart/form-data; boundary=" + FHttpRequest.BOUNDARY)
@@ -624,7 +621,8 @@ case class HttpStatusException(
   code: Int,
   reason: String,
   response: Response
-) extends RuntimeException with DeferredStackTrace {
+) extends RuntimeException
+  with DeferredStackTrace {
   var clientId = ""
   def addName(name: String) = {
     clientId = " in " + name
@@ -638,11 +636,9 @@ case class HttpStatusException(
   }
 }
 
-
 abstract class ClientResponseOrException
 case class ClientResponse[T](response: T) extends ClientResponseOrException
 case class ClientException(exception: Throwable) extends ClientResponseOrException
-
 
 object MultiPart {
   def apply(name: String, filename: String, mime: String, data: String): MultiPart = {

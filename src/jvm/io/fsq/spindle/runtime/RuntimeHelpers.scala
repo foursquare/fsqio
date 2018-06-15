@@ -10,241 +10,241 @@ object RuntimeHelpers {
   // ForeignKeyField and ForeignKeySeqField can be unified some.
   trait ForeignKeyHooks {
     def missingKey[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _]
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _]
     ): Option[FR]
 
     def missingKeySeq[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeySeqFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _]
+      record: R,
+      field: ForeignKeySeqFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _]
     ): Seq[FR]
 
     def missingObj[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: F
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: F
     ): Option[FR]
 
     def missingObjSeq[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeySeqFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: Seq[F]
+      record: R,
+      field: ForeignKeySeqFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: Seq[F]
     ): Seq[FR]
 
     def missingAlternateObj[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        fieldValue: Option[F]
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      fieldValue: Option[F]
     ): Option[AnyRef]
 
     def missingAlternateObjSeq[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M]
     ](
-        record: R,
-        field: ForeignKeySeqFieldDescriptor[F, R, M],
-        fieldValue: Seq[F]
+      record: R,
+      field: ForeignKeySeqFieldDescriptor[F, R, M],
+      fieldValue: Seq[F]
     ): Seq[AnyRef]
 
     def mismatchedInstanceType[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: F,
-        obj: AnyRef
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: F,
+      obj: AnyRef
     ): Option[FR]
 
     def mismatchedInstanceTypeSeq[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeySeqFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: Seq[F],
-        obj: Seq[AnyRef]
+      record: R,
+      field: ForeignKeySeqFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: Seq[F],
+      obj: Seq[AnyRef]
     ): Option[FR]
 
     def mismatchedPrimaryKey[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: F,
-        foreignRecord: FR
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: F,
+      foreignRecord: FR
     ): Option[FR]
 
     def mismatchedPrimaryKeySeq[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeySeqFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: Seq[F],
-        foreignRecord: FR
+      record: R,
+      field: ForeignKeySeqFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: Seq[F],
+      foreignRecord: FR
     ): Option[FR]
   }
 
   class DefaultForeignKeyHooks extends ForeignKeyHooks {
     override def missingKey[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _]
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _]
     ): Option[FR] = None
 
     override def missingKeySeq[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeySeqFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _]
+      record: R,
+      field: ForeignKeySeqFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _]
     ): Seq[FR] = Vector.empty
 
     override def missingObj[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: F
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: F
     ): Option[FR] = None
 
     override def missingObjSeq[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeySeqFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: Seq[F]
+      record: R,
+      field: ForeignKeySeqFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: Seq[F]
     ): Seq[FR] = Vector.empty
 
     override def missingAlternateObj[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        fieldValue: Option[F]
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      fieldValue: Option[F]
     ): Option[AnyRef] = None
 
     override def missingAlternateObjSeq[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M]
     ](
-        record: R,
-        field: ForeignKeySeqFieldDescriptor[F, R, M],
-        fieldValue: Seq[F]
+      record: R,
+      field: ForeignKeySeqFieldDescriptor[F, R, M],
+      fieldValue: Seq[F]
     ): Seq[AnyRef] = Vector.empty
 
     override def mismatchedInstanceType[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: F,
-        obj: AnyRef
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: F,
+      obj: AnyRef
     ): Option[FR] = None
 
     override def mismatchedInstanceTypeSeq[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeySeqFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: Seq[F],
-        obj: Seq[AnyRef]
+      record: R,
+      field: ForeignKeySeqFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: Seq[F],
+      obj: Seq[AnyRef]
     ): Option[FR] = None
 
     override def mismatchedPrimaryKey[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeyFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: F,
-        foreignRecord: FR
+      record: R,
+      field: ForeignKeyFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: F,
+      foreignRecord: FR
     ): Option[FR] = None
 
     override def mismatchedPrimaryKeySeq[
-        F,
-        R <: Record[R],
-        M <: MetaRecord[R, M],
-        FR <: Record[FR] with HasPrimaryKey[F, FR]
+      F,
+      R <: Record[R],
+      M <: MetaRecord[R, M],
+      FR <: Record[FR] with HasPrimaryKey[F, FR]
     ](
-        record: R,
-        field: ForeignKeySeqFieldDescriptor[F, R, M],
-        foreignMeta: MetaRecord[FR, _],
-        fieldValue: Seq[F],
-        foreignRecord: FR
+      record: R,
+      field: ForeignKeySeqFieldDescriptor[F, R, M],
+      foreignMeta: MetaRecord[FR, _],
+      fieldValue: Seq[F],
+      foreignRecord: FR
     ): Option[FR] = None
   }
 

@@ -11,9 +11,9 @@ import scala.util.Random
 
 class S2CoverBenchmark extends SimpleBenchmark {
   val rand = new Random(7)
-  val points = (1 to 1000).map(_ => new Coordinate((rand.nextDouble*360) - 180, (rand.nextDouble*360) - 180))
+  val points = (1 to 1000).map(_ => new Coordinate((rand.nextDouble * 360) - 180, (rand.nextDouble * 360) - 180))
 
-/*
+  /*
   for use in console:
 
   import com.vividsolutions.jts.geom.Coordinate
@@ -34,7 +34,7 @@ class S2CoverBenchmark extends SimpleBenchmark {
       Some(levelMod) //Some(store.getLevelMod)
     ).map(_.id())
   })
-  */
+   */
 
   def geocode(radius: Int): Unit = {
     val sizeDegrees = radius / 111319.9 // req.radius / ...
@@ -45,15 +45,16 @@ class S2CoverBenchmark extends SimpleBenchmark {
       gsf.setNumPoints(100)
       gsf.setCentre(c) //new Coordinate(40.74, -74.0))//req.ll.lng, req.ll.lat))
       val geom = gsf.createCircle()
-      GeometryUtils.coverAtAllLevels(
-        geom,
-        8, //store.getMinS2Level,
-        12, //store.getMaxS2Level,
-        Some(2) //Some(store.getLevelMod)
-      ).map(_.id())
-     })
+      GeometryUtils
+        .coverAtAllLevels(
+          geom,
+          8, //store.getMinS2Level,
+          12, //store.getMaxS2Level,
+          Some(2) //Some(store.getLevelMod)
+        )
+        .map(_.id())
+    })
   }
-
 
   def helpTime[T](f: () => T)(reps: Int): Int = {
     var i = 0
@@ -61,16 +62,16 @@ class S2CoverBenchmark extends SimpleBenchmark {
     while (i < reps) {
       i += 1
       f()
-      sum += i*i
+      sum += i * i
     }
     sum
   }
 
   def time100(reps: Int): Unit = helpTime(() => geocode(100))(reps)
   def time1k(reps: Int): Unit = helpTime(() => geocode(1000))(reps)
-  def time2k(reps: Int): Unit = helpTime(() => geocode(2*1000))(reps)
-  def time5k(reps: Int): Unit = helpTime(() => geocode(5*1000))(reps)
-  def time10k(reps: Int): Unit = helpTime(() => geocode(10*1000))(reps)
+  def time2k(reps: Int): Unit = helpTime(() => geocode(2 * 1000))(reps)
+  def time5k(reps: Int): Unit = helpTime(() => geocode(5 * 1000))(reps)
+  def time10k(reps: Int): Unit = helpTime(() => geocode(10 * 1000))(reps)
 }
 
 /** To run this benchmark:

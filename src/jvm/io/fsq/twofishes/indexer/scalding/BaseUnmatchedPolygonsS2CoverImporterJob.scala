@@ -62,10 +62,15 @@ class BaseUnmatchedPolygonsS2CoverImporterJob(
       .result
     val matchingKey = PolygonMatchingKey(s2CellId, woeType)
     (new PolygonMatchingKeyWritable(matchingKey) -> matchingValue)
-  }).group
-    .toList
-    .mapValues({matchingValues: List[PolygonMatchingValue] => {
-      PolygonMatchingValues(matchingValues)
-    }})
-    .write(TypedSink[(PolygonMatchingKeyWritable, PolygonMatchingValues)](SpindleSequenceFileSource[PolygonMatchingKeyWritable, PolygonMatchingValues](outputPath)))
+  }).group.toList
+    .mapValues({ matchingValues: List[PolygonMatchingValue] =>
+      {
+        PolygonMatchingValues(matchingValues)
+      }
+    })
+    .write(
+      TypedSink[(PolygonMatchingKeyWritable, PolygonMatchingValues)](
+        SpindleSequenceFileSource[PolygonMatchingKeyWritable, PolygonMatchingValues](outputPath)
+      )
+    )
 }

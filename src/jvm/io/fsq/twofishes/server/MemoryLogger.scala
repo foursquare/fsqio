@@ -27,7 +27,7 @@ class MemoryLogger(req: CommonGeocodeRequestParams) extends TwofishesLogger {
     if (va.isEmpty) {
       ifLevelDebug(1, "%s", formatSpecifier)
     } else {
-      ifLevelDebug(1, formatSpecifier, va:_*)
+      ifLevelDebug(1, formatSpecifier, va: _*)
     }
   }
 
@@ -36,7 +36,7 @@ class MemoryLogger(req: CommonGeocodeRequestParams) extends TwofishesLogger {
       val finalString = if (va.isEmpty) {
         formatSpecifier
       } else {
-        formatSpecifier.format(va:_*)
+        formatSpecifier.format(va: _*)
       }
       lines.append("%d: %s".format(timeSinceStart, finalString))
     }
