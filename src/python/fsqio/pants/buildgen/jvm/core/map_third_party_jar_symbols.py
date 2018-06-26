@@ -73,7 +73,7 @@ class MapThirdPartyJarSymbols(Task):
     # TODO(mateo): Should convert to context.util.open_zip which, it turns out, is pretty damn similar to this method.
     try:
       with closing(ZipFile(jar_abspath)) as dep_zip:
-        return dep_zip.namelist()
+        return dep_zip.namelist()  # pylint: disable=no-member
     except BadZipfile as e:
       raise TaskError(
         "Could not unzip jar file: {}\nYou may have a corrupted file. Delete it and try again: {}"
