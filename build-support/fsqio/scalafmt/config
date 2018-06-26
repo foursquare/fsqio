@@ -21,7 +21,7 @@ spaces.afterTripleEquals = true
 spaces.inImportCurlyBraces = false
 newlines.alwaysBeforeMultilineDef = false
 newlines.penalizeSingleSelectMultiArgList = true
-rewrite.rules = [sortimports, prefercurlyfors]
+rewrite.rules = [prefercurlyfors]
 # Only format files tracked by git.
 project.git = true
 # manually exclude files to format.
