@@ -17,4 +17,5 @@ requests_futures>=0.9.4,<0.10
 setuptools==30.0.0
 six==1.10.0
 twitter.common.collections==0.3.9
+typing==3.6.1
 unittest2>=0.6.0,<=1.9.0
