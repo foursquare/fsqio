@@ -12,3 +12,9 @@ scala_record_library(
     'dependencies_must_have:opensource',
   ],
 )
+
+# Required to bring the thrift files into an integration test's chroot.
+files(
+  name = 'files',
+  sources = globs('*thrift'),
+)
