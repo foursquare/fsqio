@@ -7,6 +7,7 @@ from __future__ import (
   generators,
   nested_scopes,
   print_function,
+  unicode_literals,
   with_statement,
 )
 
@@ -21,7 +22,7 @@ from pants.base.build_environment import get_buildroot
 from pants.base.exceptions import TaskError
 from pants.base.workunit import WorkUnit, WorkUnitLabel
 from pants.task.task import Task
-from typing import List, Set
+from typing import List, Set, Text
 
 
 class MypyTask(Task):
@@ -69,14 +70,14 @@ class MypyTask(Task):
   def _assert_mypy_and_python3_installed_locally(self):
     # type: () -> None
     def program_exists_on_path(program_name):  # see https://github.com/pydanny/whichcraft/blob/master/whichcraft.py
-      # type: (str) -> bool
-      path = os.environ.get("PATH", os.defpath)
+      # type: (Text) -> bool
+      path = os.environ.get("PATH", os.defpath)  # type: ignore
       path_list = path.split(os.pathsep)
       return any(os.path.exists(os.path.join(path_dir, program_name))
                  for path_dir in path_list)
 
     def raise_not_installed_error(program_name, install_command):
-      # type: (str, str) -> None
+      # type: (Text, Text) -> None
       raise TaskError(dedent('''
         {0} not found on local path. Install with `{1}`.\n
         (Note this is a temporary solution - Pants will soon automatically install this for you.)
