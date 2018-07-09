@@ -219,6 +219,8 @@ jvm_third_party_map = {
       'finagle': {
         'httpx': {
           'HttpToHttpxAdaptor': None,
+          'HttpxRequestProxy': None,
+          'HttpxResponseProxy': None,
           'DEFAULT': 'finagle',
         },
         'memcached': {
