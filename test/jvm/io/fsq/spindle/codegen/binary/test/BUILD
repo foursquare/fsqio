@@ -6,6 +6,8 @@ junit_tests(
   dependencies = [
     '3rdparty:junit',
     'src/jvm/io/fsq/spindle/codegen:binary',
+    'src/resources/io/fsq/ssp/codegen/javagen:files',
+    'src/resources/io/fsq/ssp/codegen/scala:files',
     'test/jvm/io/fsq/spindle/codegen/binary/test/gen:files',
     'test/thrift/io/fsq/spindle/codegen/parser/test',
   ],

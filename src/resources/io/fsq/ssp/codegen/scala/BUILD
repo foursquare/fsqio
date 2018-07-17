@@ -12,3 +12,8 @@ ssp_template(
     'src/resources/io/fsq/ssp/codegen/javagen',
   ]
 )
+
+files(
+  name = 'files',
+  sources = rglobs('*.ssp'),
+)

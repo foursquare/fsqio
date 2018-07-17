@@ -8,3 +8,8 @@ ssp_template(
     'src/resources/io/fsq/ssp/codegen/javagen/field',
   ]
 )
+
+files(
+  name = 'files',
+  sources = rglobs('*.ssp'),
+)
