@@ -1,15 +1,7 @@
 # coding=utf-8
 # Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
 
-from __future__ import (
-  absolute_import,
-  division,
-  generators,
-  nested_scopes,
-  print_function,
-  unicode_literals,
-  with_statement,
-)
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from pants.backend.python.tasks2.pex_build_util import has_python_requirements
 from pants.backend.python.tasks2.resolve_requirements_task_base import ResolveRequirementsTaskBase

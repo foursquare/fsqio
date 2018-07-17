@@ -1,15 +1,7 @@
 # coding=utf-8
 # Copyright 2014 Foursquare Labs Inc. All Rights Reserved.
 
-from __future__ import (
-  absolute_import,
-  division,
-  generators,
-  nested_scopes,
-  print_function,
-  unicode_literals,
-  with_statement,
-)
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from collections import defaultdict
 from hashlib import sha1
