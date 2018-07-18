@@ -1,7 +1,7 @@
 # coding=utf-8
 # Copyright 2016 Foursquare Labs Inc. All Rights Reserved.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 
 def merge_map(a, b):
