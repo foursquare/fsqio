@@ -17,4 +17,5 @@ scala_record_library(
 files(
   name = 'files',
   sources = globs('*thrift'),
+  scope="runtime",
 )

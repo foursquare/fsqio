@@ -9,5 +9,6 @@ files(
     'src/thrift/io/fsq/common/thrift/descriptors/services/gen:files',
     'src/thrift/io/fsq/common/thrift/descriptors/structs/gen:files',
     'src/thrift/io/fsq/common/thrift/descriptors/types/gen:files',
-  ]
+  ],
+  scope="runtime",
 )

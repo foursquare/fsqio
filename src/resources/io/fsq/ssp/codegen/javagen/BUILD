@@ -12,4 +12,5 @@ ssp_template(
 files(
   name = 'files',
   sources = rglobs('*.ssp'),
+  scope="runtime",
 )
