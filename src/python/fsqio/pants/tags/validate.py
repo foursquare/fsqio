@@ -23,7 +23,7 @@ class NameTagsAndDepFingerprintStrategy(FingerprintStrategy):
     return 1
 
   def __eq__(self, other):
-    return type(other) == type(self)
+    return isinstance(other, type(self))
 
 
 class Tagger(Task):
