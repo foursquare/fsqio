@@ -189,7 +189,7 @@ class RpmbuildTask(Task):
     entrypoint_path = os.path.join(build_dir, 'build_rpm.sh')
     with open(entrypoint_path, 'wb') as f:
       f.write(entrypoint_generator.render())
-    os.chmod(entrypoint_path, 0555)
+    os.chmod(entrypoint_path, 0o555)
 
     # Copy globally-configured files into build directory.
     for context_file_path_template in self.get_options().docker_build_context_files:

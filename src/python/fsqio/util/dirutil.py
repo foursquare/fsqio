@@ -28,7 +28,7 @@ def safe_mkdir(directory, clean=False):
 
 # NOTE(mateo):
 # safe_deep_mkdir and makedirs_with_mode are not proven safe for Pants plugins and are POC from an Fsqio standpoint.
-def safe_deep_mkdir(directory, clean=False, mode=0777):
+def safe_deep_mkdir(directory, clean=False, mode=0o777):
   """Ensure a directory is present recursively, with permission bits set.
 
   If it's not there, create it.  If it is, no-op. If clean is True, ensure the dir is empty."""
@@ -41,7 +41,7 @@ def safe_deep_mkdir(directory, clean=False, mode=0777):
       raise
 
 
-def makedirs_with_mode(name, mode=0777):
+def makedirs_with_mode(name, mode=0o777):
   """makedirs_with_mode(path [, mode=0777])
 
   Super-mkdir; create a leaf directory and all intermediate ones.
