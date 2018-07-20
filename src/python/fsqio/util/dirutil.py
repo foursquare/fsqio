@@ -57,7 +57,7 @@ def makedirs_with_mode(name, mode=0o777):
   if head and tail and not os.path.exists(head):
     try:
       makedirs_with_mode(head, mode)
-    except OSError, e:
+    except OSError as e:
       # be happy if someone already created the path
       if e.errno != errno.EEXIST:
         raise
