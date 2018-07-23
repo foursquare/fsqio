@@ -1,7 +1,7 @@
 # coding=utf-8
 # Copyright 2014 Foursquare Labs Inc. All Rights Reserved.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 from pants.goal.task_registrar import TaskRegistrar as task
 from pants.task.task import Task

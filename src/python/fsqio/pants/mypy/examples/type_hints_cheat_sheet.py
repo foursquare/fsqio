@@ -8,7 +8,7 @@ See https://docs.python.org/3/library/typing.html and http://mypy.readthedocs.io
 for more extensive documentation.
 """
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 from typing import Any, Callable, Dict, FrozenSet, List, Optional, Set, Text, Tuple, Union
 
