@@ -245,8 +245,13 @@ class IvyGlobalResolve(GlobalClasspathTaskMixin, IvyResolve):
     out_file = os.path.join(self.resolution_report_outdir, partition_name + '.json')
     try:
       with open(frozen_resolve_file) as fp:
-        # Order of jars in the json matches transitive dep, so preserve in case we need the signal some day.
+        # We are alphabetizing the 3rdparty names and their resolved coordinateds to get a stable diff in the SCM.
         parsed = json.load(fp, object_pairs_hook=OrderedDict)
+
+        for target, coords in parsed['default']['target_to_coords'].items():
+          parsed['default']['target_to_coords'][target] = sorted(coords)
+        parsed = OrderedDict(sorted(parsed['default']['target_to_coords'].items()))
+
         with safe_concurrent_creation(out_file) as tmp_filename:
           with open(tmp_filename, 'wb') as f:
             json.dump(parsed, f, indent=4)
