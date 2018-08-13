@@ -2,12 +2,12 @@
 
 package io.fsq.rogue.lift.test
 
+import com.mongodb.{DB, DBCollection}
 import io.fsq.rogue.{LatLong, ShardKey, Sharded}
+import io.fsq.rogue.connection.{BlockingMongoClientManager, DefaultMongoIdentifier}
 import io.fsq.rogue.index.{Asc, Desc, IndexModifier, IndexedRecord, TwoD}
 import io.fsq.rogue.lift.{HasMongoForeignObjectId, ObjectIdKey}
 import io.fsq.rogue.lift.LiftRogue._
-import io.fsq.rogue.test.TrivialORM
-import net.liftweb.mongodb.MongoDB
 import net.liftweb.mongodb.record._
 import net.liftweb.mongodb.record.field._
 import net.liftweb.record._
@@ -19,11 +19,26 @@ import org.bson.types.ObjectId
 // Sample records for testing
 /////////////////////////////////////////////////
 
-object RogueTestMongo extends ConnectionIdentifier {
-  override def jndiName = "rogue_mongo"
+object RogueTestMongoIdentifier extends DefaultMongoIdentifier("rogue_mongo") with ConnectionIdentifier {
+  override def jndiName = name
+}
 
-  def connectToMongo(): Unit = {
-    MongoDB.defineDb(RogueTestMongo, TrivialORM.mongoClient, "rogue-test")
+object RogueLiftTestMetaRecord {
+  var clientManager: BlockingMongoClientManager = null
+}
+
+trait RogueLiftTestMetaRecord[Record <: MongoRecord[Record]] extends MongoMetaRecord[Record] {
+  self: Record =>
+
+  override def useColl[T](f: DBCollection => T): T = {
+    useDb(db => f(db.getCollection(collectionName)))
+  }
+
+  override def useDb[T](f: DB => T): T = {
+    val (client, dbName) = RogueLiftTestMetaRecord.clientManager.getClientOrThrow(
+      RogueTestMongoIdentifier
+    )
+    f(new DB(client, dbName))
   }
 }
 
@@ -49,9 +64,9 @@ class Venue extends MongoRecord[Venue] with ObjectIdKey[Venue] with IndexedRecor
   object claims extends BsonRecordListField(this, VenueClaimBson)
   object lastClaim extends BsonRecordField(this, VenueClaimBson)
 }
-object Venue extends Venue with MongoMetaRecord[Venue] {
+object Venue extends Venue with RogueLiftTestMetaRecord[Venue] {
   override def collectionName = "venues"
-  override def connectionIdentifier = RogueTestMongo
+  override def connectionIdentifier = RogueTestMongoIdentifier
 
   object CustomIndex extends IndexModifier("custom")
   val idIdx = Venue.index(_._id, Asc)
@@ -88,10 +103,10 @@ class VenueClaim extends MongoRecord[VenueClaim] with ObjectIdKey[VenueClaim] wi
   object reason extends EnumField(this, RejectReason)
   object date extends DateField(this)
 }
-object VenueClaim extends VenueClaim with MongoMetaRecord[VenueClaim] {
+object VenueClaim extends VenueClaim with RogueLiftTestMetaRecord[VenueClaim] {
   override def fieldOrder = List(status, _id, userid, venueid, reason)
   override def collectionName = "venueclaims"
-  override def connectionIdentifier = RogueTestMongo
+  override def connectionIdentifier = RogueTestMongoIdentifier
 }
 
 class VenueClaimBson extends BsonRecord[VenueClaimBson] {
@@ -119,9 +134,9 @@ class Comment extends MongoRecord[Comment] with ObjectIdKey[Comment] {
   def meta = Comment
   object comments extends MongoCaseClassListField[Comment, OneComment](this)
 }
-object Comment extends Comment with MongoMetaRecord[Comment] {
+object Comment extends Comment with RogueLiftTestMetaRecord[Comment] {
   override def collectionName = "comments"
-  override def connectionIdentifier = RogueTestMongo
+  override def connectionIdentifier = RogueTestMongoIdentifier
 
   val idx1 = Comment.index(_._id, Asc)
 }
@@ -132,9 +147,9 @@ class Tip extends MongoRecord[Tip] with ObjectIdKey[Tip] {
   object counts extends MongoMapField[Tip, Long](this)
   object userid extends LongField(this)
 }
-object Tip extends Tip with MongoMetaRecord[Tip] {
+object Tip extends Tip with RogueLiftTestMetaRecord[Tip] {
   override def collectionName = "tips"
-  override def connectionIdentifier = RogueTestMongo
+  override def connectionIdentifier = RogueTestMongoIdentifier
 }
 
 class Like extends MongoRecord[Like] with ObjectIdKey[Like] with Sharded {
@@ -143,9 +158,9 @@ class Like extends MongoRecord[Like] with ObjectIdKey[Like] with Sharded {
   object checkin extends LongField(this)
   object tip extends ObjectIdField(this)
 }
-object Like extends Like with MongoMetaRecord[Like] {
+object Like extends Like with RogueLiftTestMetaRecord[Like] {
   override def collectionName = "likes"
-  override def connectionIdentifier = RogueTestMongo
+  override def connectionIdentifier = RogueTestMongoIdentifier
 }
 
 object ConsumerPrivilege extends Enumeration {
@@ -156,9 +171,9 @@ class OAuthConsumer extends MongoRecord[OAuthConsumer] with ObjectIdKey[OAuthCon
   def meta = OAuthConsumer
   object privileges extends MongoListField[OAuthConsumer, ConsumerPrivilege.Value](this)
 }
-object OAuthConsumer extends OAuthConsumer with MongoMetaRecord[OAuthConsumer] {
+object OAuthConsumer extends OAuthConsumer with RogueLiftTestMetaRecord[OAuthConsumer] {
   override def collectionName = "oauthconsumers"
-  override def connectionIdentifier = RogueTestMongo
+  override def connectionIdentifier = RogueTestMongoIdentifier
 }
 
 // Used for selectCase tests.
@@ -175,8 +190,8 @@ class CalendarFld private () extends MongoRecord[CalendarFld] with ObjectIdPk[Ca
   object inner extends BsonRecordField(this, CalendarInner)
 }
 
-object CalendarFld extends CalendarFld with MongoMetaRecord[CalendarFld] {
-  override def connectionIdentifier = RogueTestMongo
+object CalendarFld extends CalendarFld with RogueLiftTestMetaRecord[CalendarFld] {
+  override def connectionIdentifier = RogueTestMongoIdentifier
 }
 
 class CalendarInner private () extends BsonRecord[CalendarInner] {

@@ -2,6 +2,8 @@
 
 package io.fsq.rogue.lift
 
+import com.mongodb.BasicDBObject
+import com.mongodb.client.MongoCollection
 import io.fsq.field.{Field => RField, OptionalField => ROptionalField}
 import io.fsq.rogue.{
   BSONType,
@@ -50,7 +52,9 @@ import io.fsq.rogue.{
   Unskipped
 }
 import io.fsq.rogue.MongoHelpers.AndCondition
+import io.fsq.rogue.adapter.BlockingResult
 import io.fsq.rogue.index.MongoIndex
+import io.fsq.rogue.query.QueryExecutor
 import java.util.Date
 import net.liftweb.common.Box.box2Option
 import net.liftweb.json.JsonAST.{JArray, JInt}
@@ -98,7 +102,7 @@ trait LiftRogue {
     (implicit ev: ShardingOk[M with MongoMetaRecord[_], State]): ExecutableQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], R, State] = {
     ExecutableQuery(
         query.asInstanceOf[Query[M with MongoMetaRecord[_], R, State]],
-        LiftRogue.config
+        LiftRogue.executor
     )
   }
 
@@ -107,7 +111,7 @@ trait LiftRogue {
   ): ExecutableModifyQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], State] = {
     ExecutableModifyQuery(
         query.asInstanceOf[ModifyQuery[M with MongoMetaRecord[_], State]],
-        LiftRogue.config
+        LiftRogue.executor
     )
   }
 
@@ -116,7 +120,7 @@ trait LiftRogue {
   ): ExecutableFindAndModifyQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], R] = {
     ExecutableFindAndModifyQuery(
         query.asInstanceOf[FindAndModifyQuery[M with MongoMetaRecord[_], R]],
-        LiftRogue.config
+        LiftRogue.executor
     )
   }
 
@@ -318,11 +322,14 @@ trait LiftRogue {
 }
 
 object LiftRogue extends Rogue with LiftRogue {
-  val defaultConfig = ExecutableQueryConfig(
-    legacyQueryExecutor = LiftQueryExecutor,
-    newQueryExecutor = null,
-    useNewQueryExecutor = () => false
-  )
+  type Executor = QueryExecutor[
+    MongoCollection,
+    Object,
+    BasicDBObject,
+    MongoRecord[_] with MongoMetaRecord[_],
+    MongoRecord[_],
+    BlockingResult
+  ]
 
-  var config = defaultConfig
+  var executor: Executor = null
 }

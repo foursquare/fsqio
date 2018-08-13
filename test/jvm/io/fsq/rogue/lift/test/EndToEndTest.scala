@@ -2,11 +2,17 @@
 
 package io.fsq.rogue.lift.test
 
-import com.mongodb.ReadPreference
-import io.fsq.rogue.{Iter, LatLong}
+import com.mongodb.{ReadPreference, WriteConcern}
+import io.fsq.rogue.{Iter, LatLong, QueryOptimizer}
 import io.fsq.rogue.Iter._
+import io.fsq.rogue.adapter.{BlockingMongoClientAdapter, BlockingResult}
+import io.fsq.rogue.adapter.lift.LiftMongoCollectionFactory
+import io.fsq.rogue.connection.testlib.RogueMongoTest
 import io.fsq.rogue.lift.LiftRogue
 import io.fsq.rogue.lift.LiftRogue._
+import io.fsq.rogue.query.QueryExecutor
+import io.fsq.rogue.query.lift.LiftRogueSerializer
+import io.fsq.rogue.util.DefaultQueryUtilities
 import java.util.Calendar
 import java.util.regex.Pattern
 import org.bson.types.ObjectId
@@ -16,13 +22,13 @@ import org.specs2.matcher.JUnitMustMatchers
 /**
   * Contains tests that test the interaction of Rogue with a real mongo.
   */
-class EndToEndTest extends JUnitMustMatchers {
-  // HACK(jacob): These tests need to be ported to the new QueryExecutor, but in the
-  //    meantime they can fail when run alongside other tests which set a custom query
-  //    config in LiftRogue. The solution here is to run them serially (they were already
-  //    not thread safe) and simply record that global state in the test setup and reset
-  //    it after each run.
-  private var globalQueryConfig = LiftRogue.defaultConfig
+class EndToEndTest extends RogueMongoTest with JUnitMustMatchers with BlockingResult.Implicits {
+  // HACK(jacob): These tests should use the new QueryExecutor explicitly, but in the
+  //    meantime they can fail when run alongside other tests which set a custom executor
+  //    in LiftRogue. The solution here is to run them serially (they were already not
+  //    thread safe) and simply record that global state in the test setup and reset it
+  //    after each run.
+  private var globalQueryExecutor: LiftRogue.Executor = null
 
   def baseTestVenue(): Venue = {
     Venue.createRecord
@@ -59,24 +65,34 @@ class EndToEndTest extends JUnitMustMatchers {
       .counts(Map("foo" -> 1L, "bar" -> 2L))
   }
 
+  def newQueryExecutor: LiftRogue.Executor = {
+    val collectionFactory = new LiftMongoCollectionFactory(blockingClientManager)
+    val clientAdapter = new BlockingMongoClientAdapter(
+      collectionFactory,
+      new DefaultQueryUtilities[BlockingResult]
+    )
+    new QueryExecutor(clientAdapter, new QueryOptimizer, new LiftRogueSerializer) {
+      override def defaultWriteConcern: WriteConcern = WriteConcern.W1
+    }
+  }
+
   @Before
-  def setupMongoConnection(): Unit = {
-    globalQueryConfig = LiftRogue.config
-    LiftRogue.config = LiftRogue.defaultConfig
-    RogueTestMongo.connectToMongo()
+  override def initClientManagers(): Unit = {
+    globalQueryExecutor = LiftRogue.executor
+
+    blockingClientManager.defineDb(
+      RogueTestMongoIdentifier,
+      blockingMongoClient,
+      "rogue-lift-EndToEndTest"
+    )
+    RogueLiftTestMetaRecord.clientManager = blockingClientManager
+
+    LiftRogue.executor = newQueryExecutor
   }
 
   @After
-  def cleanupTestData(): Unit = {
-    Venue.bulkDelete_!!!
-    Venue.count must_== 0
-
-    VenueClaim.bulkDelete_!!!
-    VenueClaim.count must_== 0
-
-    Like.allShards.bulkDelete_!!!
-
-    LiftRogue.config = globalQueryConfig
+  def resetQueryExecutor(): Unit = {
+    LiftRogue.executor = globalQueryExecutor
   }
 
   @Test
