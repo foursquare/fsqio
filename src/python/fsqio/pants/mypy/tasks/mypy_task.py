@@ -10,9 +10,9 @@ from textwrap import dedent
 from pants.backend.python.targets.python_binary import PythonBinary
 from pants.backend.python.targets.python_library import PythonLibrary, PythonTarget
 from pants.backend.python.targets.python_tests import PythonTests
-from pants.base.build_environment import get_buildroot
 from pants.base.exceptions import TaskError
 from pants.base.workunit import WorkUnit, WorkUnitLabel
+from pants.option.custom_types import file_option
 from pants.task.task import Task
 from typing import List, Set, Text
 
@@ -31,8 +31,8 @@ class MypyTask(Task):
              help='Determines if Pants stops due to error.')
     register('--ignore-missing-imports', type=bool, default=True,
              help='Ignore missing type stubs if not found. Useful for mostly untyped code bases.')
-    register('--config-file', type=str, default='build-support/fsqio/mypy/mypy.ini',
-             help='Path to .ini file, relative to build root.')
+    register('--config-file', type=file_option, fingerprint=True,
+             help='Path to MyPy config (in ini format).')
 
   @classmethod
   def supports_passthru_args(cls):
@@ -76,6 +76,7 @@ class MypyTask(Task):
         '''.format(program_name, install_command)))
 
     py3_interpreter = self.get_options().py3_path
+
     if not program_exists_on_path(py3_interpreter):
       raise_not_installed_error('python3', 'brew install python3')
     if not program_exists_on_path('mypy'):
@@ -83,9 +84,10 @@ class MypyTask(Task):
 
   def execute(self):
     # type: () -> None
-    self._assert_mypy_and_python3_installed_locally()
 
     py3_interpreter = self.get_options().py3_path
+    if not os.path.isfile(py3_interpreter):
+      self._assert_mypy_and_python3_installed_locally()
 
     sources = self._calculate_python_sources(self.context.target_roots)
     if not sources:
@@ -94,8 +96,11 @@ class MypyTask(Task):
 
     mypy_options = [
       '--py2',  # run in Python2 mode
-      '--config-file={}'.format(os.path.join(get_buildroot(), self.get_options().config_file))
     ]
+
+    if self.get_options().config_file:
+      mypy_options.append('--config-file={}'.format(self.get_options().config_file))
+
     if self.get_options().ignore_missing_imports:
       mypy_options.append('--ignore-missing-imports')
 
