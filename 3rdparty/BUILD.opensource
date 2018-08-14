@@ -923,17 +923,6 @@ jar_library(
 )
 
 jar_library(
-  name = 'scalacheck',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    scala_jar(org = 'org.scalacheck', name = 'scalacheck', rev = '1.10.1')
-  ]
-)
-
-jar_library(
   name = 'scalaj-time',
   tags = [
     'opensource',

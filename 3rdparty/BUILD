@@ -144,3 +144,14 @@ jar_library(
     jar(org = 'org.jnegre.google', name = 's2-geometry', rev = '1.0')
   ]
 )
+
+jar_library(
+  name = 'scalacheck',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'org.scalacheck', name = 'scalacheck', rev = '1.10.1')
+  ]
+)
