@@ -22,17 +22,5 @@ Licensed under the Apache License, Version 2.0 (see LICENSE).
     <dependency org="org.bouncycastle" name="bcpg-jdk14" rev="1.45"/>
     <dependency org="org.bouncycastle" name="bcprov-jdk14" rev="1.45"/>
 
-
-    <!-- Jar libraries that are globally banned because they conflict in weird ways -->
-    <exclude org="org.slf4j" module="slf4j-log4j12" />
-    <exclude org="org.slf4j" module="slf4j-jdk14" />
-    <exclude org="log4j" module="log4j" />
-    <exclude org="org.mongodb" module="mongo-java-driver" />
-    <exclude org="com.esotericsoftware" module="kryo" />
-    <exclude org="com.esotericsoftware" module="minlog" />
-    <exclude org="com.esotericsoftware" module="reflectasm" />
-    <exclude org="org.ow2.asm" module="*" />
-    <exclude org="org.apache.hadoop" module="hadoop-client" />
-    <exclude org="org.apache.hadoop" module="hadoop-core" />
   </dependencies>
 </ivy-module>
