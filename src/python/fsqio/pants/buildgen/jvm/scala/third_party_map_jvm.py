@@ -359,6 +359,7 @@ jvm_third_party_map = {
       'uadetector': 'uadetector'
     }
   },
+  'nak': 'nak',
   'nl': {
     'captcha': 'simplecaptcha',
   },
