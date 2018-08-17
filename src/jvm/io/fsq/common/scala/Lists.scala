@@ -13,6 +13,7 @@ import scala.collection.generic.{
 }
 import scala.collection.immutable.{Map, VectorBuilder}
 import scala.collection.mutable.{ArrayBuffer, ArraySeq, Builder, HashMap, Map => MutableMap, PriorityQueue}
+import scala.reflect.ClassTag
 import scala.util.Random
 
 object Arrays {
@@ -367,6 +368,21 @@ class FSTraversableOnce[T, CC[X] <: TraversableOnce[X]](val xs: CC[T]) extends A
 
     xs.foreach(x => {
       f(x).foreach(y => builder += y)
+    })
+
+    builder.result()
+  }
+
+  /** Applies `f` to each item in the collection and returns an Array
+    */
+  def toArrayBy[U: ClassTag](f: T => U): Array[U] = {
+    val builder = Array.newBuilder[U]
+    if (xs.isTraversableAgain && xs.hasDefiniteSize) {
+      builder.sizeHint(xs.size)
+    }
+
+    xs.foreach(x => {
+      builder += f(x)
     })
 
     builder.result()

@@ -5,6 +5,7 @@ scala_library(
   sources = globs('*.scala'),
   dependencies = [
     '3rdparty:bson',
+    '3rdparty:scala-reflect',
   ],
   provides = scala_artifact(
     org = 'io.fsq',
