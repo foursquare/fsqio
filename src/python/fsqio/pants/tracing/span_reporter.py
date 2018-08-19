@@ -45,7 +45,7 @@ class SpanReporter(Reporter, Subsystem):
     self.opts = self.GLOBAL_OPTIONS_INSTANCE.for_scope(self.options_scope)
 
   def close(self):
-    assert not self.workunit_to_span, "%s stack not clean at exit" % self.__class__.__name__
+    assert not self.workunit_to_span, "{} stack not clean at exit".format(self.__class__.__name__)
 
   @if_enabled
   def start_workunit(self, workunit):

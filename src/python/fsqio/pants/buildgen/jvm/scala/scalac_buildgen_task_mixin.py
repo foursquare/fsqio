@@ -130,7 +130,7 @@ class ScalacBuildgenTaskMixin(JvmToolTaskMixin):
       '-Dio.fsq.buildgen.plugin.used_symbol_emitter.whitelist={0}'.format(whitelist_path),
     ]
     scalac_args = [
-      '-Xplugin:%s' % plugin_jar,
+      '-Xplugin:{}'.format(plugin_jar),
       '-Ystop-after:emit-used-symbols',
     ] + sources
 

@@ -75,20 +75,20 @@ class TagValidationError(TaskError):
 
 class BannedTag(BuildGraphRuleViolation):
   def msg(self):
-    return '%s bans dependency on %s (via tag: %s)' % \
-      (self.target.address.spec, self.dep.address.spec, self.tag)
+    return '{} bans dependency on {} (via tag: {})'.format(
+      self.target.address.spec, self.dep.address.spec, self.tag)
 
 
 class MissingTag(BuildGraphRuleViolation):
   def msg(self):
-    return '%s requires dependencies to have tag %s and thus cannot depend on %s' \
-        % (self.target.address.spec, self.tag, self.dep.address.spec)
+    return '{} requires dependencies to have tag {} and thus cannot depend on {}'.format(
+      self.target.address.spec, self.tag, self.dep.address.spec)
 
 
 class PrivacyViolation(BuildGraphRuleViolation):
   def msg(self):
-    return '%s cannot depend on %s without having tag %s' \
-        % (self.target.address.spec, self.dep.address.spec, self.tag)
+    return '{} cannot depend on {} without having tag {}'.format(
+      self.target.address.spec, self.dep.address.spec, self.tag)
 
 
 class Validate(Task):

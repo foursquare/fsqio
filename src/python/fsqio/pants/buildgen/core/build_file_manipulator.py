@@ -233,7 +233,7 @@ class BuildFileManipulator(object):
     #   print("interval_index:", interval_index)
     #   start = target_call_intervals[interval_index]
     #   end = target_call_intervals[interval_index + 1]
-    #   print("interval: %s, %s" % (start, end))
+    #   print("interval: {}, {}".format(start, end))
     #   print("lines:")
     #   print('\n'.join(target_source_lines[start:end]))
     #   print('\n\n')
