@@ -388,6 +388,21 @@ class FSTraversableOnce[T, CC[X] <: TraversableOnce[X]](val xs: CC[T]) extends A
     builder.result()
   }
 
+  /** Applies `f` to each item in the collection and returns an Array
+    */
+  def flatToArrayBy[U: ClassTag](f: T => TraversableOnce[U]): Array[U] = {
+    val builder = Array.newBuilder[U]
+    if (xs.isTraversableAgain && xs.hasDefiniteSize) {
+      builder.sizeHint(xs.size)
+    }
+
+    xs.foreach(x => {
+      f(x).foreach(y => builder += y)
+    })
+
+    builder.result()
+  }
+
   /** Applies `f` to each item in the collection and returns a Set
     */
   def toSetBy[U](f: T => U): Set[U] = {
