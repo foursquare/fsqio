@@ -20,8 +20,7 @@ scala_library(
   ),
   tags = [
     'opensource',
-    'spindle_runtime'
-    'gobblin',
+    'spindle_runtime',
     'dependencies_must_have:opensource',
   ],
 )
