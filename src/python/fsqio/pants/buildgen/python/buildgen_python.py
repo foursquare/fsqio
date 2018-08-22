@@ -348,8 +348,8 @@ class BuildgenPython(BuildgenTask):
           addresses_used_by_target.add(Address.parse(dep))
 
     # Remove any imports from within the same module.
-    filtered_addresses_used_by_target = set([
+    filtered_addresses_used_by_target = {
       addr for addr in addresses_used_by_target
       if addr != target.address
-    ])
+    }
     self.adjust_target_build_file(target, filtered_addresses_used_by_target)

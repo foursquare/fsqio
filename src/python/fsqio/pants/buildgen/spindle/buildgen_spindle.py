@@ -25,7 +25,7 @@ class ThriftDependencyMapper(object):
     # TODO(pl): Get the source roots for thrift in a more
     # generic way.  Either look at the entire graph to get
     # them all, or query a proper SourceRoots API.
-    source_roots = set(['src/thrift', 'test/thrift'])
+    source_roots = {'src/thrift', 'test/thrift'}
     found_paths = set()
     for source_root in source_roots:
       potential_path = os.path.join(source_root, source)
@@ -101,7 +101,7 @@ class BuildgenSpindle(BuildgenScala):
     thrift_implicit_deps = set(
       self.context.options.for_scope('gen.spindle').runtime_dependency
     )
-    filtered_addresses = set(dep for dep in all_addresses if
-                             dep.spec not in thrift_implicit_deps and
-                             dep != spindle_target.address)
+    filtered_addresses = {dep for dep in all_addresses if
+                          dep.spec not in thrift_implicit_deps and
+                          dep != spindle_target.address}
     self.adjust_target_build_file(spindle_target, filtered_addresses)

@@ -96,7 +96,7 @@ class ScalacBuildgenTaskMixin(JvmToolTaskMixin):
           source = os.path.relpath(source_symbol_json['source'], get_buildroot())
           exported_symbols_by_source[source] = {
             'package': package,
-            'exported_symbols': list(set(exported_symbols) - set([package])),
+            'exported_symbols': list(set(exported_symbols) - {package}),
           }
 
     finally:

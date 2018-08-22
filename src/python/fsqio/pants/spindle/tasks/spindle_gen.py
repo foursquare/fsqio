@@ -205,7 +205,7 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
     # Allow for the chance that the java templating is disabled (e.g. for IDE stubs).
     if self.java_template:
       tool_args.extend(['--java_template', self.java_template])
-    bases = set(tgt.target_base for tgt in target.closure() if self.is_gentarget(tgt))
+    bases = {tgt.target_base for tgt in target.closure() if self.is_gentarget(tgt)}
     tool_args.extend(['--thrift_include', ':'.join(bases)])
     if self._annotations:
       tool_args.extend(['--write_annotations_json', 'true'])

@@ -67,7 +67,7 @@ class BuildgenTask(BuildgenBase):
       self.filtered_target_addresses(self._source_mapper.target_addresses_for_source(source))
       for source in source_dependencies
     ))
-    return set(addr for addr in included_addresses if addr != target.address)
+    return {addr for addr in included_addresses if addr != target.address}
 
   def adjust_target_build_file(self, target, computed_dep_addresses, whitelist=None):
     """Makes a BuildFileManipulator and adjusts the BUILD file to reflect the computed addresses"""

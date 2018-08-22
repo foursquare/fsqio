@@ -502,7 +502,7 @@ class PomResolve(Task):
       for address in self.context.address_mapper.scan_specs([DescendantAddresses('3rdparty')]):
         build_graph.inject_address_closure(address)
         third_party_libs.add(build_graph.get_target(address))
-      self._all_jar_libs = set(t for t in third_party_libs if isinstance(t, JarLibrary))
+      self._all_jar_libs = {t for t in third_party_libs if isinstance(t, JarLibrary)}
     return self._all_jar_libs
 
   @classmethod

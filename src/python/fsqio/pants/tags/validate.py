@@ -133,7 +133,7 @@ class Validate(Task):
         raise TagValidationError('The graph validation failed, please check the failures above.')
 
   def extract_matching_tags(self, prefix, target):
-    return set([tag.split(':', 1)[1] for tag in target.tags if tag.startswith(prefix)])
+    return {tag.split(':', 1)[1] for tag in target.tags if tag.startswith(prefix)}
 
   def nonexempt_deps(self, address):
     if address not in self._transitive_closure_cache:

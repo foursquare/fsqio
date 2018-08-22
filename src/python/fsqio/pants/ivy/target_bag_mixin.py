@@ -172,9 +172,9 @@ class TargetBagMixin(object):
     original_targets = build_graph.targets()
 
     # The address macros return OrderedSets, which is not considered here. I believe that to be fine but FYI.
-    buildroot = set([SiblingAddresses('')]) if options.get('include_buildroot') else set()
-    paths_checked = set(SiblingAddresses(t) for t in options.get('spec_paths'))
-    dirs_checked = set(DescendantAddresses(t) for t in options.get('spec_roots'))
+    buildroot = {SiblingAddresses('')} if options.get('include_buildroot') else set()
+    paths_checked = {SiblingAddresses(t) for t in options.get('spec_paths')}
+    dirs_checked = {DescendantAddresses(t) for t in options.get('spec_roots')}
     spec_sets = buildroot | paths_checked | dirs_checked
 
     all_found_addresses = address_mapper.scan_specs(spec_sets)
