@@ -5,22 +5,24 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import os
 import subprocess
-from textwrap import dedent
 
 from pants.backend.python.targets.python_binary import PythonBinary
 from pants.backend.python.targets.python_library import PythonLibrary, PythonTarget
 from pants.backend.python.targets.python_tests import PythonTests
+from pants.backend.python.tasks.python_task import PythonTask
 from pants.base.exceptions import TaskError
 from pants.base.workunit import WorkUnit, WorkUnitLabel
 from pants.option.custom_types import file_option
-from pants.task.task import Task
-from typing import List, Set, Text
+from typing import List, Set
 
 
-class MypyTask(Task):
-  """Invoke the mypy static type analyzer for Python."""
+class MypyTask(PythonTask):
+  """Invoke the MyPy static type analyzer for Python."""
 
   _PYTHON_SOURCE_EXTENSION = '.py'
+
+  def __init__(self, *args, **kwargs):
+    super(MypyTask, self).__init__(*args, **kwargs)
 
   @classmethod
   def register_options(cls, register):
@@ -37,9 +39,6 @@ class MypyTask(Task):
   @classmethod
   def supports_passthru_args(cls):
     return True
-
-  def __init__(self, *args, **kwargs):
-    super(MypyTask, self).__init__(*args, **kwargs)
 
   @staticmethod
   def is_non_synthetic_python_target(target):
@@ -58,44 +57,26 @@ class MypyTask(Task):
       )
     return list(sources)
 
-  # TODO(earellano): users shouldn't have to install Python3 and MyPy locally. This is a temporary solution
-  def _assert_mypy_and_python3_installed_locally(self):
-    # type: () -> None
-    def program_exists_on_path(program_name):  # see https://github.com/pydanny/whichcraft/blob/master/whichcraft.py
-      # type: (Text) -> bool
-      path = os.environ.get("PATH", os.defpath)  # type: ignore
-      path_list = path.split(os.pathsep)
-      return any(os.path.exists(os.path.join(path_dir, program_name))
-                 for path_dir in path_list)
-
-    def raise_not_installed_error(program_name, install_command):
-      # type: (Text, Text) -> None
-      raise TaskError(dedent('''
-        {0} not found on local path. Install with `{1}`.\n
-        (Note this is a temporary solution - Pants will soon automatically install this for you.)
-        '''.format(program_name, install_command)))
-
-    py3_interpreter = self.get_options().py3_path
-
-    if not program_exists_on_path(py3_interpreter):
-      raise_not_installed_error('python3', 'brew install python3')
-    if not program_exists_on_path('mypy'):
-      raise_not_installed_error('mypy', 'pip3 install mypy')
-
   def execute(self):
     # type: () -> None
 
     py3_interpreter = self.get_options().py3_path
     if not os.path.isfile(py3_interpreter):
-      self._assert_mypy_and_python3_installed_locally()
+      raise TaskError('Unable to find a Python 3.x interpreter (required for MyPy).')
 
     sources = self._calculate_python_sources(self.context.target_roots)
     if not sources:
       self.context.log.debug('No Python sources to check.')
       return
 
+    # Determine interpreter used by the sources so we can tell MyPy.
+    interpreter_for_targets = self._interpreter_cache.select_interpreter_for_targets(self.context.target_roots)
+    target_python_version = interpreter_for_targets.identity.python
+    if not interpreter_for_targets:
+      raise TaskError('No Python interpreter compatible with specified sources.')
+
     mypy_options = [
-      '--py2',  # run in Python2 mode
+      '--python-version={}'.format(target_python_version),
     ]
 
     if self.get_options().config_file:
