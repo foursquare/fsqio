@@ -39,6 +39,10 @@ case $CURRENT_UNAME in
       ;;
 esac
 
+export PANTS_JVM_TEST_JUNIT_OPTIONS="+[\
+  ' -Djava.util.logging.config.file=${BUILD_ROOT}/src/resources/io/fsq/props/logging.properties ' \
+]"
+
 # The script below runs the pants bootstrap task and exports PANTSBINARY. Basically a noop if the pants_version
 # hasn't changed. This could be hooked more properly into upkeep but we are waiting on the need to arise.
 source "${BUILD_ROOT}/build-support/fsqio/upkeep/scripts/opensource-pants-env.sh"
