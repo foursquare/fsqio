@@ -13,7 +13,7 @@ if [ -n "${FS_PANTS_NOOP}" ]; then
   # A noop flag for tests that cover seeding the environment since Pants exits nonzero when sourced.
   return
 elif [ -z "$PANTSBINARY" ]; then
-  exec .pvenvs/fs/bin/pants "$@"
+  .pvenvs/fs/bin/pants "$@"
 else
   export PYTHONPATH=src/python
   "$PANTSBINARY" "$@"

@@ -183,3 +183,10 @@ function exit_with_failure() {
   done
   exit 1
 }
+
+function exit_with_warning() {
+  for i in "$@"; do
+    colorized_warn "${i}\n"
+  done
+  exit 0
+}

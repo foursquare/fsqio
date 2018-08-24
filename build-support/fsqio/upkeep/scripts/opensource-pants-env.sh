@@ -21,7 +21,7 @@ VENV_PACKAGE="virtualenv-${VENV_VERSION}"
 VENV_TARBALL="${VENV_PACKAGE}.tar.gz"
 
 
-FOURSQUARE_REQUIREMENTS="${BUILD_ROOT}/3rdparty/python/requirements.txt"
+FOURSQUARE_REQUIREMENTS="${BUILD_ROOT}/3rdparty/python/requirements.txt.freeze"
 
 # The high-level flow:
 # 1.) Grab pants version from pants.ini or default to latest.

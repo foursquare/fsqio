@@ -8,6 +8,7 @@ pantsbuild.pants.contrib.go==1.4.0
 pantsbuild.pants.contrib.node==1.4.0
 pantsbuild.pants==1.4.0
 pantsbuild.pants.testinfra==1.4.0
+pex==1.2.16
 psycopg2==2.7
 pymongo==2.8
 py_zipkin==0.9.0
