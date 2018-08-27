@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 
 import argparse
+from builtins import input
 import colors
 
 
@@ -48,13 +49,13 @@ class _InteractiveModeAction(argparse.Action):
         (' ' if len(modifiers) > 0 else ''),  # Space if modifiers nonempty
         ' '.join(modifiers)
       ))
-      value = raw_input(prompt)
+      value = input(prompt)
       # Repeat while input is invalid.
       while (
         (value.strip() == '' and required) or
         (is_boolean and self._convert_to_boolean(value) is None)
       ):
-        value = raw_input(prompt)
+        value = input(prompt)
       if is_boolean:
         value = self._convert_to_boolean(value)
       elif not required:

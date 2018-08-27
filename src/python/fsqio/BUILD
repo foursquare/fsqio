@@ -5,5 +5,6 @@ python_library(
   sources = globs('*.py'),
   dependencies = [
     '3rdparty/python:ansicolors',
+    '3rdparty/python:future',
   ],
 )
