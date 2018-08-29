@@ -7,6 +7,7 @@ import contextlib
 import json
 import os
 
+from future.utils import viewitems
 from pants.base.exceptions import TaskError
 from pants.base.workunit import WorkUnitLabel
 from pants.contrib.node.subsystems.resolvers.npm_resolver import NpmResolver
@@ -55,7 +56,7 @@ class WebPackResolver(NpmResolver):
       if key in package:
         dependencies = package[key]
         filtered_dependencies = {
-          name: spec for (name, spec) in dependencies.iteritems()
+          name: spec for (name, spec) in viewitems(dependencies)
           if not spec.startswith('file:')
         }
         package[key] = filtered_dependencies
