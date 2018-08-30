@@ -35,7 +35,11 @@ for opt in $@; do
   case ${opt} in
     "--all" )
       DOWNSTREAM_TASKS="true"
-      upkeep_args=( "${upkeep_args[@]}" $(all_task_names) )
+      task_names=( $(all_task_names) )
+      if [[ ! $@ =~ "--clean" ]]; then
+        task_names=( "${task_names[@]/clean}" )
+      fi
+      upkeep_args=( "${upkeep_args[@]}" "${task_names[@]}" )
       ;;
     "--no-downstream" )
       DOWNSTREAM_TASKS="false"
