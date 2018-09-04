@@ -3,7 +3,7 @@
 package io.fsq.exceptionator.service
 
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{Request, Response}
+import com.twitter.finagle.httpx.{Method, Request, Response, Status, Version}
 import com.twitter.util.{Future, FuturePool}
 import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{HasBucketActions, HasHistoryActions, HasNoticeActions, HasUserFilterActions}
@@ -11,11 +11,9 @@ import io.fsq.exceptionator.model.io.{Outgoing, UserFilterView}
 import io.fsq.exceptionator.util.Config
 import java.net.URLDecoder
 import java.util.concurrent.Executors
-import org.jboss.netty.handler.codec.http._
 import org.joda.time.DateTime
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.jackson.Serialization
-import scala.collection.JavaConverters._
 
 object ApiHttpService {
   val Notices = """/api/notices(?:/([^/]+)(?:/([^/?&=]+))?)?""".r
@@ -27,30 +25,30 @@ object InternalResponse {
   implicit val formats: Formats = DefaultFormats
 
   def notFound: Future[InternalResponse] = {
-    Future.value(InternalResponse("", HttpResponseStatus.NOT_FOUND))
+    Future.value(InternalResponse("", Status.NotFound))
   }
 
   def notAuthorized(msgOpt: Option[String] = None): Future[InternalResponse] = {
     Future.value(
       InternalResponse(
         msgOpt.map(msg => Serialization.write(Map("error" -> msg))).getOrElse(""),
-        HttpResponseStatus.UNAUTHORIZED
+        Status.Unauthorized
       )
     )
   }
 
   def apply(content: String): Future[InternalResponse] = {
-    Future.value(InternalResponse(content, HttpResponseStatus.OK))
+    Future.value(InternalResponse(content, Status.Ok))
   }
 
   def apply(contentFuture: Future[String]): Future[InternalResponse] = {
-    contentFuture.map(content => InternalResponse(content, HttpResponseStatus.OK))
+    contentFuture.map(content => InternalResponse(content, Status.Ok))
   }
 }
 
-case class InternalResponse(content: String, status: HttpResponseStatus) {
+case class InternalResponse(content: String, status: Status) {
   def toResponse: Response = {
-    val response = Response(HttpVersion.HTTP_1_1, status)
+    val response = Response(Version.Http11, status)
     response.contentString = content
     response.setContentTypeJson
     response
@@ -66,17 +64,18 @@ class ApiHttpService(
   implicit val formats: Formats = DefaultFormats
   val apiFuturePool = FuturePool(Executors.newFixedThreadPool(10))
 
-  def apply(request: ExceptionatorRequest) = {
+  def apply(exceptionatorRequest: ExceptionatorRequest): Future[Response] = {
+    val request = exceptionatorRequest.request
     val res: Future[InternalResponse] = request.path match {
       case "/api/config" =>
-        config(request)
+        config(exceptionatorRequest)
       case ApiHttpService.Filters(key) =>
         val keyOpt = Option(key)
         request.method match {
-          case HttpMethod.GET => filters(keyOpt, request)
-          case HttpMethod.DELETE => deleteFilter(keyOpt, request)
-          case HttpMethod.PUT | HttpMethod.POST =>
-            saveFilter(request)
+          case Method.Get => filters(keyOpt, exceptionatorRequest)
+          case Method.Delete => deleteFilter(keyOpt, exceptionatorRequest)
+          case Method.Put | Method.Post =>
+            saveFilter(exceptionatorRequest)
           case _ =>
             InternalResponse.notFound
         }
@@ -157,15 +156,16 @@ class ApiHttpService(
       )
   }
 
-  def saveFilter(request: ExceptionatorRequest): Future[InternalResponse] = {
-    if (request.userId.isEmpty) {
-      InternalResponse.notAuthorized()
-    } else {
-      logger.info("saving filter: %s".format(request.contentString))
-      apiFuturePool(services.userFilterActions.save(request.contentString, request.userId.get)).flatMap(
-        _.map(view => InternalResponse(view.compact))
-          .getOrElse(InternalResponse.notAuthorized())
-      )
+  def saveFilter(exceptionatorRequest: ExceptionatorRequest): Future[InternalResponse] = {
+    exceptionatorRequest match {
+      case ExceptionatorRequest(_, None) =>
+        InternalResponse.notAuthorized()
+      case ExceptionatorRequest(request, Some(userId)) =>
+        logger.info("saving filter: %s".format(request.contentString))
+        apiFuturePool(services.userFilterActions.save(request.contentString, userId)).flatMap(
+          _.map(view => InternalResponse(view.compact))
+            .getOrElse(InternalResponse.notAuthorized())
+        )
     }
   }
 

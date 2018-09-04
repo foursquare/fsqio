@@ -3,7 +3,8 @@
 package io.fsq.exceptionator.service
 
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.Response
+import com.twitter.finagle.httpx.{Method, Response, Status, Version}
+import com.twitter.io.BufInputStream
 import com.twitter.ostrich.stats.Stats
 import com.twitter.util.Future
 import io.fsq.common.logging.Logger
@@ -12,8 +13,6 @@ import io.fsq.exceptionator.filter.FilteredIncoming
 import io.fsq.exceptionator.model.io.Incoming
 import io.fsq.exceptionator.util.Config
 import java.io.{BufferedWriter, FileWriter, InputStreamReader}
-import org.jboss.netty.buffer.ChannelBufferInputStream
-import org.jboss.netty.handler.codec.http._
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.jackson.Serialization
 
@@ -26,40 +25,41 @@ class IncomingHttpService(incomingActions: IncomingActions, backgroundActions: B
     .map(fn => new BufferedWriter(new FileWriter(fn, true)))
   implicit val formats: Formats = DefaultFormats
 
-  def apply(request: ExceptionatorRequest) = {
+  def apply(exceptionatorRequest: ExceptionatorRequest): Future[Response] = {
+    val request = exceptionatorRequest.request
     request.method match {
-      case HttpMethod.POST =>
+      case Method.Post =>
         request.path match {
           case "/api/notice" =>
             val incoming = Serialization.read[Incoming](
-              new InputStreamReader(new ChannelBufferInputStream(request.getContent))
+              new InputStreamReader(new BufInputStream(request.content))
             )
             process(incoming).map(res => {
-              val response = Response(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
+              val response = Response(Version.Http11, Status.Ok)
               response.contentString = res
               response
             })
           case "/api/multi-notice" =>
             val incomingSeq = Serialization.read[List[Incoming]](
-              new InputStreamReader(new ChannelBufferInputStream(request.getContent))
+              new InputStreamReader(new BufInputStream(request.content))
             )
             Future
               .collect(incomingSeq.map(incoming => process(incoming)))
               .map(res => {
-                val response = Response(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
+                val response = Response(Version.Http11, Status.Ok)
                 response.contentString = res.mkString(",")
                 response
               })
           case _ =>
-            ServiceUtil.errorResponse(HttpResponseStatus.NOT_FOUND)
+            ServiceUtil.errorResponse(Status.NotFound)
         }
 
       case _ =>
-        ServiceUtil.errorResponse(HttpResponseStatus.NOT_FOUND)
+        ServiceUtil.errorResponse(Status.NotFound)
     }
   }
 
-  def process(incoming: Incoming) = {
+  def process(incoming: Incoming): Future[String] = {
     incomingLog.foreach(log => {
       log.write(Serialization.write(incoming))
       log.write("\n")

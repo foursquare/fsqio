@@ -5,9 +5,10 @@ package io.fsq.exceptionator.service
 import com.mongodb.{MongoClient, MongoClientOptions, MongoException, ServerAddress}
 import com.twitter.finagle.Service
 import com.twitter.finagle.builder.{Server, ServerBuilder}
-import com.twitter.finagle.http.{Http, Request, Response, RichHttp}
-import com.twitter.finagle.http.filter.ExceptionFilter
+import com.twitter.finagle.httpx.{Http, Method, Response, Status, Version}
+import com.twitter.finagle.httpx.filter.ExceptionFilter
 import com.twitter.finagle.stats.OstrichStatsReceiver
+import com.twitter.io.Buf
 import com.twitter.ostrich.admin.{AdminServiceFactory, RuntimeEnvironment, StatsFactory, TimeSeriesCollectorFactory}
 import com.twitter.util.{Future, FuturePool}
 import io.fsq.common.logging.Logger
@@ -36,14 +37,12 @@ import java.net.InetSocketAddress
 import java.util.concurrent.Executors
 import net.liftweb.mongodb.MongoDB
 import net.liftweb.util.DefaultConnectionIdentifier
-import org.jboss.netty.buffer.ChannelBuffers
-import org.jboss.netty.handler.codec.http._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
 object ServiceUtil {
-  def errorResponse(status: HttpResponseStatus) = {
-    val response = Response(HttpVersion.HTTP_1_1, status)
+  def errorResponse(status: Status): Future[Response] = {
+    val response = Response(Version.Http11, status)
     Future.value(response)
   }
 }
@@ -62,7 +61,8 @@ class StaticFileService(prefix: String) extends Service[ExceptionatorRequest, Re
     buf.toArray
   }
 
-  def apply(request: ExceptionatorRequest) = {
+  def apply(exceptionatorRequest: ExceptionatorRequest): Future[Response] = {
+    val request = exceptionatorRequest.request
     val path = if (request.path.matches("^/(?:css|html|js)/.*")) {
       request.path
     } else {
@@ -76,18 +76,18 @@ class StaticFileService(prefix: String) extends Service[ExceptionatorRequest, Re
     stream
       .map(s => {
         staticFileFuturePool(inputStreamToByteArray(s)).map(data => {
-          val response = Response(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
-          response.setContent(ChannelBuffers.copiedBuffer(data))
+          val response = Response(Version.Http11, Status.Ok)
+          response.content = Buf.ByteArray.Shared(data)
           if (path.endsWith(".js")) {
-            response.headerMap.add(HttpHeaders.Names.CONTENT_TYPE, "application/x-javascript")
+            response.headerMap.add("Content-Type", "application/x-javascript")
           }
           if (path.endsWith(".css")) {
-            response.headerMap.add(HttpHeaders.Names.CONTENT_TYPE, "text/css")
+            response.headerMap.add("Content-Type", "text/css")
           }
           response
         })
       })
-      .getOrElse(ServiceUtil.errorResponse(HttpResponseStatus.NOT_FOUND))
+      .getOrElse(ServiceUtil.errorResponse(Status.NotFound))
   }
 }
 
@@ -97,17 +97,18 @@ class ExceptionatorHttpService(
   incomingService: Service[ExceptionatorRequest, Response]
 ) extends Service[ExceptionatorRequest, Response] {
 
-  def apply(request: ExceptionatorRequest) = {
+  def apply(exceptionatorRequest: ExceptionatorRequest): Future[Response] = {
+    val request = exceptionatorRequest.request
     if (!request.path.startsWith("/api/")) {
-      fileService(request)
+      fileService(exceptionatorRequest)
     } else {
       // TODO why did i make this hard on myself?
-      if (request.method == HttpMethod.POST &&
+      if (request.method == Method.Post &&
           (request.path.startsWith("/api/notice") ||
           request.path.startsWith("/api/multi-notice"))) {
-        incomingService(request)
+        incomingService(exceptionatorRequest)
       } else {
-        apiService(request)
+        apiService(exceptionatorRequest)
       }
     }
   }
@@ -208,7 +209,7 @@ object ExceptionatorServer extends Logger {
 
     val server: Server = ServerBuilder()
       .bindTo(new InetSocketAddress(httpPort))
-      .codec(new RichHttp[Request](Http.get))
+      .codec(Http.get)
       .name("exceptionator-http")
       .reportTo(new OstrichStatsReceiver)
       .build(service)
