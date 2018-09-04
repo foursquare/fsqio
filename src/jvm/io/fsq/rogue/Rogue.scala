@@ -50,6 +50,9 @@ trait Rogue {
   implicit def renumerationListFieldToEnumerationListQueryField[M, F <: Enumeration#Value](
     f: RField[List[F], M]
   ): EnumerationListQueryField[F, M] = new EnumerationListQueryField[F, M](f)
+  implicit def renumerationSetFieldToEnumerationSetQueryField[M, F <: Enumeration#Value](
+    f: RField[Set[F], M]
+  ): EnumerationSetQueryField[F, M] = new EnumerationSetQueryField[F, M](f)
   implicit def rlatLongFieldToGeoQueryField[M](f: RField[LatLong, M]): GeoQueryField[M] = new GeoQueryField(f)
   implicit def rStringsListFieldToStringsListQueryField[M](f: RField[List[String], M]): StringsListQueryField[M] =
     new StringsListQueryField[M](f)
@@ -57,6 +60,8 @@ trait Rogue {
     new ListQueryField[F, M](f)
   implicit def rseqFieldToSeqQueryField[M, F: BSONType](f: RField[Seq[F], M]): SeqQueryField[F, M] =
     new SeqQueryField[F, M](f)
+  implicit def rsetFieldToSetQueryField[M, F: BSONType](f: RField[Set[F], M]): SetQueryField[F, M] =
+    new SetQueryField[F, M](f)
   implicit def rmapFieldToMapQueryField[M, F](f: RField[Map[String, F], M]): MapQueryField[F, M] =
     new MapQueryField[F, M](f)
 
@@ -98,6 +103,11 @@ trait Rogue {
   ): EnumerationListModifyField[F, M] =
     new EnumerationListModifyField[F, M](f)
 
+  implicit def renumerationSetFieldToEnumerationSetModifyField[M, F <: Enumeration#Value](
+    f: RField[Set[F], M]
+  ): EnumerationSetModifyField[F, M] =
+    new EnumerationSetModifyField[F, M](f)
+
   implicit def rlatLongFieldToGeoQueryModifyField[M](f: RField[LatLong, M]): GeoModifyField[M] =
     new GeoModifyField(f)
 
@@ -106,6 +116,9 @@ trait Rogue {
 
   implicit def rSeqFieldToSeqModifyField[M, F: BSONType](f: RField[Seq[F], M]): SeqModifyField[F, M] =
     new SeqModifyField[F, M](f)
+
+  implicit def rSetFieldToSetModifyField[M, F: BSONType](f: RField[Set[F], M]): SetModifyField[F, M] =
+    new SetModifyField[F, M](f)
 
   implicit def rmapFieldToMapModifyField[M, F](f: RField[Map[String, F], M]): MapModifyField[F, M] =
     new MapModifyField[F, M](f)

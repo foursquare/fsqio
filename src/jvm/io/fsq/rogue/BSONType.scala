@@ -92,4 +92,17 @@ object BSONType {
   }
 
   implicit def SeqsOfBSONTypesAreBSONTypes[T: BSONType]: BSONType[Seq[T]] = new SeqsOfBSONTypesAreBSONTypes[T]
+
+  class SetsOfBSONTypesAreBSONTypes[T: BSONType] extends BSONType[Set[T]] {
+    override def asBSONObject(v: Set[T]): AnyRef = {
+      val bsonType = BSONType[T]
+      val ret = new java.util.ArrayList[AnyRef](v.size)
+      for (x <- v) {
+        ret.add(bsonType.asBSONObject(x))
+      }
+      ret
+    }
+  }
+
+  implicit def SetsOfBSONTypesAreBSONTypes[T: BSONType]: BSONType[Set[T]] = new SetsOfBSONTypesAreBSONTypes[T]
 }

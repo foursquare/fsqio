@@ -284,7 +284,7 @@ class BsonRecordQueryField[M, B](field: Field[B, M], asDBObject: B => DBObject, 
   def subselect[V](f: B => Field[V, B]): SelectableDummyField[V, M] = subfield(f)
 }
 
-abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Seq[X]](field: Field[CC[F], M])
+abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Iterable[X]](field: Field[CC[F], M])
   extends AbstractQueryField[CC[F], V, DB, M](field) {
 
   def all(vs: Traversable[V]) =
@@ -328,6 +328,11 @@ class SeqQueryField[V: BSONType, M](field: Field[Seq[V], M])
   override def valueToDB(v: V): AnyRef = BSONType[V].asBSONObject(v)
 }
 
+class SetQueryField[V: BSONType, M](field: Field[Set[V], M])
+  extends AbstractListQueryField[V, V, AnyRef, M, Set](field) {
+  override def valueToDB(v: V): AnyRef = BSONType[V].asBSONObject(v)
+}
+
 class BsonRecordListQueryField[M, B](field: Field[List[B], M], rec: B, asDBObject: B => DBObject)
   extends AbstractListQueryField[B, B, DBObject, M, List](field) {
   override def valueToDB(b: B) = asDBObject(b)
@@ -360,7 +365,12 @@ class MapQueryField[V, M](val field: Field[Map[String, V], M]) {
 
 class EnumerationListQueryField[V <: Enumeration#Value, M](field: Field[List[V], M])
   extends AbstractListQueryField[V, V, String, M, List](field) {
-  override def valueToDB(v: V) = v.toString
+  override def valueToDB(v: V): String = v.toString
+}
+
+class EnumerationSetQueryField[V <: Enumeration#Value, M](field: Field[Set[V], M])
+  extends AbstractListQueryField[V, V, String, M, Set](field) {
+  override def valueToDB(v: V): String = v.toString
 }
 
 // ********************************************************************************
@@ -446,7 +456,7 @@ class MapModifyField[V, M](field: Field[Map[String, V], M])
   override def valueToDB(m: Map[String, V]) = QueryHelpers.makeJavaMap(m)
 }
 
-abstract class AbstractListModifyField[V, DB, M, CC[X] <: Seq[X]](val field: Field[CC[V], M]) {
+abstract class AbstractListModifyField[V, DB, M, CC[X] <: Iterable[X]](val field: Field[CC[V], M]) {
   def valueToDB(v: V): DB
 
   def valuesToDB(vs: Traversable[V]) = vs.map(valueToDB _)
@@ -505,9 +515,19 @@ class ListModifyField[V: BSONType, M](field: Field[List[V], M])
   override def valueToDB(v: V): AnyRef = BSONType[V].asBSONObject(v)
 }
 
+class SetModifyField[V: BSONType, M](field: Field[Set[V], M])
+  extends AbstractListModifyField[V, AnyRef, M, Set](field) {
+  override def valueToDB(v: V): AnyRef = BSONType[V].asBSONObject(v)
+}
+
 class EnumerationListModifyField[V <: Enumeration#Value, M](field: Field[List[V], M])
   extends AbstractListModifyField[V, String, M, List](field) {
-  override def valueToDB(v: V) = v.toString
+  override def valueToDB(v: V): String = v.toString
+}
+
+class EnumerationSetModifyField[V <: Enumeration#Value, M](field: Field[Set[V], M])
+  extends AbstractListModifyField[V, String, M, Set](field) {
+  override def valueToDB(v: V): String = v.toString
 }
 
 class BsonRecordListModifyField[M, B](field: Field[List[B], M], rec: B, asDBObject: B => DBObject)(

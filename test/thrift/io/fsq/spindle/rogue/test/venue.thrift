@@ -54,6 +54,9 @@ struct ThriftVenue {
   15: optional list<ThriftVenueClaimBson> claims (wire_name="claims")
   16: optional ThriftVenueClaimBson lastClaim (wire_name="last_claim")
   17: optional map<string, ThriftCheckin> lastCheckins
+  // just for testing set<>, doesn't reflect actual venue thrift
+  18: optional set<string> setOfStrings
+  19: optional set<ThriftClaimStatus> setOfEnums
 } (
    primary_key="id"
    index="id:asc"

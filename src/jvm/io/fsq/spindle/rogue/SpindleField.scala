@@ -17,42 +17,62 @@ import org.bson.BSONObject
 
 class SpindleEnumIntQueryField[M, E <: Enum[E]](field: Field[E, M] with EnumIntField)
   extends AbstractQueryField[E, E, Int, M](field) {
-  override def valueToDB(e: E) = e.id
+  override def valueToDB(e: E): Int = e.id
 }
 
 class SpindleEnumIntListQueryField[M, E <: Enum[E]](field: Field[Seq[E], M] with EnumIntField)
   extends AbstractListQueryField[E, E, Int, M, Seq](field) {
-  override def valueToDB(e: E) = e.id
+  override def valueToDB(e: E): Int = e.id
+}
+
+class SpindleEnumIntSetQueryField[M, E <: Enum[E]](field: Field[Set[E], M] with EnumIntField)
+  extends AbstractListQueryField[E, E, Int, M, Set](field) {
+  override def valueToDB(e: E): Int = e.id
 }
 
 class SpindleEnumIntModifyField[M, E <: Enum[E]](field: Field[E, M] with EnumIntField)
   extends AbstractModifyField[E, Int, M](field) {
-  override def valueToDB(e: E) = e.id
+  override def valueToDB(e: E): Int = e.id
 }
 
 class SpindleEnumIntListModifyField[M, E <: Enum[E]](field: Field[Seq[E], M] with EnumIntField)
   extends AbstractListModifyField[E, Int, M, Seq](field) {
-  override def valueToDB(e: E) = e.id
+  override def valueToDB(e: E): Int = e.id
+}
+
+class SpindleEnumIntSetModifyField[M, E <: Enum[E]](field: Field[Set[E], M] with EnumIntField)
+  extends AbstractListModifyField[E, Int, M, Set](field) {
+  override def valueToDB(e: E): Int = e.id
 }
 
 class SpindleEnumStringQueryField[M, E <: Enum[E]](field: Field[E, M] with EnumStringField)
   extends AbstractQueryField[E, E, String, M](field) {
-  override def valueToDB(e: E) = e.stringValue
+  override def valueToDB(e: E): String = e.stringValue
 }
 
 class SpindleEnumStringListQueryField[M, E <: Enum[E]](field: Field[Seq[E], M] with EnumStringField)
   extends AbstractListQueryField[E, E, String, M, Seq](field) {
-  override def valueToDB(e: E) = e.stringValue
+  override def valueToDB(e: E): String = e.stringValue
+}
+
+class SpindleEnumStringSetQueryField[M, E <: Enum[E]](field: Field[Set[E], M] with EnumStringField)
+  extends AbstractListQueryField[E, E, String, M, Set](field) {
+  override def valueToDB(e: E): String = e.stringValue
 }
 
 class SpindleEnumStringModifyField[M, E <: Enum[E]](field: Field[E, M] with EnumStringField)
   extends AbstractModifyField[E, String, M](field) {
-  override def valueToDB(e: E) = e.stringValue
+  override def valueToDB(e: E): String = e.stringValue
 }
 
 class SpindleEnumStringListModifyField[M, E <: Enum[E]](field: Field[Seq[E], M] with EnumStringField)
   extends AbstractListModifyField[E, String, M, Seq](field) {
-  override def valueToDB(e: E) = e.stringValue
+  override def valueToDB(e: E): String = e.stringValue
+}
+
+class SpindleEnumStringSetModifyField[M, E <: Enum[E]](field: Field[Set[E], M] with EnumStringField)
+  extends AbstractListModifyField[E, String, M, Set](field) {
+  override def valueToDB(e: E): String = e.stringValue
 }
 
 abstract class SpindleEmbeddedRecordQueryFieldHelper[C, F1, F2] {
@@ -72,7 +92,7 @@ class SpindleEmbeddedRecordQueryField[
   f: Field[R, MM]
 ) extends AbstractQueryField[R, R, BSONObject, MM](f) {
 
-  override def valueToDB(b: R) = {
+  override def valueToDB(b: R): BSONObject = {
     val factory = new TBSONObjectProtocol.WriterFactoryForDBObject
     val protocol = factory.getProtocol
     b.asInstanceOf[TBase[_, _]].write(protocol)
@@ -109,7 +129,7 @@ class SpindleEmbeddedRecordModifyField[
   f: Field[R, MM]
 ) extends AbstractModifyField[R, BSONObject, MM](f) {
 
-  override def valueToDB(b: R) = {
+  override def valueToDB(b: R): BSONObject = {
     val factory = new TBSONObjectProtocol.WriterFactoryForDBObject
     val protocol = factory.getProtocol
     b.asInstanceOf[TBase[_, _]].write(protocol)
@@ -123,7 +143,7 @@ class SpindleEmbeddedRecordListQueryField[
 ](
   f: Field[Seq[R], MM]
 ) extends AbstractListQueryField[R, R, BSONObject, MM, Seq](f) {
-  override def valueToDB(b: R) = {
+  override def valueToDB(b: R): BSONObject = {
     val factory = new TBSONObjectProtocol.WriterFactoryForDBObject
     val protocol = factory.getProtocol
     b.asInstanceOf[TBase[_, _]].write(protocol)
@@ -163,7 +183,7 @@ class SpindleEmbeddedRecordListModifyField[
   f: Field[Seq[R], MM]
 ) extends AbstractListModifyField[R, BSONObject, MM, Seq](f) {
 
-  override def valueToDB(b: R) = {
+  override def valueToDB(b: R): BSONObject = {
     val factory = new TBSONObjectProtocol.WriterFactoryForDBObject
     val protocol = factory.getProtocol
     b.asInstanceOf[TBase[_, _]].write(protocol)

@@ -619,6 +619,12 @@ class QueryTest extends JUnitMustMatchers {
       .modify(_.privileges addToSet ThriftConsumerPrivilege.awardBadges)
       .toString() must_== """db.oauthconsumers.update({ }, { "$addToSet" : { "privileges" : 0}}""" + suffix
 
+    // Set
+    Q(ThriftVenue)
+      .where(_.legacyid eqs 1)
+      .modify(_.setOfStrings addToSet "abc")
+      .toString() must_== query + """{ "$addToSet" : { "setOfStrings" : "abc"}}""" + suffix
+
     // BsonRecordField and BsonRecordListField with nested Enumeration
     val src = ThriftSourceBson.newBuilder.name("").url("").result()
     val claims = List(ThriftVenueClaimBson.newBuilder.userid(1).status(ThriftClaimStatus.approved).source(src).result())
@@ -777,6 +783,19 @@ class QueryTest extends JUnitMustMatchers {
     Q(ThriftVenue)
       .where(_.tags idx 0 startsWith "kara")
       .signature() must_== """db.venues.find({ "tags.0" : { "$regex" : 0 , "$options" : 0}})"""
+
+    // set
+    Q(ThriftVenue)
+      .where(_.setOfStrings contains "123")
+      .signature() must_== """db.venues.find({ "setOfStrings" : 0})"""
+
+    Q(ThriftVenue)
+      .where(_.setOfEnums contains ThriftClaimStatus.approved)
+      .signature() must_== """db.venues.find({ "setOfEnums" : 0})"""
+
+    Q(ThriftVenue)
+      .where(_.setOfEnums size 3)
+      .signature() must_== """db.venues.find({ "setOfEnums" : { "$size" : 0}})"""
 
     // map
     Q(ThriftTip).where(_.counts at "foo" eqs 3).signature() must_== """db.tips.find({ "counts.foo" : 0})"""
