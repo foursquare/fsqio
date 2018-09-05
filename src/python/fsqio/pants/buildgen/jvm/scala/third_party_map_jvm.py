@@ -218,7 +218,6 @@ jvm_third_party_map = {
       'elephantbird': 'elephant-bird',
       'finagle': {
         'httpx': {
-          'HttpToHttpxAdaptor': None,
           'HttpxRequestProxy': None,
           'HttpxResponseProxy': None,
           'DEFAULT': 'finagle',
