@@ -6,18 +6,23 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 import subprocess
 
+from pants.backend.python.interpreter_cache import PythonInterpreterCache
+from pants.backend.python.subsystems.python_setup import PythonSetup
 from pants.backend.python.targets.python_binary import PythonBinary
-from pants.backend.python.targets.python_library import PythonLibrary, PythonTarget
+from pants.backend.python.targets.python_library import PythonLibrary
+from pants.backend.python.targets.python_target import PythonTarget
 from pants.backend.python.targets.python_tests import PythonTests
-from pants.backend.python.tasks.python_task import PythonTask
+from pants.backend.python.tasks.resolve_requirements_task_base import ResolveRequirementsTaskBase
 from pants.base.exceptions import TaskError
 from pants.base.workunit import WorkUnit, WorkUnitLabel
 from pants.option.custom_types import file_option
-from typing import List, Set
+from pants.python.python_repos import PythonRepos
+from pants.util.memo import memoized_property
+from pants.util.process_handler import subprocess
 
 
-class MypyTask(PythonTask):
-  """Invoke the MyPy static type analyzer for Python."""
+class MypyTask(ResolveRequirementsTaskBase):
+  """Invoke the mypy static type analyzer for Python."""
 
   _PYTHON_SOURCE_EXTENSION = '.py'
 
@@ -35,6 +40,14 @@ class MypyTask(PythonTask):
              help='Ignore missing type stubs if not found. Useful for mostly untyped code bases.')
     register('--config-file', type=file_option, fingerprint=True,
              help='Path to MyPy config (in ini format).')
+
+  @memoized_property
+  def _interpreter_cache(self):
+    return PythonInterpreterCache(
+      PythonSetup.global_instance(),
+      PythonRepos.global_instance(),
+      logger=self.context.log.debug
+    )
 
   @classmethod
   def supports_passthru_args(cls):

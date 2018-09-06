@@ -7,7 +7,6 @@ python_tests(
     '3rdparty/python:mock',
     '3rdparty/python:pytz',
     '3rdparty/python:requests',
-    '3rdparty/python:unittest2',
     'src/python/fsqio/util',
   ],
 )

@@ -25,7 +25,7 @@ class RemoteSourceTask(Task):
 
   @classmethod
   def subsystem_dependencies(cls):
-    return super(RemoteSourceTask, cls).subsystem_dependencies() + (RemoteSourceFetcher.Factory.scoped(cls),)
+    return super(RemoteSourceTask, cls).subsystem_dependencies() + (RemoteSourceFetcher.scoped(cls),)
 
   @classmethod
   def product_types(cls):
@@ -58,9 +58,8 @@ class RemoteSourceTask(Task):
     with self.invalidated(targets, invalidate_dependents=True, topological_order=True) as invalidation_check:
       # The fetches are idempotent operations from the subsystem, invalidation only controls recreating the symlinks.
       for vt in invalidation_check.all_vts:
-        remote_source = RemoteSourceFetcher.Factory.scoped_instance(self).create(vt.target)
+        remote_source = RemoteSourceFetcher(vt.target)
         fetched = remote_source.path
-        self.context.log.debug("Found fetched file at {}".format(fetched))
         safe_mkdir(fetched)
 
         # Some unfortunate rigamorole to cover for the case where different targets want the same fetched file

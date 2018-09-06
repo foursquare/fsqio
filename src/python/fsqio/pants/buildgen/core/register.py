@@ -43,6 +43,8 @@ def register_goals():
     action=Buildgen,
   ).install()
 
+  # This is a noop from a task perspective - it only updates the target roots to properly attach
+  # transitive dependencies.
   task(
     name='add-target-bags',
     action=BuildgenInjectTargetBags,

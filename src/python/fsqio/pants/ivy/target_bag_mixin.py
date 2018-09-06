@@ -181,8 +181,10 @@ class TargetBagMixin(object):
     matching_addresses = set()
 
     for address in all_found_addresses:
-      _, addressable = address_mapper.resolve(address)
-      if addressable.addressed_alias in tuple(cls.gathered_target_type_aliases()):
+
+      # TODO(mateo): This used to be able to get this info without hydrating the target.
+      target = build_graph.resolve_address(address)
+      if target.type_alias in tuple(cls.gathered_target_type_aliases()):
         matching_addresses.add(address)
         build_graph.inject_address_closure(address)
     synthetic_target = cls.create_synthetic_target(options, address_mapper, build_graph, matching_addresses)

@@ -38,17 +38,25 @@ class WebPackResolver(NpmResolver):
       if not os.path.exists('package.json'):
         raise TaskError(
           'Cannot find package.json. Did you forget to put it in target sources?')
-      package_manager = node_task.get_package_manager_for_target(target=target)
-      if package_manager != node_task.node_distribution.PACKAGE_MANAGER_NPM:
-        raise TaskError(
-          'Found package manager: {}. Only NPM is supported at this time!'.format(package_manager))
+        if os.path.exists('npm-shrinkwrap.json'):
+          node_task.context.log.info('Found npm-shrinkwrap.json, will not inject package.json')
+        else:
+          node_task.context.log.warn(
+            'Cannot find npm-shrinkwrap.json. Did you forget to put it in target sources? '
+            'This package will fall back to inject package.json with pants BUILD dependencies '
+            'including node_remote_module and other node dependencies. However, this is '
+            'not fully supported.')
+          self._emit_package_descriptor(node_task, target, results_dir, node_paths)
       self._rewrite_package_descriptor(node_task, target, results_dir, node_paths)
-      result, npm_install = node_task.execute_npm(['install'],
-                                                  workunit_name=target.address.reference(),
-                                                  workunit_labels=[WorkUnitLabel.COMPILER])
+
+      result, command = node_task.install_module(
+        target=target,
+        install_optional=self.get_options().install_optional,
+        workunit_name=target.address.reference(),
+        workunit_labels=[WorkUnitLabel.COMPILER])
       if result != 0:
         raise TaskError('Failed to resolve dependencies for {}:\n\t{} failed with exit code {}'
-                        .format(target.address.reference(), npm_install, result))
+                        .format(target.address.reference(), command, result))
 
   def _remove_file_uris_from_dependencies(self, package):
     """Remove file: URIs from any dependencies in package.json."""

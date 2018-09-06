@@ -145,12 +145,13 @@ class BuildgenPython(BuildgenTask):
     module_list = {}
     reqs = set()
     for source_dir in source_dirs:
+      # TODO(mateo): Before Pants 1.7.0, this was able to derive the addressable without hydrating the target.
       for address in address_mapper.scan_addresses(os.path.join(get_buildroot(), source_dir)):
-        _, addressable = address_mapper.resolve(address)
-        if addressable.addressed_alias in self.third_party_target_aliases:
-          module_list[addressable.addressed_name.replace('-', '_')] = address.spec
+        target = self.context.build_graph.resolve_address(address)
+        if target.type_alias in self.third_party_target_aliases:
+          module_list[target.name.replace('-', '_')] = address.spec
         # This gathers a list of the python requirements as strings. Forget you saw this.
-        reqs.update([str(r.requirement) for r in addressable._kwargs['requirements']])
+        reqs.update([str(r.requirement) for r in target.requirements])
     return reqs, module_list
 
   @memoized_property

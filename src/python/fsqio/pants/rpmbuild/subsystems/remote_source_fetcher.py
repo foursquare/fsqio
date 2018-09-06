@@ -4,99 +4,72 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
+import os
 
-from pants.binaries.binary_util import BinaryUtil
+from pants.binaries.binary_tool import BinaryToolBase
 from pants.fs.archive import archiver_for_path
-from pants.subsystem.subsystem import Subsystem
 from pants.util.contextutil import temporary_dir
-from pants.util.memo import memoized_property
+from pants.util.memo import memoized_method, memoized_property
 
 
-class RemoteSourceUtil(BinaryUtil):
-  """Encapsulates access to hosted remote sources."""
-
-  class RemoteSourceNotFound(BinaryUtil.BinaryNotFound):
-    """No file or bundle found at any registered baseurl."""
-
-  class Factory(BinaryUtil.Factory):
-
-    @classmethod
-    def subsystem_dependencies(cls):
-      return super(RemoteSourceUtil.Factory, cls).subsystem_dependencies()
-
-    @classmethod
-    def create(cls):
-      options = cls.global_instance().get_options()
-      return RemoteSourceUtil(
-        options.binaries_baseurls,
-        options.binaries_fetch_timeout_secs,
-        options.pants_bootstrapdir,
-        options.binaries_path_by_id,
-      )
-
-  @staticmethod
-  def uname_func():
-    # Force pulling down linux paths, since this is destined to be built in a Docker container.
-    return "linux", "foo", "bar", "baz", "x86_64"
-
-  def select_binary(self, supportdir, version, name):
-    # Enforces using the linux Docker environment since this is for rpmbuilder.
-    # TODO(mateo): Derive the uname_func from the platfrom in the RpmBuilder.
-    binary_path = self._select_binary_base_path(supportdir, version, name, uname_func=self.uname_func)
-    return self._fetch_binary(name=name, binary_path=binary_path)
-
-
-class RemoteSourceFetcher(object):
-  """Fetcher for remote sources which uses BinaryUtil pipeline."""
+class RemoteSourceFetcher(BinaryToolBase):
+  """Fetcher for remote sources which uses BinaryToolBase pipeline."""
   # This allows long-lived caching of remote downloads, which are painful to to over and over when they aren't changing.
 
-  class Factory(Subsystem):
-    options_scope = 'remote-fetcher'
+  # NOTE(mateo): Upstream Pants saw this subsystem and ended up adding a subset of the features.
+  # That subset needs to be audited and consumed, with a longer-term goal of patching upstream to add
+  # any of the following features we cannot live without.
+  #
+  # RemoteSources plugin provides the following features (uniquely or otherwise):
+  #  * Long-lived caching of downloaded files
+  #     - Only invalidated by version changes - otherwise considered cached
+  #     - Kept outsidce .pants.d or artifact cache, alongside Pants downloaded tooling.
+  #     - Atomic downloads so we aren't poisoned by corrupted downloads.
+  #  * Addressable in BUILD files
+  #     - These are considered "versioned" and can be referenced as dependencies.
+  #     - RpmBuilder as canonical consumer - caching bootstrapped source bundles.
+  #  * Fetched on demand, either directly or transitively
+  #     - If you call `./pants rpmbuild src/redhat/libevent` only then should it bootstrap the source bundle.
+  #  * Unpack attribute in the target
+  #     - Extract as an addressable feature.
+  #
+  # These features mean that we can add new bootstrapped downloads strictly by editing BUILD files and they
+  # will be fetched on demand, and cached ~forever. This is incredibly powerful for engineers without direct
+  # Pants development experience.
 
-    @classmethod
-    def subsystem_dependencies(cls):
-      return super(RemoteSourceFetcher.Factory, cls).subsystem_dependencies() + (BinaryUtil.Factory,)
+  # TODO(mateo): Either fully adapt the remote_sources plugin for the new BinaryToolBase interface or
+  # work with upstream until UnpackJars is robust enough for our use cases.
 
-    @classmethod
-    def register_options(cls, register):
-      register(
-        '--supportdir',
-        advanced=True,
-        default='bin',
-        help='Find sources under this dir. Path under URLS from --binary-baseurls and --pants-bootstrapdir.',
-      )
+  # NOTE(mateo): We actually have both platform-dependent, but the symlinks should be in place to universally set True.
+  platform_dependent = True
 
-    def create(self, remote_target):
-      remote_source_util = RemoteSourceUtil.Factory.create()
-      options = self.get_options()
-      return RemoteSourceFetcher(
-        remote_source_util,
-        options.supportdir,
-        remote_target.namespace,
-        remote_target.version,
-        remote_target.filename,
-        extract=remote_target.extract,
-      )
+  # The upstream interface uses this for the "name" because it expects a new Subsystem for every boostrapped
+  # tool. We set the name in the BUILD file, which is interpolated through overrides below.
+  options_scope = 'remote-fetcher'
 
-  def __init__(self, remote_source_util, supportdir, namespace, version, filename, extract):
-    self._supportdir = supportdir
-    self._namespace = namespace
-    self._filename = filename
-    self._extract = extract or False
+  def __init__(self, remote_target):
+    self.name = remote_target.namespace
+    self._filename = remote_target.filename
+    self._extract = remote_target.extract or False
+    self._version = remote_target.version
 
-    self.remote_source_util = remote_source_util
-    self.version = version
+  def get_support_dir(self):
+    return 'bin/{}'.format(self.name)
+
+  def version(self, context=None):
+    """Returns the version of the specified binary tool."""
+    return self._version
 
   @property
   def _relpath(self):
-    return os.path.join(self._supportdir, self._namespace)
+    return os.path.join(self.get_support_dir(), self.name())
 
   @property
   def extracted(self):
     return self._extract
 
-  def _construct_path(self):
-    fetched = self.remote_source_util.select_binary(self._relpath, self.version, self._filename)
+  def _construct_path(self, context=None):
+    fetched = self.select(context)
     if not self._extract:
       return fetched
     unpacked_dir = os.path.dirname(fetched)
@@ -109,8 +82,19 @@ class RemoteSourceFetcher(object):
         os.rename(tmp_root, outdir)
     return os.path.join(outdir)
 
+  @memoized_method
+  def _select_for_version(self, version):
+    # Override, since we include the extension in the actual filename
+    # (a compromise so we could support downloading files with no extension).
+    return self._binary_util.select(
+      supportdir=self.get_support_dir(),
+      version=version,
+      name='{}'.format(self._filename),
+      platform_dependent=self.platform_dependent,
+      archive_type=self.archive_type)
+
   @memoized_property
-  def path(self):
+  def path(self, context=None):
     """Fetch the binary and return the full file path.
 
     Safe to call repeatedly, the fetch itself is idempotent.

@@ -4,7 +4,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os.path
-from textwrap import dedent
 
 from pants.base.exceptions import TaskError
 from pants.base.workunit import WorkUnitLabel
@@ -17,6 +16,7 @@ from pants.util.contextutil import pushd
 from fsqio.pants.node.targets.webpack_module import NpmResource, WebPackModule
 
 
+# TODO(mateo): This backend is not bringing any value, should move on to the now-developed upstream contrib.node.
 class WebPack(NodeTask, SimpleCodegenTask):
   """Run webpack on WebPackModule targets.
 
@@ -87,27 +87,22 @@ class WebPack(NodeTask, SimpleCodegenTask):
     node_paths = self.context.products.get_data(NodePaths)
     if not node_paths:
       raise TaskError("No npm distribution was found!")
-    node_path = node_paths.node_path(target)
     dest_dir = os.path.join(target_workdir, self.get_options().destination_dir, target.name)
     # Added "bail" to the args since webpack only returns failure on failed transpiling, treating missing deps or
     # syntax errors as soft errors. This resulted in Pants returning success while the canary fails health check.
     args = [
-      'run-script',
-      'webpack',
-      '--',
       '--bail',
       '--output-path={}'.format(dest_dir),
       '--env=dist',
     ]
-    with pushd(node_path):
-      result, npm_run = self.execute_npm(
-        args=args,
-        workunit_name='npm',
-        workunit_labels=[WorkUnitLabel.RUN],
-      )
-      if result:
-        raise TaskError(dedent(
-          """ webpack command:
-          \n\t{} failed with exit code {}
-          """.format(' '.join(npm_run.cmd), result)
-        ))
+    with pushd(node_paths.node_path(target)):
+      result, command = self.run_script(
+        'webpack',
+        target=target,
+        script_args=args,
+        node_paths=node_paths.all_node_paths,
+        workunit_name=target.address.reference(),
+        workunit_labels=[WorkUnitLabel.RUN])
+      if result != 0:
+        raise TaskError('Run script failed:\n'
+                        '\t{} failed with exit code {}'.format(command, result))
