@@ -50,17 +50,22 @@ def void():
 # Text
 # -----------------------------------------------------------
 
-# NOTE(earellano): Python2 and Python3 handle `str` differently. In Python3, `str` means the same thing as Python2's
-# `unicode`, which is a representation of Unicode char-points but not an actual bytes object that can be used by IO.
-# In Python2, meanwhile, `str` is stored as a byte string.
-#
-# In general, represent string literals with `str`. Use `Text` if you want unicode support.
-#
-# See https://timothybramlett.com/Strings_Bytes_and_Unicode_in_Python_2_and_3.html for more info.
+"""
+NOTE(earellano): Python 2 and Python 3 handle `str` differently. In Python3, `str` means the same thing as Python 2's
+`unicode`, whereas in Python 2 `str` means a byte string.
 
-s = "Hello World!"          # type: str
-byt = 'Hi'.encode('utf-8')  # type: bytes
-uni = u'🌎'                 # type: Text
+In general, we want to use unicode whenever possible, because it's far saner and is what Python 3 defaults to. So,
+always prefer `Text`, a way to consistently refer to unicode across Python 2 and Python 3
+(https://docs.python.org/3.7/library/typing.html#typing.Text).
+
+However, it's likely when you first add hints to the code it will be using byte strings. For example, if you don't have
+`from __future__ import string_literals`, then "hello" will be type `str`. Until you add unicode semantics to the file,
+it is okay to use `str`. Refer to http://wiki.prod.foursquare.com/python/python3-porting-guide.
+"""
+
+uni = u'🌎'                 # type: Text  # always prefer this. Requires either u'' or `__future__ unicode_literals`
+s = "Hello World!"          # type: str  # only use this if you haven't yet added unicode semantics to the file.
+byt = 'Hi'.encode('utf-8')  # type: bytes  # use this when it should actually be bytes
 
 
 # ------------------------------------------------
