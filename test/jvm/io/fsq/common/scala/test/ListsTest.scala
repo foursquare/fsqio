@@ -5,7 +5,8 @@ package io.fsq.common.scala.test
 import io.fsq.common.scala.{Lists, TryO}
 import io.fsq.common.scala.Identity._
 import org.junit.{Assert => A, Test}
-import org.scalacheck.{ConsoleReporter, Prop, Test => Check}
+import org.scalacheck.{Prop, Test => Check}
+import org.scalacheck.util.ConsoleReporter
 import scala.collection.mutable.{Map => MutableMap}
 
 class ListsTest extends Lists.Implicits {
