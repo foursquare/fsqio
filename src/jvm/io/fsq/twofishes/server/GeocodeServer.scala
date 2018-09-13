@@ -4,10 +4,10 @@ package io.fsq.twofishes.server
 import com.google.common.geometry.S2CellId
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.finagle.builder.{Server, ServerBuilder}
-import com.twitter.finagle.http.Http
+import com.twitter.finagle.httpx.{Http, Request, Response, Status, Version}
 import com.twitter.finagle.thrift.ThriftServerFramedCodec
+import com.twitter.io.Buf
 import com.twitter.ostrich.admin.{AdminServiceFactory, RuntimeEnvironment, StatsFactory, TimeSeriesCollectorFactory, _}
-import com.twitter.ostrich.admin.config._
 import com.twitter.ostrich.stats.Stats
 import com.twitter.util.{Await, Future, FuturePool}
 import com.vividsolutions.jts.io.WKTWriter
@@ -43,9 +43,7 @@ import org.apache.thrift.{TBase, TDeserializer, TFieldIdEnum, TSerializer}
 import org.apache.thrift.protocol.{TBinaryProtocol, TSimpleJSONProtocol}
 import org.bson.types.ObjectId
 import org.codehaus.jackson.JsonFactory
-import org.jboss.netty.buffer.ChannelBuffers
-import org.jboss.netty.handler.codec.http._
-import org.jboss.netty.util.CharsetUtil
+import org.jboss.netty.handler.codec.http.QueryStringDecoder
 import org.slf4s.Logging
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
@@ -55,9 +53,9 @@ class QueryLogHttpHandler(
   queryMap: ConcurrentHashMap[ObjectId, (TBase[_, _], Long)],
   recentQueries: Seq[(TBase[_, _], Long, Long)],
   slowQueries: Seq[(TBase[_, _], Long, Long)]
-) extends Service[HttpRequest, HttpResponse] {
-  def apply(request: HttpRequest) = {
-    val response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
+) extends Service[Request, Response] {
+  def apply(request: Request): Future[Response] = {
+    val response = Response(Version.Http11, Status.Ok)
     val currentTime = System.currentTimeMillis()
 
     val content = (queryMap.asScala
@@ -94,9 +92,9 @@ class QueryLogHttpHandler(
         })
         .mkString("\n"))
 
-    response.headers.set("Content-Type", "text/plain")
-    response.setContent(ChannelBuffers.copiedBuffer(content, CharsetUtil.UTF_8))
-    response.headers.add("Content-Length", response.getContent.readableBytes.toString)
+    response.contentType = "text/plain"
+    response.content = Buf.Utf8(content)
+    response.contentLength = response.content.length
     Future.value(response)
   }
 }
@@ -309,17 +307,17 @@ class GeocodeServerImpl(
   }
 }
 
-class HandleExceptions extends SimpleFilter[HttpRequest, HttpResponse] with Logging {
+class HandleExceptions extends SimpleFilter[Request, Response] with Logging {
   val jsonFactory = new JsonFactory
-  def apply(request: HttpRequest, service: Service[HttpRequest, HttpResponse]) = {
+  def apply(request: Request, service: Service[Request, Response]) = {
     // `handle` asynchronously handles exceptions.
     service(request) handle {
       case error: Exception =>
         log.error("got error: %s".format(error))
         error.printStackTrace
-        val statusCode = HttpResponseStatus.INTERNAL_SERVER_ERROR
-        val errorResponse = new DefaultHttpResponse(HttpVersion.HTTP_1_1, statusCode)
-        errorResponse.headers.set("Content-Type", "application/json; charset=utf-8")
+        val statusCode = Status.InternalServerError
+        val errorResponse = Response(Version.Http11, statusCode)
+        errorResponse.contentType = "application/json; charset=utf-8"
         val errorMap = Map("exception" -> error.toString, "stacktrace" -> error.getStackTrace.mkString("", "\n", "\n"))
         val jsonBytes = {
           val baos = new ByteArrayOutputStream
@@ -329,14 +327,14 @@ class HandleExceptions extends SimpleFilter[HttpRequest, HttpResponse] with Logg
           generator.flush()
           baos.toByteArray
         }
-        errorResponse.setContent(ChannelBuffers.copiedBuffer(jsonBytes))
-        errorResponse.headers.add("Content-Length", errorResponse.getContent.readableBytes.toString)
+        errorResponse.content = Buf.ByteArray.Shared(jsonBytes)
+        errorResponse.contentLength = errorResponse.content.length
         errorResponse
     }
   }
 }
 
-class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpRequest, HttpResponse] {
+class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[Request, Response] {
   val diskIoFuturePool = FuturePool(Executors.newFixedThreadPool(8))
 
   def handleGeocodeQuery(request: GeocodeRequest, callback: Option[String]) =
@@ -380,8 +378,8 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
     request: T,
     queryProcessor: T => Future[TType],
     callback: Option[String]
-  ): Future[DefaultHttpResponse] = {
-    val response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
+  ): Future[Response] = {
+    val response = Response(Version.Http11, Status.Ok)
 
     queryProcessor(request).map(geocode => {
       val serializer = new TSerializer(new TSimpleJSONProtocol.Factory());
@@ -409,9 +407,9 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
           .getOrElse(fixedJson)
       }
 
-      response.headers.set("Content-Type", "application/json; charset=utf-8")
-      response.setContent(ChannelBuffers.copiedBuffer(json, CharsetUtil.UTF_8))
-      response.headers.add("Content-Length", response.getContent.readableBytes.toString)
+      response.contentType = "application/json; charset=utf-8"
+      response.content = Buf.Utf8(json)
+      response.contentLength = response.content.length
       response
     })
   }
@@ -500,8 +498,8 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
       .result
   }
 
-  def apply(request: HttpRequest) = {
-    val queryString = new QueryStringDecoder(request.getUri())
+  def apply(request: Request): Future[Response] = {
+    val queryString = new QueryStringDecoder(request.uri)
     val params = queryString.getParameters().asScala.toMap.mappedValues(_.asScala)
     val path = queryString.getPath()
     val callback = params.get("callback").flatMap(_.headOption)
@@ -509,9 +507,9 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
     def getJsonRequest[R <: TBase[_ <: TBase[_, _], _ <: TFieldIdEnum] with Record[R]](meta: MetaRecord[R, _]): R = {
       var json: Option[String] = params.get("json").map(a => a(0))
 
-      val content = request.getContent()
-      if (content.readable()) {
-        json = Some(content.toString(CharsetUtil.UTF_8))
+      val content = request.contentString
+      if (!content.isEmpty) {
+        json = Some(content)
       }
       val deserializer = new TDeserializer(new TReadableJSONProtocol.Factory(false))
       val thriftRequest = meta.createRecord
@@ -525,12 +523,12 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
       }
 
       diskIoFuturePool(dataRead).map(data => {
-        val response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
+        val response = Response(Version.Http11, Status.Ok)
         if (path.endsWith("png")) {
-          response.headers.set("Content-Type", "image/png")
+          response.contentType = "image/png"
         }
-        response.setContent(ChannelBuffers.copiedBuffer(data))
-        response.headers.add("Content-Length", response.getContent.readableBytes.toString)
+        response.content = Buf.ByteArray.Shared(data)
+        response.contentLength = response.content.length
         response
       })
     } else if (path.startsWith("/search/geocode")) {
@@ -568,12 +566,12 @@ class GeocoderHttpService(geocoder: Geocoder.ServiceIface) extends Service[HttpR
         handleGeocodeQuery(request, callback)
       }
     } else {
-      val response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND)
+      val response = Response(Version.Http11, Status.NotFound)
       val msg = new BufferedSource(
         getClass.getResourceAsStream("/io/fsq/twofishes/server/resources/twofishes-static/index.html")
       ).getLines.mkString("\n")
-      response.setContent(ChannelBuffers.copiedBuffer(msg, CharsetUtil.UTF_8))
-      response.headers.add("Content-Length", response.getContent.readableBytes.toString)
+      response.content = Buf.Utf8(msg)
+      response.contentLength = response.content.length
       Future.value(response)
     }
   }
@@ -597,7 +595,7 @@ object ServerStore {
 }
 
 object GeocodeFinagleServer extends Logging {
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     val handleExceptions = new HandleExceptions
 
     val version = getClass.getPackage.getImplementationVersion
