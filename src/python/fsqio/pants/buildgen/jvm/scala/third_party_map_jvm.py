@@ -10,7 +10,10 @@ jvm_third_party_map = {
   'backtype': {
     'storm': 'storm-core',
   },
-  'breeze': 'breeze',
+  'breeze': {
+    'DEFAULT': 'breeze',
+    'plot': 'breeze-viz',
+  },
   'caffe': 'caffe-protobuf',
   'ch': {
     'qos': {
@@ -134,7 +137,8 @@ jvm_third_party_map = {
         },
         'services': {
           'drive': 'gdata',
-          'mirror': 'libmirror'
+          'mirror': 'libmirror',
+          'dfareporting': 'dfareporting'
         }
       },
       'caliper': 'caliper',
@@ -498,6 +502,7 @@ jvm_third_party_map = {
       'netty': 'netty',
     },
     'jets3t': 'jets3t',
+    'jfree': 'jfreechart',
     'jh': 'sizer',
     'joda': {
       'time': 'joda-time',
@@ -590,5 +595,6 @@ jvm_third_party_map = {
   'tools': {
     'nsc': 'scala-io',
   },
+  'vegas': 'vegas',
   'zemberek': 'zemberek',
 }
