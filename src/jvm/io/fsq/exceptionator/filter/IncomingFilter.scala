@@ -3,35 +3,35 @@
 package io.fsq.exceptionator.filter
 
 import com.typesafe.config.{Config => TSConfig}
-import io.fsq.exceptionator.model.io.Incoming
+import io.fsq.exceptionator.model.io.RichIncoming
 import io.fsq.exceptionator.util.RegexUtil
 import scala.collection.JavaConverters._
 import scala.util.matching.Regex
 
-case class FilterResult(matchedConfig: TSConfig, allowed: Option[Boolean], incoming: Incoming)
+case class FilterResult(matchedConfig: TSConfig, allowed: Option[Boolean], incoming: RichIncoming)
 
 object IncomingFilter {
-  case class RuleResult(allowed: Option[Boolean], incoming: Incoming)
+  case class RuleResult(allowed: Option[Boolean], incoming: RichIncoming)
 
-  def fieldGetter(f: String): Incoming => List[String] = f match {
+  def fieldGetter(f: String): RichIncoming => Seq[String] = f match {
     case "msgs" => _.msgs
     case "excs" => _.excs
-    case "bt" => _.bt
-    case "h" => i => List(i.h)
-    case "v" => i => List(i.v)
+    case "bt" => _.excStack
+    case "h" => i => List(i.hostOrThrow)
+    case "v" => i => List(i.versionOrThrow)
     case _ => throw new IllegalArgumentException("Can't find a field match for " + f)
   }
 
-  def fieldSetter(f: String, v: List[String]): Incoming => Incoming = f match {
-    case "msgs" => i => i.copy(msgs = v)
-    case "excs" => i => i.copy(excs = v)
-    case "bt" => i => i.copy(bt = v)
-    case "h" => i => v.headOption.map(newH => i.copy(h = newH)).getOrElse(i)
-    case "v" => i => v.headOption.map(newV => i.copy(v = newV)).getOrElse(i)
+  def fieldSetter(f: String, v: Seq[String]): RichIncoming => RichIncoming = f match {
+    case "msgs" => i => RichIncoming(i.copy(messages = v))
+    case "excs" => i => RichIncoming(i.copy(exceptions = v))
+    case "bt" => i => RichIncoming(i.copy(exceptionStack = v))
+    case "h" => i => v.headOption.map(newH => RichIncoming(i.copy(host = newH))).getOrElse(i)
+    case "v" => i => v.headOption.map(newV => RichIncoming(i.copy(version = newV))).getOrElse(i)
     case _ => throw new IllegalArgumentException("Can't find a field match for " + f)
   }
 
-  def applyRule(incoming: Incoming, ruleType: String, ruleField: String, ruleValue: List[Regex]): RuleResult = {
+  def applyRule(incoming: RichIncoming, ruleType: String, ruleField: String, ruleValue: Seq[Regex]): RuleResult = {
 
     val incomingValue = fieldGetter(ruleField)(incoming)
 
@@ -66,7 +66,7 @@ object IncomingFilter {
     }
   }
 
-  def checkFilter(i: Incoming, filterConfig: TSConfig): FilterResult = {
+  def checkFilter(i: RichIncoming, filterConfig: TSConfig): FilterResult = {
     val order: Seq[String] = filterConfig.getStringList("order").asScala
     val rules: Seq[(String, TSConfig)] = order.map(rule => rule -> filterConfig.getConfig(rule))
     var incoming = i
@@ -99,7 +99,7 @@ object IncomingFilter {
     )
   }
 
-  def checkFilters(i: Incoming, filterConfigs: Seq[TSConfig]): Option[FilterResult] = {
+  def checkFilters(i: RichIncoming, filterConfigs: Seq[TSConfig]): Option[FilterResult] = {
     filterConfigs.view.map(checkFilter(i, _)).find(_.allowed.isDefined)
   }
 }

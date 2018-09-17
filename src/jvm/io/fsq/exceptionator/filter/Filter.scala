@@ -4,18 +4,18 @@ package io.fsq.exceptionator.filter
 
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
-import io.fsq.exceptionator.model.io.{BucketId, Incoming}
+import io.fsq.exceptionator.model.io.{BucketId, RichIncoming}
 import org.bson.types.ObjectId
 
 object FilteredIncoming {
-  def apply(incoming: Incoming): FilteredIncoming = FilteredIncoming(incoming, Set.empty, Set.empty, Set.empty)
+  def apply(incoming: RichIncoming): FilteredIncoming = FilteredIncoming(incoming, Set.empty, Set.empty, Set.empty)
 }
 
-case class FilteredIncoming(incoming: Incoming, tags: Set[String], keywords: Set[String], buckets: Set[BucketId])
+case class FilteredIncoming(incoming: RichIncoming, tags: Set[String], keywords: Set[String], buckets: Set[BucketId])
 
 case class ProcessedIncoming(
   id: Option[ObjectId],
-  incoming: Incoming,
+  incoming: RichIncoming,
   tags: Set[String],
   keywords: Set[String],
   buckets: Set[BucketId]
@@ -41,7 +41,7 @@ abstract class PreSaveFilter extends SimpleFilter[FilteredIncoming, ProcessedInc
  */
 class FilteredSaveService(
   service: Service[FilteredIncoming, ProcessedIncoming],
-  filters: List[PreSaveFilter],
+  filters: Seq[PreSaveFilter],
   registry: Registry
 ) extends Service[FilteredIncoming, ProcessedIncoming] {
 

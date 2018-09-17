@@ -27,8 +27,7 @@
     ],
 
     "postSaveActions": [
-      "io.fsq.exceptionator.actions.concrete.EmailFreshExceptionBackgroundAction",
-      "io.fsq.exceptionator.actions.concrete.ApplyUserFiltersBackgroundAction"
+      "io.fsq.exceptionator.actions.concrete.EmailFreshExceptionBackgroundAction"
     ]
 
   },

@@ -78,14 +78,12 @@ class ConcreteIncomingActions(services: HasBucketActions with HasHistoryActions 
   }
 
   def save(incoming: FilteredIncoming): ProcessedIncoming = {
-
     val tags = incoming.tags
     val kw = incoming.keywords
     val buckets = incoming.buckets
 
     val notice = services.noticeActions.save(incoming.incoming, tags, kw, buckets)
-    val incomingId = notice.id.value
-
+    val incomingId = notice.id
     services.historyActions.save(notice)
 
     // Increment /create buckets
@@ -114,7 +112,7 @@ class ConcreteIncomingActions(services: HasBucketActions with HasHistoryActions 
       }
     }
 
-    val remove = results.flatMap(r => r.noticesToRemove.map(_ -> r.bucket)).toList
+    val remove = results.flatMap(r => r.noticesToRemove.map(_ -> r.bucket))
 
     // Fix up old notices that have been kicked out
     Stats.time("incomingActions.remove") {
@@ -130,7 +128,6 @@ class ConcreteIncomingActions(services: HasBucketActions with HasHistoryActions 
         doMaintenance(now)
       }
     }
-
     ProcessedIncoming(Some(incomingId), incoming.incoming, tags, kw, finalBuckets)
   }
 }

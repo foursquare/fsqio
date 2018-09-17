@@ -10,7 +10,7 @@ import javax.mail._
 import javax.mail.internet._
 
 trait MailSender {
-  def send(to: List[String], cc: List[String], subject: String, message: String): Future[Unit]
+  def send(to: Seq[String], cc: Seq[String], subject: String, message: String): Future[Unit]
 }
 
 class ConcreteMailSender extends MailSender with Logger {
@@ -21,13 +21,13 @@ class ConcreteMailSender extends MailSender with Logger {
     new LogMailSender
   }
 
-  def send(to: List[String], cc: List[String], subject: String, message: String): Future[Unit] = {
+  def send(to: Seq[String], cc: Seq[String], subject: String, message: String): Future[Unit] = {
     sender.send(to, cc, subject, message)
   }
 }
 
 class LogMailSender extends MailSender with Logger {
-  def send(to: List[String], cc: List[String], subject: String, message: String): Future[Unit] = {
+  def send(to: Seq[String], cc: Seq[String], subject: String, message: String): Future[Unit] = {
     logger.info(
       "To:\n%s\nCC:\n%s\nSubject:\n%s\n\n%s".format(
         to.mkString("\n"),
@@ -62,7 +62,7 @@ class JavaxMailSender extends MailSender {
     }
   )
 
-  def send(to: List[String], cc: List[String], subject: String, message: String): Future[Unit] = {
+  def send(to: Seq[String], cc: Seq[String], subject: String, message: String): Future[Unit] = {
     val mail = new MimeMessage(session)
     mail.setFrom(new InternetAddress(Config.opt(_.getString("email.from")).getOrElse("")))
     mail.addRecipients(Message.RecipientType.TO, to.mkString(","))
@@ -77,7 +77,7 @@ class MailAndLogSender extends MailSender {
   val logMailSender = new LogMailSender
   val mailSender = new JavaxMailSender
 
-  def send(to: List[String], cc: List[String], subject: String, message: String): Future[Unit] = {
+  def send(to: Seq[String], cc: Seq[String], subject: String, message: String): Future[Unit] = {
     logMailSender.send(to, cc, subject, message)
     mailSender.send(to, cc, subject, message)
   }

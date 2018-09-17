@@ -2,8 +2,8 @@
 
 package io.fsq.exceptionator.actions
 
-import io.fsq.exceptionator.model.NoticeRecord
-import io.fsq.exceptionator.model.io.{BucketId, Incoming, Outgoing}
+import io.fsq.exceptionator.model.RichNoticeRecord
+import io.fsq.exceptionator.model.io.{BucketId, Outgoing, RichIncoming}
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 
@@ -12,10 +12,15 @@ trait HasNoticeActions {
 }
 
 trait NoticeActions extends IndexActions {
-  def get(ids: List[ObjectId]): List[Outgoing]
-  def search(keywords: List[String], limit: Option[Int]): List[Outgoing]
-  def save(incoming: Incoming, tags: Set[String], keywords: Set[String], buckets: Set[BucketId]): NoticeRecord
+  def get(ids: Seq[ObjectId]): Seq[Outgoing]
+  def search(keywords: Seq[String], limit: Option[Int]): Seq[Outgoing]
+  def save(
+    incoming: RichIncoming,
+    tags: Set[String],
+    keywords: Set[String],
+    buckets: Set[BucketId]
+  ): RichNoticeRecord
   def addBucket(id: ObjectId, bucketId: BucketId): Unit
   def removeBucket(id: ObjectId, bucketId: BucketId): Unit
-  def removeExpiredNotices(now: DateTime): Seq[NoticeRecord]
+  def removeExpiredNotices(now: DateTime): Seq[RichNoticeRecord]
 }

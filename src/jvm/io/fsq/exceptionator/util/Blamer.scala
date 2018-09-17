@@ -47,7 +47,7 @@ class GitBlamer(val root: File) extends Blamer with Logger {
   val maxTags = 4
   val rootSub = if (root.toString.endsWith("/")) root.toString.length else root.toString.length + 1
   val recentTags =
-    new ConcurrentLinkedHashMap.Builder[String, Map[String, List[String]]].maximumWeightedCapacity(maxTags).build()
+    new ConcurrentLinkedHashMap.Builder[String, Map[String, Seq[String]]].maximumWeightedCapacity(maxTags).build()
 
   def retry(process: () => Future[ProcessResult], fixAttempt: () => Future[ProcessResult]): Future[ProcessResult] = {
 
@@ -84,7 +84,7 @@ class GitBlamer(val root: File) extends Blamer with Logger {
         }
 
         rescued.map(r => {
-          val fileMap: Map[String, List[String]] = r.out
+          val fileMap: Map[String, Seq[String]] = r.out
             .map(f => new File(f).getName -> f)
             .groupBy(_._1)
             .map { case (key, pairs) => key -> pairs.map(_._2).toList }

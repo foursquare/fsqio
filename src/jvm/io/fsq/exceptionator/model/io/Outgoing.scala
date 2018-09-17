@@ -2,15 +2,15 @@
 
 package io.fsq.exceptionator.model.io
 
-import net.liftweb.json.{render, JArray, JValue}
+import net.liftweb.json.{JArray, JValue, render}
 
 object Outgoing {
-  def pretty(outgoings: List[Outgoing]) = {
-    net.liftweb.json.pretty(render(JArray(outgoings.map(_.doc))))
+  def pretty(outgoings: Seq[Outgoing]) = {
+    net.liftweb.json.pretty(render(JArray(outgoings.toList.map(_.doc))))
   }
 
-  def compact(outgoings: List[Outgoing]) = {
-    net.liftweb.json.compact(render(JArray(outgoings.map(_.doc))))
+  def compact(outgoings: Seq[Outgoing]) = {
+    net.liftweb.json.compact(render(JArray(outgoings.toList.map(_.doc))))
   }
 }
 

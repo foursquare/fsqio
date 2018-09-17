@@ -78,7 +78,7 @@ object ReservoirSampler {
       }
       val r1Take = Random.shuffle(r1Samples.iterator).take(fromR1)
       val r2Take = Random.shuffle(r2Samples.iterator).take(fromR2)
-      val mergedState = State((r1Take ++ r2Take).toSeq, r1Sampled + r2Sampled)
+      val mergedState = State((r1Take ++ r2Take).toVector, r1Sampled + r2Sampled)
       ReservoirSampler(size, mergedState)
     } else if (r1Sampled >= size) {
       mergeNotFull(r1, r2)

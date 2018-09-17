@@ -2,7 +2,7 @@
 
 package io.fsq.exceptionator.actions
 
-import io.fsq.exceptionator.model.NoticeRecord
+import io.fsq.exceptionator.model.RichNoticeRecord
 import io.fsq.exceptionator.model.io.Outgoing
 import org.joda.time.DateTime
 
@@ -11,12 +11,12 @@ trait HasHistoryActions {
 }
 
 trait HistoryActions extends IndexActions {
-  def get(bucketName: String, time: DateTime, limit: Int): List[Outgoing]
-  def get(bucketName: String, bucketKey: String, time: DateTime, limit: Int): List[Outgoing]
-  def get(ids: List[String], time: DateTime, limit: Int): List[Outgoing]
-  def getGroupNotices(name: String, time: DateTime, limit: Int): List[NoticeRecord]
-  def getNotices(buckets: List[String], time: DateTime, limit: Int): List[NoticeRecord]
+  def get(bucketName: String, time: DateTime, limit: Int): Seq[Outgoing]
+  def get(bucketName: String, bucketKey: String, time: DateTime, limit: Int): Seq[Outgoing]
+  def get(ids: Seq[String], time: DateTime, limit: Int): Seq[Outgoing]
+  def getGroupNotices(name: String, time: DateTime, limit: Int): Seq[RichNoticeRecord]
+  def getNotices(buckets: Seq[String], time: DateTime, limit: Int): Seq[RichNoticeRecord]
   def oldestId: Option[DateTime]
   def removeExpiredNotices(now: DateTime): Unit
-  def save(notice: NoticeRecord): DateTime
+  def save(notice: RichNoticeRecord): DateTime
 }

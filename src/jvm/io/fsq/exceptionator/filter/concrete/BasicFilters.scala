@@ -38,7 +38,7 @@ class VersionBucketFilter extends BucketFilter {
   def name = "v"
   def friendlyName = "version"
   override def invalidatesFreshness = false
-  def key(incoming: FilteredIncoming) = Option(incoming.incoming.v).filter(_ != "")
+  def key(incoming: FilteredIncoming) = incoming.incoming.versionOption.filter(_ != "")
 }
 
 // This has a special use.  It is added only for all buckets which invalidate freshness, this
@@ -52,7 +52,7 @@ object FreshBucketFilter extends BucketFilter {
 }
 
 class IncomingTagsFilter extends TagFilter {
-  def tags(incoming: FilteredIncoming): Set[String] = incoming.incoming.tags.map(_.toSet).getOrElse(Set.empty)
+  def tags(incoming: FilteredIncoming): Set[String] = incoming.incoming.tagsOption.map(_.toSet).getOrElse(Set.empty)
 }
 
 // Probably want to place this on the filter stack below all tag filters

@@ -10,6 +10,8 @@ buildgen_target_bag(
     'src/thrift/io/fsq/common/thrift/descriptors/services/gen',
     'src/thrift/io/fsq/common/thrift/descriptors/structs/gen',
     'src/thrift/io/fsq/common/thrift/descriptors/types/gen',
+    'src/thrift/io/fsq/exceptionator',
+    'src/thrift/io/fsq/exceptionator/model',
     'src/thrift/io/fsq/twofishes',
     'src/thrift/io/fsq/twofishes/model',
   ],

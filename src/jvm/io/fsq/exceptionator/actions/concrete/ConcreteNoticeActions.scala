@@ -2,76 +2,132 @@
 
 package io.fsq.exceptionator.actions.concrete
 
-import com.mongodb.WriteConcern
+import com.mongodb.{MongoCommandException, WriteConcern}
 import com.twitter.ostrich.stats.Stats
 import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{IndexActions, NoticeActions}
-import io.fsq.exceptionator.model.{MongoOutgoing, NoticeRecord}
-import io.fsq.exceptionator.model.io.{BucketId, Incoming, Outgoing}
-import io.fsq.rogue.lift.LiftRogue._
+import io.fsq.exceptionator.model.{MongoOutgoing, RichNoticeRecord}
+import io.fsq.exceptionator.model.gen.NoticeRecord
+import io.fsq.exceptionator.model.io.{BucketId, Outgoing, RichIncoming}
+import io.fsq.exceptionator.mongo.HasExceptionatorMongoService
+import io.fsq.spindle.rogue.{SpindleQuery => Q}
+import io.fsq.spindle.rogue.SpindleRogue._
 import net.liftweb.json._
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 import scala.collection.JavaConverters._
 
-class ConcreteNoticeActions extends NoticeActions with IndexActions with Logger {
-  def get(ids: List[ObjectId]): List[Outgoing] = {
-    NoticeRecord.where(_.id in ids).fetch.map(MongoOutgoing(_))
+class ConcreteNoticeActions(
+  services: HasExceptionatorMongoService
+) extends NoticeActions
+  with IndexActions
+  with Logger {
+  val executor = services.exceptionatorMongoService.executor
+
+  def get(ids: Seq[ObjectId]): Seq[Outgoing] = {
+    executor
+      .fetch(
+        Q(NoticeRecord)
+          .where(_.id in ids)
+      )
+      .unwrap
+      .map(RichNoticeRecord(_))
+      .map(MongoOutgoing(_))
   }
 
-  def search(keywords: List[String], limit: Option[Int]) = {
-    NoticeRecord
-      .where(_.keywords all keywords)
-      .orderDesc(_.id)
-      .limitOpt(limit)
-      .hint(NoticeRecord.keywordIndex)
-      .fetch
+  def search(keywords: Seq[String], limit: Option[Int]) = {
+    executor
+      .fetch(
+        Q(NoticeRecord)
+          .where(_.keywords all keywords)
+          .orderDesc(_.id)
+          .limitOpt(limit)
+      )
+      .unwrap
+      .map(RichNoticeRecord(_))
       .map(MongoOutgoing(_))
   }
 
   def ensureIndexes {
-    Vector(NoticeRecord).foreach(metaRecord => {
-      metaRecord.mongoIndexList.foreach(
-        i => metaRecord.createIndex(JObject(i.asListMap.map(fld => JField(fld._1, JInt(fld._2.toString.toInt))).toList))
-      )
-    })
+    val collectionFactory = services.exceptionatorMongoService.collectionFactory
+    collectionFactory
+      .getIndexes(NoticeRecord)
+      .foreach(indexes => {
+        try {
+          services.exceptionatorMongoService.executor.createIndexes(NoticeRecord)(indexes: _*)
+        } catch {
+          case e: MongoCommandException => {
+            logger.error("Error while creating index", e)
+          }
+        }
+      })
   }
 
-  def save(incoming: Incoming, tags: Set[String], keywords: Set[String], buckets: Set[BucketId]): NoticeRecord = {
-    NoticeRecord
-      .createRecordFrom(incoming)
+  def save(
+    incoming: RichIncoming,
+    tags: Set[String],
+    keywords: Set[String],
+    buckets: Set[BucketId]
+  ): RichNoticeRecord = {
+    val objectId = new ObjectId(incoming.dateOption.map(new DateTime(_)).getOrElse(DateTime.now).toDate)
+    val builder = NoticeRecord.newBuilder.id(objectId)
+
+    builder
       .keywords(keywords.toList)
       .tags(tags.toList)
-      .buckets(buckets.toList.map(_.toString))
-      .save(true)
+      .buckets(buckets.map(_.toString).toVector)
+      .notice(incoming)
+
+    val notice: NoticeRecord = executor.save(builder.result()).unwrap
+    RichNoticeRecord(notice)
   }
 
   def addBucket(id: ObjectId, bucketId: BucketId) {
     Stats.time("incomingActions.addBucket") {
-      NoticeRecord.where(_.id eqs id).modify(_.buckets push bucketId.toString).updateOne()
+      executor.updateOne(
+        Q(NoticeRecord)
+          .where(_.id eqs id)
+          .modify(_.buckets push bucketId.toString)
+      )
     }
   }
 
   def removeBucket(id: ObjectId, bucketId: BucketId) {
-    val result = Stats.time("noticeActions.removeBucket") {
-      NoticeRecord
-        .where(_.id eqs id)
-        .select(_.buckets)
-        .findAndModify(_.buckets pull bucketId.toString)
-        .updateOne(true)
+    val updated = Stats.time("noticeActions.removeBucket") {
+      executor
+        .updateOne(
+          Q(NoticeRecord)
+            .where(_.id eqs id)
+            .modify(_.buckets pull bucketId.toString)
+        )
+        .unwrap
     }
 
-    if (result.exists(_.isEmpty)) {
+    if (updated > 0) {
       logger.debug("deleting " + id.toString)
       Stats.time("noticeActions.removeBucket.deleteRecord") {
-        NoticeRecord.delete("_id", id)
+        executor.findAndDeleteOne(
+          Q(NoticeRecord)
+            .where(_.id eqs id)
+        )
       }
     }
   }
 
-  override def removeExpiredNotices(now: DateTime): Seq[NoticeRecord] = {
-    val expiredNotices = NoticeRecord.where(_.expireAt before now).fetch()
-    NoticeRecord.where(_.id in expiredNotices.map(_.id.value)).bulkDelete_!!(WriteConcern.W1)
+  override def removeExpiredNotices(now: DateTime): Seq[RichNoticeRecord] = {
+    val expiredNotices = executor
+      .fetch(
+        Q(NoticeRecord)
+          .where(_.expireAt before now)
+      )
+      .unwrap
+      .map(RichNoticeRecord(_))
+
+    executor.bulkDelete_!!(
+      Q(NoticeRecord)
+        .where(_.id in expiredNotices.map(_.id)),
+      WriteConcern.W1
+    )
     expiredNotices
   }
 }

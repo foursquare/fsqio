@@ -2,8 +2,8 @@
 
 package io.fsq.exceptionator.actions
 
-import io.fsq.exceptionator.model.{BucketRecordHistogram, NoticeRecord}
-import io.fsq.exceptionator.model.io.{BucketId, Incoming, Outgoing}
+import io.fsq.exceptionator.model.{RichBucketRecordHistogram, RichNoticeRecord}
+import io.fsq.exceptionator.model.io.{BucketId, Outgoing, RichIncoming}
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 
@@ -11,22 +11,22 @@ trait HasBucketActions {
   def bucketActions: BucketActions
 }
 
-case class SaveResult(bucket: BucketId, oldResult: Option[BucketId], noticesToRemove: List[ObjectId])
+case class SaveResult(bucket: BucketId, oldResult: Option[BucketId], noticesToRemove: Seq[ObjectId])
 
 trait BucketActions extends IndexActions {
-  def get(ids: List[String], noticesPerBucketLimit: Option[Int], now: DateTime): List[Outgoing]
-  def get(name: String, key: String, now: DateTime): List[Outgoing]
+  def get(ids: Seq[String], noticesPerBucketLimit: Option[Int], now: DateTime): Seq[Outgoing]
+  def get(name: String, key: String, now: DateTime): Seq[Outgoing]
   def getHistograms(
-    ids: List[String],
+    ids: Seq[String],
     now: DateTime,
     includeMonth: Boolean,
     includeDay: Boolean,
     includeHour: Boolean
-  ): List[BucketRecordHistogram]
-  def recentKeys(name: String, limit: Option[Int]): List[String]
-  def lastHourHistogram(id: BucketId, now: DateTime): List[Int]
-  def save(incomingId: ObjectId, incoming: Incoming, bucket: BucketId, maxRecent: Int): SaveResult
+  ): Seq[RichBucketRecordHistogram]
+  def recentKeys(name: String, limit: Option[Int]): Seq[String]
+  def lastHourHistogram(id: BucketId, now: DateTime): Seq[Int]
+  def save(incomingId: ObjectId, incoming: RichIncoming, bucket: BucketId, maxRecent: Int): SaveResult
   def deleteOldHistograms(time: DateTime, doIt: Boolean = true): Unit
-  def deleteOldBuckets(lastUpdatedTime: DateTime, batchSize: Int = 500, doIt: Boolean = true): List[SaveResult]
-  def removeExpiredNotices(notices: Seq[NoticeRecord]): Unit
+  def deleteOldBuckets(lastUpdatedTime: DateTime, batchSize: Int = 500, doIt: Boolean = true): Seq[SaveResult]
+  def removeExpiredNotices(notices: Seq[RichNoticeRecord]): Unit
 }

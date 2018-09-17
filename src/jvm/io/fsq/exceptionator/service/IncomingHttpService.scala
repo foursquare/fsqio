@@ -10,7 +10,7 @@ import com.twitter.util.Future
 import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{BackgroundActions, IncomingActions}
 import io.fsq.exceptionator.filter.FilteredIncoming
-import io.fsq.exceptionator.model.io.Incoming
+import io.fsq.exceptionator.model.io.{IncomingRequest, RichIncoming}
 import io.fsq.exceptionator.util.Config
 import java.io.{BufferedWriter, FileWriter, InputStreamReader}
 import org.json4s.{DefaultFormats, Formats}
@@ -31,18 +31,20 @@ class IncomingHttpService(incomingActions: IncomingActions, backgroundActions: B
       case Method.Post =>
         request.path match {
           case "/api/notice" =>
-            val incoming = Serialization.read[Incoming](
+            val incomingReq = Serialization.read[IncomingRequest](
               new InputStreamReader(new BufInputStream(request.content))
             )
+            val incoming = RichIncoming(incomingReq.toThrift)
             process(incoming).map(res => {
               val response = Response(Version.Http11, Status.Ok)
               response.contentString = res
               response
             })
           case "/api/multi-notice" =>
-            val incomingSeq = Serialization.read[List[Incoming]](
+            val incomingReqSeq = Serialization.read[Seq[IncomingRequest]](
               new InputStreamReader(new BufInputStream(request.content))
             )
+            val incomingSeq = incomingReqSeq.map(_.toThrift).map(RichIncoming(_))
             Future
               .collect(incomingSeq.map(incoming => process(incoming)))
               .map(res => {
@@ -59,13 +61,13 @@ class IncomingHttpService(incomingActions: IncomingActions, backgroundActions: B
     }
   }
 
-  def process(incoming: Incoming): Future[String] = {
+  def process(incoming: RichIncoming): Future[String] = {
     incomingLog.foreach(log => {
       log.write(Serialization.write(incoming))
       log.write("\n")
     })
 
-    val n = incoming.n.getOrElse(1)
+    val n = incoming.countOption.getOrElse(1)
     Stats.incr("notices", n)
     incomingActions(FilteredIncoming(incoming)).map(processed => {
       Stats.time("backgroundActions.postSave") {

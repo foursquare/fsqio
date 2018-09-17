@@ -34,7 +34,7 @@ class RollingRank(name: String, tokenizers: String, filter: Option[Regex], filte
     })
   }
 
-  def rank(doc: String): List[(String, Double)] = {
+  def rank(doc: String): Seq[(String, Double)] = {
     Stats.incr("ir.%s.seenDocs".format(name))
     //TODO: per-field tokenizers?
     val terms = doc

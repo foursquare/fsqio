@@ -31,7 +31,7 @@ object Process {
     }
   }
 
-  def apply(command: List[String], wd: File): Future[ProcessResult] = {
+  def apply(command: Seq[String], wd: File): Future[ProcessResult] = {
     val pb = new ProcessBuilder(command.asJava).directory(wd)
     val p = pb.start()
     val errStream = new BufferedReader(new InputStreamReader(p.getErrorStream))
@@ -58,4 +58,4 @@ object Process {
   }
 }
 
-case class ProcessResult(code: Int, out: List[String], err: List[String])
+case class ProcessResult(code: Int, out: Seq[String], err: Seq[String])

@@ -14,7 +14,7 @@ class ConcreteBackgroundActions(services: HasPluginLoaderService) extends Backgr
   val actions = services.pluginLoader
     .serviceConstruct[BackgroundAction](Config.root.getStringList("incoming.postSaveActions").asScala)
 
-  def postSave(processedIncoming: ProcessedIncoming): List[Future[Unit]] = {
+  def postSave(processedIncoming: ProcessedIncoming): Seq[Future[Unit]] = {
     actions.map(_.postSave(processedIncoming)).toList
   }
 }

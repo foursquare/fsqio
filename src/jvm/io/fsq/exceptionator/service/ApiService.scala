@@ -3,11 +3,11 @@
 package io.fsq.exceptionator.service
 
 import com.twitter.finagle.Service
-import com.twitter.finagle.httpx.{Method, Request, Response, Status, Version}
+import com.twitter.finagle.httpx.{Request, Response, Status, Version}
 import com.twitter.util.{Future, FuturePool}
 import io.fsq.common.logging.Logger
-import io.fsq.exceptionator.actions.{HasBucketActions, HasHistoryActions, HasNoticeActions, HasUserFilterActions}
-import io.fsq.exceptionator.model.io.{Outgoing, UserFilterView}
+import io.fsq.exceptionator.actions.{HasBucketActions, HasHistoryActions, HasNoticeActions}
+import io.fsq.exceptionator.model.io.Outgoing
 import io.fsq.exceptionator.util.Config
 import java.net.URLDecoder
 import java.util.concurrent.Executors
@@ -17,7 +17,6 @@ import org.json4s.jackson.Serialization
 
 object ApiHttpService {
   val Notices = """/api/notices(?:/([^/]+)(?:/([^/?&=]+))?)?""".r
-  val Filters = """/api/filters(?:/([^/]+))?""".r
   val History = """/api/history/([^/]+)(?:/([^/]+))?/(\d+)""".r
 }
 
@@ -56,7 +55,7 @@ case class InternalResponse(content: String, status: Status) {
 }
 
 class ApiHttpService(
-  services: HasBucketActions with HasHistoryActions with HasNoticeActions with HasUserFilterActions,
+  services: HasBucketActions with HasHistoryActions with HasNoticeActions,
   bucketFriendlyNames: Map[String, String]
 ) extends Service[ExceptionatorRequest, Response]
   with Logger {
@@ -69,16 +68,6 @@ class ApiHttpService(
     val res: Future[InternalResponse] = request.path match {
       case "/api/config" =>
         config(exceptionatorRequest)
-      case ApiHttpService.Filters(key) =>
-        val keyOpt = Option(key)
-        request.method match {
-          case Method.Get => filters(keyOpt, exceptionatorRequest)
-          case Method.Delete => deleteFilter(keyOpt, exceptionatorRequest)
-          case Method.Put | Method.Post =>
-            saveFilter(exceptionatorRequest)
-          case _ =>
-            InternalResponse.notFound
-        }
       case ApiHttpService.Notices(name, key) =>
         notices(Option(name).map(decodeURIComponent), Option(key).map(decodeURIComponent), request)
       case ApiHttpService.History(name, key, timestamp) =>
@@ -135,46 +124,12 @@ class ApiHttpService(
     }))
   }
 
-  def deleteFilter(keyOpt: Option[String], request: ExceptionatorRequest) = {
-    keyOpt
-      .map(key => InternalResponse(apiFuturePool({ services.userFilterActions.remove(key, request.userId); "" })))
-      .getOrElse(InternalResponse.notFound)
-  }
-
-  def filters(keyOpt: Option[String], request: ExceptionatorRequest): Future[InternalResponse] = {
-    keyOpt
-      .map(key => {
-        apiFuturePool(services.userFilterActions.get(key)).flatMap(
-          _.map(view => InternalResponse(view.compact))
-            .getOrElse(InternalResponse.notFound)
-        )
-      })
-      .getOrElse(
-        InternalResponse(apiFuturePool({
-          UserFilterView.compact(services.userFilterActions.getAll(request.userId))
-        }))
-      )
-  }
-
-  def saveFilter(exceptionatorRequest: ExceptionatorRequest): Future[InternalResponse] = {
-    exceptionatorRequest match {
-      case ExceptionatorRequest(_, None) =>
-        InternalResponse.notAuthorized()
-      case ExceptionatorRequest(request, Some(userId)) =>
-        logger.info("saving filter: %s".format(request.contentString))
-        apiFuturePool(services.userFilterActions.save(request.contentString, userId)).flatMap(
-          _.map(view => InternalResponse(view.compact))
-            .getOrElse(InternalResponse.notAuthorized())
-        )
-    }
-  }
-
   def config(request: ExceptionatorRequest): Future[InternalResponse] = {
     val values = Map(
       "friendlyNames" -> bucketFriendlyNames,
       "homepage" -> Config
         .renderJson("web.homepage")
-        .map(Serialization.read[List[_]](_))
+        .map(Serialization.read[Seq[_]](_))
         .getOrElse(
           List(
             Map("list" -> Map("bucketName" -> "all"), "view" -> Map("showList" -> false)),

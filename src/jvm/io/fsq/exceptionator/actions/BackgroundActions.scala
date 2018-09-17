@@ -14,5 +14,5 @@ trait BackgroundAction {
 }
 
 trait BackgroundActions {
-  def postSave(processedIncoming: ProcessedIncoming): List[Future[Unit]]
+  def postSave(processedIncoming: ProcessedIncoming): Seq[Future[Unit]]
 }

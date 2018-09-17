@@ -2,7 +2,6 @@
 
 package io.fsq.exceptionator.service
 
-import com.mongodb.{MongoClient, MongoClientOptions, MongoException, ServerAddress}
 import com.twitter.finagle.Service
 import com.twitter.finagle.builder.{Server, ServerBuilder}
 import com.twitter.finagle.httpx.{Http, Method, Response, Status, Version}
@@ -12,32 +11,23 @@ import com.twitter.io.Buf
 import com.twitter.ostrich.admin.{AdminServiceFactory, RuntimeEnvironment, StatsFactory, TimeSeriesCollectorFactory}
 import com.twitter.util.{Future, FuturePool}
 import io.fsq.common.logging.Logger
-import io.fsq.exceptionator.actions.{
-  HasBucketActions,
-  HasHistoryActions,
-  HasNoticeActions,
-  HasUserFilterActions,
-  IndexActions
-}
+import io.fsq.exceptionator.actions.{HasBucketActions, HasHistoryActions, HasNoticeActions, IndexActions}
 import io.fsq.exceptionator.actions.concrete.{
   ConcreteBackgroundActions,
   ConcreteBucketActions,
   ConcreteHistoryActions,
   ConcreteIncomingActions,
   ConcreteNoticeActions,
-  ConcreteUserFilterActions,
   FilteredConcreteIncomingActions
 }
 import io.fsq.exceptionator.loader.concrete.ConcretePluginLoaderService
 import io.fsq.exceptionator.loader.service.HasPluginLoaderService
+import io.fsq.exceptionator.mongo.HasExceptionatorMongoService
+import io.fsq.exceptionator.mongo.concrete.ConcreteExceptionatorMongoService
 import io.fsq.exceptionator.util.Config
-import io.fsq.rogue.QueryHelpers
 import java.io.{IOException, InputStream}
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors
-import net.liftweb.mongodb.MongoDB
-import net.liftweb.util.DefaultConnectionIdentifier
-import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
 object ServiceUtil {
@@ -122,40 +112,7 @@ object ExceptionatorServer extends Logger {
   val defaultDbSocketTimeout = 10 * 1000
 
   def bootMongo(indexesToEnsure: List[IndexActions] = Nil) {
-    // Mongo
-    val dbServerConfig = Config.opt(_.getString("db.host")).getOrElse(defaultDbHost)
-    val dbServers = dbServerConfig
-      .split(",")
-      .toList
-      .map(a => {
-        a.split(":") match {
-          case Array(h, p) => new ServerAddress(h, p.toInt)
-          case _ => throw new Exception("didn't understand host " + a)
-        }
-      })
-    val mongoOptions = MongoClientOptions.builder
-      .socketTimeout(defaultDbSocketTimeout)
-      .build
-    try {
-      val mongo = new MongoClient(dbServers.asJava, mongoOptions)
-      val dbname = Config.opt(_.getString("db.name")).getOrElse(defaultDbName)
-      MongoDB.defineDb(DefaultConnectionIdentifier, mongo, dbname)
-      indexesToEnsure.foreach(_.ensureIndexes)
-    } catch {
-      case e: MongoException =>
-        logger.error(
-          e,
-          "Failed ensure indexes on %s because: %s.  Is mongo running?"
-            .format(dbServerConfig, e.getMessage)
-        )
-        throw e
-    }
-
-    // Configure maxTimeMS in Rogue to kill queries in mongo after a socket timeout
-    QueryHelpers.config = new QueryHelpers.DefaultQueryConfig {
-      private val maxTimeMS = Some(defaultDbSocketTimeout.toLong)
-      override def maxTimeMSOpt(configName: String): Option[Long] = maxTimeMS
-    }
+    indexesToEnsure.foreach(_.ensureIndexes)
   }
 
   def main(args: Array[String]) {
@@ -163,12 +120,12 @@ object ExceptionatorServer extends Logger {
     Config.defaultInit()
 
     val services = new HasBucketActions with HasHistoryActions with HasNoticeActions with HasPluginLoaderService
-    with HasUserFilterActions {
-      lazy val bucketActions = new ConcreteBucketActions
+    with HasExceptionatorMongoService {
       lazy val historyActions = new ConcreteHistoryActions(this)
-      lazy val noticeActions = new ConcreteNoticeActions
+      lazy val noticeActions = new ConcreteNoticeActions(this)
       lazy val pluginLoader = new ConcretePluginLoaderService(this)
-      lazy val userFilterActions = new ConcreteUserFilterActions
+      lazy val bucketActions = new ConcreteBucketActions(this)
+      lazy val exceptionatorMongoService = new ConcreteExceptionatorMongoService
     }
 
     // Create services
@@ -177,7 +134,7 @@ object ExceptionatorServer extends Logger {
     // Start mongo
     try {
       bootMongo(
-        List(services.bucketActions, services.historyActions, services.noticeActions, services.userFilterActions)
+        List(services.bucketActions, services.historyActions, services.noticeActions)
       )
     } catch {
       case e: IOException => {

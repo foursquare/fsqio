@@ -2,39 +2,54 @@
 
 package io.fsq.exceptionator.actions.concrete
 
+import com.mongodb.MongoCommandException
 import com.twitter.ostrich.stats.Stats
 import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{BucketActions, IndexActions, SaveResult}
-import io.fsq.exceptionator.model.{BucketRecord, BucketRecordHistogram, MongoOutgoing, NoticeRecord}
-import io.fsq.exceptionator.model.io.{BucketId, Incoming, Outgoing}
+import io.fsq.exceptionator.model.{MongoOutgoing, RichBucketRecord, RichBucketRecordHistogram, RichNoticeRecord}
+import io.fsq.exceptionator.model.gen.{BucketRecord, BucketRecordHistogram, NoticeRecord}
+import io.fsq.exceptionator.model.io.{BucketId, Outgoing, RichIncoming}
+import io.fsq.exceptionator.mongo.HasExceptionatorMongoService
 import io.fsq.exceptionator.util.Hash
-import io.fsq.rogue.lift.LiftRogue._
+import io.fsq.spindle.rogue.{SpindleQuery => Q}
+import io.fsq.spindle.rogue.SpindleRogue._
 import java.util.regex.Pattern
-import net.liftweb.json._
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 import scala.collection.JavaConverters._
 import scala.collection.immutable.NumericRange
 
-class ConcreteBucketActions extends BucketActions with IndexActions with Logger {
+class ConcreteBucketActions(
+  services: HasExceptionatorMongoService
+) extends BucketActions
+  with IndexActions
+  with Logger {
   var currentTime: Long = 0
   var lastHistogramTrim: Long = 0
+  val executor = services.exceptionatorMongoService.executor
 
   def ensureIndexes {
-    Vector(BucketRecord, BucketRecordHistogram).foreach(metaRecord => {
-      metaRecord.mongoIndexList.foreach(
-        i => metaRecord.createIndex(JObject(i.asListMap.map(fld => JField(fld._1, JInt(fld._2.toString.toInt))).toList))
-      )
-    })
+    val collectionFactory = services.exceptionatorMongoService.collectionFactory
+    collectionFactory
+      .getIndexes(BucketRecord)
+      .foreach(indexes => {
+        try {
+          services.exceptionatorMongoService.executor.createIndexes(BucketRecord)(indexes: _*)
+        } catch {
+          case e: MongoCommandException => {
+            logger.error("Error while creating index", e)
+          }
+        }
+      })
   }
 
   def getHistograms(
-    ids: List[String],
+    ids: Seq[String],
     now: DateTime,
     includeMonth: Boolean,
     includeDay: Boolean,
     includeHour: Boolean
-  ): List[BucketRecordHistogram] = {
+  ): Seq[RichBucketRecordHistogram] = {
 
     def monthFmt(t: DateTime) = Hash.fieldNameEncode(t.getMonthOfYear)
     def dayFmt(t: DateTime) = Hash.fieldNameEncode(t.getMonthOfYear) + Hash.fieldNameEncode(t.getDayOfMonth)
@@ -78,34 +93,55 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
              Set.empty
            })
     )
-    BucketRecordHistogram.where(_._id in bucketHistogramIds).fetch
+
+    executor
+      .fetch(
+        Q(BucketRecordHistogram)
+          .where(_.id in bucketHistogramIds)
+      )
+      .unwrap
+      .map(RichBucketRecordHistogram(_))
   }
 
-  def get(ids: List[String], noticesPerBucketLimit: Option[Int], now: DateTime): List[Outgoing] = {
-    val buckets = BucketRecord.where(_._id in ids).fetch
+  def get(ids: Seq[String], noticesPerBucketLimit: Option[Int], now: DateTime): Seq[Outgoing] = {
+    val buckets = executor
+      .fetch(
+        Q(BucketRecord)
+          .where(_.id in ids)
+      )
+      .unwrap
+      .map(RichBucketRecord(_))
+
     val noticeIds = buckets
       .flatMap(bucket => {
         noticesPerBucketLimit match {
-          case Some(limit) => bucket.notices.value.takeRight(limit)
-          case None => bucket.notices.value
+          case Some(limit) => bucket.notices.takeRight(limit)
+          case None => bucket.notices
         }
       })
       .toSet
 
     val histograms = getHistograms(ids, now, true, true, true)
-    val notices = NoticeRecord.where(_.id in noticeIds).fetch
+    val notices = executor
+      .fetch(
+        Q(NoticeRecord)
+          .where(_.id in noticeIds)
+      )
+      .unwrap
+      .map(RichNoticeRecord(_))
+
     notices
-      .sortBy(_.id.value)
+      .sortBy(_.id)
       .reverse
       .map(n => {
-        val nbSet = n.buckets.value.toSet
+        val nbSet = n.buckets.toSet
         val noticeBuckets = buckets.filter(b => nbSet(b.id))
         val noticeBucketRecordHistograms = histograms.filter(h => nbSet(h.bucket))
         MongoOutgoing(n).addBuckets(noticeBuckets, noticeBucketRecordHistograms, now)
       })
   }
 
-  def lastHourHistogram(id: BucketId, now: DateTime): List[Int] = {
+  def lastHourHistogram(id: BucketId, now: DateTime): Seq[Int] = {
     val fullMap = getHistograms(List(id.toString), now, false, false, true)
       .map(_.toEpochMap(now))
       .foldLeft(Map[String, Int]()) { _ ++ _ }
@@ -124,18 +160,21 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
     get(List(BucketId(name, key).toString), None, now)
   }
 
-  def recentKeys(name: String, limit: Option[Int]): List[String] = {
-    BucketRecord
-      .where(_._id startsWith name + ":")
-      .select(_._id)
-      .orderDesc(_.lastSeen)
-      .limitOpt(limit)
-      .hint(BucketRecord.idIndex)
-      .fetch
+  def recentKeys(name: String, limit: Option[Int]): Seq[String] = {
+    executor
+      .fetch(
+        Q(BucketRecord)
+          .where(_.id startsWith name + ":")
+          .select(_.id)
+          .orderDesc(_.lastSeen)
+          .limitOpt(limit)
+      )
+      .unwrap
+      .flatten
   }
 
-  def save(incomingId: ObjectId, incoming: Incoming, bucket: BucketId, maxRecent: Int): SaveResult = {
-    val n = incoming.n.getOrElse(1)
+  def save(incomingId: ObjectId, incoming: RichIncoming, bucket: BucketId, maxRecent: Int): SaveResult = {
+    val n = incoming.countOption.getOrElse(1)
 
     val dateTime = new DateTime(incomingId.getTimestamp * 1000L)
     val month = Hash.fieldNameEncode(dateTime.getMonthOfYear)
@@ -145,32 +184,40 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
     val bucketKey = bucket.toString
 
     val existing = Stats.time("bucketActions.save.updateBucket") {
-      BucketRecord
-        .where(_._id eqs bucketKey)
-        .findAndModify(_.noticeCount inc n)
-        .and(_.lastSeen setTo incomingId.getTimestamp * 1000L)
-        .and(_.lastVersion setTo incoming.v)
-        .and(_.notices push incomingId)
-        .upsertOne()
+      executor
+        .findAndUpsertOne(
+          Q(BucketRecord)
+            .where(_.id eqs bucketKey)
+            .findAndModify(_.noticeCount inc n)
+            .findAndModify(_.lastSeen setTo incomingId.getTimestamp * 1000L)
+            .findAndModify(_.lastVersion setTo incoming.versionOption)
+            .findAndModify(_.notices push incomingId)
+        )
+        .unwrap
     }
 
     if (!existing.isDefined) {
       Stats.time("bucketActions.save.upsertBucket") {
-        BucketRecord
-          .where(_._id eqs bucketKey)
-          .modify(_.firstSeen setTo incomingId.getTimestamp * 1000L)
-          .modify(_.firstVersion setTo incoming.v)
-          .upsertOne()
+        executor.upsertOne(
+          Q(BucketRecord)
+            .where(_.id eqs bucketKey)
+            .modify(_.firstSeen setTo incomingId.getTimestamp * 1000L)
+            .modify(_.firstVersion setTo incoming.versionOption)
+        )
       }
     }
 
     val noticesToRemove = existing.toList.flatMap(e => {
-      val len = e.notices.value.length
+      val len = e.notices.length
       if (len >= maxRecent + maxRecent / 2) {
         logger.debug("trimming %d from %s".format(len - maxRecent, bucketKey))
-        val toRemove = e.notices.value.take(len - maxRecent)
+        val toRemove = e.notices.take(len - maxRecent)
         Stats.time("bucketActions.save.removeExpiredNotices") {
-          BucketRecord.where(_._id eqs bucketKey).modify(_.notices pullAll toRemove).updateOne()
+          executor.updateOne(
+            Q(BucketRecord)
+              .where(_.id eqs bucketKey)
+              .modify(_.notices pullAll toRemove)
+          )
         }
         toRemove
       } else {
@@ -182,12 +229,24 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
     val bucketDay = "%s%s:%s".format(month, day, bucketKey)
     val bucketMonth = "%s:%s".format(month, bucketKey)
     Stats.time("bucketActions.save.updateHistogram") {
-      BucketRecordHistogram.where(_._id eqs bucketHour).modify(_.histogram at minute inc n).upsertOne()
-      BucketRecordHistogram.where(_._id eqs bucketDay).modify(_.histogram at hour inc n).upsertOne()
-      BucketRecordHistogram.where(_._id eqs bucketMonth).modify(_.histogram at day inc n).upsertOne()
+      executor.upsertOne(
+        Q(BucketRecordHistogram)
+          .where(_.id eqs bucketHour)
+          .modify(_.histogram at minute inc n)
+      )
+      executor.upsertOne(
+        Q(BucketRecordHistogram)
+          .where(_.id eqs bucketDay)
+          .modify(_.histogram at hour inc n)
+      )
+      executor.upsertOne(
+        Q(BucketRecordHistogram)
+          .where(_.id eqs bucketMonth)
+          .modify(_.histogram at day inc n)
+      )
     }
 
-    val oldNoticeCount = existing.map(_.noticeCount.value).getOrElse(0)
+    val oldNoticeCount = existing.map(_.noticeCount).getOrElse(0)
 
     SaveResult(bucket.count(oldNoticeCount + 1), existing.map(b => BucketId(b.id, oldNoticeCount)), noticesToRemove)
   }
@@ -214,36 +273,47 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
       )
     )
 
-    val deleteQueries = List(
-      BucketRecordHistogram.where(_._id startsWith oldMonthField),
-      BucketRecordHistogram.where(_._id matches oldDaysPattern),
-      BucketRecordHistogram.where(_._id matches oldHoursPattern)
-    )
+    if (doIt) {
+      Stats.time("bucketActions.save.deleteOldHistograms.delete") {
+        executor.bulkDelete_!!(
+          Q(BucketRecordHistogram)
+            .where(_.id startsWith oldMonthField)
+        )
 
-    deleteQueries.foreach(q => {
-      logger.debug("deleting: %s".format(q))
-      if (doIt) {
-        Stats.time("bucketActions.save.deleteOldHistograms.delete") {
-          q.bulkDelete_!!!()
-        }
+        executor.bulkDelete_!!(
+          Q(BucketRecordHistogram)
+            .where(_.id matches oldDaysPattern)
+        )
+
+        executor.bulkDelete_!!(
+          Q(BucketRecordHistogram)
+            .where(_.id matches oldHoursPattern)
+        )
       }
-    })
+    }
   }
 
-  override def deleteOldBuckets(time: DateTime, batchSize: Int = 500, doIt: Boolean = true): List[SaveResult] = {
+  override def deleteOldBuckets(time: DateTime, batchSize: Int = 500, doIt: Boolean = true): Seq[SaveResult] = {
     val staleDateTime = time.minusMonths(2).minusDays(1)
     val staleTime = staleDateTime.getMillis
-    val oldBuckets = BucketRecord.where(_.lastSeen lte staleTime).limit(batchSize).fetch()
+    val oldBuckets = executor
+      .fetch(
+        Q(BucketRecord)
+          .where(_.lastSeen lte staleTime)
+          .limit(batchSize)
+      )
+      .unwrap
 
     if (!oldBuckets.isEmpty) {
       logger.info("Deleting %d old buckets since %s".format(oldBuckets.length, staleDateTime.toString()))
-      val toRemoveResult = oldBuckets.map(b => SaveResult(BucketId(b.id), None, b.notices.value))
+      val toRemoveResult = oldBuckets.map(b => SaveResult(BucketId(b.id), None, b.notices))
       val bucketIds = oldBuckets.map(_.id)
-      val q = BucketRecord.where(_._id in bucketIds)
-      Stats.time("bucketActions.deleteOldBuckets.delete") {
-        logger.debug("deleting: %s".format(q))
-        if (doIt) {
-          q.bulkDelete_!!!()
+      if (doIt) {
+        Stats.time("bucketActions.deleteOldBuckets.delete") {
+          executor.fetch(
+            Q(BucketRecord)
+              .where(_.id in bucketIds)
+          )
         }
       }
       toRemoveResult
@@ -252,9 +322,13 @@ class ConcreteBucketActions extends BucketActions with IndexActions with Logger 
     }
   }
 
-  override def removeExpiredNotices(notices: Seq[NoticeRecord]): Unit = {
-    val bucketIds = notices.flatMap(_.buckets.value)
-    val noticeIds = notices.map(_.id.value)
-    BucketRecord.where(_._id in bucketIds).modify(_.notices pullAll noticeIds).updateMulti()
+  override def removeExpiredNotices(notices: Seq[RichNoticeRecord]): Unit = {
+    val bucketIds = notices.flatMap(_.buckets)
+    val noticeIds = notices.map(_.id)
+    executor.updateMany(
+      Q(BucketRecord)
+        .where(_.id in bucketIds)
+        .modify(_.notices pullAll noticeIds)
+    )
   }
 }

@@ -6,14 +6,15 @@ scala_library(
   dependencies = [
     '3rdparty:bson',
     '3rdparty:joda-time',
-    '3rdparty:lift-common',
     '3rdparty:lift-json',
     '3rdparty:lift-mongo',
     '3rdparty:lift-record',
+    '3rdparty:thrift',
     'src/jvm/io/fsq/exceptionator/model/io',
     'src/jvm/io/fsq/exceptionator/util',
-    'src/jvm/io/fsq/rogue/index',
     'src/jvm/io/fsq/rogue/lift',
+    'src/jvm/io/fsq/spindle/common/thrift/json',
+    'src/thrift/io/fsq/exceptionator/model',
   ],
   provides=scala_artifact(
     org='io.fsq',

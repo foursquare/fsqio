@@ -4,16 +4,16 @@ package io.fsq.exceptionator.actions.concrete
 
 import com.twitter.util.Future
 import io.fsq.common.logging.Logger
-import io.fsq.exceptionator.actions.{BackgroundAction, HasBucketActions, HasNoticeActions, HasUserFilterActions}
+import io.fsq.exceptionator.actions.{BackgroundAction, HasBucketActions, HasNoticeActions}
 import io.fsq.exceptionator.filter.{IncomingFilter, ProcessedIncoming}
 import io.fsq.exceptionator.filter.concrete.FreshBucketFilter
 import io.fsq.exceptionator.model.io.BacktraceLine
 import io.fsq.exceptionator.util.{ConcreteBlamer, ConcreteMailSender, Config}
 import scala.collection.JavaConverters._
 
-class EmailFreshExceptionBackgroundAction(services: HasBucketActions with HasNoticeActions with HasUserFilterActions)
+class EmailFreshExceptionBackgroundAction(services: HasBucketActions with HasNoticeActions)
   extends EmailExceptionBackgroundAction {
-  def route(processedIncoming: ProcessedIncoming): (List[String], List[String]) = {
+  def route(processedIncoming: ProcessedIncoming): (Seq[String], Seq[String]) = {
 
     // Find the config whose filter matches
     val routeConfig = Config.opt(_.getConfigList("email.routes").asScala)
@@ -40,7 +40,7 @@ class EmailFreshExceptionBackgroundAction(services: HasBucketActions with HasNot
   }
 }
 
-case class SendInfo(extraInfo: String, to: List[String], cc: List[String])
+case class SendInfo(extraInfo: String, to: Seq[String], cc: Seq[String])
 
 object EmailExceptionBackgroundAction {
   val mailSender = new ConcreteMailSender
@@ -73,14 +73,14 @@ abstract class EmailExceptionBackgroundAction extends BackgroundAction with Logg
       val rev = processedIncoming.incoming.env
         .get("git")
         .filter(_ != "0")
-        .getOrElse(processedIncoming.incoming.v)
+        .getOrElse(processedIncoming.incoming.versionOrThrow)
       val blameInfo = blameList(rev, interesting)
       formatAndSendMail(processedIncoming, sendInfo, blameInfo)
     }).getOrElse(Future.Unit))
   }
 
-  def blameList(rev: String, interesting: List[BacktraceLine]): Future[List[String]] = {
-    val blames: List[Future[Option[String]]] = interesting.map(bl => {
+  def blameList(rev: String, interesting: Seq[BacktraceLine]): Future[Seq[String]] = {
+    val blames: Seq[Future[Option[String]]] = interesting.map(bl => {
       EmailExceptionBackgroundAction.blamer
         .blame(rev, bl.fileName, bl.number, bl.method.split(".").toList.toSet)
         .map(
@@ -97,7 +97,7 @@ abstract class EmailExceptionBackgroundAction extends BackgroundAction with Logg
   def formatAndSendMail(
     processedIncoming: ProcessedIncoming,
     sendInfo: SendInfo,
-    interestingInfo: Future[List[String]]
+    interestingInfo: Future[Seq[String]]
   ): Future[Unit] = {
 
     val incoming = processedIncoming.incoming
@@ -130,7 +130,7 @@ Exceptionator""".format(
             .map(sb => "http://%s/notices/s/%s".format(prettyHost, sb.key))
             .getOrElse("<unknown>"),
           incoming.msgs.head,
-          incoming.h,
+          incoming.hostOption,
           info.mkString("\n"),
           incoming.flatBacktrace.mkString("\n")
         )

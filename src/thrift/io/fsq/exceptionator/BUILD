@@ -1,17 +1,13 @@
-# Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
-
-scala_library(
-  name = 'io',
-  sources = globs('*.scala'),
+scala_record_library(
+  name = 'exceptionator',
   dependencies = [
-    '3rdparty:lift-json',
-    'src/jvm/io/fsq/exceptionator/util',
-    'src/jvm/io/fsq/spindle/common/thrift/json',
-    'src/thrift/io/fsq/exceptionator/model',
+    '3rdparty:bson',
+    '3rdparty:joda-time',
   ],
+  sources = globs('*.thrift'),
   provides=scala_artifact(
     org='io.fsq',
-    name='exceptionator-model-io',
+    name='exceptionator-records',
     repo=oss_sonatype_repo,
     publication_metadata=io_fsq_library("""
       Foursquare's exception aggregator built on top of twitter finagle and mongodb.

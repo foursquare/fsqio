@@ -2,27 +2,35 @@
 
 package io.fsq.exceptionator.actions.concrete
 
+import com.mongodb.MongoCommandException
 import com.twitter.conversions.time._
 import com.twitter.ostrich.stats.Stats
 import com.twitter.util.ScheduledThreadPoolTimer
 import io.fsq.common.logging.Logger
+import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.exceptionator.actions.{HasBucketActions, HistoryActions, IndexActions}
-import io.fsq.exceptionator.model.{BucketRecord, HistoryRecord, MongoOutgoing, NoticeRecord}
+import io.fsq.exceptionator.model.{MongoOutgoing, RichBucketRecord, RichHistoryRecord, RichNoticeRecord}
+import io.fsq.exceptionator.model.gen.{BucketRecord, HistoryRecord}
 import io.fsq.exceptionator.model.io.{BucketId, Outgoing}
+import io.fsq.exceptionator.mongo.HasExceptionatorMongoService
 import io.fsq.exceptionator.util.{Config, ReservoirSampler}
-import io.fsq.rogue.lift.LiftRogue._
+import io.fsq.spindle.rogue.{SpindleQuery => Q}
+import io.fsq.spindle.rogue.SpindleRogue._
 import java.util.concurrent.ConcurrentHashMap
-import net.liftweb.json.{JField, JInt, JObject}
 import org.joda.time.DateTime
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.language.postfixOps
-
-class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions with IndexActions with Logger {
+class ConcreteHistoryActions(
+  services: HasBucketActions with HasExceptionatorMongoService
+) extends HistoryActions
+  with IndexActions
+  with Logger {
   val flushPeriod = Config.opt(_.getInt("history.flushPeriod")).getOrElse(60)
   val sampleRate = Config.opt(_.getInt("history.sampleRate")).getOrElse(50)
-  val samplers = (new ConcurrentHashMap[DateTime, ReservoirSampler[NoticeRecord]]).asScala
+  val samplers = (new ConcurrentHashMap[DateTime, ReservoirSampler[RichNoticeRecord]]).asScala
   val timer = new ScheduledThreadPoolTimer(makeDaemons = true)
+  val executor = services.exceptionatorMongoService.executor
 
   timer.schedule(flushPeriod seconds, flushPeriod seconds) {
     try {
@@ -35,11 +43,18 @@ class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions 
   }
 
   def ensureIndexes {
-    Vector(HistoryRecord).foreach(metaRecord => {
-      metaRecord.mongoIndexList.foreach(
-        i => metaRecord.createIndex(JObject(i.asListMap.map(fld => JField(fld._1, JInt(fld._2.toString.toInt))).toList))
-      )
-    })
+    val collectionFactory = services.exceptionatorMongoService.collectionFactory
+    collectionFactory
+      .getIndexes(HistoryRecord)
+      .foreach(indexes => {
+        try {
+          services.exceptionatorMongoService.executor.createIndexes(HistoryRecord)(indexes: _*)
+        } catch {
+          case e: MongoCommandException => {
+            logger.error("Error while creating index", e)
+          }
+        }
+      })
   }
 
   // Write history to mongo
@@ -48,127 +63,155 @@ class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions 
       historyId <- samplers.keys
       sampler <- samplers.remove(historyId)
     } {
-      val saved = HistoryRecord
-        .where(_.id eqs historyId)
-        .get()
-        .filter(_.sampleRate.value == sampler.size)
+      val merged = executor
+        .fetchOne(
+          Q(HistoryRecord)
+            .where(_.id eqs historyId)
+        )
+        .unwrap
+        .filter(_.sampleRate =? sampler.size)
         .map(existing => {
-          logger.debug(s"Merging histories for ${historyId}")
+          logger.debug(s"Writing histories for ${historyId}")
           Stats.time("historyActions.flushMerge") {
-            val existingState = ReservoirSampler.State(existing.notices.value, existing.totalSampled.value)
-            val existingSampler = ReservoirSampler(existing.sampleRate.value, existingState)
+            val notices = existing.notices.map(RichNoticeRecord(_))
+            val existingState = ReservoirSampler.State(notices, existing.totalSampled)
+            val existingSampler = ReservoirSampler(existing.sampleRate, existingState)
             val merged = ReservoirSampler.merge(existingSampler, sampler)
             val state = merged.state
-            val sorted = state.samples.sortBy(_.id.value).reverse
-            val buckets = sorted.flatMap(_.buckets.value).distinct
-            val earliestExpirationOpt = sorted.flatMap(_.expireAt.value).minByOption(_.getTime)
+            val sorted = state.samples.sortBy(_.id).reverse
+            val buckets = sorted.flatMap(_.buckets).distinct
+            val earliestExpirationOpt: Option[DateTime] = sorted
+              .flatMap(_.expireAtOption)
+              .minByOption(_.getMillis)
 
-            existing
-              .notices(sorted.toList)
-              .buckets(buckets.toList)
+            val builder = existing.toBuilder
+
+            builder
+              .notices(sorted.toVector)
+              .buckets(buckets.toVector)
               .totalSampled(state.sampled)
               .earliestExpiration(earliestExpirationOpt)
-              .save(true)
+
+            executor.save(builder.result())
           }
         })
-        .getOrElse {
-          logger.debug(s"Writing new history for ${historyId}")
-          Stats.time("historyActions.flushNew") {
-            val state = sampler.state
-            val sorted = state.samples.sortBy(_.id.value).reverse
-            val buckets = sorted.flatMap(_.buckets.value).distinct
-            val earliestExpirationOpt = sorted.flatMap(_.expireAt.value).minByOption(_.getTime)
 
-            HistoryRecord.createRecord
-              .id(historyId)
-              .notices(sorted.toList)
-              .buckets(buckets.toList)
-              .sampleRate(sampleRate)
-              .totalSampled(state.sampled)
-              .earliestExpiration(earliestExpirationOpt)
-              .save(true)
-          }
+      if (merged.isEmpty) {
+        logger.debug(s"Writing new history for ${historyId}")
+        Stats.time("historyActions.flushNew") {
+          val state = sampler.state
+          val sorted = state.samples.sortBy(_.id).reverse
+          val buckets = sorted.flatMap(_.buckets).distinct
+          val earliestExpirationOpt = sorted.flatMap(_.expireAtOption).minByOption(_.getMillis)
+          val builder = HistoryRecord.newBuilder.id(historyId)
+
+          builder
+            .notices(sorted.toList)
+            .buckets(buckets.toList)
+            .sampleRate(sampleRate)
+            .totalSampled(state.sampled)
+            .earliestExpiration(earliestExpirationOpt)
+
+          executor.save(builder.result())
         }
+      }
     }
   }
 
-  def get(bucketName: String, time: DateTime, limit: Int): List[Outgoing] = {
+  def get(bucketName: String, time: DateTime, limit: Int): Seq[Outgoing] = {
     val notices = getGroupNotices(bucketName, time, limit)
-    val ids = notices.flatMap(_.buckets.value.filter(_.startsWith(bucketName + ":")))
+    val ids = notices.flatMap(_.buckets.filter(_.startsWith(bucketName + ":")))
     processNotices(ids, notices, time)
   }
 
-  def get(bucketName: String, bucketKey: String, time: DateTime, limit: Int): List[Outgoing] = {
+  def get(bucketName: String, bucketKey: String, time: DateTime, limit: Int): Seq[Outgoing] = {
     get(List(BucketId(bucketName, bucketKey).toString), time, limit)
   }
 
-  def get(ids: List[String], time: DateTime, limit: Int): List[Outgoing] = {
+  def get(ids: Seq[String], time: DateTime, limit: Int): Seq[Outgoing] = {
     val notices = getNotices(ids, time, limit)
     processNotices(ids, notices, time)
   }
 
-  def getNotices(buckets: List[String], time: DateTime, limit: Int): List[NoticeRecord] = {
-    val historyId = HistoryRecord.idForTime(time)
-    val historyOpt = HistoryRecord
-      .where(_.buckets in buckets)
-      .and(_.id lte historyId)
-      .orderDesc(_.id)
-      .hint(HistoryRecord.bucketIdIndex)
-      .get()
+  def getNotices(buckets: Seq[String], time: DateTime, limit: Int): Seq[RichNoticeRecord] = {
+    val historyId = RichHistoryRecord.idForTime(time)
+    val historyOpt: Option[HistoryRecord] = executor
+      .fetch(
+        Q(HistoryRecord)
+          .where(_.buckets in buckets)
+          .and(_.id lte historyId)
+          .orderDesc(_.id)
+          .limit(1)
+      )
+      .unwrap
+      .headOption
 
     historyOpt
-      .map { history =>
+      .map(thriftHistory => {
         // use a view to avoid creating an intermediate collection at each step
-        val notices = history.notices.value.view
+        val history = RichHistoryRecord(thriftHistory)
+
+        history.notices.view
+          .map(RichNoticeRecord(_))
           .dropWhile(_.createDateTime.isAfter(time))
-          .filter(_.buckets.value.exists(buckets.contains(_)))
+          .filter(_.buckets.exists(buckets.contains(_)))
           .take(limit)
-          .toList
-        if (notices.size < limit) {
-          // recurse and look at previous records to flush out our list
-          notices ++ getNotices(buckets, history.id.dateTimeValue.minusMillis(1), limit - notices.size)
-        } else {
-          notices
-        }
-      }
+          .toVector
+      })
       .getOrElse(Nil)
   }
 
-  def getGroupNotices(name: String, time: DateTime, limit: Int): List[NoticeRecord] = {
-    val historyId = HistoryRecord.idForTime(time)
-    val historyOpt = HistoryRecord
-      .where(_.buckets startsWith name + ":")
-      .and(_.id lte historyId)
-      .orderDesc(_.id)
-      .hint(HistoryRecord.bucketIdIndex)
-      .get()
+  def getGroupNotices(name: String, time: DateTime, limit: Int): Seq[RichNoticeRecord] = {
+    val historyId = RichHistoryRecord.idForTime(time)
+    val historyOpt: Option[HistoryRecord] = executor
+      .fetchOne(
+        Q(HistoryRecord)
+          .where(_.buckets contains name + ":")
+          .and(_.id lte historyId)
+          .orderDesc(_.id)
+      )
+      .unwrap
 
-    historyOpt
-      .map { history =>
+    historyOpt.view
+      .flatMap(thriftHistory => {
+        val history = RichHistoryRecord(thriftHistory)
         // use a view to avoid creating an intermediate collection at each step
-        val notices = history.notices.value.view
+        history.notices.view
+          .map(RichNoticeRecord(_))
           .dropWhile(_.createDateTime.isAfter(time))
-          .filter(_.buckets.value.exists(_.startsWith(name + ":")))
+          .filter(_.buckets.exists(_.startsWith(name + ":")))
           .take(limit)
-          .toList
-        if (notices.size < limit) {
-          // recurse and look at previous records to flush out our list
-          notices ++ getGroupNotices(name, history.id.dateTimeValue.minusMillis(1), limit - notices.size)
-        } else {
-          notices
-        }
-      }
-      .getOrElse(Nil)
+      })
+      .take(limit)
+      .toVector
   }
 
-  def oldestId: Option[DateTime] = HistoryRecord.select(_.id).orderAsc(_.id).get().map(new DateTime(_))
+  def oldestId: Option[DateTime] = {
+    executor
+      .fetchOne(
+        Q(HistoryRecord)
+          .select(_.id)
+          .orderAsc(_.id)
+      )
+      .unwrap
+      .headOption
+      .map(new DateTime(_))
+  }
 
-  def processNotices(ids: List[String], notices: List[NoticeRecord], time: DateTime): List[Outgoing] = {
-    val buckets = BucketRecord.where(_._id in ids).fetch
+  def processNotices(ids: Seq[String], notices: Seq[RichNoticeRecord], time: DateTime): Seq[Outgoing] = {
+    val buckets = executor
+      .fetch(
+        Q(BucketRecord)
+          .where(_.id in ids)
+      )
+      .unwrap
     val histograms = services.bucketActions.getHistograms(ids, time, true, true, true)
     notices.map(n => {
-      val nbSet = n.buckets.value.toSet
-      val noticeBuckets = buckets.filter(b => nbSet(b.id))
+      val nbSet = n.buckets.toSet
+      val noticeBuckets = buckets.view
+        .filter(b => nbSet(b.id))
+        .map(RichBucketRecord(_))
+        .toVector
       val noticeBucketRecordHistograms = histograms.filter(h => nbSet(h.bucket))
       MongoOutgoing(n).addBuckets(noticeBuckets, noticeBucketRecordHistograms, time)
     })
@@ -177,31 +220,47 @@ class ConcreteHistoryActions(services: HasBucketActions) extends HistoryActions 
   def removeExpiredNotices(now: DateTime): Unit = {
     // NOTE(jacob): The number of these returned is dependent upon a few factors, but we
     //    will fetch a max of incoming.maintenanceWindow / history.flushPeriod records.
-    val historyRecords = HistoryRecord.where(_.earliestExpiration before now).fetch()
+    val historyRecords = executor
+      .fetch(
+        Q(HistoryRecord)
+          .where(_.earliestExpiration before now)
+      )
+      .unwrap
 
     // TODO(jacob): Once exceptionator is ported to the new mongo client this should be a
     //    single bulk update.
     for (record <- historyRecords) {
-      val validNotices = record.notices.value.filter(notice => {
-        notice.expireAt.dateTimeValue.map(_.isAfter(now)).getOrElse(true)
+      val noticeRecords = record.notices.map(RichNoticeRecord(_))
+      val validNotices = noticeRecords.filter(notice => {
+        notice.expireAtOption.map(_.isAfter(now)).getOrElse(true)
       })
-      val updatedBuckets = validNotices.flatMap(_.buckets.value).distinct
-      val newEarliestExpirationOpt = validNotices.flatMap(_.expireAt.value).minByOption(_.getTime)
+      val updatedBuckets = validNotices.flatMap(_.buckets).distinct
+      val newEarliestExpirationOpt = validNotices
+        .flatMap(_.expireAtOption)
+        .minByOption(_.getMillis)
 
-      record
+      val builder = record.toBuilder
+
+      builder
         .notices(validNotices)
         .buckets(updatedBuckets)
         .earliestExpiration(newEarliestExpirationOpt)
-        .save()
+
+      executor.save(builder.result())
     }
   }
 
   // Save a notice to its HistoryRecord, using reservoir sampling
-  def save(notice: NoticeRecord): DateTime = {
+  def save(notice: RichNoticeRecord): DateTime = {
     // use the client-provided date if available, otherwise record creation time
-    val dateTime = notice.notice.value.d.map(new DateTime(_)).getOrElse(notice.createDateTime)
-    val historyId = HistoryRecord.idForTime(dateTime)
-    val sampler = samplers.getOrElseUpdate(historyId, new ReservoirSampler[NoticeRecord](sampleRate))
+    val dateTime: DateTime = notice.noticeOrThrow.dateOption
+      .map(date => {
+        new DateTime(date)
+      })
+      .getOrElse(notice.createDateTime)
+
+    val historyId: DateTime = RichHistoryRecord.idForTime(dateTime)
+    val sampler = samplers.getOrElseUpdate(historyId, new ReservoirSampler[RichNoticeRecord](sampleRate))
     sampler.update(notice)
     historyId
   }
