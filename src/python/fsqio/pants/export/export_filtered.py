@@ -1,38 +1,69 @@
 # coding=utf-8
 # Copyright 2018 Foursquare Labs Inc. All Rights Reserved.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (
+  absolute_import,
+  division,
+  generators,
+  nested_scopes,
+  print_function,
+  unicode_literals,
+  with_statement,
+)
 
 from collections import defaultdict
 import json
 
 from pants.backend.jvm.subsystems.jvm_platform import JvmPlatform
 from pants.backend.jvm.targets.jar_library import JarLibrary
+from pants.backend.jvm.targets.junit_tests import JUnitTests
 from pants.backend.jvm.targets.jvm_target import JvmTarget
 from pants.backend.jvm.targets.scala_library import ScalaLibrary
 from pants.backend.project_info.tasks.export import ExportTask
 from pants.backend.python.targets.python_requirement_library import PythonRequirementLibrary
 from pants.backend.python.targets.python_target import PythonTarget
+from pants.backend.python.targets.python_tests import PythonTests
+from pants.backend.python.tasks.pex_build_util import has_python_requirements
 from pants.base.exceptions import TaskError
 from pants.build_graph.resources import Resources
+from pants.build_graph.target import Target
 from pants.java.distribution.distribution import DistributionLocator
 from pants.java.jar.jar_dependency_utils import M2Coordinate
 from pants.task.console_task import ConsoleTask
-from pex.pex_info import PexInfo
 import six
 from twitter.common.collections import OrderedSet
 
 from fsqio.pants.spindle.targets.spindle_thrift_library import SpindleThriftLibrary
 
 
+# Changing the behavior of this task may affect the IntelliJ Pants plugin.
+# Please add @yic to reviews for this file.
 class GenStubsAndExportTask(ExportTask):
+  """Base class for generating a json-formattable blob of data about the target graph.
+
+  Subclasses can invoke the generate_targets_map method to get a dictionary of plain datastructures
+  (dicts, lists, strings) that can be easily read and exported to various formats.
+  """
+
+  # FORMAT_VERSION_NUMBER: Version number for identifying the export file format output. This
+  # version number should change when there is a change to the output format.
+  #
+  # Major Version 1.x.x : Increment this field when there is a major format change
+  # Minor Version x.1.x : Increment this field when there is a minor change that breaks backward
+  #   compatibility for an existing field or a field is removed.
+  # Patch version x.x.1 : Increment this field when a minor format change that just adds information
+  #   that an application can safely ignore.
+  #
+  # Note format changes in src/docs/export.md and update the Changelog section.
+  #
+  DEFAULT_EXPORT_VERSION = '1.0.10'
 
   @classmethod
   def prepare(cls, options, round_manager):
     # TODO: this method is overriden explicitly for stub generation. When we change the approach we can remove
     super(GenStubsAndExportTask, cls).prepare(options, round_manager)
     if options.libraries or options.libraries_sources or options.libraries_javadocs:
-     round_manager.require_data('stubs')
+      round_manager.require_data('stubs')
 
   def generate_targets_map(self, targets, classpath_products=None):
     """Generates a dictionary containing all pertinent information about the target graph.
@@ -42,10 +73,10 @@ class GenStubsAndExportTask(ExportTask):
     :param classpath_products: Optional classpath_products. If not provided when the --libraries
       option is `True`, this task will perform its own jar resolution.
 
-      This is forked from the base export; the only significant changes are reconfiguring targets after resolve_jars and
-      filtering synthetic SpindleThriftLibraries from the dependencies.
-      This can be a strict call to super if we mess with how dependencies are calculated instead, and reformat targets
-      prior to calling this function.
+    This is forked from the base export; the only significant changes are reconfiguring targets after resolve_jars and
+    filtering synthetic SpindleThriftLibraries from the dependencies.
+    This can be a strict call to super if we mess with how dependencies are calculated instead, and reformat targets
+    prior to calling this function.
     """
     targets_map = {}
     resource_target_map = {}
@@ -58,26 +89,24 @@ class GenStubsAndExportTask(ExportTask):
     else:
       classpath_products = None
 
-    # TODO: following line custom to override targets and replace thrift codegen with stubs
-    targets = [t for t in targets if not (isinstance(t.derived_from, SpindleThriftLibrary) and t.is_synthetic)]
     target_roots_set = set(self.context.target_roots)
 
     def process_target(current_target):
       """
       :type current_target:pants.build_graph.target.Target
       """
-      def get_target_type(target):
-        if target.is_test:
-          return ExportTask.SourceRootTypes.TEST
+      def get_target_type(tgt):
+        def is_test(t):
+          return isinstance(t, JUnitTests) or isinstance(t, PythonTests)
+        if is_test(tgt):
+          return GenStubsAndExportTask.SourceRootTypes.TEST
         else:
-          if (isinstance(target, Resources) and target in resource_target_map and
-                  resource_target_map[target].is_test):
-
-            return ExportTask.SourceRootTypes.TEST_RESOURCE
-          elif isinstance(target, Resources):
-            return ExportTask.SourceRootTypes.RESOURCE
+          if (isinstance(tgt, Resources) and tgt in resource_target_map and is_test(resource_target_map[tgt])):
+            return GenStubsAndExportTask.SourceRootTypes.TEST_RESOURCE
+          elif isinstance(tgt, Resources):
+            return GenStubsAndExportTask.SourceRootTypes.RESOURCE
           else:
-            return ExportTask.SourceRootTypes.SOURCE
+            return GenStubsAndExportTask.SourceRootTypes.SOURCE
 
       info = {
         'targets': [],
@@ -106,7 +135,8 @@ class GenStubsAndExportTask(ExportTask):
         info['requirements'] = [req.key for req in reqs]
 
       if isinstance(current_target, PythonTarget):
-        interpreter_for_target = self.select_interpreter_for_targets([current_target])
+        interpreter_for_target = self._interpreter_cache.select_interpreter_for_targets(
+          [current_target])
         if interpreter_for_target is None:
           raise TaskError('Unable to find suitable interpreter for {}'
                           .format(current_target.address))
@@ -130,8 +160,7 @@ class GenStubsAndExportTask(ExportTask):
       target_libraries = OrderedSet()
       if isinstance(current_target, JarLibrary):
         target_libraries = OrderedSet(iter_transitive_jars(current_target))
-      # Jbarry note - this is the unforked approach.
-      # for de in current_target.dependencies:
+      # for dep in current_target.dependencies:
       # TODO: following line custom to override targets and replace thrift codegen with stubs.
       for dep in [t for t in current_target.dependencies
                   if not (isinstance(t.derived_from, SpindleThriftLibrary) and t.is_synthetic)]:
@@ -155,9 +184,9 @@ class GenStubsAndExportTask(ExportTask):
         if hasattr(current_target, 'test_platform'):
           info['test_platform'] = current_target.test_platform.name
 
-      info['roots'] = map(lambda source_root_package_prefix: {
-        'source_root': source_root_package_prefix[0],
-        'package_prefix': source_root_package_prefix[1]
+      info['roots'] = map(lambda (source_root, package_prefix): {
+        'source_root': source_root,
+        'package_prefix': package_prefix
       }, self._source_roots_for_target(current_target))
 
       if classpath_products:
@@ -181,25 +210,20 @@ class GenStubsAndExportTask(ExportTask):
       'version': self.DEFAULT_EXPORT_VERSION,
       'targets': targets_map,
       'jvm_platforms': jvm_platforms_map,
+      # `jvm_distributions` are static distribution settings from config,
+      # `preferred_jvm_distributions` are distributions that pants actually uses for the
+      # given platform setting.
+      'preferred_jvm_distributions': {}
     }
-
-    # `jvm_distributions` are static distribution settings from config,
-    # `preferred_jvm_distributions` are distributions that pants actually uses for the
-    # given platform setting.
-    graph_info['preferred_jvm_distributions'] = {}
-
-    def get_preferred_distribution(platform, strict):
-      try:
-        return JvmPlatform.preferred_jvm_distribution([platform], strict=strict)
-      except DistributionLocator.Error:
-        return None
 
     for platform_name, platform in JvmPlatform.global_instance().platforms_by_name.items():
       preferred_distributions = {}
       for strict, strict_key in [(True, 'strict'), (False, 'non_strict')]:
-        dist = get_preferred_distribution(platform, strict=strict)
-        if dist:
+        try:
+          dist = JvmPlatform.preferred_jvm_distribution([platform], strict=strict)
           preferred_distributions[strict_key] = dist.home
+        except DistributionLocator.Error:
+          pass
 
       if preferred_distributions:
         graph_info['preferred_jvm_distributions'][platform_name] = preferred_distributions
@@ -226,11 +250,8 @@ class GenStubsAndExportTask(ExportTask):
 
       interpreters_info = {}
       for interpreter, targets in six.iteritems(python_interpreter_targets_mapping):
-        chroot = self.cached_chroot(
-          interpreter=interpreter,
-          pex_info=PexInfo.default(),
-          targets=targets
-        )
+        req_libs = filter(has_python_requirements, Target.closure_for_targets(targets))
+        chroot = self.resolve_requirements(interpreter, req_libs)
         interpreters_info[str(interpreter.identity)] = {
           'binary': interpreter.binary,
           'chroot': chroot.path()
@@ -256,7 +277,6 @@ class GenStubsAndExport(GenStubsAndExportTask, ConsoleTask):
 
   def console_output(self, targets, classpath_products=None):
     graph_info = self.generate_targets_map(targets, classpath_products=classpath_products)
-
     if self.get_options().formatted:
       return json.dumps(graph_info, indent=4, separators=(',', ': ')).splitlines()
     else:
