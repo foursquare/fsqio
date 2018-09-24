@@ -4,7 +4,6 @@ package io.fsq.common.testing.matchers
 
 import io.fsq.common.scala.Identity._
 import org.hamcrest.{BaseMatcher, Description, Matcher}
-import scala.collection.TraversableLike
 import scala.math.max
 import scala.reflect.runtime.universe.TypeTag
 
@@ -88,48 +87,5 @@ object FoursquareMatchers {
     */
   def equalsCollection[A](expected: Iterable[A]): Matcher[Iterable[A]] = {
     new EqualsCollection(expected)
-  }
-
-  object IsNonEmpty extends BaseMatcher {
-    override def describeTo(d: Description) = d.appendText("Not a non-empty collection")
-
-    override def matches(other: Object) = {
-      other match {
-        case other: TraversableLike[_, _] => other.nonEmpty
-        case _ => false
-      }
-    }
-  }
-
-  // TODO(patrick): If we ever update to hamcrest 1.3, we can use the existing matcher that does
-  // this, but this is handy because it accepts scala collections instead of java collections
-  class HasItem(matchers: Seq[Matcher[_]]) extends BaseMatcher {
-    override def describeTo(d: Description) = {
-      d.appendText("Didn't match any of:")
-      matchers.foreach(m => m.describeTo(d))
-    }
-
-    override def matches(other: Object) = {
-      other match {
-        case other: TraversableLike[_, _] => other.exists(t => matchers.exists(m => m.matches(t)))
-        case _ => false
-      }
-    }
-  }
-
-  // TODO(patrick): If we ever update to hamcrest 1.3, we can use the existing matcher that does
-  // this, but this is handy because it accepts scala collections instead of java collections
-  class ContainsInAnyOrder(matchers: Seq[Matcher[_]]) extends BaseMatcher {
-    override def describeTo(d: Description) = {
-      d.appendText("Didn't match in any order:")
-      matchers.foreach(m => m.describeTo(d))
-    }
-
-    override def matches(other: Object) = {
-      other match {
-        case other: TraversableLike[_, _] => other.forall(t => matchers.exists(m => m.matches(t)))
-        case _ => false
-      }
-    }
   }
 }

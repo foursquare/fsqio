@@ -708,7 +708,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.mockito', name = 'mockito-core', rev = '1.9.5')
+    jar(org = 'org.mockito', name = 'mockito-core', rev = '2.21.0')
   ]
 )
 
