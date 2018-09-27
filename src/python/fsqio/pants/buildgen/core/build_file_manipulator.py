@@ -456,7 +456,7 @@ class BuildFileManipulator(object):
       # Note: This will write out the diff for the first incorrect build file and then exit. There may be other changes
       # which will be picked up if --fail-on-diff is not passed.
       if fail_on_diff:
-        print("Buildgen wrote a diff. Run `./pants builgen` locally and commit the buildfile diff with your changes.")
+        print("Buildgen wrote a diff. Run `./pants buildgen` locally and commit the buildfile diff with your changes.")
         sys.exit(1)
       if not dry_run:
         with open(self.target_address.rel_path, 'w') as f:

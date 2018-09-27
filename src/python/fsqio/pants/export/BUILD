@@ -5,8 +5,5 @@ python_library(
   sources = globs('*.py'),
   dependencies = [
     '3rdparty/python:pantsbuild.pants',
-    '3rdparty/python:six',
-    '3rdparty/python:twitter.common.collections',
-    'src/python/fsqio/pants/spindle/targets',
   ],
  )
