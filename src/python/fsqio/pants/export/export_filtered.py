@@ -14,7 +14,6 @@ from __future__ import (
 import json
 import os
 
-from pants.backend.jvm.targets.scala_library import ScalaLibrary
 from pants.backend.project_info.tasks.export import ExportTask, get_buildroot
 from pants.task.console_task import ConsoleTask
 
@@ -57,9 +56,9 @@ class GenStubsAndExportTask(ExportTask):
 
     def root_package_prefix(source_file):
       source = os.path.dirname(source_file)
-      if target.is_synthetic and isinstance(target, ScalaLibrary):
-        source_root = os.path.join(get_buildroot(), target.target_base, source)
-        source_root = mod_path_to_ide_gen(source_root)
+      if target.is_synthetic:
+        source_root = mod_path_to_ide_gen(os.path.join(get_buildroot(), target.target_base, source))
+
       else:
         source_root = os.path.join(get_buildroot(), target.target_base, source)
       return source_root, source.replace(os.sep, '.')
