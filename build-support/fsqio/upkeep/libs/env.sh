@@ -3,6 +3,7 @@
 
 # Allow any passed pants or fsq.io to override the default config.
 export PANTS_CONFIG_FILES="${PANTS_CONFIG_FILES:-"['pants.ini']"}"
+
 export DEPENDENCIES_ROOT="${BUILD_ROOT}/dependencies"
 export CURRENT_UNAME=$(uname -s)
 
