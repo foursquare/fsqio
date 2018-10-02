@@ -1,6 +1,7 @@
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
 scala_version = '2.11.8'
+HADOOP_VERSION = '2.6.0-cdh5.4.3'
 
 
 ### START Managed Dependencies START ###
@@ -28,7 +29,9 @@ managed_jar_dependencies(
     ':curator-test',
     ':gson',
     ':guava',
+    ':hadoop-common',
     ':hamcrest-core',
+    ':hbase',
     ':jackson',
     ':jackson-scala',
     ':joda-time',
@@ -268,33 +271,21 @@ jar_library(
     jar(org = 'org.apache.curator', name = 'curator-framework', rev = curator_rev,
       excludes = [
         exclude('org.apache.curator', name = 'apache-curator'),
-        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
-        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
     jar(org = 'org.apache.curator', name = 'curator-client', rev = curator_rev,
       excludes = [
         exclude('org.apache.curator', name = 'apache-curator'),
-        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
-        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
     jar(org = 'org.apache.curator', name = 'curator-recipes', rev = curator_rev,
       excludes = [
         exclude('org.apache.curator', name = 'apache-curator'),
-        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
-        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
     jar(org = 'org.apache.curator', name = 'curator-x-discovery', rev = curator_rev,
       excludes = [
         exclude('org.apache.curator', name = 'apache-curator'),
-        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
-        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
   ],
@@ -310,9 +301,6 @@ jar_library(
     jar(org = 'org.apache.curator', name = 'curator-test', rev = curator_rev,
       excludes = [
         exclude('org.apache.curator', name = 'apache-curator'),
-        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
-        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     )
   ]
@@ -330,35 +318,30 @@ jar_library(
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
     scala_jar(org = 'com.twitter', name = 'finagle-http', rev = finagle_rev,
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
     scala_jar(org = 'com.twitter', name = 'finagle-httpx', rev = finagle_rev,
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
     scala_jar(org = 'com.twitter', name = 'finagle-httpx-compat', rev = finagle_rev,
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
     scala_jar(org = 'com.twitter', name = 'finagle-stream', rev = finagle_rev,
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
     scala_jar(org = 'com.twitter', name = 'finagle-kestrel', rev = finagle_rev),
@@ -366,42 +349,36 @@ jar_library(
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
     scala_jar(org = 'com.twitter', name = 'finagle-ostrich4', rev = finagle_rev,
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
     scala_jar(org = 'com.twitter', name = 'finagle-serversets', rev = finagle_rev,
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
     scala_jar(org = 'com.twitter', name = 'finagle-thrift', rev = finagle_rev,
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
     scala_jar(org = 'com.twitter', name = 'finagle-memcached', rev = finagle_rev,
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
     scala_jar(org = 'com.twitter', name = 'finagle-memcachedx', rev = finagle_rev,
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
   ],
@@ -503,6 +480,45 @@ jar_library(
 )
 
 
+jar_library(
+  name = 'hadoop-mapreduce-client',
+  jars = [
+    jar(org = 'org.apache.hadoop', name = 'hadoop-mapreduce-client-core', rev = HADOOP_VERSION,
+      excludes = [
+      ],
+    ),
+  ],
+  dependencies = [
+    ':hadoop-common',
+  ],
+  tags = [
+    'opensource',
+  ],
+)
+
+
+jar_library(
+  name = 'hadoop-common',
+  jars = [
+    jar(org = 'org.apache.hadoop', name = 'hadoop-common', rev = HADOOP_VERSION,
+      excludes = [
+      ],
+    ),
+    jar(org = 'org.apache.hadoop', name = 'hadoop-auth', rev = HADOOP_VERSION),
+    jar(org = 'javax.ws.rs', name = 'javax.ws.rs-api', rev = '2.0.1'),
+  ],
+  dependencies = [
+    ':slf4j-api',
+    ':slf4j-jcl',
+    ':slf4j-jul',
+    ':slf4j-log4j',
+  ],
+  tags = [
+    'opensource',
+  ],
+)
+
+
 # NOTE(mateo): This is a bit of a time bomb. It is a hard requirement for some libs but is also fatjarred with  junit.
 # Additionally, some libraries import it, but just transitively inherit it from junit instead of referencing this def.
 # Fix is to add this to third_party_map and see what is up.
@@ -511,6 +527,26 @@ jar_library(
   jars = [
     jar(org='org.hamcrest', name = 'hamcrest-core', rev='1.3'),
     jar(org='org.hamcrest', name = 'hamcrest-library', rev='1.3'),
+  ],
+)
+
+
+jar_library(
+  name = 'hbase',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.apache.hbase', name = 'hbase', rev = '0.94.6-cdh4.4.0',
+      # NOTE(mateo): Turns out jruby is super poisoinous and does things like fatjar unshaded joda-time.
+      # Globally excluded as well, but since hbase is the only thing that brings it in, lets do our diligence.
+      excludes = [
+        exclude(org = 'log4j', name = 'log4j'),
+        exclude(org = 'org.jruby', name = 'jruby-complete'),
+        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
+      ],
+    ),
   ],
 )
 
@@ -1065,8 +1101,6 @@ jar_library(
   jars = [
     jar(org = 'org.slf4j', name = 'slf4j-api', rev = slf4j_rev,
       excludes = [
-        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
-        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
       ],
     ),
   ],
@@ -1081,8 +1115,6 @@ jar_library(
   jars = [
     jar(org = 'org.slf4j', name = 'jcl-over-slf4j', rev = slf4j_rev,
       excludes = [
-        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
-        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
       ],
     ),
   ],
@@ -1097,8 +1129,6 @@ jar_library(
   jars = [
     jar(org = 'org.slf4j', name = 'jul-to-slf4j', rev = slf4j_rev,
       excludes = [
-        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
-        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
       ],
     ),
   ],
@@ -1113,7 +1143,6 @@ jar_library(
   jars = [
     jar(org = 'org.slf4j', name = 'log4j-over-slf4j', rev = slf4j_rev,
       excludes = [
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
   ],
@@ -1233,9 +1262,6 @@ jar_library(name = 'zookeeper',
   jars = [
     jar(org = 'org.apache.zookeeper', name = 'zookeeper', rev = '3.4.6', intransitive = True,
       excludes = [
-        exclude(org = 'org.slf4j', name = 'slf4j-log4j12'),
-        exclude(org = 'org.slf4j', name = 'slf4j-jdk14'),
-        exclude(org = 'log4j', name = 'log4j'),
       ],
     ),
   ],

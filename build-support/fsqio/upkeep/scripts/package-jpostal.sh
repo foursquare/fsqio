@@ -162,4 +162,5 @@ colorized_warn "Packaged bundles:\n"
 for i in ${packaged_archives[@]}; do
   colorized_warn "\t* ${i}\n"
 done
-colorized_warn "\nPlease upload to hosting\n"
+colorized_warn "\nFor local use, copy the folders under ${DIST_DIR} to ${PANTS_BOOTSTRAP}/bin"
+colorized_warn "To publish for production use, please upload to hosting\n"

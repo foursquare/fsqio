@@ -81,4 +81,4 @@ function bootstrap_pants {
 }
 
 pants_dir=$(bootstrap_pants) && \
-export PANTSBINARY="${pants_dir}/bin/pants"
+export PANTSBINARY="${PANTSBINARY:-$pants_dir/bin/pants}"

@@ -9,12 +9,11 @@ source upkeep ''
 
 "${BUILD_ROOT}/upkeep"
 
-if [ -n "${FS_PANTS_NOOP}" ]; then
-  # A noop flag for tests that cover seeding the environment since Pants exits nonzero when sourced.
-  return
-elif [ -z "$PANTSBINARY" ]; then
-  .pvenvs/fs/bin/pants "$@"
-else
-  export PYTHONPATH=src/python
-  "$PANTSBINARY" "$@"
-fi
+# A noop flag for tests that cover seeding the environment since Pants exits nonzero when sourced.
+[[ -n "${FS_PANTS_NOOP}" ]] && exit 0
+
+# The script below runs the pants bootstrap task and exports PANTSBINARY. Basically a noop if the pants_version
+# hasn't changed. This could be hooked more properly into upkeep but we are waiting on the need to arise.
+source "${BUILD_ROOT}/build-support/fsqio/upkeep/scripts/opensource-pants-env.sh"
+export PYTHONPATH=src/python
+"$PANTSBINARY" "$@"

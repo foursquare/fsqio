@@ -11,6 +11,8 @@ if [[ -z "${DEPENDENCIES_ROOT+x}" ]]; then
   exit 1
 fi
 
+source "${UPKEEP_HOME}/libs/fetcher.sh"
+
 function print_help() {
   echo ""
   echo -e "upkeep:\n\tManage dependencies and the development environment."

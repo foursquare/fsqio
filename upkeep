@@ -10,20 +10,13 @@ export UPKEEPROOT="${BUILD_ROOT}/build-support"
 UPKEEP_HOME="${UPKEEPROOT}/fsqio/upkeep"
 ENV_FILE="libs/env.sh"
 
-# Symlink the proper environmental variables file.
-if [[ -e "${UPKEEPROOT}/foursquare/upkeep/${ENV_FILE}" ]]; then
-  repo_env="${UPKEEPROOT}/foursquare/upkeep/${ENV_FILE}"
-else
-  repo_env="${UPKEEP_HOME}/${ENV_FILE}"
-fi
+# Source the environment env files.
+UPKEEP_FSQIO_ENV="${UPKEEP_HOME}/${ENV_FILE}"
+UPKEEP_FS_ENV="${UPKEEPROOT}/foursquare/upkeep/${ENV_FILE}"
 
-source "${repo_env}"
-source "${UPKEEP_HOME}/libs/util.sh" && source "${UPKEEP_HOME}/libs/fetcher.sh"
-
-if [[ -z "${FSQWORKING_XCODE}" ]]; then
-  # If XCode is validated, set a env to disable future checks that invocation.
-  validate_xcode && export FSQ_WORKING_XCODE="True"
-fi
+[[ -e ${UPKEEP_FS_ENV} ]] && source "${UPKEEP_FS_ENV}"
+[[ -e ${UPKEEP_FSQIO_ENV} ]] && source "${UPKEEP_FSQIO_ENV}"
+source "${UPKEEP_HOME}/libs/util.sh"
 
 # Default to not SKIP_UPKEEP
 SKIP_UPKEEP=${SKIP_UPKEEP:-0}
@@ -55,10 +48,17 @@ for opt in $@; do
       ;;
     "--no-cache" )
       # This could and probably should be per-task but the delete would have to happen in the check.sh
-      DELETE_UPKEEP_CACHE=1
       colorized_warn "Deleting the upkeep cache...\n"
+      # We have reluctantly introduced a leak with this and again have several types of clean.
+      # * "./upkeep clean"
+      #    - Removes created environments
+      #    - Delete .pants.d and any directories defined by FSQ_CLEAN_DIRS
+      # ./upkeep <anything> --no-cache
+      #    - Wipes the third party tools and download caches.
+
+      # This will delete the current files and in almost all cases safely trigger a rebuild.
+      # Run ./upkeep --all in the off chance your environment ends up unhealthy.
       (rm -rf "${DEPENDENCIES_ROOT}" "${FS_DOWNLOAD_CACHE}")
-      # TODO: Don't include clean task by default.
       ;;
     * )
       # Try and catch bad options - while allowing passthrough for ./upkeep run.
@@ -139,5 +139,5 @@ if [ "$0" = "$BASH_SOURCE" ]; then
   # This must be two separate shell commands or else exec will return the exit code of the function's `echo` call.
   cmd="$(upkeep_cmd ${action} ${args[@]})"
   export SKIP_UPKEEP=$SKIP_UPKEEP
-  exec ${cmd}
+  ${cmd}
 fi

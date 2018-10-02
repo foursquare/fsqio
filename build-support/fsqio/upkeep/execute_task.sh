@@ -93,6 +93,10 @@ if [ "$0" = "$BASH_SOURCE" ]; then
   if [[ "${DOWNSTREAM_TASKS}" != "true" ]]; then
     # This is where the tasks are actually run - eventually the DOWNSTREAM_TASKS pipeline calls every task run here.
     task_list=( "$@" )
+    if [[ -z "${FSQWORKING_XCODE}" ]]; then
+      # If XCode is validated, set a env to disable future checks that invocation.
+      validate_xcode && export FSQ_WORKING_XCODE="True"
+    fi
     for requested in ${task_list[@]}; do
       run_required "${requested}"
       echo -e "Upkeep task complete: ${requested}"
