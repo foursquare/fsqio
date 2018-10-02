@@ -20,7 +20,7 @@ class RemoteSource(Resources):
     name=None,
     filename=None,
     version=None,
-    platform=None,
+    platform_dependent=None,
     arch=None,
     namespace=None,
     extract=None,
@@ -32,7 +32,7 @@ class RemoteSource(Resources):
     :param string name: Basename of the source package or file, as well as the target name.
       e.g. 'node.tar.gz' or 'thrift'.
     :param string version: version of the source distribution.
-    :param string platform: Intended platform. Currently defaults to linux
+    :param string platform_dependent: None or "True" string indicates platform-dependent tooling and "False" otherwise.
     :param string arch: Intended architecture of the package. Currently defaults to 'x86_64'.
     :param string filename: Name of the file intended for fetching. Defaults to the target name.
     :param string namespace: Directory name that holds these sources. Defaults to using the split filename,
@@ -44,7 +44,10 @@ class RemoteSource(Resources):
     # TODO(mateo): Support platform-independent bundles, which is what most source distributions will be.
     # TODO(mateo): Add a 'release' param. For now, I have been rolling it into the version field or hardcoding it.
     self.version = version
-    self.platform = platform or 'linux'
+    # TODO(mateo): Convert our source packages (actually agnostic) to the platfrom independent
+    # namespacing, which can save a TON of space for our big packages (stored up to 4x every rev).
+    _platform_dependent = platform_dependent or "True"
+    self.platform_dependent = str(_platform_dependent)
     self.arch = arch or 'x86_64'
     self.filename = filename or name
     self.namespace = namespace or self.filename.split('.')[0]
@@ -52,10 +55,10 @@ class RemoteSource(Resources):
     payload = payload or Payload()
     payload.add_fields({
       'version': PrimitiveField(self.version),
-      'platform': PrimitiveField(self.platform),
+      'platform_dependent': PrimitiveField(self.platform_dependent),
       'arch': PrimitiveField(self.arch),
       'filename': PrimitiveField(self.filename),
       'namespace': PrimitiveField(self.namespace),
-      'extract': PrimitiveField(self.extract),
+      'extract': PrimitiveField(str(self.extract)),
     })
     super(RemoteSource, self).__init__(name=name, payload=payload, **kwargs)

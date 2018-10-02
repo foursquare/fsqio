@@ -9,7 +9,8 @@ remote_source(
     'opensource',
     'dependencies_must_have:opensource',
   ],
-  extract = True
+  extract = True,
+  platform_dependent = "False",
 )
 
 scala_library(

@@ -40,9 +40,6 @@ class RemoteSourceFetcher(BinaryToolBase):
   # TODO(mateo): Either fully adapt the remote_sources plugin for the new BinaryToolBase interface or
   # work with upstream until UnpackJars is robust enough for our use cases.
 
-  # NOTE(mateo): We actually have both platform-dependent, but the symlinks should be in place to universally set True.
-  platform_dependent = True
-
   # The upstream interface uses this for the "name" because it expects a new Subsystem for every boostrapped
   # tool. We set the name in the BUILD file, which is interpolated through overrides below.
   options_scope = 'remote-fetcher'
@@ -52,6 +49,7 @@ class RemoteSourceFetcher(BinaryToolBase):
     self._filename = remote_target.filename
     self._extract = remote_target.extract or False
     self._version = remote_target.version
+    self.platform_dependent = remote_target.platform_dependent == "True"
 
   def get_support_dir(self):
     return 'bin/{}'.format(self.name)
