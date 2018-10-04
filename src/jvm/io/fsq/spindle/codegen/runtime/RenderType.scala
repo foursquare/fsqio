@@ -396,6 +396,15 @@ case class JavaDateRenderType(ref: RenderType) extends RefRenderType with Enhanc
   override def hasOrdering: Boolean = false
 }
 
+case class LocalDateRenderType(ref: RenderType) extends RefRenderType with EnhancedRenderType {
+  override def text: String = "org.joda.time.LocalDate"
+  override def fieldWriteTemplate: String = "write/localdate.ssp"
+  override def fieldReadTemplate: String = "read/localdate.ssp"
+  override def underlying: RenderType = ref.underlying
+  override def ttype: TType = TType.STRING
+  override def hasOrdering: Boolean = false
+}
+
 case class DollarAmountRenderType(ref: RenderType) extends RefRenderType with EnhancedRenderType {
   override def text: String = "com.foursquare.common.base.DollarAmount"
   override def fieldWriteTemplate: String = "write/dollaramount.ssp"
@@ -505,6 +514,7 @@ object RenderType {
       case EnhancedTypeRef("bson:ObjectId", ref @ BinaryRef) => ObjectIdRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("bson:BSONObject", ref @ BinaryRef) => BSONObjectRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("bson:DateTime", ref @ I64Ref) => DateTimeRenderType(RenderType(ref, annotations))
+      case EnhancedTypeRef("bson:LocalDate", ref @ I64Ref) => LocalDateRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("java:Date", ref @ StringRef) => JavaDateRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("java:UUID", ref @ BinaryRef) => UUIDRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("fs:DollarAmount", ref @ I64Ref) => DollarAmountRenderType(RenderType(ref, annotations))
