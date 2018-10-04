@@ -1,0 +1,4 @@
+<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.LocalDateRenderType %>
+<%@ val valueExpr: String %>
+<%@ val indent: String %>
+${indent}oprot.writeString(io.fsq.spindle.runtime.DateFieldHelpers.printLocalDate(${valueExpr}))

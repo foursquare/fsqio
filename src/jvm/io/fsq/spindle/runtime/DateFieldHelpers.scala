@@ -2,6 +2,7 @@
 
 package io.fsq.spindle.runtime
 
+import org.joda.time.LocalDate
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 
 object DateFieldHelpers {
@@ -17,4 +18,11 @@ object DateFieldHelpers {
     javaUtilDateFormatter.parseDateTime(dateString).toDate
   }
 
+  def printLocalDate(date: LocalDate): String = {
+    date.toString()
+  }
+
+  def parseLocalDate(dateString: String): LocalDate = {
+    LocalDate.parse(dateString)
+  }
 }
