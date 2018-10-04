@@ -3,6 +3,7 @@
 package io.fsq.spindle.codegen.binary.test
 
 import io.fsq.spindle.codegen.binary.ThriftCodegen
+import io.fsq.spindle.codegen.binary.test.gen.ChildStruct16
 import java.nio.file.{Files, Paths}
 import java.util.Arrays
 import org.junit.{Rule, Test}
@@ -69,5 +70,14 @@ class CodegenSampleTest {
       "The thrift_descriptor samples didn't match. They have been overwritten with the expected values.",
       noMatchFiles.isEmpty
     )
+  }
+
+  @Test
+  def testHashCode(): Unit = {
+    val hash1 = ChildStruct16.newBuilder.member1(true).result.hashCode
+    val hash2 = ChildStruct16.newBuilder.member1(false).result.hashCode
+    val hash3 = ChildStruct16.newBuilder.member2(true).result.hashCode
+    assertTrue("Spindle hashcode imp is not working properly", hash1 != hash2)
+    assertTrue("Spindle hashcode imp is not working properly", hash1 != hash3)
   }
 }

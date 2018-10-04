@@ -9,6 +9,7 @@ junit_tests(
     'src/resources/io/fsq/ssp/codegen/javagen:files',
     'src/resources/io/fsq/ssp/codegen/scala:files',
     'test/jvm/io/fsq/spindle/codegen/binary/test/gen:files',
+    'test/thrift/io/fsq/spindle/codegen/binary/test/gen',
     'test/thrift/io/fsq/spindle/codegen/parser/test:files',
   ],
   tags=[

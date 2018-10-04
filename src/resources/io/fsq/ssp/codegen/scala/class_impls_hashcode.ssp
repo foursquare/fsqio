@@ -10,6 +10,7 @@
     val hasher = new _root_.io.fsq.spindle.runtime.MurmurHash[AnyRef](0)
 #for (field <- cls.fields)
     if (${field.isSetName}) hasher.append(${field.varName}.##)
+    hasher.append('\n')
 #end
     hasher.hash
   }

@@ -1502,15 +1502,25 @@ final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.c
     // We use a fixed seed, for consistency.
     val hasher = new _root_.io.fsq.spindle.runtime.MurmurHash[AnyRef](0)
     if (namespacesIsSet) hasher.append(_namespaces.##)
+    hasher.append('\n')
     if (includesIsSet) hasher.append(_includes.##)
+    hasher.append('\n')
     if (constantsIsSet) hasher.append(_constants.##)
+    hasher.append('\n')
     if (enumsIsSet) hasher.append(_enums.##)
+    hasher.append('\n')
     if (typedefsIsSet) hasher.append(_typedefs.##)
+    hasher.append('\n')
     if (structsIsSet) hasher.append(_structs.##)
+    hasher.append('\n')
     if (unionsIsSet) hasher.append(_unions.##)
+    hasher.append('\n')
     if (exceptionsIsSet) hasher.append(_exceptions.##)
+    hasher.append('\n')
     if (servicesIsSet) hasher.append(_services.##)
+    hasher.append('\n')
     if (typeRegistryIsSet) hasher.append(_typeRegistry.##)
+    hasher.append('\n')
     hasher.hash
   }
 
