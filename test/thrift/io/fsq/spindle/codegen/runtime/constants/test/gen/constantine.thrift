@@ -5,6 +5,7 @@ namespace java io.fsq.spindle.codegen.runtime.constants.test.gen
 const string SIMPLE = "hello"
 const bool BOOL = true
 const double DOUBLE = 3.2
+const i64 LONG = 10000000000
 const map<string, string> MAPCONST = {"hello": "world", "wisconsin": "badgers"}
 const list<double> LISTCONST = [1.2, 2.1, 1.1]
 
