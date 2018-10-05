@@ -74,7 +74,10 @@ case class PrimitiveRenderType(
   override def usesSetVar: Boolean = true
   override def hasOrdering: Boolean = true
   override val renderValueSupported = true
-  override def renderValue(v: String) = Some(v)
+  override def renderValue(v: String) = ttype match {
+    case TType.I64 => Some(s"${v}L")
+    case _ => Some(v)
+  }
 }
 
 trait RefRenderType extends RenderType {
