@@ -9,6 +9,7 @@ class ScalaConstTest {
   @Test
   def testConstantGeneration(): Unit = {
     A.assertEquals(List(1.2, 2.1, 1.1), ConstantineConstants.LISTCONST)
+    A.assertEquals(10000000000L, ConstantineConstants.LONG)
     A.assertEquals(Map("hello" -> "world", "wisconsin" -> "badgers"), ConstantineConstants.MAPCONST)
     A.assertTrue(ConstantineConstants.BOOL)
     A.assertEquals("hello", ConstantineConstants.SIMPLE)
