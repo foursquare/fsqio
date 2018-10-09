@@ -6,9 +6,8 @@ import com.twitter.conversions.time._
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.finagle.builder.ClientBuilder
 import com.twitter.finagle.builder.ClientConfig.Yes
-import com.twitter.finagle.httpx.{Http, Request, Response}
+import com.twitter.finagle.httpx.{Http, Request, Response, Status}
 import com.twitter.util.Future
-import org.jboss.netty.handler.codec.http.HttpResponseStatus
 
 class FHttpClient(
   val name: String,
@@ -25,7 +24,7 @@ class FHttpClient(
           case x if x >= 200 && x < 300 =>
             Future.value(response)
           case statusCode =>
-            val reasonPhrase = HttpResponseStatus.valueOf(statusCode).getReasonPhrase
+            val reasonPhrase = Status(statusCode).reason
             Future.exception(HttpStatusException(statusCode, reasonPhrase, response).addName(name))
         }
       })

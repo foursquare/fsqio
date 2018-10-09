@@ -76,7 +76,7 @@ class OAuth1Filter(
     // Normalize
     val normParams = percentEncode(sigParams).sortWith(_ < _).mkString("&")
     val normUrl = (scheme + "://" + host + portString + path).toLowerCase
-    val normReq = List(methodToString(request.method).toUpperCase, normUrl, normParams).map(percentEncode).mkString("&")
+    val normReq = List(request.method.toString.toUpperCase, normUrl, normParams).map(percentEncode).mkString("&")
 
     // Sign
     val normKey = percentEncode(consumer.secret) + "&" + token.map(t => percentEncode(t.secret)).getOrElse("")
@@ -96,21 +96,6 @@ class OAuth1Filter(
     )
 
     service(request)
-  }
-
-  private[this] def methodToString(method: Method): String = {
-    method match {
-      case Method.Get => "GET"
-      case Method.Post => "POST"
-      case Method.Put => "PUT"
-      case Method.Head => "HEAD"
-      case Method.Patch => "PATCH"
-      case Method.Delete => "DELETE"
-      case Method.Trace => "TRACE"
-      case Method.Connect => "CONNECT"
-      case Method.Options => "OPTIONS"
-      case _ => Method.unapply(method).getOrElse("UNKNOWN")
-    }
   }
 
   private[this] def percentEncode(params: List[(String, String)]): List[String] = {
