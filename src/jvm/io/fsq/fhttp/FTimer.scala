@@ -2,10 +2,11 @@
 
 package io.fsq.fhttp
 
-import java.util.concurrent.{Executors, ThreadFactory, TimeUnit}
+import com.twitter.util.{Duration, Timer}
+import java.util.concurrent.{Executors, ThreadFactory}
 
 object FTimer {
-  val threadFactory = new ThreadFactory {
+  private val threadFactory = new ThreadFactory {
     val default = Executors.defaultThreadFactory
     override def newThread(r: Runnable): Thread = {
       val thread = default.newThread(r)
@@ -14,8 +15,5 @@ object FTimer {
     }
   }
 
-  val nettyTimer = new org.jboss.netty.util.HashedWheelTimer(threadFactory, 10, TimeUnit.MILLISECONDS)
-  val finagleTimer = new com.twitter.finagle.util.TimerFromNettyTimer(nettyTimer)
-
-  nettyTimer.start
+  val finagleTimer: Timer = com.twitter.finagle.util.HashedWheelTimer(threadFactory, Duration.fromMilliseconds(10))
 }

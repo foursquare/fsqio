@@ -3,7 +3,7 @@
 package io.fsq.exceptionator.service
 
 import com.twitter.finagle.Service
-import com.twitter.finagle.httpx.{Request, Response, Status, Version}
+import com.twitter.finagle.http.{Request, Response, Status, Version}
 import com.twitter.util.{Future, FuturePool}
 import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{HasBucketActions, HasHistoryActions, HasNoticeActions}

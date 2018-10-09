@@ -5,7 +5,7 @@ package io.fsq.fhttp.test
 import com.twitter.conversions.time._
 import com.twitter.finagle.{Service, TimeoutException}
 import com.twitter.finagle.builder.{ClientBuilder, ServerBuilder}
-import com.twitter.finagle.httpx.{Http, Message, Request, Response, Status}
+import com.twitter.finagle.http.{Http, Message, Request, Response, Status}
 import com.twitter.io.Buf
 import com.twitter.util.{Await, Future}
 import io.fsq.common.scala.Identity._

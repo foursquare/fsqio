@@ -3,7 +3,7 @@
 package io.fsq.fhttp
 
 import com.twitter.finagle.{Service, SimpleFilter}
-import com.twitter.finagle.httpx.{Method, Request, Response}
+import com.twitter.finagle.http.{Method, Request, Response}
 import com.twitter.util.Future
 import io.fsq.common.scala.Identity._
 import java.util.UUID

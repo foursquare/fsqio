@@ -4,7 +4,7 @@ package io.fsq.fhttp
 
 import com.twitter.conversions.time._
 import com.twitter.finagle.{Filter, IndividualRequestTimeoutException, NoStacktrace, Service, SimpleFilter}
-import com.twitter.finagle.httpx.{Message, Method, Request, RequestBuilder, Response, Version}
+import com.twitter.finagle.http.{Message, Method, Request, RequestBuilder, Response, Version}
 import com.twitter.finagle.service.TimeoutFilter
 import com.twitter.io.Buf
 import com.twitter.util.{Await, Future}

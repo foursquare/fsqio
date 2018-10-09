@@ -306,7 +306,7 @@ jar_library(
   ]
 )
 
-finagle_rev = '6.28.0'
+finagle_rev = '6.30.0'
 jar_library(
   name = 'finagle',
   tags = [
@@ -321,18 +321,6 @@ jar_library(
       ],
     ),
     scala_jar(org = 'com.twitter', name = 'finagle-http', rev = finagle_rev,
-      excludes = [
-        exclude(org="org.slf4j", name="slf4j-jdk14"),
-        exclude(org="org.slf4j", name="slf4j-log4j12"),
-      ],
-    ),
-    scala_jar(org = 'com.twitter', name = 'finagle-httpx', rev = finagle_rev,
-      excludes = [
-        exclude(org="org.slf4j", name="slf4j-jdk14"),
-        exclude(org="org.slf4j", name="slf4j-log4j12"),
-      ],
-    ),
-    scala_jar(org = 'com.twitter', name = 'finagle-httpx-compat', rev = finagle_rev,
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
@@ -833,7 +821,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'com.twitter', name = 'ostrich', rev = '9.8.0')
+    scala_jar(org = 'com.twitter', name = 'ostrich', rev = '9.13.0')
   ]
 )
 
@@ -1224,7 +1212,7 @@ jar_library(
   ],
 )
 
-twitter_util_rev = '6.27.0'
+twitter_util_rev = '6.29.0'
 jar_library(
   name = 'twitter-util',
   tags = [

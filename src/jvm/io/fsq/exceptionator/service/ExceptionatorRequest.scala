@@ -3,7 +3,7 @@
 package io.fsq.exceptionator.service
 
 import com.twitter.finagle.{Filter, Service}
-import com.twitter.finagle.httpx.{Request, Response}
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.util.Future
 
 /**

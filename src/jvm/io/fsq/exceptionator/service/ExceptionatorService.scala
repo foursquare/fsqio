@@ -4,8 +4,8 @@ package io.fsq.exceptionator.service
 
 import com.twitter.finagle.Service
 import com.twitter.finagle.builder.{Server, ServerBuilder}
-import com.twitter.finagle.httpx.{Http, Method, Response, Status, Version}
-import com.twitter.finagle.httpx.filter.ExceptionFilter
+import com.twitter.finagle.http.{Http, Method, Response, Status, Version}
+import com.twitter.finagle.http.filter.ExceptionFilter
 import com.twitter.finagle.stats.OstrichStatsReceiver
 import com.twitter.io.Buf
 import com.twitter.ostrich.admin.{AdminServiceFactory, RuntimeEnvironment, StatsFactory, TimeSeriesCollectorFactory}

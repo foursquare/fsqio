@@ -6,7 +6,7 @@ import com.twitter.conversions.time._
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.finagle.builder.ClientBuilder
 import com.twitter.finagle.builder.ClientConfig.Yes
-import com.twitter.finagle.httpx.{Http, Request, Response, Status}
+import com.twitter.finagle.http.{Http, Request, Response, Status}
 import com.twitter.util.Future
 
 class FHttpClient(

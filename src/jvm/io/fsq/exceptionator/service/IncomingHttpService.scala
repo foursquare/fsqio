@@ -3,7 +3,7 @@
 package io.fsq.exceptionator.service
 
 import com.twitter.finagle.Service
-import com.twitter.finagle.httpx.{Method, Response, Status, Version}
+import com.twitter.finagle.http.{Method, Response, Status, Version}
 import com.twitter.io.BufInputStream
 import com.twitter.ostrich.stats.Stats
 import com.twitter.util.Future

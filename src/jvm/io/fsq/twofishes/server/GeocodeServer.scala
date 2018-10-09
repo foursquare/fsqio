@@ -4,7 +4,7 @@ package io.fsq.twofishes.server
 import com.google.common.geometry.S2CellId
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.finagle.builder.{Server, ServerBuilder}
-import com.twitter.finagle.httpx.{Http, Request, Response, Status, Version}
+import com.twitter.finagle.http.{Http, Request, Response, Status, Version}
 import com.twitter.finagle.thrift.ThriftServerFramedCodec
 import com.twitter.io.Buf
 import com.twitter.ostrich.admin.{AdminServiceFactory, RuntimeEnvironment, StatsFactory, TimeSeriesCollectorFactory, _}

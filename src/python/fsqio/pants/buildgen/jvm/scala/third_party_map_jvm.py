@@ -220,18 +220,7 @@ jvm_third_party_map = {
       'concurrent': 'twitter-util',
       'conversions': 'twitter-util',
       'elephantbird': 'elephant-bird',
-      'finagle': {
-        'httpx': {
-          'HttpxRequestProxy': None,
-          'HttpxResponseProxy': None,
-          'DEFAULT': 'finagle',
-        },
-        'memcached': {
-          'NoReplicationClient': None,
-          'DEFAULT': 'finagle',
-        },
-        'DEFAULT': 'finagle',
-      },
+      'finagle': 'finagle',
       'hashing': 'twitter-util',
       'io': 'twitter-util',
       'json': 'twitter-json',
