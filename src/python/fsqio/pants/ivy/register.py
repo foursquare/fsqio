@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, print_function
 
 from collections import OrderedDict
+from difflib import unified_diff
 import json
 import os
 
@@ -29,8 +30,12 @@ from pants.invalidation.cache_manager import VersionedTargetSet
 from pants.java.jar.exclude import Exclude
 from pants.util.dirutil import safe_concurrent_creation, safe_mkdir
 from pants.util.memo import memoized_property
+from typing import List
 
 from fsqio.pants.ivy.global_classpath_task_mixin import GlobalClasspathTaskMixin
+
+
+JSON_INDENT = 4
 
 
 class JarDependencyGlobalManagementSetup(GlobalClasspathTaskMixin, JarDependencyManagementSetup):
@@ -90,6 +95,13 @@ class IvyGlobalResolve(GlobalClasspathTaskMixin, IvyResolve):
       default=True,
       help='Skip writing the reports, even when a reporting dir is set.'
      )
+    register(
+      '--fail-on-diff',
+      type=bool,
+      default=False,
+      help='When True, changes in 3rdparty jar dependencies raise an Exception instead of writing the report. '
+      'This option is primarily useful in CI when requiring the generated report to be checked-in.'
+    )
 
   @classmethod
   def alternate_target_roots(cls, options, address_mapper, build_graph):
@@ -243,6 +255,15 @@ class IvyGlobalResolve(GlobalClasspathTaskMixin, IvyResolve):
   def write_resolve_report(self, frozen_resolve_file, partition_name):
     safe_mkdir(self.resolution_report_outdir)
     out_file = os.path.join(self.resolution_report_outdir, partition_name + '.json')
+
+    def lines_from_json(json_str):
+      # type: (str) -> List[str]
+      return [s.strip() for s in json_str.splitlines()]
+
+    def _diff(json1, json2, fromfile='commited', tofile='generated'):
+      # type: (str, str, str, str) -> List[str]
+      return list(unified_diff(lines_from_json(json1), lines_from_json(json2), fromfile=fromfile, tofile=tofile))
+
     try:
       with open(frozen_resolve_file) as fp:
         # We are alphabetizing the 3rdparty names and their resolved coordinateds to get a stable diff in the SCM.
@@ -252,9 +273,27 @@ class IvyGlobalResolve(GlobalClasspathTaskMixin, IvyResolve):
           parsed['default']['target_to_coords'][target] = sorted(coords)
         parsed = OrderedDict(sorted(parsed['default']['target_to_coords'].items()))
 
+        new_report = json.dumps(parsed, indent=JSON_INDENT)
+
+        if self.get_options().fail_on_diff:
+          with open(out_file, 'r') as old_report_fd:
+            old_report = old_report_fd.read()
+
+          diff = _diff(old_report, new_report)
+          if diff:
+            pretty_diff = "\n".join(diff)
+            raise TaskError(
+              '\n{pretty_diff}\n\n'
+              'Committed dependency file and resolved dependencies are different, '
+              'please make sure you comitted latest dependency file (@ {path}).'.format(
+                pretty_diff=pretty_diff,
+                path=out_file,
+              )
+            )
+
         with safe_concurrent_creation(out_file) as tmp_filename:
           with open(tmp_filename, 'wb') as f:
-            json.dump(parsed, f, indent=4)
+            f.write(new_report)
     except IOError as e:
       raise TaskError('Failed to dump resolution report to {}: {}'.format(out_file, e))
 
