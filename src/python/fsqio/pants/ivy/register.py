@@ -271,9 +271,17 @@ class IvyGlobalResolve(GlobalClasspathTaskMixin, IvyResolve):
 
         for target, coords in parsed['default']['target_to_coords'].items():
           parsed['default']['target_to_coords'][target] = sorted(coords)
-        parsed = OrderedDict(sorted(parsed['default']['target_to_coords'].items()))
 
-        new_report = json.dumps(parsed, indent=JSON_INDENT)
+        parsed = OrderedDict(sorted(
+          (key, val) for key, val in parsed['default']['target_to_coords'].items() if not key.startswith('//')
+        ))
+
+        # By default `json.dumps` uses the seperators ', ' and ': '. While that second one is fine, the first
+        # one when used in conjunction with indent produces trailing whitespaces. Because many devs have IDEs
+        # that go ahead and get rid of trailing whitespace this will create giant unwanted diffs. And because
+        # it's generaly frowned upon, we override that setting so at to produce a trailing whitespace free json.
+        # -- Mathieu
+        new_report = json.dumps(parsed, indent=JSON_INDENT, separators=(',', ': '))
 
         if self.get_options().fail_on_diff:
           with open(out_file, 'r') as old_report_fd:
@@ -285,7 +293,8 @@ class IvyGlobalResolve(GlobalClasspathTaskMixin, IvyResolve):
             raise TaskError(
               '\n{pretty_diff}\n\n'
               'Committed dependency file and resolved dependencies are different, '
-              'please make sure you comitted latest dependency file (@ {path}).'.format(
+              'please make sure you comitted latest dependency file (@ {path}). '
+              'Check 3rdparty/reports/jvm/README.md for more help.'.format(
                 pretty_diff=pretty_diff,
                 path=out_file,
               )
