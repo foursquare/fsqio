@@ -42,6 +42,8 @@ managed_jar_dependencies(
     ':mongodb-driver',
     ':mongodb-driver-async',
     ':netty',
+    jar(org = 'org.codehaus.janino', name = 'janino',rev = '2.7.8'),
+    jar(org = 'org.codehaus.janino', name = 'commons-compiler',rev = '2.7.8'),
     ':ostrich',
     ':reflections',
     ':scalacheck',
