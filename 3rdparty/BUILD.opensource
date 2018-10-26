@@ -49,6 +49,9 @@ managed_jar_dependencies(
     ':scalacheck',
     jar(org = 'org.scala-lang', name = 'scalap', rev = scala_version),
     ':scalaz-stream',
+    '//:scalac',
+    '//:scala-library',
+    ':scala-reflect',
     ':scalding',
     ':slf4j-api',
     ':slf4j-jcl',
@@ -897,16 +900,6 @@ jar_library(
   ],
 )
 
-jar_library(
-  name = 'scala-library',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    jar(org='org.scala-lang', name = 'scala-library', rev=scala_version)
-  ],
-)
 
 jar_library(
   name = 'scala-reflect',
@@ -915,7 +908,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.scala-lang', name = 'scala-reflect', rev = '2.11.8'),
+    jar(org = 'org.scala-lang', name = 'scala-reflect', rev = scala_version),
   ],
 )
 

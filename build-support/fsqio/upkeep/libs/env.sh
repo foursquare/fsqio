@@ -2,7 +2,7 @@
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
 # Allow any passed pants or fsq.io to override the default config.
-export DEPENDENCIES_ROOT="${BUILD_ROOT}/dependencies"
+export DEPENDENCIES_ROOT="${DEPENDENCIES_ROOT:-$BUILD_ROOT/dependencies}"
 export CURRENT_UNAME=$(uname -s)
 
 export PYTHONPATH=${PYTHONPATH:-""}

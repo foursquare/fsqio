@@ -5,31 +5,21 @@ scala_version = '2.11.8'
 
 # NOTE: Now that we have full use of Ivy and target scopes, this should probably be adjusted.
 # Need to do define this target and maintain tags is a leak.
-target(
-  name='scala-library',
-  dependencies = [
-    '3rdparty:scala-library',
-  ],
+jar_library(
+  name = 'scalac',
   tags = [
     'exempt',
+  ],
+  jars = [
+    jar(org='org.scala-lang', name = 'scala-compiler', rev=scala_version),
   ],
 )
 
 
-target(
-  name='scala-repl',
-  dependencies = [
-    ':ammonite',
-  ],
-  tags = [
-    'exempt',
-  ],
-)
-
-
-target(name='scalac',
-  dependencies=[
-    '3rdparty:scalac',
+jar_library(
+  name = 'scala-repl',
+  jars = [
+    jar(org='com.lihaoyi', name = 'ammonite_2.11.8', rev='0.8.2')
   ],
   tags = [
     'exempt',
@@ -38,12 +28,12 @@ target(name='scalac',
 
 
 jar_library(
-  name = 'ammonite',
-  jars = [
-    jar(org='com.lihaoyi', name = 'ammonite_2.11.8', rev='0.8.2')
-  ],
+  name = 'scala-library',
   tags = [
     'exempt',
+  ],
+  jars = [
+    jar(org='org.scala-lang', name = 'scala-library', rev=scala_version)
   ],
 )
 

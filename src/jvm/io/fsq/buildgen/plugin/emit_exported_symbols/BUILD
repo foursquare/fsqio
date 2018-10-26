@@ -21,6 +21,7 @@ scalac_plugin(
   dependencies = [
     '3rdparty:scalac',
     '3rdparty:scala-reflect',
+    '//:scalac',   # Possibly safe to remove, not sure if needed at runtime. Build and test.
   ],
 )
 
@@ -34,5 +35,6 @@ jvm_binary(
     ':emit-exported-symbols',
     '3rdparty:scalac',
     '3rdparty:scala-reflect',
+    '//:scalac',    # Possibly safe to remove, not sure if needed at runtime. Build and test.
   ],
 )
