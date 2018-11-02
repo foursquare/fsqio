@@ -45,8 +45,10 @@ case $CURRENT_UNAME in
     [Dd]arwin )
       export OS_NAMESPACE="mac"
       # This will break if we ever start caring about minor versions.
-      export OS_ARCH=$(sw_vers -productVersion | sed "s:.[[:digit:]]*.$::g")
-      export OS_FULL_NAMESPACE="${OS_NAMESPACE}/${OS_ARCH}"      ;;
+      full_osx_vers=$(sw_vers -productVersion)
+      export OS_ARCH=${OS_ARCH:-${full_osx_vers::5}}
+      export OS_FULL_NAMESPACE="${OS_NAMESPACE}/${OS_ARCH}"
+      ;;
     * )
       export OS_NAMESPACE="linux"
       # We do not currently support 32 bit or quantum machines.
