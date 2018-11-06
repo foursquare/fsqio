@@ -58,6 +58,7 @@ Many people have contributed:
 - Jacob Van De Weert
 - Jason Liszka
 - Jorge Ortiz
+- Jonathan Shea
 - Matthew Rathbone
 - Neil Sanchala
 - Tom Dyas

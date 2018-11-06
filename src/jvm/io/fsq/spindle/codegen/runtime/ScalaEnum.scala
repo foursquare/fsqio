@@ -18,8 +18,8 @@ class ScalaEnum(override val underlying: Enum) extends EnumProxy with HasAnnotat
   override val elements: Seq[ScalaEnumElement] = underlying.elements.map(elem => new ScalaEnumElement(elem))
 
   val supportsAlternateValues: Boolean = {
-    var supported = true
     var attemptToSupport = false
+    val elementsMissingAlternativeValue = new scala.collection.mutable.HashSet[String]
     val existingValues = new scala.collection.mutable.HashSet[String]
 
     for (element <- elements) {
@@ -27,19 +27,56 @@ class ScalaEnum(override val underlying: Enum) extends EnumProxy with HasAnnotat
         case Some(alternateValue) =>
           attemptToSupport = true
           if (existingValues.contains(alternateValue)) {
-            throw new Exception("Duplicate string_value's detected. They must be unique.")
+            throw new CodegenException("Duplicate string_value's detected. They must be unique.")
           }
           existingValues += alternateValue
 
         case None =>
-          supported = false
+          elementsMissingAlternativeValue += element.name
       }
     }
 
-    if (attemptToSupport && !supported) {
-      throw new Exception("Must define alternate values for all enum elements")
+    if (attemptToSupport && elementsMissingAlternativeValue.nonEmpty) {
+      throw new CodegenException(
+        s"Must define alternate values for all enum elements, but " +
+          s"missing from ${elementsMissingAlternativeValue.mkString(", ")}"
+      )
     }
 
-    supported
+    elementsMissingAlternativeValue.isEmpty
+  }
+
+  // Check that no retired_ids are being used
+  {
+    // In an extra scope to prevent these vals from being public on the class
+    val ids = elements.map(_.value).toSet
+    val retiredIds = annotations.getAll("retired_ids").flatMap(_.split(',')).map(_.toInt).toSet
+
+    val badIds = for {
+      element <- elements
+      if retiredIds.contains(element.value)
+    } yield {
+      s"${element.value}: ${element.name}"
+    }
+
+    if (badIds.nonEmpty) {
+      throw new CodegenException(s"Error: illegal use of retired_ids: ${badIds.mkString("; ")}")
+    }
+
+    val retiredStringValues = annotations.getAll("retired_wire_names").flatMap(_.split(',')).toSet
+    val badStringValues = for {
+      element <- elements
+      stringValue = element.alternateValue.getOrElse(element.name)
+      if retiredStringValues.contains(stringValue)
+    } yield {
+      element.alternateValue match {
+        case None => s"${element.value}: ${element.name}}"
+        case Some(alternateValue) => s"${element.value}: ${element.name} string_value=${alternateValue}}"
+      }
+    }
+
+    if (badStringValues.nonEmpty) {
+      throw new CodegenException(s"Error: illegal use of retired string_vale: ${badStringValues.mkString("; ")}")
+    }
   }
 }
