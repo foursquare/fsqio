@@ -378,6 +378,10 @@ jvm_third_party_map = {
         'DEFAULT': 'curator',
         'test': 'curator-test',
       },
+      'directory': {
+        'api': 'apache-directory-api',
+        'ldap': 'apache-directory-api',
+      },
       'hadoop': {
         # NOTE(ryan): org.apache.hadoop is a complicated soup of dependencies
         'conf': 'hadoop-common',
