@@ -479,6 +479,22 @@ class FSTraversableOnce[T, CC[X] <: TraversableOnce[X]](val xs: CC[T]) extends A
   def flatToMapByKey[K](f: T => Option[K]): Map[K, T] = {
     flatToMapBy(elem => f(elem).map((_, elem)))
   }
+
+  /** Returns the top N elements of the Traversable in a Vector.
+    * They'll come back sorted from least to greatest.
+    */
+  def topNSorted(size: Int)(implicit ord: Ordering[T]): Seq[T] = {
+    val pq = new PriorityQueue[T]()(ord.reverse)
+    xs.foreach(x => {
+      if (pq.size < size || ord.gt(x, pq.head)) {
+        pq.enqueue(x)
+        if (pq.size > size) {
+          pq.dequeue()
+        }
+      }
+    })
+    pq.dequeueAll[T, Vector[T]]
+  }
 }
 
 class FSTraversable[CC[X] <: Traversable[X], T, Repr <: TraversableLike[T, Repr]](
@@ -885,7 +901,7 @@ class FSIterable[CC[X] <: Iterable[X], T, Repr <: IterableLike[T, Repr] with Gen
     * They'll come back sorted :)
     */
   def topNSorted(size: Int)(implicit ord: Ordering[T]): Seq[T] = {
-    topNUnsorted(size)(ord).toVector.sortBy(identity)(ord)
+    new FSTraversableOnce(xs).topNSorted(size)
   }
 
   /** Returns the top N elements in the Iterable.
