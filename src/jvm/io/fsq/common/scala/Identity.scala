@@ -7,8 +7,13 @@ import scala.math.Numeric
 final class Identity[A](val _value: A) extends AnyVal {
   def =?(other: A): Boolean = _value == other
   def !=?(other: A): Boolean = _value != other
+
+  @deprecated("unexpected operator precedence in boolean expressions", "11/30/2018")
   def ==>[B](other: => B)(implicit evA: A <:< Boolean, evB: B <:< Boolean): Boolean = !evA(_value) || evB(other)
+
+  @deprecated("unexpected operator precedence in boolean expressions", "11/30/2018")
   def !=>[B](other: => B)(implicit evA: A <:< Boolean, evB: B <:< Boolean): Boolean = evA(_value) && !evB(other)
+
   def optionally[B](other: => B)(implicit ev: A <:< Boolean): Option[B] = if (ev(_value)) Some(other) else None
   def flatOptionally[B](other: => Option[B])(implicit ev: A <:< Boolean): Option[B] = if (ev(_value)) other else None
   def ifOption[B](pred: A => Boolean)(f: A => B): Option[B] = if (pred(_value)) Some(f(_value)) else None
