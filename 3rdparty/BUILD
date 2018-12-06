@@ -97,3 +97,22 @@ jar_library(
     jar(org = 'org.jnegre.google', name = 's2-geometry', rev = '1.0')
   ]
 )
+
+
+jar_library(
+  name = 'jetty',
+  jars = [
+    jar(org = 'org.mortbay.jetty', name = 'jetty', rev = '6.1.25'),
+  ],
+  dependencies = [
+    ':jetty-util',
+  ],
+)
+
+
+jar_library(
+  name = 'jetty-util',
+  jars = [
+    jar(org = 'org.mortbay.jetty', name = 'jetty-util', rev = '6.1.25')
+  ]
+)

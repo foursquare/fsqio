@@ -34,6 +34,8 @@ managed_jar_dependencies(
     ':hbase',
     ':jackson',
     ':jackson-scala',
+    ':jetty',
+    ':jetty-util',
     ':joda-time',
     ':json4s',
     ':logback',
@@ -525,7 +527,7 @@ jar_library(
   ],
   jars = [
     jar(org = 'org.apache.hbase', name = 'hbase', rev = '0.94.6-cdh4.4.0',
-      # NOTE(mateo): Turns out jruby is super poisoinous and does things like fatjar unshaded joda-time.
+      # NOTE(mateo): Turns out jruby is super poisonous and does things like fatjar unshaded joda-time.
       # Globally excluded as well, but since hbase is the only thing that brings it in, lets do our diligence.
       excludes = [
         exclude(org = 'log4j', name = 'log4j'),
