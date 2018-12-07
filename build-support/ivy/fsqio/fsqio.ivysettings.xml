@@ -28,7 +28,7 @@ Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
       <ibiblio name="maven.twttr.com-maven"
                m2compatible="true"
                usepoms="true"
-               root="http://maven.twttr.com/"/>
+               root="https://maven.twttr.com/"/>
       <!-- Publishes an s2 jar publicly. Thank you! -->
       <ibiblio name="jnegre"
                m2compatible="true"
