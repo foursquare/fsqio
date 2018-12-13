@@ -2,6 +2,7 @@ ansicolors==1.0.2
 future==0.16.0
 mock==2.0.0
 pantsbuild.pants==1.7.0
+pantsbuild.pants.contrib.confluence==1.7.0
 pantsbuild.pants.contrib.go==1.7.0
 pantsbuild.pants.contrib.node==1.7.0
 pantsbuild.pants.contrib.python.checks==1.7.0
