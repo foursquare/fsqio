@@ -84,17 +84,28 @@ def remove_patterns_from_commit_message(commit_range=None, match_patterns=None, 
   :param list[string] match_patterns: regex that can be understood by sed, removes only matches themselves.
   :param list[string] line_patterns: regex that can be understood by sed, removes any line containing a match.
   """
-  if not match_patterns or line_patterns:
-    logger.info("Skipping commit message rewrite: no requested redactions.")
-    return
-  command = "sed -n \"/{}/!p\"".format(line_patterns[0])
-  for pattern in line_patterns[1:]:
-   command += """ | sed -n \"/{}/!p\"""".format(pattern)
-  for pattern in match_patterns:
-    command += """ |  sed "s/{}//g\"""".format(pattern)
-  command += """ | cat -s"""
-  logger.info("Redacting commit messages.")
-  git_filter_branch(filter_type='msg', shell_command=command, commit_range=commit_range)
+  command = ''
+  if line_patterns:
+    command += "sed -n \"/{}/!p\"".format(line_patterns[0])
+    for pattern in line_patterns[1:]:
+      # Don't try and redact newlines.
+      if pattern:
+        command += """ | sed -n \"/{}/!p\"""".format(pattern)
+
+  if match_patterns:
+    if command:
+      command += " | "
+    command += """sed "s/{}//g\"""".format(match_patterns[0])
+    for pattern in match_patterns[1:]:
+      # Don't try and redact newlines.
+      if pattern:
+        command += """ |  sed "s/{}//g\"""".format(pattern)
+  if command:
+    command += """ | cat -s"""
+    logger.info("Redacting commit messages.")
+    git_filter_branch(filter_type='msg', shell_command=command, commit_range=commit_range)
+  else:
+    logger.info("No redaction patterns found!")
 
 
 def permanently_transform_opensource_repo():
@@ -155,11 +166,13 @@ def permanently_transform_opensource_repo():
   )
   parser.add_argument(
     '--line-redactions-file',
+    default=None,
     help="Commit message redaction. File path of text file, with a single sed regex on each line"
          "Removes the entire line from any commit message matching these patterns.",
   )
   parser.add_argument(
     '--match-redactions-file',
+    default=None,
     help="Commit message redaction. File path of text file, with a single sed regex on each line"
          "Removes only the matches themselves from commit messages.",
   )
@@ -170,13 +183,14 @@ def permanently_transform_opensource_repo():
   )
 
   def get_lines_from_text_file(file_path):
-    if not file_path:
-      yield []
-    if not os.path.isfile(file_path):
+    if file_path is None:
+      yield
+    elif not os.path.isfile(file_path):
       raise ValueError("No file found: {}".format(file_path))
-    with open(file_path, 'rb') as file_path:
-      for line in file_path.read().split('\n'):
-        yield line
+    else:
+      with open(file_path, 'rb') as file_path:
+        for line in file_path.read().split('\n'):
+          yield line
 
   args = parser.parse_args()
   git_commit_range = args.commit_range
@@ -193,20 +207,20 @@ def permanently_transform_opensource_repo():
 
   line_redactions_file = args.line_redactions_file
   match_redactions_file = args.match_redactions_file
-  line_patterns = list(get_lines_from_text_file(line_redactions_file))
-  match_patterns = list(get_lines_from_text_file(match_redactions_file))
+  line_patterns = list(get_lines_from_text_file(line_redactions_file)) if line_redactions_file else None
+  match_patterns = list(get_lines_from_text_file(match_redactions_file)) if match_redactions_file else None
 
   remove_patterns_from_commit_message(
     commit_range=git_commit_range, match_patterns=match_patterns, line_patterns=line_patterns
   )
 
   moves_json = args.file_moves_json_file
-  if moves_json:
+  if moves_json is not None:
     if not os.path.isfile(moves_json):
       raise ValueError("No file found: {}".format(moves_json))
     with open(moves_json, 'rb') as moves:
       file_moves_dict = json.load(moves)
-  change_file_locations(commit_range=git_commit_range, file_moves_map=file_moves_dict)
+      change_file_locations(commit_range=git_commit_range, file_moves_map=file_moves_dict)
 
 if __name__ == '__main__':
   permanently_transform_opensource_repo()

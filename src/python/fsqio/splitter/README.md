@@ -103,12 +103,28 @@ config example(`fsqio/commit/messages/commit_message_line_removals.txt`):
 config example(`fsqio/commit/messages/commit_message_match_removals.txt`):
 
           Opensource:[[:space:]]*
-          DEV-[0-9]*:
-          WEB-[0-9]*:
+          DEV.*[0-9:-]:
+          WEB.*[0-9:-]:
           <etc>
+
+## Development process
+I typically iterate against a local split made with the sapling_util, but you could use pure sapling. In our case, the sapling-created branch called `_sapling_split_opensource_`.
+
+Then I can iterate on the history rewriter using just a subset of that branch, and reset it to the original every loop.
+
+          $  orig_sha=$(git log _sapling_split_opensource_)
+          $  commit_range="_sapling_split_opensource_~10..._sapling_split_opensource_"
+          $  python src/python/fsqio/splitter/codebase/history_rewriter.py --commit-range=${commit_range} --match-redactions-file=fsqio/commit_messages/commit_message_match_removals.txt --line-redactions-file=fsqio/commit_messages/commit_message_line_removals.txt
+
+
+Inspect the commits of `_sapling_split_opensource_` to audit your redactions and then reset its state to iterate.
+
+          $  git update-ref refs/heads/_sapling_split_opensource_ ${orig_sha}
+
 
 ## Limitations
 1. Ideally we would package this as a library, but the Sapling entry point is non-conducive to that workflow.
 1. No incremental updates. Our Fsq.io build happens once per-day, commits are cherry-picked as a group directly onto Fsq.io master.
 1. Sapling branch names are not flexible - they will always be `_sapling_split_<split_name>_`. This resulted in some non-intuitive defaults.
 1. Haphazard API - this was grown organically around the strict Fsq.io requirements - other use cases will likely require inline changes.
+1. Need tests...
