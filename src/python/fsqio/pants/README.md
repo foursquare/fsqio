@@ -5,7 +5,7 @@ Foursquare's opensource Pants plugins are under this root.
 ## Available as plugins from PyPi
 [We publish some of these plugins on PyPi](https://pypi.python.org/pypi?%3Aaction=search&term=fsqio&submit=search), including buildgen and pom-resolve.
 
-Publishing as plugins means enables arbitrary Pants projects can consume just by adding config. There is some light documentation on how to do that at the buildgen [`README`](/src/python/fsqio/pants/buildgen/).
+Publishing as plugins means enables arbitrary Pants projects can consume just by adding config. There is some light documentation on how to do that at the buildgen [[README.md|pants('src/python/fsqio/pants/buildgen:page')]].
 
 ### How to publish to PyPi
 
@@ -15,7 +15,8 @@ The `Fsq.io` packages are registered to PyPi under the `opensource@foursquare.co
 
 1. Bump the version!
     - Set in the BUILD file for the target `python_library`
-    - e.g. [fsqio.pants.buildgen.core](src/python/fsqio/pants/buildgen/core/BUILD)
+    - e.g. [src/python/fsqio/pants/buildgen/core/BUILD](https://github.com/foursquare/foursquare.web/blob/master/src/python/fsqio/pants/buildgen/core/BUILD)
+     !inc[start-at=provides=setup_py&end-before=files(](./buildgen/core/BUILD)
 1. Build the modules
     - `./pants setup-py src/python/fsqio::`
     - Look for the output tar.gz files in `dist/`
