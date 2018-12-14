@@ -114,7 +114,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'com.twitter', name = 'algebird-core', rev = '0.13.0'),
+    scala_jar(org = 'com.twitter', name = 'algebird-core', rev = '0.13.4'),
   ],
 )
 
