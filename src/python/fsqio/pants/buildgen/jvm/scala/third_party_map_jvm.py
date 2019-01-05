@@ -573,7 +573,6 @@ jvm_third_party_map = {
   'scalaj': {
     'http': 'scalaj-http',
   },
-  'scalax': 'scala-io',
   'scopt': 'scopt',
   'storm': {
     'kafka': 'storm-kafka',
@@ -584,9 +583,6 @@ jvm_third_party_map = {
       'BASE64Decoder': 'SKIP',  # NOTE(ryan): I can't find where this lives
       'BASE64Encoder': 'SKIP',  # NOTE(ryan): I can't find where this lives
     },
-  },
-  'tools': {
-    'nsc': 'scala-io',
   },
   'vegas': 'vegas',
   'zemberek': 'zemberek',
