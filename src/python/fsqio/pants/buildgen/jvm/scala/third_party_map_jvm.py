@@ -458,7 +458,6 @@ jvm_third_party_map = {
     'bytedeco': 'tesseract-javacpp',
     'clapper': {
       'argot': 'argot',
-      'classutil': 'classutil',
     },
     'codehaus': {
       'jackson': 'jackson',
