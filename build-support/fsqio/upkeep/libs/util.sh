@@ -166,11 +166,16 @@ function get_current_path() {
 }
 
 function colorized_error() {
-  echo -ne "[31;50m${1}[0m"
+  echo -ne "[31;50m$@[0m"
 }
 
 function colorized_warn() {
-  echo -ne "[32;50m${1}[0m"
+  echo -ne "[32;50m$@[0m"
+}
+
+function colorized_info() {
+  # Alias to colorized_warn since it has been abused for info for a long while.
+  colorized_warn $@
 }
 
 function print_output() {
@@ -178,17 +183,11 @@ function print_output() {
 }
 
 function exit_with_failure() {
-  colorized_error "\nUPKEEP FAILURE! "
-  # TODO(mateo): May be better to allow the task to decide about colored output here.
-  for i in "$@"; do
-    colorized_error "${i}\n"
-  done
+  colorized_error "\nUPKEEP FAILURE!\n$@\n"
   exit 1
 }
 
 function exit_with_warning() {
-  for i in "$@"; do
-    colorized_warn "${i}\n"
-  done
+  colorized_warn "${@}\n"
   exit 0
 }
