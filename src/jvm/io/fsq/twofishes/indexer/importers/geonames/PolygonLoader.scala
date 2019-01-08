@@ -4,8 +4,6 @@ package io.fsq.twofishes.indexer.importers.geonames
 import com.cybozu.labs.langdetect.DetectorFactory
 import com.ibm.icu.text.Transliterator
 import com.mongodb.MongoException
-import com.rockymadden.stringmetric.similarity.JaroWinklerMetric
-import com.rockymadden.stringmetric.transform._
 import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBReader, WKBWriter}
@@ -22,6 +20,7 @@ import io.fsq.twofishes.indexer.util.{
   FsqSimpleFeature,
   GeoJsonIterator,
   GeocodeRecord,
+  JaroWinkler,
   ShapeIterator,
   ShapefileIterator
 }
@@ -325,15 +324,13 @@ class PolygonLoader(
     val namesFromShape_Modified = namesFromShape.flatMap(applyHacks)
     val namesFromFeature_Modified = namesFromFeature.flatMap(applyHacks)
 
-    val composedTransform = (filterAlpha andThen ignoreAlphaCase)
-
     val scores = namesFromShape_Modified.flatMap(ns => {
       namesFromFeature_Modified.map(ng => {
         if (ng.nonEmpty && ns.nonEmpty) {
           if (ng == ns) {
             return 100
           } else {
-            val jaroScore = (JaroWinklerMetric withTransform composedTransform).compare(ns, ng).getOrElse(0.0)
+            val jaroScore = JaroWinkler.score(ns, ng)
             jaroScore * 100
           }
         } else {

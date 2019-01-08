@@ -11,7 +11,6 @@ scala_library(
     '3rdparty:icu4j',
     '3rdparty:json4s',
     '3rdparty:jts',
-    '3rdparty:rockymadden',
     '3rdparty:scalding',
     'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/geo/quadtree',

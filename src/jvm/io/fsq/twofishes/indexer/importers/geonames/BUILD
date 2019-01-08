@@ -14,7 +14,6 @@ scala_library(
     '3rdparty:language-detect',
     '3rdparty:mongodb-drivers',
     '3rdparty:ostrich',
-    '3rdparty:rockymadden',
     '3rdparty:s2',
     '3rdparty:scopt',
     '3rdparty:slf4s',

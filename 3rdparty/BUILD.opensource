@@ -881,17 +881,6 @@ jar_library(
 )
 
 jar_library(
-  name = 'rockymadden',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    scala_jar(org = 'com.rockymadden.stringmetric', name = 'stringmetric-core', rev = '0.27.4')
-  ]
-)
-
-jar_library(
   name = 'scala-parser-combinators',
   tags = [
     'opensource',

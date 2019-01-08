@@ -201,7 +201,6 @@ jvm_third_party_map = {
     'relayrides': {
       'pushy': 'pushy',
     },
-    'rockymadden': 'rockymadden',
     'thoughtworks': 'SKIP',
     'sun': {
       'jna': 'jna',

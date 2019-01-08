@@ -1,12 +1,10 @@
 // Copyright 2014 Foursquare Labs Inc. All Rights Reserved.
 package io.fsq.twofishes.indexer.scalding
 
-import com.rockymadden.stringmetric.similarity.JaroWinklerMetric
-import com.rockymadden.stringmetric.transform._
 import com.twitter.scalding._
 import com.twitter.scalding.typed.TypedSink
 import io.fsq.twofishes.gen._
-import io.fsq.twofishes.indexer.util.SpindleSequenceFileSource
+import io.fsq.twofishes.indexer.util.{JaroWinkler, SpindleSequenceFileSource}
 import io.fsq.twofishes.util.NameNormalizer
 import org.apache.hadoop.io.LongWritable
 
@@ -79,15 +77,13 @@ class BaseUnmatchedPolygonFeatureMatchingIntermediateJob(
     val polygonNamesModified = polygonNames.map(_.name).flatMap(applyHacks)
     val candidateNamesModified = candidateNames.map(_.name).flatMap(applyHacks)
 
-    val composedTransform = (filterAlpha andThen ignoreAlphaCase)
-
     val scores = polygonNamesModified.flatMap(pn => {
       candidateNamesModified.map(cn => {
         if (cn.nonEmpty && pn.nonEmpty) {
           if (cn == pn) {
             return 100
           } else {
-            val jaroScore = (JaroWinklerMetric withTransform composedTransform).compare(pn, cn).getOrElse(0.0)
+            val jaroScore = JaroWinkler.score(pn, cn)
             jaroScore * 100
           }
         } else {
