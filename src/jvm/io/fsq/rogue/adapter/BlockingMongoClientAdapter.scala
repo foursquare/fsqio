@@ -11,6 +11,7 @@ import com.mongodb.client.model.{
   FindOneAndDeleteOptions,
   FindOneAndUpdateOptions,
   IndexModel,
+  ReplaceOptions,
   UpdateOptions,
   WriteModel
 }
@@ -18,7 +19,7 @@ import io.fsq.rogue.{Iter, Query, RogueException}
 import io.fsq.rogue.util.QueryUtilities
 import java.util.{List => JavaList}
 import java.util.concurrent.TimeUnit
-import org.bson.{BsonBoolean, BsonDocument, BsonValue}
+import org.bson.BsonValue
 import org.bson.conversions.Bson
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
@@ -139,7 +140,7 @@ class BlockingMongoClientAdapter[
     filter: Bson,
     options: CountOptions
   ): BlockingResult[Long] = {
-    collection.count(filter, options)
+    collection.countDocuments(filter, options)
   }
 
   override protected def distinctImpl[T](
@@ -153,12 +154,6 @@ class BlockingMongoClientAdapter[
   ): BlockingResult[T] = {
     collection.distinct(fieldName, filter, classOf[BsonValue]).forEach(accumulator)
     resultAccessor
-  }
-
-  override protected def explainProcessor(cursor: Cursor): BlockingResult[String] = {
-    collectionFactory.documentToString(
-      cursor.modifiers(new BsonDocument("$explain", BsonBoolean.TRUE)).first()
-    )
   }
 
   override protected def forEachProcessor[T](
@@ -261,8 +256,9 @@ class BlockingMongoClientAdapter[
   )(
     filter: Bson
   )(
-    modifiers: Bson,
     batchSizeOpt: Option[Int] = None,
+    commentOpt: Option[String] = None,
+    hintOpt: Option[Bson],
     limitOpt: Option[Int] = None,
     skipOpt: Option[Int] = None,
     sortOpt: Option[Bson] = None,
@@ -271,8 +267,9 @@ class BlockingMongoClientAdapter[
   ): BlockingResult[T] = {
     val cursor = collection.find(filter)
 
-    cursor.modifiers(modifiers)
     batchSizeOpt.foreach(cursor.batchSize(_))
+    commentOpt.foreach(cursor.comment(_))
+    hintOpt.foreach(cursor.hint(_))
     limitOpt.foreach(cursor.limit(_))
     skipOpt.foreach(cursor.skip(_))
     sortOpt.foreach(cursor.sort(_))
@@ -308,7 +305,7 @@ class BlockingMongoClientAdapter[
     record: R,
     filter: Bson,
     document: Document,
-    options: UpdateOptions
+    options: ReplaceOptions
   ): BlockingResult[R] = {
     collection.replaceOne(filter, document, options)
     record

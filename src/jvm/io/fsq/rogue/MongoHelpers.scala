@@ -5,6 +5,8 @@ package io.fsq.rogue
 import com.mongodb.{BasicDBObjectBuilder, DBObject}
 import io.fsq.rogue.index.MongoIndex
 import java.util.regex.Pattern
+import org.bson.{BsonDocument, BsonInt32, BsonString}
+import org.bson.conversions.Bson
 
 object MongoHelpers extends Rogue {
   case class AndCondition(clauses: List[QueryClause[_]], orCondition: Option[OrCondition]) {
@@ -158,6 +160,30 @@ object MongoHelpers extends Rogue {
         upsert,
         multi
       )
+    }
+
+    def buildQueryHint(query: Query[_, _, _]): Option[Bson] = {
+      val hintDocument = new BsonDocument
+
+      query.hint.foreach(hint => {
+        hint.asListMap.foreach({
+          case (fieldName, intModifier: Int) => {
+            hintDocument.put(fieldName, new BsonInt32(intModifier))
+          }
+          case (fieldName, stringModifier: String) => {
+            hintDocument.put(fieldName, new BsonString(stringModifier))
+          }
+          case (fieldName, wronglyTypedModifier) => {
+            throw new RuntimeException(s"Found index modifier of unsupported type: $wronglyTypedModifier")
+          }
+        })
+      })
+
+      if (hintDocument.isEmpty) {
+        None
+      } else {
+        Some(hintDocument)
+      }
     }
 
     def buildFindAndModifyString[R, M](

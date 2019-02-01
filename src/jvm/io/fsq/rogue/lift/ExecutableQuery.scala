@@ -158,14 +158,6 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
     executor.findAndDeleteOne(query)
   }
 
-  /**
-    * Return a string containing details about how the query would be executed in mongo.
-    * In particular, this is useful for finding out what indexes will be used by the query.
-    */
-  def explain(): String = {
-    executor.explain(query)
-  }
-
   def iterate[S](state: S)(handler: (S, Iter.Event[R]) => Iter.Command[S]): S = {
     executor.iterate(query, state)(handler)
   }

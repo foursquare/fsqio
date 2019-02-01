@@ -14,6 +14,7 @@ import com.mongodb.client.model.{
   IndexModel,
   InsertOneModel,
   ReplaceOneModel,
+  ReplaceOptions,
   ReturnDocument,
   UpdateManyModel,
   UpdateOneModel,
@@ -35,7 +36,7 @@ import io.fsq.rogue.{
   ModifyQuery,
   Query
 }
-import io.fsq.rogue.MongoHelpers.{AndCondition, MongoBuilder => LegacyMongoBuilder, MongoModify}
+import io.fsq.rogue.MongoHelpers.{AndCondition, MongoBuilder, MongoModify}
 import io.fsq.rogue.index.UntypedMongoIndex
 import io.fsq.rogue.util.QueryUtilities
 import java.util.{ArrayList, List => JavaList}
@@ -118,9 +119,6 @@ abstract class MongoClientAdapter[
     filter: Bson
   ): Result[T]
 
-  /** A cursor processor used for explain queries. */
-  protected def explainProcessor(cursor: Cursor): Result[String]
-
   /** A constructor for exhaustive cursor processors used in find queries. Essentially
     * just calls cursor.forEach.
     */
@@ -163,8 +161,9 @@ abstract class MongoClientAdapter[
   )(
     filter: Bson
   )(
-    modifiers: Bson,
     batchSizeOpt: Option[Int] = None,
+    commentOpt: Option[String] = None,
+    hintOpt: Option[Bson],
     limitOpt: Option[Int] = None,
     skipOpt: Option[Int] = None,
     sortOpt: Option[Bson] = None,
@@ -192,7 +191,7 @@ abstract class MongoClientAdapter[
     record: R,
     filter: Bson,
     document: Document,
-    options: UpdateOptions
+    options: ReplaceOptions
   ): Result[R]
 
   protected def removeImpl[R <: Record](
@@ -272,16 +271,6 @@ abstract class MongoClientAdapter[
     createIndexesImpl(collection)(indexModels)
   }
 
-  def explain[M <: MetaRecord](query: Query[M, _, _]): Result[String] = {
-    queryRunner(explainProcessor)(
-      "find",
-      query,
-      batchSizeOpt = None,
-      readPreferenceOpt = None,
-      setMaxTimeMS = true
-    )
-  }
-
   def count[
     M <: MetaRecord
   ](
@@ -294,10 +283,10 @@ abstract class MongoClientAdapter[
       collectionFactory.getIndexes(queryClause.meta)
     )
     val collection = collectionFactory.getMongoCollectionFromQuery(query, readPreferenceOpt)
-    val descriptionFunc = () => LegacyMongoBuilder.buildConditionString("count", query.collectionName, queryClause)
+    val descriptionFunc = () => MongoBuilder.buildConditionString("count", query.collectionName, queryClause)
     // TODO(jacob): This cast will always succeed, but it should be removed once there is a
-    //    version of LegacyMongoBuilder that speaks the new CRUD api.
-    val filter = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+    //    version of MongoBuilder that speaks the new CRUD api.
+    val filter = MongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
     val options = {
       new CountOptions()
         .limit(queryClause.lim.getOrElse(0))
@@ -323,10 +312,10 @@ abstract class MongoClientAdapter[
       collectionFactory.getIndexes(queryClause.meta)
     )
     val collection = collectionFactory.getMongoCollectionFromQuery(query, readPreferenceOpt)
-    val descriptionFunc = () => LegacyMongoBuilder.buildConditionString("distinct", query.collectionName, queryClause)
+    val descriptionFunc = () => MongoBuilder.buildConditionString("distinct", query.collectionName, queryClause)
     // TODO(jacob): This cast will always succeed, but it should be removed once there is a
-    //    version of LegacyMongoBuilder that speaks the new CRUD api.
-    val filter = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+    //    version of MongoBuilder that speaks the new CRUD api.
+    val filter = MongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
 
     runCommand(descriptionFunc, queryClause) {
       distinctImpl(resultAccessor, accumulator)(collection)(fieldName, filter)
@@ -405,7 +394,7 @@ abstract class MongoClientAdapter[
         .map(id => {
           val filter = collectionFactory.documentClass.newInstance
           filter.put("_id", id)
-          val options = new UpdateOptions().upsert(true)
+          val options = new ReplaceOptions().upsert(true)
           upsertWithDuplicateKeyRetry(
             replaceOneImpl(collection)(record, filter, document, options)
           )
@@ -482,11 +471,11 @@ abstract class MongoClientAdapter[
     // TODO(jacob): We should just use the read preference on the query itself.
     val queryReadPreferenceOpt = readPreferenceOpt.orElse(queryClause.readPreference)
     val collection = collectionFactory.getMongoCollectionFromQuery(query, queryReadPreferenceOpt)
-    val descriptionFunc = () => LegacyMongoBuilder.buildQueryString(operation, query.collectionName, queryClause)
+    val descriptionFunc = () => MongoBuilder.buildQueryString(operation, query.collectionName, queryClause)
 
     // TODO(jacob): These casts will always succeed, but should be removed once there is a
-    //    version of LegacyMongoBuilder that speaks the new CRUD api.
-    val filter = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+    //    version of MongoBuilder that speaks the new CRUD api.
+    val filter = MongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
 
     val maxTimeMSOpt = {
       if (setMaxTimeMS) {
@@ -496,14 +485,17 @@ abstract class MongoClientAdapter[
       }
     }
 
+    val queryHint: Option[Bson] = MongoBuilder.buildQueryHint(queryClause)
+
     runCommand(descriptionFunc, queryClause) {
       findImpl(processor)(collection)(filter)(
-        modifiers = MongoBuilder.buildQueryModifiers(queryClause),
         batchSizeOpt = queryHelpers.config.cursorBatchSize.getOrElse(batchSizeOpt),
+        commentOpt = query.comment,
+        hintOpt = queryHint,
         limitOpt = queryClause.lim,
         skipOpt = queryClause.sk,
-        sortOpt = queryClause.order.map(LegacyMongoBuilder.buildOrder(_).asInstanceOf[Bson]),
-        projectionOpt = queryClause.select.map(LegacyMongoBuilder.buildSelect(_).asInstanceOf[Bson]),
+        sortOpt = queryClause.order.map(MongoBuilder.buildOrder(_).asInstanceOf[Bson]),
+        projectionOpt = queryClause.select.map(MongoBuilder.buildSelect(_).asInstanceOf[Bson]),
         maxTimeMSOpt = maxTimeMSOpt
       )
     }
@@ -557,10 +549,10 @@ abstract class MongoClientAdapter[
       collectionFactory.getIndexes(queryClause.meta)
     )
     val collection = collectionFactory.getMongoCollectionFromQuery(query, writeConcernOpt = writeConcernOpt)
-    val descriptionFunc = () => LegacyMongoBuilder.buildConditionString("remove", query.collectionName, queryClause)
+    val descriptionFunc = () => MongoBuilder.buildConditionString("remove", query.collectionName, queryClause)
     // TODO(jacob): This cast will always succeed, but it should be removed once there is a
-    //    version of LegacyMongoBuilder that speaks the new CRUD api.
-    val filter = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+    //    version of MongoBuilder that speaks the new CRUD api.
+    val filter = MongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
 
     runCommand(descriptionFunc, queryClause) {
       deleteImpl(collection)(filter)
@@ -588,16 +580,16 @@ abstract class MongoClientAdapter[
         writeConcernOpt = writeConcernOpt
       )
       val descriptionFunc = () =>
-        LegacyMongoBuilder.buildModifyString(
+        MongoBuilder.buildModifyString(
           modifyQuery.query.collectionName,
           modifyClause,
           upsert = upsert,
           multi = multi
         )
       // TODO(jacob): These casts will always succeed, but should be removed once there is a
-      //    version of LegacyMongoBuilder that speaks the new CRUD api.
-      val filter = LegacyMongoBuilder.buildCondition(modifyClause.query.condition).asInstanceOf[Bson]
-      val update = LegacyMongoBuilder.buildModify(modifyClause.mod).asInstanceOf[Bson]
+      //    version of MongoBuilder that speaks the new CRUD api.
+      val filter = MongoBuilder.buildCondition(modifyClause.query.condition).asInstanceOf[Bson]
+      val update = MongoBuilder.buildModify(modifyClause.mod).asInstanceOf[Bson]
       val options = {
         new UpdateOptions()
           .upsert(upsert)
@@ -646,7 +638,7 @@ abstract class MongoClientAdapter[
         writeConcernOpt = writeConcernOpt
       )
       val descriptionFunc = () =>
-        LegacyMongoBuilder.buildFindAndModifyString(
+        MongoBuilder.buildFindAndModifyString(
           findAndModify.query.collectionName,
           findAndModifyClause,
           returnNew = returnNew,
@@ -655,9 +647,9 @@ abstract class MongoClientAdapter[
         )
 
       // TODO(jacob): These casts will always succeed, but should be removed once there is a
-      //    version of LegacyMongoBuilder that speaks the new CRUD api.
-      val filter = LegacyMongoBuilder.buildCondition(findAndModifyClause.query.condition).asInstanceOf[Bson]
-      val update = LegacyMongoBuilder.buildModify(findAndModifyClause.mod).asInstanceOf[Bson]
+      //    version of MongoBuilder that speaks the new CRUD api.
+      val filter = MongoBuilder.buildCondition(findAndModifyClause.query.condition).asInstanceOf[Bson]
+      val update = MongoBuilder.buildModify(findAndModifyClause.mod).asInstanceOf[Bson]
 
       val options = new FindOneAndUpdateOptions()
       queryHelpers.config
@@ -666,10 +658,10 @@ abstract class MongoClientAdapter[
           options.maxTime(_, TimeUnit.MILLISECONDS)
         )
       findAndModifyClause.query.order.foreach(order => {
-        options.sort(LegacyMongoBuilder.buildOrder(order).asInstanceOf[Bson])
+        options.sort(MongoBuilder.buildOrder(order).asInstanceOf[Bson])
       })
       findAndModifyClause.query.select.foreach(select => {
-        options.projection(LegacyMongoBuilder.buildSelect(select).asInstanceOf[Bson])
+        options.projection(MongoBuilder.buildSelect(select).asInstanceOf[Bson])
       })
       if (returnNew) {
         options.returnDocument(ReturnDocument.AFTER)
@@ -704,7 +696,7 @@ abstract class MongoClientAdapter[
 
     val collection = collectionFactory.getMongoCollectionFromQuery(query, writeConcernOpt = writeConcernOpt)
     val descriptionFunc = () =>
-      LegacyMongoBuilder.buildFindAndModifyString(
+      MongoBuilder.buildFindAndModifyString(
         query.collectionName,
         FindAndModifyQuery(queryClause, MongoModify(Nil)),
         returnNew = false,
@@ -713,8 +705,8 @@ abstract class MongoClientAdapter[
       )
 
     // TODO(jacob): These casts will always succeed, but should be removed once there is a
-    //    version of LegacyMongoBuilder that speaks the new CRUD api.
-    val filter = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+    //    version of MongoBuilder that speaks the new CRUD api.
+    val filter = MongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
 
     val options = new FindOneAndDeleteOptions()
     queryHelpers.config
@@ -723,10 +715,10 @@ abstract class MongoClientAdapter[
         options.maxTime(_, TimeUnit.MILLISECONDS)
       )
     queryClause.order.foreach(order => {
-      options.sort(LegacyMongoBuilder.buildOrder(order).asInstanceOf[Bson])
+      options.sort(MongoBuilder.buildOrder(order).asInstanceOf[Bson])
     })
     queryClause.select.foreach(select => {
-      options.projection(LegacyMongoBuilder.buildSelect(select).asInstanceOf[Bson])
+      options.projection(MongoBuilder.buildSelect(select).asInstanceOf[Bson])
     })
 
     runCommand(descriptionFunc, queryClause) {
@@ -797,15 +789,15 @@ abstract class MongoClientAdapter[
               collectionFactory.getIndexes(queryClause.meta)
             )
             descriptionBuilder += { () =>
-              LegacyMongoBuilder.buildConditionString(
+              MongoBuilder.buildConditionString(
                 queryOp.getClass.getSimpleName,
                 queryOp.query.collectionName,
                 queryClause
               )
             }
             // TODO(jacob): This cast will always succeed, but it should be removed once there is a
-            //    version of LegacyMongoBuilder that speaks the new CRUD api.
-            val filter = LegacyMongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
+            //    version of MongoBuilder that speaks the new CRUD api.
+            val filter = MongoBuilder.buildCondition(queryClause.condition).asInstanceOf[Bson]
 
             queryOp match {
               case _: BulkRemoveOne[M, R] => requests.add(new DeleteOneModel(filter))
@@ -813,7 +805,7 @@ abstract class MongoClientAdapter[
               case BulkReplaceOne(_, record, upsert) => {
                 val document = serializer(record)
                 val options = {
-                  new UpdateOptions()
+                  new ReplaceOptions()
                     .upsert(upsert)
                 }
                 requests.add(new ReplaceOneModel(filter, document, options))
@@ -830,7 +822,7 @@ abstract class MongoClientAdapter[
                 collectionFactory.getIndexes(modifyClause.query.meta)
               )
               descriptionBuilder += { () =>
-                LegacyMongoBuilder.buildModifyString(
+                MongoBuilder.buildModifyString(
                   modifyOp.modifyQuery.query.collectionName,
                   modifyClause,
                   upsert = modifyOp.upsert,
@@ -838,9 +830,9 @@ abstract class MongoClientAdapter[
                 )
               }
               // TODO(jacob): These casts will always succeed, but should be removed once there is a
-              //    version of LegacyMongoBuilder that speaks the new CRUD api.
-              val filter = LegacyMongoBuilder.buildCondition(modifyClause.query.condition).asInstanceOf[Bson]
-              val update = LegacyMongoBuilder.buildModify(modifyClause.mod).asInstanceOf[Bson]
+              //    version of MongoBuilder that speaks the new CRUD api.
+              val filter = MongoBuilder.buildCondition(modifyClause.query.condition).asInstanceOf[Bson]
+              val update = MongoBuilder.buildModify(modifyClause.mod).asInstanceOf[Bson]
               val options = {
                 new UpdateOptions()
                   .upsert(modifyOp.upsert)

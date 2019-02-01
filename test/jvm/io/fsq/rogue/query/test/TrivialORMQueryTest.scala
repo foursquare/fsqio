@@ -265,7 +265,7 @@ class TrivialORMQueryTest
   @Test
   def canBuildQuery: Unit = {
     metaRecordToQuery(SimpleRecord).toString must_== """db.test_records.find({ })"""
-    SimpleRecord.where(_.int eqs 1).toString must_== """db.test_records.find({ "int" : 1})"""
+    SimpleRecord.where(_.int eqs 1).toString must_== """db.test_records.find({ "int" : 1 })"""
   }
 
   /** Ensure correct throwable encoding -- we catch and encode Exceptions as
@@ -293,7 +293,7 @@ class TrivialORMQueryTest
             resultCallback.onResult(result, toThrow)
           }
         }
-        collection.count(filter, options, queryCallback)
+        collection.countDocuments(filter, options, queryCallback)
         resultCallback.result
       }
     }
@@ -376,7 +376,7 @@ class TrivialORMQueryTest
             resultCallback.onResult(result, throwable)
           }
         }
-        collection.count(filter, options, queryCallback)
+        collection.countDocuments(filter, options, queryCallback)
         resultCallback.result
       }
     }
@@ -389,25 +389,6 @@ class TrivialORMQueryTest
       barrier.await()
     }
     Await.result(countFuture)
-  }
-
-  // TODO(jacob): This is a very dumb check currently, as the output depends on the mongo
-  //    server version used, the db name for this test run, execution time for this query,
-  //    etc. Write a more robust check that actually verifies expected structure while
-  //    handling variability between runs.
-  def verifyExplainJson(json: String): Unit = {
-    json must_!= ""
-    json must_!= (new Document).toJson
-  }
-
-  @Test
-  def testAsyncExplain: Unit = {
-    Await.result(asyncQueryExecutor.explain(SimpleRecord).map(verifyExplainJson))
-  }
-
-  @Test
-  def testBlockingExplain: Unit = {
-    verifyExplainJson(blockingQueryExecutor.explain(SimpleRecord))
   }
 
   def testSingleAsyncSave(record: SimpleRecord): Future[Unit] = {

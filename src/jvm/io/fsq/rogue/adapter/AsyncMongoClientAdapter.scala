@@ -12,6 +12,7 @@ import com.mongodb.client.model.{
   FindOneAndDeleteOptions,
   FindOneAndUpdateOptions,
   IndexModel,
+  ReplaceOptions,
   UpdateOptions,
   WriteModel
 }
@@ -22,7 +23,7 @@ import io.fsq.rogue.adapter.callback.{MongoCallback, MongoCallbackFactory}
 import io.fsq.rogue.util.QueryUtilities
 import java.util.{Iterator => JavaIterator, List => JavaList}
 import java.util.concurrent.TimeUnit
-import org.bson.{BsonBoolean, BsonDocument, BsonValue}
+import org.bson.BsonValue
 import org.bson.conversions.Bson
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
@@ -144,7 +145,7 @@ class AsyncMongoClientAdapter[
     options: CountOptions
   ): Result[Long] = {
     val callback = callbackFactory.newCallback[Long]
-    collection.count(filter, options, callback)
+    collection.countDocuments(filter, options, callback)
     callback.result
   }
 
@@ -164,21 +165,6 @@ class AsyncMongoClientAdapter[
       }
     }
     collection.distinct(fieldName, filter, classOf[BsonValue]).forEach(accumulator, queryCallback)
-    resultCallback.result
-  }
-
-  override protected def explainProcessor(cursor: Cursor): Result[String] = {
-    val resultCallback = callbackFactory.newCallback[String]
-    val queryCallback = new SingleResultCallback[Document] {
-      override def onResult(explainDocument: Document, throwable: Throwable): Unit = {
-        if (throwable !=? null) {
-          resultCallback.onResult(null, throwable)
-        } else {
-          resultCallback.onResult(collectionFactory.documentToString(explainDocument), null)
-        }
-      }
-    }
-    cursor.modifiers(new BsonDocument("$explain", BsonBoolean.TRUE)).first(queryCallback)
     resultCallback.result
   }
 
@@ -372,8 +358,9 @@ class AsyncMongoClientAdapter[
   )(
     filter: Bson
   )(
-    modifiers: Bson,
     batchSizeOpt: Option[Int] = None,
+    commentOpt: Option[String] = None,
+    hintOpt: Option[Bson],
     limitOpt: Option[Int] = None,
     skipOpt: Option[Int] = None,
     sortOpt: Option[Bson] = None,
@@ -382,8 +369,9 @@ class AsyncMongoClientAdapter[
   ): Result[T] = {
     val cursor = collection.find(filter)
 
-    cursor.modifiers(modifiers)
     batchSizeOpt.foreach(cursor.batchSize(_))
+    commentOpt.foreach(cursor.comment(_))
+    hintOpt.foreach(cursor.hint(_))
     limitOpt.foreach(cursor.limit(_))
     skipOpt.foreach(cursor.skip(_))
     sortOpt.foreach(cursor.sort(_))
@@ -431,7 +419,7 @@ class AsyncMongoClientAdapter[
     record: R,
     filter: Bson,
     document: Document,
-    options: UpdateOptions
+    options: ReplaceOptions
   ): Result[R] = {
     val resultCallback = callbackFactory.newCallback[R]
     val queryCallback = new SingleResultCallback[UpdateResult] {

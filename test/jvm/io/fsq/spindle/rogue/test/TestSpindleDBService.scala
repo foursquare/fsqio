@@ -30,7 +30,7 @@ class TestSpindleDBService {
 
     val q = SpindleQuery(TestStruct).where(_.id eqs 1)
 
-    assertEquals("query string", "db.test_structs.find({ \"_id\" : 1})", q.toString)
+    assertEquals("query string", "db.test_structs.find({ \"_id\" : 1 })", q.toString)
 
     val res = dbService.fetch(q)
     assertEquals("result length", 1, res.length)

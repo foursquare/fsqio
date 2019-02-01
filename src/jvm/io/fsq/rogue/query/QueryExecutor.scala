@@ -57,10 +57,6 @@ class QueryExecutor[
     adapter.createIndexes(metaRecord)(indexes: _*)
   }
 
-  def explain[M <: MetaRecord](query: Query[M, _, _]): Result[String] = {
-    adapter.explain(query)
-  }
-
   def count[M <: MetaRecord, State](
     query: Query[M, _, State],
     readPreferenceOpt: Option[ReadPreference] = None

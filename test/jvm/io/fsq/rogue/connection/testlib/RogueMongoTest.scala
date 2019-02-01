@@ -3,17 +3,15 @@
 package io.fsq.rogue.connection.testlib
 
 import com.mongodb.{
+  Block,
   ConnectionString,
   MongoClient => BlockingMongoClient,
   MongoClientOptions,
+  MongoClientSettings,
   MongoClientURI,
   ServerAddress
 }
-import com.mongodb.async.client.{
-  MongoClient => AsyncMongoClient,
-  MongoClientSettings,
-  MongoClients => AsyncMongoClients
-}
+import com.mongodb.async.client.{MongoClient => AsyncMongoClient, MongoClients => AsyncMongoClients}
 import com.mongodb.connection.ClusterSettings
 import com.mongodb.connection.netty.NettyStreamFactoryFactory
 import io.netty.channel.nio.NioEventLoopGroup
@@ -39,15 +37,19 @@ object RogueMongoTest {
     }
     val nettyEventLoop = new NioEventLoopGroup(nettyThreadCount, nettyThreadFactory)
 
+    val clusterSettingsBlock: Block[ClusterSettings.Builder] = new Block[ClusterSettings.Builder] {
+      override def apply(builder: ClusterSettings.Builder): Unit = {
+        builder.applyConnectionString(connectionString)
+      }
+    }
+
     val settings = {
       MongoClientSettings.builder
         .codecRegistry(
           codecRegistry
         )
-        .clusterSettings(
-          ClusterSettings.builder
-            .applyConnectionString(connectionString)
-            .build()
+        .applyToClusterSettings(
+          clusterSettingsBlock
         )
         .streamFactoryFactory(
           NettyStreamFactoryFactory.builder
