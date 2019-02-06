@@ -9,6 +9,7 @@ scala_library(
   ],
   dependencies = [
     '3rdparty:reflections',
+    '3rdparty:scalac',
     '3rdparty:specs2',
   ],
 )

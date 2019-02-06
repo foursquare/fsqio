@@ -3,7 +3,7 @@
 package io.fsq.specs2
 
 import org.junit.runner.RunWith
-import org.specs2.control.consoleLogging
+import org.specs2.control.{ExecuteActions, consoleLogging}
 import org.specs2.mutable.SpecificationWithJUnit
 import org.specs2.runner.{JUnitRunner => BaseJUnitRunner}
 import org.specs2.specification.core.SpecificationStructure
@@ -16,13 +16,12 @@ import org.specs2.specification.core.SpecificationStructure
   */
 class JUnitRunner(klass: Class[_]) extends BaseJUnitRunner(klass) {
   override lazy val specification: SpecificationStructure = {
-    SpecificationStructure
-      .create(klass.getName, klass.getClassLoader)
-      .execute(consoleLogging)
-      .unsafePerformIO
+    val structure = SpecificationStructure.create(klass.getName, klass.getClassLoader, Some(env))
+    ExecuteActions
+      .runAction(structure, consoleLogging)(env.specs2ExecutionEnv)
       .fold(
-        ok => ok,
-        error => error.fold(m => throw new Exception(m), t => throw t, (m, t) => throw t)
+        error => error.fold(t => throw t, m => throw new Exception(m)),
+        ok => ok
       )
   }
 }

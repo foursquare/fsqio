@@ -1172,7 +1172,7 @@ jar_library(
   ]
 )
 
-specs2_rev = '3.3.1'
+specs2_rev = '4.3.6'
 jar_library(
   name = 'specs2',
   tags = [
@@ -1180,7 +1180,6 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'org.specs2', name = 'specs2', rev = specs2_rev),
     scala_jar(org = 'org.specs2', name = 'specs2-core', rev = specs2_rev),
     scala_jar(org = 'org.specs2', name = 'specs2-junit', rev = specs2_rev),
     scala_jar(org = 'org.specs2', name = 'specs2-matcher', rev = specs2_rev),

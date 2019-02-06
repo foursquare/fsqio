@@ -566,6 +566,7 @@ jvm_third_party_map = {
     },
     'reflect': 'scala-reflect',
     'xml': 'scala-xml',
+    'tools': 'scalac',
     'DEFAULT': 'SKIP',
   },
   'scalaj': {
