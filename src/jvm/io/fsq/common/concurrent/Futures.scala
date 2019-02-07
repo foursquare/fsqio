@@ -46,7 +46,7 @@ object Futures {
   }
 
   def within[T](f: Future[T], timer: Timer, timeout: Duration)(implicit caller: StackElement): Future[T] = {
-    f.within(timer, timeout, new FilledTimeoutException(timeout.toString, caller))
+    if (f.isDefined) f else f.within(timer, timeout, new FilledTimeoutException(timeout.toString, caller))
   }
 
   /**

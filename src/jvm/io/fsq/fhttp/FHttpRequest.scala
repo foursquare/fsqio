@@ -3,7 +3,7 @@
 package io.fsq.fhttp
 
 import com.twitter.conversions.time._
-import com.twitter.finagle.{Filter, IndividualRequestTimeoutException, NoStacktrace, Service, SimpleFilter}
+import com.twitter.finagle.{Filter, IndividualRequestTimeoutException, Service, SimpleFilter}
 import com.twitter.finagle.http.{Message, Method, Request, RequestBuilder, Response, Version}
 import com.twitter.finagle.service.TimeoutFilter
 import com.twitter.io.Buf
@@ -16,6 +16,7 @@ import org.jboss.netty.buffer.ChannelBufferOutputStream
 import org.jboss.netty.channel.DefaultChannelConfig
 import org.jboss.netty.handler.codec.http.{QueryStringDecoder, QueryStringEncoder}
 import scala.collection.JavaConverters._
+import scala.util.control.NoStackTrace
 
 object FHttpRequest {
   type HttpOption = Message => Unit
@@ -550,7 +551,7 @@ case class FHttpRequest(
     case ClientException(e: DeferredStackTrace) => throw e.withNewStackTrace()
     case ClientException(e) =>
       e match {
-        case ns: NoStacktrace => {
+        case ns: NoStackTrace => {
           ns.setStackTrace(new Throwable().getStackTrace)
           throw ns
         }
