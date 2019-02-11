@@ -951,13 +951,13 @@ jar_library(
 )
 
 jar_library(
-  name = 'scalaj-time',
+  name = 'nscala-time',
   tags = [
     'opensource',
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'org.scalaj', name = 'scalaj-time', rev = '0.8'),
+    scala_jar(org = 'com.github.nscala-time', name = 'nscala-time', rev = '2.22.0'),
   ],
 )
 

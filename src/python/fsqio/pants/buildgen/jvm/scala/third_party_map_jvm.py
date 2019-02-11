@@ -113,7 +113,8 @@ jvm_third_party_map = {
     },
     'github': {
       'fakemongo': 'fongo',
-      'mustachejava': 'mustache-java'
+      'mustachejava': 'mustache-java',
+      'nscala_time': 'nscala-time',
     },
     'google': {
       'api': {
@@ -537,9 +538,6 @@ jvm_third_party_map = {
     },
     'reflections': 'reflections',
     'rocksdb': 'rocksdb',
-    'scala_tools': {
-      'time': 'scalaj-time',
-    },
     'scalacheck': 'scalacheck',
     'scalatra': 'scalatra',
     'slf4j': 'slf4j-all',
