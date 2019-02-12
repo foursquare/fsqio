@@ -324,7 +324,7 @@ jar_library(
   ]
 )
 
-finagle_rev = '6.39.0'
+finagle_rev = '6.40.0'
 jar_library(
   name = 'finagle',
   tags = [
@@ -363,12 +363,6 @@ jar_library(
       ],
     ),
     scala_jar(org = 'com.twitter', name = 'finagle-serversets', rev = finagle_rev,
-      excludes = [
-        exclude(org="org.slf4j", name="slf4j-jdk14"),
-        exclude(org="org.slf4j", name="slf4j-log4j12"),
-      ],
-    ),
-    scala_jar(org = 'com.twitter', name = 'finagle-thrift', rev = finagle_rev,
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
@@ -1211,7 +1205,7 @@ jar_library(
   ],
 )
 
-twitter_util_rev = '6.38.0'
+twitter_util_rev = '6.39.0'
 jar_library(
   name = 'twitter-util',
   tags = [
