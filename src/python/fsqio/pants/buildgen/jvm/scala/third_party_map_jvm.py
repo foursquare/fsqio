@@ -35,7 +35,7 @@ jvm_third_party_map = {
         'clustering': 'hierarchical-clustering'
       }
     },
-    'beeswax': 'beeswax-api',
+    'beeswax': 'beeswaxrtb',
     'clearspring': {
       'analytics': {
         'stream': 'stream-lib',
