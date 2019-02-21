@@ -884,7 +884,6 @@ abstract class MongoClientAdapter[
           collectionName = getCollectionNamespace(collection).getCollectionName,
           lim = None,
           sk = None,
-          maxScan = None,
           comment = Some("bulk"),
           hint = None,
           condition = AndCondition(Nil, None),

@@ -225,7 +225,6 @@ class SpindleDatabaseService(val dbCollectionFactory: SpindleDBCollectionFactory
           collectionName = collectionName,
           lim = None,
           sk = None,
-          maxScan = None,
           comment = Some("bulk"),
           hint = None,
           condition = AndCondition(Nil, None),

@@ -195,7 +195,6 @@ object TrivialORMQueryTest {
         collectionName = meta.collectionName,
         lim = None,
         sk = None,
-        maxScan = None,
         comment = None,
         hint = None,
         condition = AndCondition(Nil, None),

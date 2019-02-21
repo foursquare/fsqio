@@ -116,7 +116,6 @@ object TrivialORM {
         None,
         None,
         None,
-        None,
         AndCondition(Nil, None),
         None,
         None,

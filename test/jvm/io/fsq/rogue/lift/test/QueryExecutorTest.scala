@@ -27,7 +27,6 @@ class LegacyQueryExecutorTest extends JUnitMustMatchers {
       None,
       None,
       None,
-      None,
       AndCondition(Nil, None),
       None,
       None,

@@ -43,7 +43,6 @@ case class Query[M, R, +State](
   collectionName: String,
   lim: Option[Int],
   sk: Option[Int],
-  maxScan: Option[Int],
   comment: Option[String],
   hint: Option[MongoIndex[M]],
   condition: AndCondition,
@@ -139,7 +138,6 @@ case class Query[M, R, +State](
       this.copy[M, R, Ordered with Selected with Limited with Skipped with HasNoOrClause](
         lim = None,
         sk = None,
-        maxScan = None,
         comment = None,
         hint = None,
         condition = AndCondition(Nil, None),
@@ -248,13 +246,9 @@ case class Query[M, R, +State](
   override def toString: String =
     MongoBuilder.buildQueryString("find", collectionName, this)
 
-  def asDBObject: DBObject =
-    MongoBuilder.buildCondition(this.condition)
+  def asDBObject: DBObject = MongoBuilder.buildCondition(this.condition)
 
-  def signature(): String =
-    MongoBuilder.buildSignature(collectionName, this)
-
-  def maxScan(max: Int): Query[M, R, State] = this.copy(maxScan = Some(max))
+  def signature(): String = MongoBuilder.buildSignature(collectionName, this)
 
   def comment(c: String): Query[M, R, State] = this.copy(comment = Some(c))
 

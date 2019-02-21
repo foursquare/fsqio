@@ -134,7 +134,6 @@ object MongoHelpers extends Rogue {
       query.order.foreach(o => sb.append(".sort(%s)" format buildOrder(o).toString))
       query.lim.foreach(l => sb.append(".limit(%d)" format l))
       query.sk.foreach(s => sb.append(".skip(%d)" format s))
-      query.maxScan.foreach(m => sb.append("._addSpecial(\"$maxScan\", %d)" format m))
       query.comment.foreach(c => sb.append("._addSpecial(\"$comment\", \"%s\")" format c))
       query.hint.foreach(h => sb.append(".hint(%s)" format buildHint(h).toString))
       sb.toString

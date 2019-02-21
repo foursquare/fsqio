@@ -356,7 +356,6 @@ class MongoJavaDriverAdapter[MB, RB](
         queryClause.sk.foreach(cursor.skip _)
         ord.foreach(cursor.sort _)
         readPreference.orElse(queryClause.readPreference).foreach(cursor.setReadPreference _)
-        queryClause.maxScan.foreach(cursor addSpecial ("$maxScan", _))
         queryClause.comment.foreach(cursor addSpecial ("$comment", _))
         hnt.foreach(cursor hint _)
         if (setMaxTimeMS) {
