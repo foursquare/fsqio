@@ -114,7 +114,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'com.typesafe.akka', name = 'akka-actor', rev = '2.3.11')
+    scala_jar(org = 'com.typesafe.akka', name = 'akka-actor', rev = '2.5.21')
   ],
 )
 
