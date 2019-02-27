@@ -2,7 +2,7 @@
 
 package io.fsq.common.logging
 
-import com.twitter.logging.{ConsoleHandler, Level, LoggerFactory}
+import com.twitter.logging.{ConsoleHandler, Level, Logger => TwitterLogger, LoggerFactory}
 
 object Logger {
   lazy val configured = {
@@ -21,6 +21,6 @@ object Logger {
 trait Logger {
   val logger = {
     val _ = Logger.configured
-    com.twitter.logging.Logger.get(getClass)
+    TwitterLogger.get(getClass)
   }
 }

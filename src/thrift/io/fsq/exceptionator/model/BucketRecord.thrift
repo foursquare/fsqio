@@ -14,6 +14,8 @@ struct BucketRecord {
   primary_key="id"
   mongo_collection="buckets"
   mongo_identifier="exceptionator"
+  index="id:asc"
+  index="lastSeen:asc"
   generate_proxy="1"
 )
 
@@ -24,5 +26,6 @@ struct BucketRecordHistogram {
   primary_key="id"
   mongo_collection="bucket_histograms"
   mongo_identifier="exceptionator"
+  index="id:asc"
   generate_proxy="1"
 )

@@ -11,6 +11,7 @@ scala_library(
   dependencies = [
     '3rdparty:mongodb-drivers',
     'src/jvm/io/fsq/rogue/adapter',
+    'src/jvm/io/fsq/rogue/connection',
     'src/jvm/io/fsq/rogue/query',
     'src/jvm/io/fsq/spindle/rogue/adapter',
     'src/jvm/io/fsq/spindle/runtime',

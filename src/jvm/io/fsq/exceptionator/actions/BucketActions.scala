@@ -13,7 +13,7 @@ trait HasBucketActions {
 
 case class SaveResult(bucket: BucketId, oldResult: Option[BucketId], noticesToRemove: Seq[ObjectId])
 
-trait BucketActions extends IndexActions {
+trait BucketActions {
   def get(ids: Seq[String], noticesPerBucketLimit: Option[Int], now: DateTime): Seq[Outgoing]
   def get(name: String, key: String, now: DateTime): Seq[Outgoing]
   def getHistograms(

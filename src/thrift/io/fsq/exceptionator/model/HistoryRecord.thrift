@@ -30,6 +30,9 @@ struct NoticeRecord {
   primary_key="id"
   mongo_collection="notices"
   mongo_identifier="exceptionator"
+  index="id:asc"
+  index="keywords:asc"
+  index="expireAt:asc"
   generate_proxy="1"
 )
 
@@ -45,6 +48,8 @@ struct HistoryRecord {
   primary_key="id"
   mongo_collection="history"
   mongo_identifier="exceptionator"
-  index="id:asc,id:desc"
+  index="id:asc"
+  index="buckets:asc,id:desc"
+  index="earliestExpiration:asc"
   generate_proxy="1"
 )

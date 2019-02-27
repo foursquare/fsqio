@@ -11,7 +11,7 @@ trait HasNoticeActions {
   def noticeActions: NoticeActions
 }
 
-trait NoticeActions extends IndexActions {
+trait NoticeActions {
   def get(ids: Seq[ObjectId]): Seq[Outgoing]
   def search(keywords: Seq[String], limit: Option[Int]): Seq[Outgoing]
   def save(

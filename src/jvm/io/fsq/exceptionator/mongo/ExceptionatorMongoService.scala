@@ -5,13 +5,12 @@ package io.fsq.exceptionator.mongo
 import com.mongodb.{BasicDBObject, MongoClient}
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import io.fsq.rogue.adapter.BlockingResult
+import io.fsq.rogue.connection.BlockingMongoClientManager
 import io.fsq.rogue.query.QueryExecutor
 import io.fsq.spindle.rogue.adapter.SpindleMongoCollectionFactory
 import io.fsq.spindle.runtime.{UntypedMetaRecord, UntypedRecord}
 
-trait ExceptionatorMongoService {
-  def executor: Executor
-  def collectionFactory: CollectionFactory
+object ExceptionatorMongoService {
   type Executor = QueryExecutor[
     MongoCollection,
     Object,
@@ -28,6 +27,12 @@ trait ExceptionatorMongoService {
   ]
 }
 
+trait ExceptionatorMongoService {
+  def clientManager: BlockingMongoClientManager
+  def collectionFactory: ExceptionatorMongoService.CollectionFactory
+  def executor: ExceptionatorMongoService.Executor
+}
+
 trait HasExceptionatorMongoService {
-  def exceptionatorMongoService: ExceptionatorMongoService
+  def exceptionatorMongo: ExceptionatorMongoService
 }

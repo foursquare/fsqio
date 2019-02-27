@@ -2,6 +2,7 @@
 
 package io.fsq.exceptionator.service
 
+import com.mongodb.{MongoClient, MongoClientOptions, ServerAddress}
 import com.twitter.finagle.Service
 import com.twitter.finagle.builder.{Server, ServerBuilder}
 import com.twitter.finagle.http.{Http, Method, Response, Status, Version}
@@ -11,7 +12,7 @@ import com.twitter.io.Buf
 import com.twitter.ostrich.admin.{AdminServiceFactory, RuntimeEnvironment, StatsFactory, TimeSeriesCollectorFactory}
 import com.twitter.util.{Future, FuturePool}
 import io.fsq.common.logging.Logger
-import io.fsq.exceptionator.actions.{HasBucketActions, HasHistoryActions, HasNoticeActions, IndexActions}
+import io.fsq.exceptionator.actions.{HasBucketActions, HasHistoryActions, HasNoticeActions}
 import io.fsq.exceptionator.actions.concrete.{
   ConcreteBackgroundActions,
   ConcreteBucketActions,
@@ -22,11 +23,15 @@ import io.fsq.exceptionator.actions.concrete.{
 }
 import io.fsq.exceptionator.loader.concrete.ConcretePluginLoaderService
 import io.fsq.exceptionator.loader.service.HasPluginLoaderService
+import io.fsq.exceptionator.model.gen.{BucketRecord, BucketRecordHistogram, HistoryRecord, NoticeRecord}
 import io.fsq.exceptionator.mongo.HasExceptionatorMongoService
 import io.fsq.exceptionator.mongo.concrete.ConcreteExceptionatorMongoService
 import io.fsq.exceptionator.util.Config
-import java.io.{IOException, InputStream}
+import io.fsq.rogue.connection.DefaultMongoIdentifier
+import io.fsq.spindle.runtime.UntypedMetaRecord
+import java.io.InputStream
 import java.net.InetSocketAddress
+import java.util.Arrays
 import java.util.concurrent.Executors
 import scala.collection.mutable.ListBuffer
 
@@ -109,10 +114,45 @@ object ExceptionatorServer extends Logger {
   val defaultStatsPort = defaultPort + 1
   val defaultDbHost = "localhost:27017"
   val defaultDbName = "test"
-  val defaultDbSocketTimeout = 10 * 1000
+  val defaultMongoIdentifier = new DefaultMongoIdentifier("exceptionator")
 
-  def bootMongo(indexesToEnsure: List[IndexActions] = Nil) {
-    indexesToEnsure.foreach(_.ensureIndexes)
+  def bootMongo(
+    services: HasExceptionatorMongoService,
+    ensureIndexesMetaRecords: Seq[UntypedMetaRecord] = Nil
+  ): Unit = {
+    Runtime
+      .getRuntime()
+      .addShutdownHook(new Thread {
+        override def run(): Unit = {
+          services.exceptionatorMongo.clientManager.closeAll()
+        }
+      })
+
+    val serverAddresses = Config
+      .opt(_.getString("db.host"))
+      .getOrElse(defaultDbHost)
+      .split(',')
+      .map(hostString => {
+        hostString.split(':') match {
+          case Array(host, port) => new ServerAddress(host, port.toInt)
+          case Array(host) => new ServerAddress(host)
+          case _ => throw new IllegalArgumentException(s"Malformed host string: $hostString")
+        }
+      })
+
+    val mongoOptions = MongoClientOptions.builder
+      .socketTimeout(ConcreteExceptionatorMongoService.defaultDbSocketTimeoutMS.toInt)
+      .build
+
+    val client = new MongoClient(Arrays.asList(serverAddresses: _*), mongoOptions)
+    val dbName = Config.opt(_.getString("db.name")).getOrElse(defaultDbName)
+    services.exceptionatorMongo.clientManager.defineDb(defaultMongoIdentifier, client, dbName)
+
+    ensureIndexesMetaRecords.foreach(metaRecord => {
+      services.exceptionatorMongo.collectionFactory
+        .getIndexes(metaRecord)
+        .foreach(services.exceptionatorMongo.executor.createIndexes(metaRecord)(_: _*))
+    })
   }
 
   def main(args: Array[String]) {
@@ -121,11 +161,12 @@ object ExceptionatorServer extends Logger {
 
     val services = new HasBucketActions with HasHistoryActions with HasNoticeActions with HasPluginLoaderService
     with HasExceptionatorMongoService {
+
       lazy val historyActions = new ConcreteHistoryActions(this)
       lazy val noticeActions = new ConcreteNoticeActions(this)
       lazy val pluginLoader = new ConcretePluginLoaderService(this)
       lazy val bucketActions = new ConcreteBucketActions(this)
-      lazy val exceptionatorMongoService = new ConcreteExceptionatorMongoService
+      lazy val exceptionatorMongo = new ConcreteExceptionatorMongoService
     }
 
     // Create services
@@ -134,10 +175,16 @@ object ExceptionatorServer extends Logger {
     // Start mongo
     try {
       bootMongo(
-        List(services.bucketActions, services.historyActions, services.noticeActions)
+        services,
+        Vector(
+          BucketRecord,
+          BucketRecordHistogram,
+          HistoryRecord,
+          NoticeRecord
+        )
       )
     } catch {
-      case e: IOException => {
+      case e: Exception => {
         logger.error(e, "Failed to connect to mongo")
         System.exit(1)
       }

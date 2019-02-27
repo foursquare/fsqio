@@ -2,14 +2,13 @@
 
 package io.fsq.exceptionator.actions.concrete
 
-import com.mongodb.MongoCommandException
 import com.twitter.ostrich.stats.Stats
 import io.fsq.common.logging.Logger
-import io.fsq.exceptionator.actions.{BucketActions, IndexActions, SaveResult}
+import io.fsq.exceptionator.actions.{BucketActions, SaveResult}
 import io.fsq.exceptionator.model.{MongoOutgoing, RichBucketRecord, RichBucketRecordHistogram, RichNoticeRecord}
 import io.fsq.exceptionator.model.gen.{BucketRecord, BucketRecordHistogram, NoticeRecord}
 import io.fsq.exceptionator.model.io.{BucketId, Outgoing, RichIncoming}
-import io.fsq.exceptionator.mongo.HasExceptionatorMongoService
+import io.fsq.exceptionator.mongo.{ExceptionatorMongoService, HasExceptionatorMongoService}
 import io.fsq.exceptionator.util.Hash
 import io.fsq.spindle.rogue.{SpindleQuery => Q}
 import io.fsq.spindle.rogue.SpindleRogue._
@@ -22,26 +21,10 @@ import scala.collection.immutable.NumericRange
 class ConcreteBucketActions(
   services: HasExceptionatorMongoService
 ) extends BucketActions
-  with IndexActions
   with Logger {
   var currentTime: Long = 0
   var lastHistogramTrim: Long = 0
-  val executor = services.exceptionatorMongoService.executor
-
-  def ensureIndexes {
-    val collectionFactory = services.exceptionatorMongoService.collectionFactory
-    collectionFactory
-      .getIndexes(BucketRecord)
-      .foreach(indexes => {
-        try {
-          services.exceptionatorMongoService.executor.createIndexes(BucketRecord)(indexes: _*)
-        } catch {
-          case e: MongoCommandException => {
-            logger.error("Error while creating index", e)
-          }
-        }
-      })
-  }
+  def executor: ExceptionatorMongoService.Executor = services.exceptionatorMongo.executor
 
   def getHistograms(
     ids: Seq[String],

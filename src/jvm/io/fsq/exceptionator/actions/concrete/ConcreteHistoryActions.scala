@@ -2,18 +2,17 @@
 
 package io.fsq.exceptionator.actions.concrete
 
-import com.mongodb.MongoCommandException
 import com.twitter.conversions.time._
 import com.twitter.ostrich.stats.Stats
 import com.twitter.util.ScheduledThreadPoolTimer
 import io.fsq.common.logging.Logger
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
-import io.fsq.exceptionator.actions.{HasBucketActions, HistoryActions, IndexActions}
+import io.fsq.exceptionator.actions.{HasBucketActions, HistoryActions}
 import io.fsq.exceptionator.model.{MongoOutgoing, RichBucketRecord, RichHistoryRecord, RichNoticeRecord}
 import io.fsq.exceptionator.model.gen.{BucketRecord, HistoryRecord}
 import io.fsq.exceptionator.model.io.{BucketId, Outgoing}
-import io.fsq.exceptionator.mongo.HasExceptionatorMongoService
+import io.fsq.exceptionator.mongo.{ExceptionatorMongoService, HasExceptionatorMongoService}
 import io.fsq.exceptionator.util.{Config, ReservoirSampler}
 import io.fsq.spindle.rogue.{SpindleQuery => Q}
 import io.fsq.spindle.rogue.SpindleRogue._
@@ -21,16 +20,16 @@ import java.util.concurrent.ConcurrentHashMap
 import org.joda.time.DateTime
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.language.postfixOps
+
 class ConcreteHistoryActions(
   services: HasBucketActions with HasExceptionatorMongoService
 ) extends HistoryActions
-  with IndexActions
   with Logger {
   val flushPeriod = Config.opt(_.getInt("history.flushPeriod")).getOrElse(60)
   val sampleRate = Config.opt(_.getInt("history.sampleRate")).getOrElse(50)
   val samplers = (new ConcurrentHashMap[DateTime, ReservoirSampler[RichNoticeRecord]]).asScala
   val timer = new ScheduledThreadPoolTimer(makeDaemons = true)
-  val executor = services.exceptionatorMongoService.executor
+  def executor: ExceptionatorMongoService.Executor = services.exceptionatorMongo.executor
 
   timer.schedule(flushPeriod seconds, flushPeriod seconds) {
     try {
@@ -40,21 +39,6 @@ class ConcreteHistoryActions(
     } catch {
       case t: Throwable => logger.debug("Error flushing history", t)
     }
-  }
-
-  def ensureIndexes {
-    val collectionFactory = services.exceptionatorMongoService.collectionFactory
-    collectionFactory
-      .getIndexes(HistoryRecord)
-      .foreach(indexes => {
-        try {
-          services.exceptionatorMongoService.executor.createIndexes(HistoryRecord)(indexes: _*)
-        } catch {
-          case e: MongoCommandException => {
-            logger.error("Error while creating index", e)
-          }
-        }
-      })
   }
 
   // Write history to mongo

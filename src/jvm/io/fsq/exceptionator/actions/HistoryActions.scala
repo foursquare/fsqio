@@ -10,7 +10,7 @@ trait HasHistoryActions {
   def historyActions: HistoryActions
 }
 
-trait HistoryActions extends IndexActions {
+trait HistoryActions {
   def get(bucketName: String, time: DateTime, limit: Int): Seq[Outgoing]
   def get(bucketName: String, bucketKey: String, time: DateTime, limit: Int): Seq[Outgoing]
   def get(ids: Seq[String], time: DateTime, limit: Int): Seq[Outgoing]

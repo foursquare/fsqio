@@ -2,14 +2,14 @@
 
 package io.fsq.exceptionator.actions.concrete
 
-import com.mongodb.{MongoCommandException, WriteConcern}
+import com.mongodb.WriteConcern
 import com.twitter.ostrich.stats.Stats
 import io.fsq.common.logging.Logger
-import io.fsq.exceptionator.actions.{IndexActions, NoticeActions}
+import io.fsq.exceptionator.actions.NoticeActions
 import io.fsq.exceptionator.model.{MongoOutgoing, RichNoticeRecord}
 import io.fsq.exceptionator.model.gen.NoticeRecord
 import io.fsq.exceptionator.model.io.{BucketId, Outgoing, RichIncoming}
-import io.fsq.exceptionator.mongo.HasExceptionatorMongoService
+import io.fsq.exceptionator.mongo.{ExceptionatorMongoService, HasExceptionatorMongoService}
 import io.fsq.spindle.rogue.{SpindleQuery => Q}
 import io.fsq.spindle.rogue.SpindleRogue._
 import net.liftweb.json._
@@ -20,9 +20,8 @@ import scala.collection.JavaConverters._
 class ConcreteNoticeActions(
   services: HasExceptionatorMongoService
 ) extends NoticeActions
-  with IndexActions
   with Logger {
-  val executor = services.exceptionatorMongoService.executor
+  def executor: ExceptionatorMongoService.Executor = services.exceptionatorMongo.executor
 
   def get(ids: Seq[ObjectId]): Seq[Outgoing] = {
     executor
@@ -46,21 +45,6 @@ class ConcreteNoticeActions(
       .unwrap
       .map(RichNoticeRecord(_))
       .map(MongoOutgoing(_))
-  }
-
-  def ensureIndexes {
-    val collectionFactory = services.exceptionatorMongoService.collectionFactory
-    collectionFactory
-      .getIndexes(NoticeRecord)
-      .foreach(indexes => {
-        try {
-          services.exceptionatorMongoService.executor.createIndexes(NoticeRecord)(indexes: _*)
-        } catch {
-          case e: MongoCommandException => {
-            logger.error("Error while creating index", e)
-          }
-        }
-      })
   }
 
   def save(
