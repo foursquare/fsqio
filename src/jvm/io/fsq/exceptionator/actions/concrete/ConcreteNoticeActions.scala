@@ -5,6 +5,7 @@ package io.fsq.exceptionator.actions.concrete
 import com.mongodb.WriteConcern
 import com.twitter.ostrich.stats.Stats
 import io.fsq.common.logging.Logger
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.exceptionator.actions.NoticeActions
 import io.fsq.exceptionator.model.{MongoOutgoing, RichNoticeRecord}
 import io.fsq.exceptionator.model.gen.NoticeRecord
@@ -77,17 +78,17 @@ class ConcreteNoticeActions(
   }
 
   def removeBucket(id: ObjectId, bucketId: BucketId) {
-    val updated = Stats.time("noticeActions.removeBucket") {
+    val updatedNoticeOpt = Stats.time("noticeActions.removeBucket") {
       executor
-        .updateOne(
+        .findAndUpdateOne(
           Q(NoticeRecord)
             .where(_.id eqs id)
-            .modify(_.buckets pull bucketId.toString)
+            .findAndModify(_.buckets pull bucketId.toString)
         )
         .unwrap
     }
 
-    if (updated > 0) {
+    if (updatedNoticeOpt.exists(_.buckets.isEmpty)) {
       logger.debug("deleting " + id.toString)
       Stats.time("noticeActions.removeBucket.deleteRecord") {
         executor.findAndDeleteOne(
