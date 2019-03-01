@@ -178,7 +178,7 @@ class ConcreteHistoryActions(
           .orderAsc(_.id)
       )
       .unwrap
-      .headOption
+      .flatten
       .map(new DateTime(_))
   }
 
