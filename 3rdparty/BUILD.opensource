@@ -576,7 +576,8 @@ jar_library(
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-annotations', rev = jackson_rev),
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-core', rev = jackson_rev),
     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-databind', rev = jackson_rev),
-    scala_jar(org = 'com.fasterxml.jackson.module', name = 'jackson-module-scala', rev = jackson_rev),
+    # NOTE(iant): 2.6.7.1 for 2.12 support; should be jackson_rev in the future
+    scala_jar(org = 'com.fasterxml.jackson.module', name = 'jackson-module-scala', rev = '2.6.7.1'),
     jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-joda', rev = jackson_rev),
     jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-guava', rev = jackson_rev),
     jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jdk8', rev = jackson_rev),
