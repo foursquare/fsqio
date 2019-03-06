@@ -1,3 +1,9 @@
 # Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 
-python_requirements(requirements_relpath="requirements.txt.freeze")
+# NOTE(mateo): We should consider defining the python build tooling (wheel, setuptools, etc)
+# in this file where we can inject the version from env.sh instead of
+# trying to keep it in sync.
+
+filtered_python_requirements(
+  requirements_relpath='requirements.txt'
+)

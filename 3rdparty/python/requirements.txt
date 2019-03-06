@@ -1,6 +1,7 @@
 ansicolors==1.0.2
 future==0.16.0
 mock==2.0.0
+more-itertools==5.0.0       # Pinned to avoid pulling in unsafe upgrade
 pantsbuild.pants==1.7.0
 pantsbuild.pants.contrib.confluence==1.7.0
 pantsbuild.pants.contrib.go==1.7.0
