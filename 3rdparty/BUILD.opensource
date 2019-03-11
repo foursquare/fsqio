@@ -742,7 +742,7 @@ jar_library(
   ]
 )
 
-mongo_rev = '3.8.0'
+mongo_rev = '3.8.2'
 
 jar_library(
   name = 'bson',
