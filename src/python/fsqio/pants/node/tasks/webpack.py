@@ -76,6 +76,14 @@ class WebPack(NodeTask, SimpleCodegenTask):
       '--destination-dir', type=str, advanced=True, default='webpack',
       help='The directory prefix for webpack resources to go in'
     )
+    register(
+      '--env',
+      type=str,
+      advanced=False,
+      fingerprint=True,
+      default='dev',
+      help='The --env=value passed to the webpack command'
+    )
 
   def synthetic_target_type(self, target):
     return WebPack.Resources
@@ -93,7 +101,7 @@ class WebPack(NodeTask, SimpleCodegenTask):
     args = [
       '--bail',
       '--output-path={}'.format(dest_dir),
-      '--env=dist',
+      '--env={}'.format(self.get_options().env),
     ]
     with pushd(node_paths.node_path(target)):
       result, command = self.run_script(
