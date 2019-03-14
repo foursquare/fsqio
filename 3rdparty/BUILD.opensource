@@ -842,7 +842,7 @@ jar_library(
 )
 
 
-parboiled_rev = '1.1.6'
+parboiled_rev = '1.3.0'
 jar_library(
   name = 'parboiled-scala',
   tags = [
@@ -963,7 +963,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'org.scalatra.scalate', name = 'scalate-core', rev = '1.7.1')
+    scala_jar(org = 'org.scalatra.scalate', name = 'scalate-core', rev = '1.8.0')
   ]
 )
 
