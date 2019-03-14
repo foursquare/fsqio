@@ -1156,7 +1156,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'org.slf4s', name = 'slf4s-api', rev = '1.7.13'),
+    scala_jar(org = 'org.slf4s', name = 'slf4s-api', rev = '1.7.25'),
   ]
 )
 
