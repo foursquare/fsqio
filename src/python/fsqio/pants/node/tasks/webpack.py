@@ -50,7 +50,7 @@ class WebPack(NodeTask, SimpleCodegenTask):
 
   @classmethod
   def implementation_version(cls):
-    return super(WebPack, cls).implementation_version() + [('WebPack', 5)]
+    return super(WebPack, cls).implementation_version() + [('WebPack', 6)]
 
   @classmethod
   def prepare(cls, options, round_manager):
