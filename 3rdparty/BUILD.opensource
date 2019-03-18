@@ -575,17 +575,6 @@ jar_library(
 )
 
 jar_library(
-  name = 'jerkson',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    scala_jar(org = 'com.gilt', name = 'jerkson', rev = '0.6.7'),
-  ],
-)
-
-jar_library(
   name = 'jline',
   tags = [
     'opensource',

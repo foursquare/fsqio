@@ -44,9 +44,6 @@ jvm_third_party_map = {
     'bettercloud': {
       'vault': 'vault-java-driver',
     },
-    'codahale': {
-      'jerkson': 'jerkson',
-    },
     'carrotsearch': 'langid-java',
     'cybozu': {
       'labs': 'language-detect',
