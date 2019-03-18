@@ -29,8 +29,13 @@ for opt in $@; do
     "--all" )
       DOWNSTREAM_TASKS="true"
       task_names=( $(all_task_names) )
+
+      # Force removing nuke-pvenvs from ./upkeep --all as it adds extra ~5 mins each run (up to ~10 when including py3).
+      # It nukes venv-faster and prod virtualenv cache on each run intentionally - but that is only desirable in
+      # extreme circumstances.
       if [[ ! $@ =~ "--clean" ]]; then
         task_names=( "${task_names[@]/clean}" )
+        task_names=( "${task_names[@]/nuke-pvenvs}" )
       fi
       upkeep_args=( "${upkeep_args[@]}" "${task_names[@]}" )
       ;;
