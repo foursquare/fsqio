@@ -10,7 +10,6 @@ import io.fsq.rogue.lift.{HasMongoForeignObjectId, ObjectIdKey}
 import io.fsq.rogue.lift.LiftRogue._
 import net.liftweb.mongodb.record._
 import net.liftweb.mongodb.record.field._
-import net.liftweb.record._
 import net.liftweb.record.field._
 import net.liftweb.util.ConnectionIdentifier
 import org.bson.types.ObjectId

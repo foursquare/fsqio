@@ -337,7 +337,10 @@ jvm_third_party_map = {
       'mocks': 'liftweb-testkit',
       'mongodb': 'lift-mongo',
       'proto': 'lift-proto',
-      'record': 'lift-record',
+      'record': {
+        'FSField': None,
+        'DEFAULT': 'lift-record',
+      },
       'sitemap': 'lift-webkit',
       'util': 'lift-util',
     },

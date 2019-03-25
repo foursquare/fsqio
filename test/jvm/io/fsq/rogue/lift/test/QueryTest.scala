@@ -9,7 +9,7 @@ import io.fsq.util.compiler.test.CompilerForNegativeTests
 import java.util.regex.Pattern
 import net.liftweb.mongodb.record._
 import net.liftweb.mongodb.record.field._
-import net.liftweb.record._
+import net.liftweb.record.Field
 import net.liftweb.record.field._
 import org.bson.types._
 import org.joda.time.{DateTime, DateTimeZone}
