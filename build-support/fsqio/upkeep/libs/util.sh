@@ -146,6 +146,26 @@ function xcode_help() {
   colorized_error "\t or go straight to the App Store and install/upgrade XCode + XCode CommandLine Tools."
 }
 
+function install_brew_packages_with_args() {
+  # Usage:
+  # Accepts either a list of strings or a single space-delimited string.
+  #   install_packages_with_args BREW_PACKAGE [ARG1 ARG2]
+  # or
+  #   install_packages_with_args "BREW_PACKAGE ARG1 ARG2"
+
+  # Give some custom error messages when we cannot verify homebrew install.
+  if [[ -z "${FSQ_HOMEBREW}" ]] || [[ ! -f "${FSQ_HOMEBREW}" ]]; then
+    exit_with_failure "No Homebrew install found! (location set by FSQ_HOMEBREW: ${FSQ_HOMEBREW})"
+  fi
+  passed_args=( $@ )
+  package_name=${passed_args[0]}
+  brew_install_args="${passed_args[@]:1}"
+
+  ("${FSQ_HOMEBREW}" ls --versions "${package_name}" > /dev/null 2>&1) \
+      ||  "${FSQ_HOMEBREW}" install "${package_name}" ${brew_install_args[@]}
+
+}
+
 function tempdir {
   # usage: tempdir ROOT [OPTIONAL_NAMESPACING]
   mkdir -p "${1}"
