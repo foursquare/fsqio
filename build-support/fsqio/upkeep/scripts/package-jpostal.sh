@@ -10,8 +10,8 @@ set -ea
 # To update jpostal/libpostal blobs:
 #     * adjust the VERSIONS in the env.sh file
 #     * compile on linux and OS box
-#     * upload the tarball to bodega preserving the namespacing here.
-#       -  for internal usage, at bodega at /data/appdata/bodega/4sq-dev/pants/fs-bootstrap/bin/jpostal_blobs/<etc>
+#     * upload the tarball to hosting preserving the namespacing here.
+#       -  for internal usage, at ${FS_ARTIFACT_DEV_BUCKET}/pants/fs-bootstrap/bin/jpostal_blobs/<etc>
 
 libpostal_tar=$(fetch_github_release "foursquare libpostal ${LIBPOSTAL_RELEASE_TAG} tar.gz")
 [[ -e "${libpostal_tar}" ]] || exit_with_failure "${libpostal_tar}"

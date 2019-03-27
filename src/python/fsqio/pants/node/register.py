@@ -8,6 +8,7 @@ from pants.goal.goal import Goal
 from pants.goal.task_registrar import TaskRegistrar as task
 
 from fsqio.pants.node.subsystems.resolvers.webpack_resolver import WebPackResolver
+from fsqio.pants.node.subsystems.webpack_distribution import WebPackDistribution
 from fsqio.pants.node.targets.webpack_module import NpmResource, WebPackModule
 from fsqio.pants.node.tasks.webpack import WebPack
 from fsqio.pants.node.tasks.webpack_bundle import WebPackBundle
@@ -26,7 +27,7 @@ def build_file_aliases():
 
 
 def global_subsystems():
-  return (WebPackResolver,)
+  return (WebPackResolver, WebPackDistribution)
 
 
 def register_goals():

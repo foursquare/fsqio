@@ -36,6 +36,8 @@ for opt in $@; do
       if [[ ! $@ =~ "--clean" ]]; then
         task_names=( "${task_names[@]/clean}" )
         task_names=( "${task_names[@]/nuke-pvenvs}" )
+        ./upkeep check clean --no-downstream
+        ./upkeep check nuke-pvenvs --no-downstream
       fi
       upkeep_args=( "${upkeep_args[@]}" "${task_names[@]}" )
       ;;

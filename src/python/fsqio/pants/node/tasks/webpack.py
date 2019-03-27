@@ -12,7 +12,9 @@ from pants.contrib.node.tasks.node_paths import NodePaths
 from pants.contrib.node.tasks.node_task import NodeTask
 from pants.task.simple_codegen_task import SimpleCodegenTask
 from pants.util.contextutil import pushd
+from pants.util.memo import memoized_property
 
+from fsqio.pants.node.subsystems.webpack_distribution import WebPackDistribution
 from fsqio.pants.node.targets.webpack_module import NpmResource, WebPackModule
 
 
@@ -35,6 +37,14 @@ class WebPack(NodeTask, SimpleCodegenTask):
     """Resources container to hold generated json."""
 
   @classmethod
+  def subsystem_dependencies(cls):
+    return super(WebPack, cls).subsystem_dependencies() + (WebPackDistribution,)
+
+  @memoized_property
+  def webpack_subsystem(self):
+    return WebPackDistribution.global_instance()
+
+  @classmethod
   def product_types(cls):
     return super(WebPack, cls).product_types() + [WebPack.Resources, 'compile_classpath']
 
@@ -50,7 +60,7 @@ class WebPack(NodeTask, SimpleCodegenTask):
 
   @classmethod
   def implementation_version(cls):
-    return super(WebPack, cls).implementation_version() + [('WebPack', 6)]
+    return super(WebPack, cls).implementation_version() + [('WebPack', 6.1)]
 
   @classmethod
   def prepare(cls, options, round_manager):
@@ -98,11 +108,13 @@ class WebPack(NodeTask, SimpleCodegenTask):
     dest_dir = os.path.join(target_workdir, self.get_options().destination_dir, target.name)
     # Added "bail" to the args since webpack only returns failure on failed transpiling, treating missing deps or
     # syntax errors as soft errors. This resulted in Pants returning success while the canary fails health check.
-    args = [
+    webpack_args = [
       '--bail',
       '--output-path={}'.format(dest_dir),
       '--env={}'.format(self.get_options().env),
     ]
+    args = list(self.webpack_subsystem.get_distribution_args() + webpack_args)
+
     with pushd(node_paths.node_path(target)):
       result, command = self.run_script(
         'webpack',

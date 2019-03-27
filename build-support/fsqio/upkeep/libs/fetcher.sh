@@ -21,15 +21,19 @@ function cached_download() {
   local download_path="${fetchdir}/${expected_filename}"
 
   trap "wipe_workspace ${FS_TEMP_EXTRACTDIR} 3" ERR INT
-
-  # Disable progress on CI runs since running under 'set -x' streams the progress as spam 2x per second.
-  # [ -z "${FSQ_RUN_AS_CI}" ] && progress=" --progress "
   if [[ ! -e "${cache_path}" ]]; then
-        (
-          curl "-fL${FSQ_CURL_PROGRESS}"  "${url}" > "${download_path}" \
-          && [[ -e "${download_path}" ]] \
-          && mv -f "${download_path}" "${cache_path}" \
-        ) || (echo "${url}" && exit -9)
+    # Homebrew cannot use brew install wget to bootstrap itself.
+    # So we allow this to fall back to curl in localdev. Add wget/curl option.
+    if [[ ${FSQ_RUNNING_ON_OSX} == "True" ]] && [[ ! -f ${FS_WGET_BINARY} ]]; then
+      curl "-fL${FSQ_CURL_PROGRESS}" ${FS_CURL_EXTRA_PARAMS} "${url}" > "${download_path}" # ) || _fetch_failed=True
+    else
+      ( ${FS_WGET_BINARY} ${FS_WGET_EXTRA_PARAMS} -O ${download_path} ${url} ) || _fetch_failed=True
+    fi
+    (
+      [[ -z ${_fetch_failed} ]] \
+      && [[ -e "${download_path}" ]] \
+      && mv -f "${download_path}" "${cache_path}" \
+    ) || (echo "${url}" && exit -9)
   fi
   if [[ -e "${cache_path}" ]]; then
     echo "${cache_path}"
