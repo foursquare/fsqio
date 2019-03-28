@@ -161,7 +161,8 @@ function download_and_extract() {
   local fetched=$(fetch_remote_source "${FS_REMOTE_SOURCES_URL}" ${fetch_args[@]}) || (echo "${fetched}" && exit 2)
 
   local extractdir=$(extract "${libname}" "${fetched}")
-  [[ -e "${extractdir}" ]] || exit 6
+  [[ -e "${extractdir}" ]] || \
+    (colorized_error "Download failed: Probably due to invalid artifactory creds.\n" && exit 6)
   relocate "${extractdir}/${archive_basedir}" "${destination}"
   echo "${destination}"
 }
