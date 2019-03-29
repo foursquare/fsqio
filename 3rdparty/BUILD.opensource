@@ -844,7 +844,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'com.googlecode.libphonenumber', name = 'libphonenumber', rev = '8.3.3')
+    jar(org = 'com.googlecode.libphonenumber', name = 'libphonenumber', rev = '8.10.9')
   ]
 )
 

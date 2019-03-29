@@ -574,6 +574,11 @@ jvm_third_party_map = {
   'storm': {
     'kafka': 'storm-kafka',
   },
+  'software': {
+    'amazon': {
+      'awssdk': 'amazonaws-v2',
+    }
+  },
   'sun': {
     'reflect': 'SKIP',
     'misc': {
