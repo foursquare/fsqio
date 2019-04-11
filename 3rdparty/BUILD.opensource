@@ -312,7 +312,7 @@ jar_library(
   ]
 )
 
-finagle_rev = '6.40.0'
+finagle_rev = '6.41.0'
 jar_library(
   name = 'finagle',
   tags = [
@@ -1183,7 +1183,7 @@ jar_library(
   ],
 )
 
-twitter_util_rev = '6.39.0'
+twitter_util_rev = '6.40.0'
 jar_library(
   name = 'twitter-util',
   tags = [

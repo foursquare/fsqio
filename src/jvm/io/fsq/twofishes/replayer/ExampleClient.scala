@@ -1,19 +1,16 @@
 package io.fsq.twofishes.replayer
 
 import com.twitter.conversions.time._
+import com.twitter.finagle.Thrift
 import com.twitter.finagle.builder.ClientBuilder
-import com.twitter.finagle.thrift.{ThriftClientFramedCodec, ThriftClientRequest}
 import com.twitter.util.Future
 import io.fsq.twofishes.gen.Geocoder
 import java.io.{File, FileWriter}
-import java.nio._
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.{BytesWritable, NullWritable, SequenceFile}
-import org.apache.hadoop.io.SequenceFile.Reader
 import org.apache.thrift.TBase
-import org.apache.thrift.protocol.{TBinaryProtocol, TMessage, TProtocol, TProtocolFactory, TProtocolUtil, TType}
-import scala.collection.JavaConverters._
+import org.apache.thrift.protocol.{TBinaryProtocol, TProtocol, TProtocolFactory, TProtocolUtil, TType}
 
 object ThriftPrinter {
   def typeStr(t: Byte): String = {
@@ -127,7 +124,7 @@ object GeocoderTestClient {
       .name("geocoderv2")
       .hostConnectionLimit(100)
       .tcpConnectTimeout(5.seconds)
-      .codec(ThriftClientFramedCodec())
+      .stack(Thrift.client)
       .build())
     val factory = new TBinaryProtocol.Factory()
 
