@@ -16,7 +16,7 @@ The `Fsq.io` packages are registered to PyPi under the `opensource@foursquare.co
 1. Bump the version!
     - Set in the BUILD file for the target `python_library`
     - e.g. [src/python/fsqio/pants/buildgen/core/BUILD](https://github.com/foursquare/foursquare.web/blob/master/src/python/fsqio/pants/buildgen/core/BUILD)
-     !inc[start-at=provides=setup_py&end-before=files(](./buildgen/core/BUILD)
+     !inc[start-at=provides=setup_py(](./buildgen/core/BUILD)
 1. Build the modules
     - `./pants setup-py src/python/fsqio::`
     - Look for the output tar.gz files in `dist/`
