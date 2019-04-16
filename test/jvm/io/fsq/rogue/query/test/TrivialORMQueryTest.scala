@@ -10,7 +10,6 @@ import com.mongodb.client.{MongoCollection => BlockingMongoCollection}
 import com.mongodb.client.model.CountOptions
 import com.twitter.util.{Await, Future}
 import io.fsq.common.concurrent.Futures
-import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.field.{OptionalField, RequiredField}
 import io.fsq.rogue.{

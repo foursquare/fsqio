@@ -3,7 +3,6 @@ package io.fsq.twofishes.server
 
 import com.vividsolutions.jts.geom.{Coordinate, Geometry, GeometryFactory, Point => JTSPoint}
 import com.vividsolutions.jts.io.WKBReader
-import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.core.YahooWoeTypes
 import io.fsq.twofishes.gen.{

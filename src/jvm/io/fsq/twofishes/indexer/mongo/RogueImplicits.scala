@@ -2,7 +2,6 @@
 
 package io.fsq.twofishes.indexer.mongo
 
-import io.fsq.common.scala.Identity._
 import io.fsq.rogue.Rogue
 import io.fsq.rogue.adapter.BlockingResult
 import io.fsq.spindle.rogue.{SpindleQuery, SpindleRogue}

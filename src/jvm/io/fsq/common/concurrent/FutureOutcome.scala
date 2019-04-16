@@ -4,7 +4,6 @@ package io.fsq.common.concurrent
 
 import com.twitter.util.Future
 import io.fsq.common.base.{Failure, Outcome, Success}
-import io.fsq.common.scala.Identity._
 
 /**
   *  Inspired by [[io.fsq.common.concurrent.FutureOption]], this is a monadic wrapper

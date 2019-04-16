@@ -1,7 +1,6 @@
 package io.fsq.twofishes.indexer.output
 
 import com.twitter.util.{Await, Future, FuturePool}
-import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.indexer.mongo.IndexerQueryExecutor
 import io.fsq.twofishes.indexer.mongo.RogueImplicits._

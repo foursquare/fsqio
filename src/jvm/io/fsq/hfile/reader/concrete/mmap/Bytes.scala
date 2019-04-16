@@ -4,7 +4,6 @@ package io.fsq.hfile.reader.concrete.mmap
 
 import io.fsq.common.base.Hex
 import io.fsq.common.logging.Logger
-import io.fsq.common.scala.Identity._
 import java.nio.ByteBuffer
 import java.util.Comparator
 import org.apache.hadoop.io.WritableComparator

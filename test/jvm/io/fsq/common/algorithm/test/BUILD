@@ -6,7 +6,6 @@ junit_tests(
   dependencies = [
     '3rdparty:junit',
     'src/jvm/io/fsq/common/algorithm',
-    'src/jvm/io/fsq/common/scala',
     'test/jvm/io/fsq/common/testing/matchers',
   ],
 )

@@ -1,7 +1,6 @@
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 package io.fsq.twofishes.core
 
-import io.fsq.common.scala.Identity._
 import io.fsq.twofishes.gen.YahooWoeType
 import io.fsq.twofishes.gen.YahooWoeType.{ADMIN1, ADMIN2, ADMIN3, AIRPORT, COUNTRY, POI, POSTAL_CODE, SUBURB, TOWN}
 

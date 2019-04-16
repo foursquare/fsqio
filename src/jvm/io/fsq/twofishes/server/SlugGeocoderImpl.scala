@@ -2,7 +2,6 @@
 package io.fsq.twofishes.server
 
 import com.vividsolutions.jts.geom.Geometry
-import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.gen.{
   BulkSlugLookupRequest,

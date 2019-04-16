@@ -1,6 +1,5 @@
 package io.fsq.twofishes.indexer.output
 
-import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.core.Indexes
 import io.fsq.twofishes.gen.{FeatureNameFlags, YahooWoeType}

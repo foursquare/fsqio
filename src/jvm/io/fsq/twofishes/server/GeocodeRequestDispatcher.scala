@@ -2,7 +2,6 @@
 package io.fsq.twofishes.server
 
 import com.twitter.ostrich.stats.Stats
-import io.fsq.common.scala.Identity._
 import io.fsq.twofishes.gen.{GeocodeRequest, GeocodeResponse, ResponseIncludes}
 import scala.collection.JavaConverters._
 
