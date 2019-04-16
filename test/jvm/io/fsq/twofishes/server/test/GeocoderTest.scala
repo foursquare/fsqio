@@ -3,7 +3,6 @@ package io.fsq.twofishes.server.test
 
 import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBWriter, WKTReader}
-import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.specs2.FSSpecificationWithJUnit
 import io.fsq.twofishes.gen.{
   CellGeometry,

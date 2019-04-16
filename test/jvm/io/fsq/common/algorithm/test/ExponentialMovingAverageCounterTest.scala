@@ -4,7 +4,6 @@ package io.fsq.common.algorithm.test
 
 import io.fsq.common.algorithm.ExponentialMovingAverageCounter
 import io.fsq.common.scala.Identity._
-import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.common.testing.matchers.{FoursquareMatchers => FM}
 import org.junit.{Assert => A, Test}
 

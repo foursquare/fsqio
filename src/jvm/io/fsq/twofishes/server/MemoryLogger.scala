@@ -3,7 +3,6 @@ package io.fsq.twofishes.server
 
 import com.twitter.ostrich.stats.Stats
 import io.fsq.common.scala.Identity._
-import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.twofishes.gen.{CommonGeocodeRequestParams, GeocodeRequest}
 import io.fsq.twofishes.util.{DurationUtils, TwofishesLogger}
 import java.util.Date

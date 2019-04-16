@@ -2,8 +2,6 @@
 
 package io.fsq.hfile.writer.service
 
-import io.fsq.common.scala.Lists.Implicits._
-
 trait HFileWriter {
   def addKeyValue(key: Array[Byte], value: Array[Byte]): Unit
   def addFileInfo(key: Array[Byte], value: Array[Byte]): Unit

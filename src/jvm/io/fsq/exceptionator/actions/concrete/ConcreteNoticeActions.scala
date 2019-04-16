@@ -5,7 +5,6 @@ package io.fsq.exceptionator.actions.concrete
 import com.mongodb.WriteConcern
 import com.twitter.ostrich.stats.Stats
 import io.fsq.common.logging.Logger
-import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.exceptionator.actions.NoticeActions
 import io.fsq.exceptionator.model.{MongoOutgoing, RichNoticeRecord}
 import io.fsq.exceptionator.model.gen.NoticeRecord
