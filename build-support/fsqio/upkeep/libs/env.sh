@@ -8,11 +8,13 @@ export CURRENT_UNAME=$(uname -s)
 export PYTHONPATH=${PYTHONPATH:-""}
 export PYTHONIOENCODING="utf-8"
 
-CACHEDIR="${XDG_CACHE_HOME:-${HOME}/.cache}"
+# Pants respects XDG_HOME settings, and will use that for the pants_bootstrapdir if it is set.
 export FS_DOWNLOAD_CACHE="${FS_DOWNLOAD_CACHE:-${DEPENDENCIES_ROOT/package_cache}}"
-
-# Stand-in that is used to set CI-only flags, gate console output, and toggle for unit tests.
 export FSQ_RUN_AS_CI="${FSQ_RUN_AS_CI:-$JENKINS_HOME}"
+
+cache_root="${XDG_CACHE_HOME:-${HOME}/.cache}"
+export PANTS_BOOTSTRAPDIR=${PANTS_BOOTSTRAPDIR:-$cache_root/fsqio}
+export PANTS_SUPPORTDIR=${PANTS_SUPPORTDIR:-$BUILD_ROOT/build-support}
 
 # LIBPOSTAL and JPOSTAL
 # These libraries are tagged and versioned in funny ways because the upstream library
@@ -73,3 +75,8 @@ FSQIO_JVM_TEST_JUNIT_OPTIONS="+[\
   ' -Djava.util.logging.config.file=${BUILD_ROOT}/src/resources/io/fsq/props/logging.properties ' \
 ]"
 export PANTS_JVM_TEST_JUNIT_OPTIONS=${PANTS_JVM_TEST_JUNIT_OPTIONS:-$FSQIO_JVM_TEST_JUNIT_OPTIONS}
+
+export PANTS_IVY_CACHE_DIR=${PANTS_IVY_CACHE_DIR:-"$HOME/.pom2"}
+export PANTS_IVY_IVY_PROFILE=${PANTS_IVY_IVY_PROFILE:-$PANTS_SUPPORTDIR/ivy/fsqio/fsqio.ivy.xml}
+export PANTS_IVY_IVY_SETTINGS=${PANTS_IVY_IVY_SETTINGS:-$PANTS_SUPPORTDIR/ivy/fsqio/fsqio.ivysettings.xml}
+

@@ -46,7 +46,7 @@ class JarDependencyGlobalManagementSetup(GlobalClasspathTaskMixin, JarDependency
   def execute(self):
     self._resolve_default_target()
 
-    all_targets = set(self.context.targets() | self.bag_target_closure)
+    all_targets = set(self.context.targets()) | self.bag_target_closure
     jar_libs = [t for t in all_targets if isinstance(t, JarLibrary)]
     targets = {g.managed_dependencies for g in jar_libs if g.managed_dependencies is not None}
     for library in jar_libs:

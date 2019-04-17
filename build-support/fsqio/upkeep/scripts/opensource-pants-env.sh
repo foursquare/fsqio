@@ -9,10 +9,7 @@ set -e
 CANONICAL_PYTHON=${CANONICAL_PYTHON:-${PYTHON}}
 PYTHON=${CANONICAL_PYTHON:-$(which python2.7)}
 
-# Pants respects XDG_HOME settings, and will use that for the pants_bootstrapdir if it is set.
-CACHEDIR="${XDG_CACHE_HOME:-${HOME}/.cache}"
-
-FSQIO_HOME="${CACHEDIR}/fsqio/setup"
+FSQIO_HOME="${PANTS_BOOTSTRAPDIR}/setup"
 PANTS_BOOTSTRAP="${FSQIO_HOME}/bootstrap"
 
 VENV_VERSION=15.0.1

@@ -24,7 +24,8 @@ class GlobalClasspathTaskMixin(TargetBagMixin):
 
   @memoized_property
   def bag_target_closure(self):
-    return self.context.build_graph.get_target(self.get_synthetic_address()).closure()
+    # This returns a Twitter.common.OrderedSet. Turning into a set for ease, relucant and reckless as it may be.
+    return set(self.context.build_graph.get_target(self.get_synthetic_address()).closure())
 
   @classmethod
   def add_payload_fields(cls, build_graph, addresses, payload):
