@@ -8,13 +8,13 @@ export CURRENT_UNAME=$(uname -s)
 export PYTHONPATH=${PYTHONPATH:-""}
 export PYTHONIOENCODING="utf-8"
 
-# Pants respects XDG_HOME settings, and will use that for the pants_bootstrapdir if it is set.
-export FS_DOWNLOAD_CACHE="${FS_DOWNLOAD_CACHE:-${DEPENDENCIES_ROOT/package_cache}}"
-export FSQ_RUN_AS_CI="${FSQ_RUN_AS_CI:-$JENKINS_HOME}"
-
-cache_root="${XDG_CACHE_HOME:-${HOME}/.cache}"
+CACHEDIR="${XDG_CACHE_HOME:-${HOME}/.cache}"
 export PANTS_BOOTSTRAPDIR=${PANTS_BOOTSTRAPDIR:-$cache_root/fsqio}
 export PANTS_SUPPORTDIR=${PANTS_SUPPORTDIR:-$BUILD_ROOT/build-support}
+export FS_DOWNLOAD_CACHE="${FS_DOWNLOAD_CACHE:-${DEPENDENCIES_ROOT/package_cache}}"
+
+# Stand-in that is used to set CI-only flags, gate console output, and toggle for unit tests.
+export FSQ_RUN_AS_CI="${FSQ_RUN_AS_CI:-$JENKINS_HOME}"
 
 # LIBPOSTAL and JPOSTAL
 # These libraries are tagged and versioned in funny ways because the upstream library
@@ -66,7 +66,6 @@ export FS_SETUPTOOLS_VERS="30.0.0"
 export FS_WHEEL_VERS="0.29.0"
 export PANTS_PYTHON_SETUP_SETUPTOOLS_VERSION="${PANTS_PYTHON_SETUP_SETUPTOOLS_VERSION:-$FS_SETUPTOOLS_VERS}"
 export PANTS_PYTHON_SETUP_WHEEL_VERSION="${PANTS_PYTHON_SETUP_WHEEL_VERSION:-$FS_WHEEL_VERS}"
-
 # Override from internal version due to more-itertools bug with pex resolution. Fixed in upcoming Pants upgrade.
 export PANTS_PYTEST_REQUIREMENTS=${PANTS_PYTEST_REQUIREMENTS:-"pytest==3.4.2"}
 
@@ -77,6 +76,5 @@ FSQIO_JVM_TEST_JUNIT_OPTIONS="+[\
 export PANTS_JVM_TEST_JUNIT_OPTIONS=${PANTS_JVM_TEST_JUNIT_OPTIONS:-$FSQIO_JVM_TEST_JUNIT_OPTIONS}
 
 export PANTS_IVY_CACHE_DIR=${PANTS_IVY_CACHE_DIR:-"$HOME/.pom2"}
-export PANTS_IVY_IVY_PROFILE=${PANTS_IVY_IVY_PROFILE:-$PANTS_SUPPORTDIR/ivy/fsqio/fsqio.ivy.xml}
-export PANTS_IVY_IVY_SETTINGS=${PANTS_IVY_IVY_SETTINGS:-$PANTS_SUPPORTDIR/ivy/fsqio/fsqio.ivysettings.xml}
-
+export PANTS_IVY_IVY_PROFILE=${PANTS_IVY_IVY_PROFILE:-$PANTS_SUPPORTDIR/fsqio/ivy/fsqio.ivy.xml}
+export PANTS_IVY_IVY_SETTINGS=${PANTS_IVY_IVY_SETTINGS:-$PANTS_SUPPORTDIR/fsqio/ivy/fsqio.ivysettings.xml}

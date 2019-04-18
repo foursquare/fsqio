@@ -19,7 +19,7 @@ from pants.build_graph.build_file_aliases import BuildFileAliases
 oss_sonatype_repo = Repository(
   name='oss_sonatype_repo',
   url='https://oss.sonatype.org/#stagingRepositories',
-  push_db_basedir=os.path.join(get_buildroot(), 'build-support', 'fsqio', 'pushdb'),
+  push_db_basedir=os.path.join(get_buildroot(), 'build-support', 'fsqio', 'ivy', 'pushdb'),
 )
 
 

@@ -3,8 +3,9 @@
 
 from __future__ import absolute_import, division, print_function
 
-from argparse import ArgumentParser
 from textwrap import dedent
+
+from argparse import ArgumentParser
 
 
 def process_paths_file(source_file=None):
@@ -69,7 +70,6 @@ def write_sapling_file(source_file=None, target_file=None):
     3rdparty/BUILD.opensource
     3rdparty/python/BUILD.opensource
     BUILD.opensource
-    build-support/ivy/fsqio/
     build-support/fsqio/
     fsqio/deployed_files/
     pants
