@@ -85,9 +85,21 @@ class MissingTag(BuildGraphRuleViolation):
       self.target.address.spec, self.tag, self.dep.address.spec)
 
 
-class PrivacyViolation(BuildGraphRuleViolation):
+class MissingOneOfTag(BuildGraphRuleViolation):
+  def msg(self):
+    return '{} requires dependencies to have at least one tag from {} and thus cannot depend on {}'.format(
+      self.target.address.spec, self.tag, self.dep.address.spec)
+
+
+class MustHaveViolation(BuildGraphRuleViolation):
   def msg(self):
     return '{} cannot depend on {} without having tag {}'.format(
+      self.target.address.spec, self.dep.address.spec, self.tag)
+
+
+class MustHaveOneOfViolation(BuildGraphRuleViolation):
+  def msg(self):
+    return '{} cannot depend on {} without having one of the following tags {}'.format(
       self.target.address.spec, self.dep.address.spec, self.tag)
 
 
@@ -152,17 +164,20 @@ class Validate(Task):
     for dep in self.nonexempt_deps(target.address):
       for must_have in self.extract_matching_tags('dependees_must_have:', dep):
         if must_have not in target.tags:
-          v = PrivacyViolation(target, dep, must_have)
-          if include_transitive or v.direct:
-            yield v
+          violation = MustHaveViolation(target, dep, must_have)
+          if include_transitive or violation.direct:
+            yield violation
 
-  def banned_tag_violations(self, target):
-    banned_tags = self.extract_matching_tags('dependencies_cannot_have:', target)
-    if banned_tags:
-      for dep in self.nonexempt_deps(target.address):
-        for banned in banned_tags:
-          if banned in dep.tags:
-            yield BannedTag(target, dep, banned)
+      for must_have_one_of in self.extract_matching_tags('dependees_must_have_one_of:', dep):
+        has_one = False
+        for one_of in must_have_one_of.split(','):
+          if one_of.strip() in target.tags:
+            has_one = True
+            break
+        if not has_one:
+          violation = MustHaveOneOfViolation(target, dep, must_have_one_of)
+          if include_transitive or violation.direct:
+            yield violation
 
   def required_tag_violations(self, target):
     required_tags = self.extract_matching_tags('dependencies_must_have:', target)
@@ -171,3 +186,24 @@ class Validate(Task):
         for required in required_tags:
           if required not in dep.tags:
             yield MissingTag(target, dep, required)
+
+    required_tags = self.extract_matching_tags('dependencies_must_have_one_of:', target)
+    if required_tags:
+      required_tags = map(lambda x: x.split(','), required_tags)
+      for dep in self.nonexempt_deps(target.address):
+        has_one = False
+        for tag_group in required_tags:
+          for tag in tag_group:
+            if tag.strip() in dep.tags:
+              has_one = True
+              break
+        if not has_one:
+          yield MissingOneOfTag(target, dep, required_tags)
+
+  def banned_tag_violations(self, target):
+    banned_tags = self.extract_matching_tags('dependencies_cannot_have:', target)
+    if banned_tags:
+      for dep in self.nonexempt_deps(target.address):
+        for banned in banned_tags:
+          if banned in dep.tags:
+            yield BannedTag(target, dep, banned)
