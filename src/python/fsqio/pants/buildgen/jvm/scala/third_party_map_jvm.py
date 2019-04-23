@@ -112,6 +112,7 @@ jvm_third_party_map = {
       'fakemongo': 'fongo',
       'mustachejava': 'mustache-java',
       'nscala_time': 'nscala-time',
+      'potix2': 'spark-google-spreadsheets',
     },
     'google': {
       'api': {
