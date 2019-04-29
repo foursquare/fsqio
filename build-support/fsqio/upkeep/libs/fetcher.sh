@@ -24,15 +24,16 @@ function cached_download() {
   if [[ ! -e "${cache_path}" ]]; then
     # Homebrew cannot use brew install wget to bootstrap itself.
     # So we allow this to fall back to curl in localdev. Add wget/curl option.
+    _fetch_failed=""
     if [[ ${FSQ_RUNNING_ON_OSX} == "True" ]] && [[ ! -f ${FS_WGET_BINARY} ]]; then
-      curl "-fL${FSQ_CURL_PROGRESS}" ${FS_CURL_EXTRA_PARAMS} "${url}" > "${download_path}" # ) || _fetch_failed=True
+      (curl "-fL${FSQ_CURL_PROGRESS}" ${FS_CURL_EXTRA_PARAMS} "${url}" >"${download_path}") || _fetch_failed="True"
     else
-      ( ${FS_WGET_BINARY} ${FS_WGET_EXTRA_PARAMS} -O ${download_path} ${url} ) || _fetch_failed=True
+      (${FS_WGET_BINARY} ${FS_WGET_EXTRA_PARAMS} -O ${download_path} ${url}) || _fetch_failed="True"
     fi
     (
-      [[ -z ${_fetch_failed} ]] \
-      && [[ -e "${download_path}" ]] \
-      && mv -f "${download_path}" "${cache_path}" \
+      [[ -z ${_fetch_failed} ]] &&
+        [[ -e "${download_path}" ]] &&
+        mv -f "${download_path}" "${cache_path}"
     ) || (echo "${url}" && exit -9)
   fi
   if [[ -e "${cache_path}" ]]; then
@@ -50,7 +51,7 @@ function fetch_github_release() {
   # This will download https://github.com/pantsbuild/pants/archive/release_1.3.0.tar.gz
   # This fetch is treated as cached once the expected file exists - so it must be deleted before it will redownload!
   local USAGE="Usage: fetch_github_release ORG REPO VERSION PACKAGE_EXTENSION"
-  local args=( $@ )
+  local args=($@)
   [[ ${#args[@]} -gt 3 ]] || echo "fetch_github_release ${USAGE}"
 
   local org="${args[0]}"
@@ -72,7 +73,7 @@ function fetch_remote_source() {
   # usage: `fetch_remote_source ROOT_URL NAMESPACE VERSION [PACKAGE_EXTENSION] [OS_NAME] [OS_ARCH]`
 
   local USAGE="Usage: fetch_remote_source HOST_PATH NAMESPACE VERSION [PACKAGE_EXTENSION] [OS_NAME] [OS_ARCH]"
-  local args=( $@ )
+  local args=($@)
   [[ ${#args[@]} -gt 2 ]] || echo "fetch_remote_source.sh ${USAGE}"
 
   local host="${args[0]}"
@@ -118,13 +119,11 @@ function extract() {
   echo "${extractdir}"
 }
 
-
 function relocate() {
   src="$1"
   dest="$2"
-  [[ $# -eq 2 ]] && [[ -e "${src}" ]] && [[ -e "${dest}" ]] &&  mv -f "${src}"/* "${dest}/"
+  [[ $# -eq 2 ]] && [[ -e "${src}" ]] && [[ -e "${dest}" ]] && mv -f "${src}"/* "${dest}/"
 }
-
 
 function download_and_extract() {
   # tarball-specific atomic extractor.
@@ -157,11 +156,11 @@ function download_and_extract() {
 
   # Find the corresponding archive, which may be cached.
   # If the fetcher exits non-zero, the attempted URL is returned.
-  local fetch_args=( "${libname}" "${libversion}" "${ext}" "${os_namespace}" "${arch}" )
+  local fetch_args=("${libname}" "${libversion}" "${ext}" "${os_namespace}" "${arch}")
   local fetched=$(fetch_remote_source "${FS_REMOTE_SOURCES_URL}" ${fetch_args[@]}) || (echo "${fetched}" && exit 2)
 
   local extractdir=$(extract "${libname}" "${fetched}")
-  [[ -e "${extractdir}" ]] || \
+  [[ -e "${extractdir}" ]] ||
     (colorized_error "Download failed: Probably due to invalid artifactory creds.\n" && exit 6)
   relocate "${extractdir}/${archive_basedir}" "${destination}"
   echo "${destination}"
