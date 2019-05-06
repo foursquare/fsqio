@@ -9,12 +9,13 @@ export PYTHONPATH=${PYTHONPATH:-""}
 export PYTHONIOENCODING="utf-8"
 
 CACHEDIR="${XDG_CACHE_HOME:-${HOME}/.cache}"
-export PANTS_BOOTSTRAPDIR=${PANTS_BOOTSTRAPDIR:-$cache_root/fsqio}
+export PANTS_BOOTSTRAPDIR=${PANTS_BOOTSTRAPDIR:-$CACHEDIR/fsqio}
 export PANTS_SUPPORTDIR=${PANTS_SUPPORTDIR:-$BUILD_ROOT/build-support}
 export FS_DOWNLOAD_CACHE="${FS_DOWNLOAD_CACHE:-${DEPENDENCIES_ROOT/package_cache}}"
 
 # Stand-in that is used to set CI-only flags, gate console output, and toggle for unit tests.
 export FSQ_RUN_AS_CI="${FSQ_RUN_AS_CI:-$JENKINS_HOME}"
+export FSQIO_VENV_BOOTSTRAP="${PANTS_BOOTSTRAPDIR}/fsqio_setup"
 
 # LIBPOSTAL and JPOSTAL
 # These libraries are tagged and versioned in funny ways because the upstream library

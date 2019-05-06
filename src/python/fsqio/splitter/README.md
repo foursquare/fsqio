@@ -43,7 +43,6 @@ config example (`fsqio/files/opensource_files.txt`):
         3rdparty/BUILD.opensource
         3rdparty/python/BUILD.opensource
         BUILD.opensource
-        build-support/ivy/fsqio/
         build-support/fsqio/
         fsqio/files/deployed_files/
         pants.ini

@@ -1,16 +1,19 @@
 #!/bin/bash
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
-
 # Thanks to John Sirois for the pants bootstrapping functions.
 
-set -e
+set -eo pipefail
+
+if [[ -z "${BUILD_ROOT+x}" ]]; then
+  echo "BUILD_ROOT undefined! Expected to be called by a top-level script like 'pants' or 'upkeep'!"
+  exit 1
+fi
 
 # Transitive song and dance in order to enforce priority order of CANONICAL_PYTHON -> PYTHON -> $(which python2.7)
 CANONICAL_PYTHON=${CANONICAL_PYTHON:-${PYTHON}}
 PYTHON=${CANONICAL_PYTHON:-$(which python2.7)}
 
-FSQIO_HOME="${PANTS_BOOTSTRAPDIR}/setup"
-PANTS_BOOTSTRAP="${FSQIO_HOME}/bootstrap"
+PANTS_BOOTSTRAP="${FSQIO_VENV_BOOTSTRAP}/bootstrap"
 
 VENV_VERSION=15.0.1
 

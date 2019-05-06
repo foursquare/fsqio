@@ -20,7 +20,7 @@ addons:
   apt:
     packages:
       - mongodb-org-server
-      - oracle-java8-set-default
+      - openjdk-8-jdk
     sources:
     - mongodb-3.0-precise
 services:
