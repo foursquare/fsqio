@@ -456,7 +456,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'com.google.guava',name = 'guava', rev = '15.0')
+    jar(org = 'com.google.guava',name = 'guava', rev = '14.0')
   ],
 )
 
