@@ -32,25 +32,28 @@ def process_paths_file(source_file=None):
     return files, directories
 
 
-def create_sapling_text(source_file):
+def create_sapling_text(split_name, source_file):
+  # TODO(mateo): Allow multiple splits in a single sapling run.
+  # We original made this DSL for sapling config because we didn't want to
+  # have a python distribution coupled to a git hook. We don't use the git hook
+  # anymore and maybe we should allow upstream sapling config.
   files, directories = process_paths_file(source_file)
   all_oss_prefixes = sorted(files | directories)
-
   sapling_text = dedent(
     """
-    opensource = {
-      'name': 'opensource',
-      'paths': ["""
+    {split_name} = {{
+      'name': '{split_name}',
+      'paths': [""".format(split_name=split_name)
   )
   for prefix in all_oss_prefixes:
     sapling_text += """\n    '{}',""".format(prefix)
   sapling_text += dedent("""
         ],
-      }
+      }}
       splits = [
-        opensource,
+        {split_name},
       ]
-  """)
+  """.format(split_name=split_name))
   return sapling_text
 
 
@@ -101,12 +104,19 @@ def write_sapling_file(source_file=None, target_file=None):
     default='.saplings',
     help='Output path for the generated sapling config.',
   )
+  parser.add_argument(
+    '-s',
+    '--split-name',
+    default='opensource',
+    help='Name for the split (will affect the name of the git branch created by Sapling).',
+  )
   args = parser.parse_args()
 
   source_file = args.paths_file
   sapling_config = args.output_file
+  split_name = args.split_name
   with open(sapling_config, 'wb') as target_file:
-    target_file.write(create_sapling_text(source_file))
+    target_file.write(create_sapling_text(split_name, source_file))
 
 
 if __name__ == '__main__':

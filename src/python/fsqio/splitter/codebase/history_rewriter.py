@@ -3,11 +3,12 @@
 
 from __future__ import absolute_import, division, print_function
 
-from argparse import ArgumentParser
 import json
 import logging
 import os
 import subprocess
+
+from argparse import ArgumentParser
 
 from fsqio.splitter.codebase.git_utils.filter_branch import git_filter_branch
 
@@ -156,7 +157,7 @@ def permanently_transform_opensource_repo():
   parser.add_argument(
     '--mailmap-file',
     default='.mailmap',
-    help="Mailmap file path. To use the current mailmap on historical commits, also set --backport-mailmap"
+    help="Mailmap file path."
   )
   parser.add_argument(
     '--mailmap-ref',
