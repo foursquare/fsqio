@@ -46,7 +46,7 @@ Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
     <ibiblio name="cloudera"
                m2compatible="true"
                usepoms="true"
-               root="https://repository.cloudera.com/content/repositories/releases/"/>
+               root="https://repository.cloudera.com/cloudera/cloudera-repos"/>
       <!-- The mvn standard local filesystem repo/cache -->
       <filesystem name="local.m2" m2compatible="true" local="true" checkmodified="true">
         <ivy pattern="${m2.repo.dir}/${m2.repo.pom}"/>
