@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, print_function
 
 from hashlib import sha1
 import os
+import textwrap
 
 from pants.base.exceptions import TaskError
 from pants.base.fingerprint_strategy import FingerprintStrategy
@@ -103,6 +104,13 @@ class MustHaveOneOfViolation(BuildGraphRuleViolation):
       self.target.address.spec, self.dep.address.spec, self.tag)
 
 
+class FSCommonViolation(BuildGraphRuleViolation):
+  def msg(self):
+    return textwrap.dedent("""{} cannot have '{}' tag because it is not in 'src/jvm/io/fsq/'
+      or 'src/jvm/com/foursquare/common'""".format(
+        self.target, self.tag))
+
+
 class Validate(Task):
   def __init__(self, *args, **kwargs):
     super(Validate, self).__init__(*args, **kwargs)
@@ -132,6 +140,7 @@ class Validate(Task):
             violations.extend(self.dependee_violations(target))
             violations.extend(self.banned_tag_violations(target))
             violations.extend(self.required_tag_violations(target))
+            violations.extend(self.fscommon_violations(target))
 
       direct_violations = [v for v in violations if v.direct]
 
@@ -178,6 +187,14 @@ class Validate(Task):
           violation = MustHaveOneOfViolation(target, dep, must_have_one_of)
           if include_transitive or violation.direct:
             yield violation
+
+  def fscommon_violations(self, target):
+    if('fscommon' in target.tags and 'should_remove_fscommon_tag' not in target.tags):
+      path = target.address.spec_path
+      # TODO:Jamie untangle resources, but ignore for now
+      allowed = ['com/foursquare/common', 'io/fsq', 'src/resources', 'test/resources', 'src/webapp']
+      if not any(sub in target.address.spec_path for sub in allowed):
+          yield FSCommonViolation(target, dep=None, tag='fscommon')
 
   def required_tag_violations(self, target):
     required_tags = self.extract_matching_tags('dependencies_must_have:', target)
