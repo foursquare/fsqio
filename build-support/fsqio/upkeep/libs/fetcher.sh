@@ -120,6 +120,7 @@ function extract() {
 }
 
 function relocate() {
+  # NOTE(mateo): This does not raise an error if any of that chain fails - should consider threading a catch through.
   src="$1"
   dest="$2"
   [[ $# -eq 2 ]] && [[ -e "${src}" ]] && [[ -e "${dest}" ]] && mv -f "${src}"/* "${dest}/"
