@@ -1,8 +1,9 @@
+# Copyright 2019 Foursquare Labs Inc. All Rights Reserved.
 
 scalac_plugin(
   name = 'emit-exported-symbols',
   plugin = 'buildgen-emit-exported-symbols',
-  classname = 'io.fsq.buildgen.plugin.emit_exported_symbols.EmitExportedSymbolsPlugin',
+  classname = 'io.fsq.buildgen.plugin.exported.EmitExportedSymbolsPlugin',
   provides=scala_artifact(
     org='io.fsq',
     name='buildgen-emit-exported-symbols',
@@ -11,7 +12,9 @@ scalac_plugin(
         Scala compiler plugin that emits a text file of the symbols exported.
     """)
   ),
-  sources = globs('*.scala'),
+  sources = [
+    'EmitExportedSymbolsPlugin.scala',
+  ],
   tags = [
     'opensource',
     'buildgen',

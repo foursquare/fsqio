@@ -1,8 +1,9 @@
+# Copyright 2019 Foursquare Labs Inc. All Rights Reserved.
 
 scalac_plugin(
-  name = 'emit_used_symbols',
-  plugin = 'buildgen-emit_used_symbols',
-  classname = 'io.fsq.buildgen.plugin.emit_used_symbols.EmitUsedSymbolsPlugin',
+  name = 'emit-used-symbols',
+  plugin = 'buildgen-emit-used-symbols',
+  classname = 'io.fsq.buildgen.plugin.used.EmitUsedSymbolsPlugin',
   provides=scala_artifact(
     org='io.fsq',
     name='buildgen-emit-used-symbols',
@@ -11,7 +12,9 @@ scalac_plugin(
         Scala compiler plugin that emits a text file of the symbols used.
     """)
   ),
-  sources = globs('*.scala'),
+  sources = [
+    'EmitUsedSymbolsPlugin.scala',
+  ],
   tags = [
     'opensource',
     'buildgen',
@@ -32,7 +35,7 @@ jvm_binary(
     'buildgen',
   ],
   dependencies = [
-    ':emit_used_symbols',
+    ':emit-used-symbols',
     '3rdparty:scalac',
     '3rdparty:scala-reflect',
     '//:scalac',    # Possibly safe to remove, not sure if needed at runtime. Build and test.

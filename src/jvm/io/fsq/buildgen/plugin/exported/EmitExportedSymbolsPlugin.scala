@@ -1,6 +1,6 @@
 // Copyright 2011 Foursquare Labs Inc. All Rights Reserved.
 
-package io.fsq.buildgen.plugin.emit_exported_symbols
+package io.fsq.buildgen.plugin.exported
 
 import scala.reflect.internal.Flags
 import scala.tools.nsc.{Global, Phase}
@@ -12,7 +12,7 @@ class EmitExportedSymbolsPlugin(val global: Global) extends Plugin {
   val name = "emit-exported-symbols"
   val description = "Emit symbols importable from this source"
   val components = List[PluginComponent](EmitExportedSymbolsPluginComponent)
-  val outputDir = System.getProperty("io.fsq.buildgen.plugin.emit_exported_symbols.outputDir")
+  val outputDir = System.getProperty("io.fsq.buildgen.plugin.exported.outputDir")
 
   private object EmitExportedSymbolsPluginComponent extends PluginComponent {
     import global._
