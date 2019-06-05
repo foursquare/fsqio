@@ -70,4 +70,5 @@ This requires an API key (not your Atlassian password!) ([directions here](https
 1. Github auto-renders markdown and converting the pure markdown links to Pants links breaks the Github version.
 1. Should add "Edit" link to every page that redirects to the Github interface, edits in Confluence will be overwritten for auto-generated content.
 1. Buildgen support with a built-in understanding of the page hierarchy
+1. Inline source code from non-markdown only works with relative paths. Fine for explaining a single target and not fine for a doc tying multiple big ideas togther.
 1. more?

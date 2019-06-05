@@ -31,7 +31,7 @@ Licensed under the Apache License, Version 2.0 (see LICENSE).
     <ibiblio name="maven2" m2compatible="true"/>
 
     <!-- For publishing to maven central only. -->
-    <ibiblio name="oss.sonatype.org-publish"
+    <ibiblio name="oss.sonatype.org"
              m2compatible="true"
              root="https://oss.sonatype.org/service/local/staging/deploy/maven2/"
              signer="pgp"/>

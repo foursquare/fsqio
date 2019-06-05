@@ -7,3 +7,9 @@ python_library(
     '3rdparty/python:pantsbuild.pants',
   ],
  )
+
+# Source code is inlined by a README.md file.
+resources(
+  name = 'publish-register',
+  sources = globs('register.py'),
+)
