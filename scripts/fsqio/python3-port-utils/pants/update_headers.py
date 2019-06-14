@@ -38,7 +38,9 @@ def is_py2_header(header: List[str]) -> bool:
 
 def rewrite(path: str , lines: List[str]) -> None:
   with open(path, "w") as f:
-    f.writelines(lines[ENCODING_INDEX + 1:FUTURE_IMPORT_INDEX] + lines[FUTURE_IMPORT_INDEX + 1:])
+    f.writelines(
+      lines[ENCODING_INDEX + 1:FUTURE_IMPORT_INDEX] + lines[FUTURE_IMPORT_INDEX + 2:]
+    )
 
 
 if __name__ == '__main__':
