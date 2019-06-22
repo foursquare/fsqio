@@ -135,18 +135,12 @@ REGEX = r'from builtins import'
 def check_what_needs_changes(folder_root: str, root_only: bool) -> None:
   target = f"{folder_root}/*.py" if root_only else f"{folder_root}/**/*.py"
   grep_output = get_stdout(['rg', '-l', REGEX, '-g', target]).split('\n')
-  remove_unnecessary = [p for p in grep_output
-                        if p and not already_has_builtin_open(p)]
+  remove_unnecessary = [p for p in grep_output if p]
   if not remove_unnecessary:
     print('No builtins imports 🐍 🎉')
     return
   pretty_printed = format_for_cli(remove_unnecessary, root_only)
   print(pretty_printed)
-
-
-def already_has_builtin_open(file_path: str) -> bool:
-  rg_search = get_stdout(['rg', r'from builtins import.*open.*', file_path])
-  return bool(rg_search)
 
 
 def format_for_cli(file_paths: List[str], root_only: bool) -> str:
