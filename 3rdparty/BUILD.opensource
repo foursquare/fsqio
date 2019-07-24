@@ -135,8 +135,8 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.apache.httpcomponents', name = 'httpclient', rev = '4.3.5'),
-    jar(org = 'org.apache.httpcomponents', name = 'httpcore', rev = '4.3.2'),
+    jar(org = 'org.apache.httpcomponents', name = 'httpclient', rev = '4.4'),
+    jar(org = 'org.apache.httpcomponents', name = 'httpcore', rev = '4.4'),
   ],
 )
 
@@ -802,7 +802,7 @@ jar_library(
 jar_library(
   name = 'netty4',
   jars = [
-    jar(org = 'io.netty', name = 'netty-all', rev = '4.1.8.Final'),
+    jar(org = 'io.netty', name = 'netty-all', rev = '4.1.37.Final'),
   ],
   managed_dependencies=':fsqio-management',
 )

@@ -49,6 +49,11 @@ jvm_third_party_map = {
       'labs': 'language-detect',
     },
     'drew': 'metadata-extractor',
+    'edmunds': {
+      'rest': {
+        'databricks': 'databricks'
+      },
+    },
     'esotericsoftware': {
       'kryo': 'kryo',
     },
@@ -197,7 +202,7 @@ jvm_third_party_map = {
     },
     'mysql': 'mysql',
     'opencsv': 'opencsv',
-    'relayrides': {
+    'turo': {
       'pushy': 'pushy',
     },
     'thoughtworks': 'SKIP',
@@ -463,6 +468,7 @@ jvm_third_party_map = {
     'codehaus': {
       'jackson': 'jackson',
     },
+    'dmg': 'jpmml-evaluator',
     'eclipse': {
       'jetty': {
         'server': 'jetty-server',
@@ -499,6 +505,10 @@ jvm_third_party_map = {
     'jh': 'sizer',
     'joda': {
       'time': 'joda-time',
+    },
+    'jpmml': {
+      'evaluator': 'jpmml-evaluator',
+      'model': 'jpmml-model',
     },
     'json4s': 'json4s',
     'jsoup': 'jsoup',
