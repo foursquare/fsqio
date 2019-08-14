@@ -8,7 +8,7 @@ import java.lang.{Long => JLong}
 import java.nio.ByteBuffer
 import java.util.Arrays
 
-case class DataBlockInfo(indexByteOffset: Int, keyOffset: Short, keyLength: Short, hfileByteOffset: Long)
+case class DataBlockInfo(indexByteOffset: Int, keyOffset: Int, keyLength: Int, hfileByteOffset: Long)
 
 class DataIndex(
   blockReader: BlockReader,
@@ -46,7 +46,7 @@ class DataIndex(
       val offset = buffer.getLong()
       val uncompressedSize = buffer.getInt()
       val (sizeLength, keyLength) = Bytes.readVarlenByteSeqOffsets(buffer)
-      indexOffsets(dataBlockCount) = DataBlockInfo(indexOffset, (sizeLength + 12).toShort, keyLength, offset)
+      indexOffsets(dataBlockCount) = DataBlockInfo(indexOffset, (sizeLength + 12), keyLength, offset)
       val nextOffset = if (dataBlockCount == blockCount - 1) {
         lastOffset
       } else {

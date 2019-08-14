@@ -37,11 +37,11 @@ object Bytes extends Logger {
     sb.toString
   }
 
-  def readVarlenByteSeqOffsets(mbb: ByteBuffer): (Short, Short) = {
+  def readVarlenByteSeqOffsets(mbb: ByteBuffer): (Int, Int) = {
     val start = mbb.position
-    val size = getVInt(mbb).toShort
+    val size = getVInt(mbb)
     assert(size > 0)
-    val byteSeqOffset = (mbb.position - start).toShort
+    val byteSeqOffset = (mbb.position - start)
     mbb.position(mbb.position + size)
     (byteSeqOffset, size)
   }
