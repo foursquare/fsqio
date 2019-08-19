@@ -15,7 +15,8 @@ from pants.build_graph.address import Address
 from pants.build_graph.target import Target
 from pants.contrib.node.tasks.node_paths import NodePaths
 from pants.contrib.node.tasks.node_resolve import NodeResolve
-from pants.util.memo import memoized_property
+from pants.option.custom_types import file_option
+from pants.util.memo import memoized_method, memoized_property
 
 from fsqio.pants.node.subsystems.resolvers.webpack_resolver import WebPackResolver
 from fsqio.pants.node.subsystems.webpack_distribution import WebPackDistribution
@@ -55,6 +56,17 @@ class ResolvedWebPackDistribution(Target):
 class WebPackResolve(NodeResolve):
 
   @classmethod
+  def register_options(cls, register):
+    super(WebPackResolve, cls).register_options(register)
+    register(
+      '--userconfig',
+      advanced=True,
+      type=file_option,
+      fingerprint=True,
+      help='Path to npmrc userconfig file. If unset, falls to npm default.',
+    )
+
+  @classmethod
   def implementation_version(cls):
     return super(WebPackResolve, cls).implementation_version() + [('WebPackResolve', 7.1)]
 
@@ -77,6 +89,11 @@ class WebPackResolve(NodeResolve):
   def product_types(cls):
     return ['webpack_distribution', NodePaths]
 
+  @memoized_method
+  def get_npm_options(self):
+    userconfig = self.get_options().userconfig
+    return ['--userconfig={}'.format(userconfig)] if userconfig else []
+
   def cache_target_dirs(self):
     return True
 
@@ -93,7 +110,7 @@ class WebPackResolve(NodeResolve):
       force=force,
       frozen_lockfile=None,
     )
-    npm_options = self.webpack_subsystem.get_distribution_args()
+    npm_options = self.get_npm_options()
     args = list(npm_options + module_args)
     command = package_manager.run_command(args=args, node_paths=node_paths)
     return self._execute_command(
