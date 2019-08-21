@@ -84,7 +84,6 @@ jvm_third_party_map = {
       'es231': 'elasticsearch-231',
       'esh230': 'elasticsearch-hadoop-mr-230',
       'geo': {
-        'quadtree': 'country-revgeo',
         'shapefile': {
           'cbsa': {
             'CbsaByNameShapefile': 'cbsa-name-shapefiles',

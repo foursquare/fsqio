@@ -255,17 +255,6 @@ jar_library(
   ],
 )
 
-jar_library(
-  name = 'country-revgeo',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    scala_jar(org = 'com.foursquare', name = 'country_revgeo', rev = '0.1a'),
-  ],
-)
-
 curator_rev = '2.9.1'
 jar_library(
   name = 'curator',

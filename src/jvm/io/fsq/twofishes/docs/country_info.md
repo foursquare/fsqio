@@ -9,7 +9,7 @@ A scala library for retrieving basic country metadata.
 
 ### Usage
 
-There are some functions in com.foursquare.geo.country.CountryUtils to perform the most common tasks
+There are some functions in io.fsq.twofishes.country.CountryUtils to perform the most common tasks
 
 * CountryUtils.getNameByCode(iso2_or_3) - takes an iso2 or iso3 code and returns a reasonable english name for the country
 
@@ -48,13 +48,13 @@ CountryInfo.tzIDs returns a String list of all Olson timezones in that country a
 
 ### Usage Example
 
-	scala> com.foursquare.geo.country.CountryUtils.getNameByCode("US")
+	scala> io.fsq.twofishes.country.CountryUtils.getNameByCode("US")
 	res0: Option[String] = Some(United States)
 
-	scala> com.foursquare.geo.country.CountryUtils.getNameByCode("KR")
+	scala> io.fsq.twofishes.country.CountryUtils.getNameByCode("KR")
 	res1: Option[String] = Some(South Korea)
 
-	scala> com.foursquare.geo.country.CountryUtils.getLangs("DE")
+	scala> io.fsq.twofishes.country.CountryUtils.getLangs("DE")
 	res2: List[String] = List(de)
 
 	scala> com.foursquare.geo.country.CountryInfo.getCountryInfo("DE")
