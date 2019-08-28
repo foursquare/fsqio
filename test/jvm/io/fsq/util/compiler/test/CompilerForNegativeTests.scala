@@ -5,7 +5,7 @@ package io.fsq.util.compiler.test
 import java.io.PrintWriter
 import org.reflections.util.ClasspathHelper
 import org.specs2.matcher.JUnitMustMatchers
-import scala.collection.convert.decorateAll._
+import scala.collection.JavaConverters._
 import scala.tools.nsc.Settings
 import scala.tools.nsc.interpreter.{IMain, Results}
 

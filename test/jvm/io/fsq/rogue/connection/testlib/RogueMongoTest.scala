@@ -17,7 +17,7 @@ import com.mongodb.connection.netty.NettyStreamFactoryFactory
 import io.netty.channel.nio.NioEventLoopGroup
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicInteger
-import scala.collection.JavaConversions.{asScalaBuffer, bufferAsJavaList}
+import scala.collection.JavaConverters.{asScalaBufferConverter, bufferAsJavaListConverter}
 
 object RogueMongoTest {
 
@@ -65,7 +65,7 @@ object RogueMongoTest {
   def buildBlockingMongoClient(mongoAddress: String): BlockingMongoClient = {
     val mongoClientURI = new MongoClientURI(mongoAddress)
 
-    val hostServerAddresses = mongoClientURI.getHosts.map(
+    val hostServerAddresses = mongoClientURI.getHosts.asScala.map(
       hostString =>
         hostString.split(':') match {
           case Array(host, port) => new ServerAddress(host, port.toInt)
@@ -80,7 +80,7 @@ object RogueMongoTest {
         .build()
     }
 
-    new BlockingMongoClient(hostServerAddresses, clientOptions)
+    new BlockingMongoClient(hostServerAddresses.asJava, clientOptions)
   }
 
   val (asyncMongoClient, blockingMongoClient) = {

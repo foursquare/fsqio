@@ -23,7 +23,7 @@ import org.apache.thrift.TDeserializer;
 import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TProtocolFactory;
 import org.junit.Test;
-import scala.collection.JavaConversions;
+import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
 public class TReadableJSONProtocolTest {
@@ -192,11 +192,11 @@ public class TReadableJSONProtocolTest {
     deser.deserialize(listOfLists, json.getBytes());
     assertEquals(3, listOfLists.listHolders().size());
     assertThat(Arrays.asList("12", "4"),
-      is(JavaConversions.seqAsJavaList(listOfLists.listHolders().toList().apply(0))));
+      is(JavaConverters.seqAsJavaListConverter(listOfLists.listHolders().toList().apply(0)).asJava()));
     assertThat(Arrays.asList("13", "5"),
-      is(JavaConversions.seqAsJavaList(listOfLists.listHolders().toList().apply(1))));
+      is(JavaConverters.seqAsJavaListConverter(listOfLists.listHolders().toList().apply(1)).asJava()));
     assertThat(Arrays.asList("14", "6"),
-      is(JavaConversions.seqAsJavaList(listOfLists.listHolders().toList().apply(2))));
+      is(JavaConverters.seqAsJavaListConverter(listOfLists.listHolders().toList().apply(2)).asJava()));
   }
 
   @Test
@@ -214,17 +214,17 @@ public class TReadableJSONProtocolTest {
 
     @SuppressWarnings("unchecked")
     List<Seq<Integer>> innerList1 =
-      (List<Seq<Integer>>)(List<?>)JavaConversions.seqAsJavaList(listOfLists.listHolders().toList().apply(0));
+      (List<Seq<Integer>>)(List<?>)JavaConverters.seqAsJavaListConverter(listOfLists.listHolders().toList().apply(0)).asJava();
     @SuppressWarnings("unchecked")
     List<Seq<Integer>> innerList2 =
-      (List<Seq<Integer>>)(List<?>)JavaConversions.seqAsJavaList(listOfLists.listHolders().toList().apply(1));
+      (List<Seq<Integer>>)(List<?>)JavaConverters.seqAsJavaListConverter(listOfLists.listHolders().toList().apply(1)).asJava();
 
-    assertThat(Arrays.asList(1, 2), is(JavaConversions.seqAsJavaList(innerList1.get(0))));
-    assertThat(Arrays.asList(3), is(JavaConversions.seqAsJavaList(innerList1.get(1))));
+    assertThat(Arrays.asList(1, 2), is(JavaConverters.seqAsJavaListConverter(innerList1.get(0)).asJava()));
+    assertThat(Arrays.asList(3), is(JavaConverters.seqAsJavaListConverter(innerList1.get(1)).asJava()));
 
 
-    assertThat(Arrays.asList(5, 6), is(JavaConversions.seqAsJavaList(innerList2.get(0))));
-    assertThat(Arrays.asList(7), is(JavaConversions.seqAsJavaList(innerList2.get(1))));
+    assertThat(Arrays.asList(5, 6), is(JavaConverters.seqAsJavaListConverter(innerList2.get(0)).asJava()));
+    assertThat(Arrays.asList(7), is(JavaConverters.seqAsJavaListConverter(innerList2.get(1)).asJava()));
   }
 
 
@@ -241,7 +241,7 @@ public class TReadableJSONProtocolTest {
     deser.deserialize(mapOfLists, json.getBytes());
     assertEquals(2, mapOfLists.mapHolder().size());
 
-    assertThat(Arrays.asList("2:00", "4:00"), is(JavaConversions.seqAsJavaList(mapOfLists.mapHolder().get("monday").get())));
-    assertThat(Arrays.asList("3:00", "5:00"), is(JavaConversions.seqAsJavaList(mapOfLists.mapHolder().get("tuesday").get())));
+    assertThat(Arrays.asList("2:00", "4:00"), is(JavaConverters.seqAsJavaListConverter(mapOfLists.mapHolder().get("monday").get()).asJava()));
+    assertThat(Arrays.asList("3:00", "5:00"), is(JavaConverters.seqAsJavaListConverter(mapOfLists.mapHolder().get("tuesday").get()).asJava()));
   }
 }
