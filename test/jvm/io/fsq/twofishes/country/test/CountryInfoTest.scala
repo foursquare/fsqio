@@ -10,6 +10,11 @@ class CountryUtilsSpec extends FSSpecificationWithJUnit with MatchersImplicits {
     CountryUtils.getNameByCode("US") mustEqual Some("United States")
     CountryUtils.getNameByCode("USA") mustEqual Some("United States")
     CountryUtils.getNameByCode("ABC") mustEqual None
+    CountryInfo.getCountryInfoByIsoNumeric(840).map(_.iso2) mustEqual Some("US")
+  }
+
+  "SA should exist" in {
+    CountryInfo.getCountryInfoByIsoNumeric(682).map(_.iso2) mustEqual Some("SA")
   }
 
   "timezones should work" in {

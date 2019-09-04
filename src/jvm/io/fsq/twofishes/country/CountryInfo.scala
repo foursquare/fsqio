@@ -2,6 +2,7 @@
 
 package io.fsq.twofishes.country
 
+import io.fsq.common.scala.Lists._
 import scala.io.BufferedSource
 
 object CountryInfoFields extends Enumeration {
@@ -104,6 +105,7 @@ object CountryInfo {
 
   private val countryInfoMap = countryInfos.map(ci => (ci.iso2, ci)).toMap
   private val countryInfoMapByISO3 = countryInfos.map(ci => (ci.iso3, ci)).toMap
+  private val countryInfoMapByISONumeric = countryInfos.map(ci => (ci.isoNumeric, ci)).toMap
 
   private val codeConversions = Map(
     "FX" -> "FR", // "metropolitan france"
@@ -121,12 +123,11 @@ object CountryInfo {
 
   def getCanonicalISO2(cc: String): String = codeConversions.getOrElse(cc, cc)
 
-  def getCountryInfoByISO2(cc: String): Option[CountryInfo] =
-    countryInfoMap.get(codeConversions.getOrElse(cc, cc))
+  def getCountryInfoByISO2(cc: String): Option[CountryInfo] = countryInfoMap.get(codeConversions.getOrElse(cc, cc))
 
-  def getCountryInfoByISO3(cc: String): Option[CountryInfo] =
-    countryInfoMapByISO3.get(cc)
+  def getCountryInfoByISO3(cc: String): Option[CountryInfo] = countryInfoMapByISO3.get(cc)
 
-  def getCountryInfo(cc: String): Option[CountryInfo] =
-    getCountryInfoByISO2(cc).orElse(getCountryInfoByISO3(cc))
+  def getCountryInfo(cc: String): Option[CountryInfo] = getCountryInfoByISO2(cc).orElse(getCountryInfoByISO3(cc))
+
+  def getCountryInfoByIsoNumeric(isoNumeric: Int): Option[CountryInfo] = countryInfoMapByISONumeric.get(isoNumeric)
 }

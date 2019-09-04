@@ -4,6 +4,7 @@ scala_library(
   name = 'country',
   sources = globs('*.scala'),
   dependencies = [
+    'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/twofishes/country/data',
   ],
   provides=scala_artifact(
