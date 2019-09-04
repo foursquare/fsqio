@@ -200,6 +200,7 @@ jvm_third_party_map = {
       }
     },
     'mysql': 'mysql',
+    'nimbusds': 'jose-jwt',
     'opencsv': 'opencsv',
     'turo': {
       'pushy': 'pushy',

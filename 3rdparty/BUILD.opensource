@@ -40,12 +40,12 @@ managed_jar_dependencies(
     ':json4s',
     ':logback',
     ':mockito',
+    ':mockito-scala',
     ':mongodb-core',
     ':mongodb-driver',
     ':mongodb-driver-async',
     ':netty',
-    jar(org = 'org.codehaus.janino', name = 'janino',rev = '2.7.8'),
-    jar(org = 'org.codehaus.janino', name = 'commons-compiler',rev = '2.7.8'),
+    ':janino-compiler',
     ':ostrich',
     ':reflections',
     ':scalacheck',
@@ -135,8 +135,8 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.apache.httpcomponents', name = 'httpclient', rev = '4.4'),
-    jar(org = 'org.apache.httpcomponents', name = 'httpcore', rev = '4.4'),
+    jar(org = 'org.apache.httpcomponents', name = 'httpclient', rev = '4.5.9'),
+    jar(org = 'org.apache.httpcomponents', name = 'httpcore', rev = '4.4.11'),
   ],
 )
 
@@ -564,6 +564,14 @@ jar_library(
 )
 
 jar_library(
+  name = 'janino-compiler',
+  jars = [
+    jar(org = 'org.codehaus.janino', name = 'janino',rev = '3.0.8'),
+    jar(org = 'org.codehaus.janino', name = 'commons-compiler', rev = '3.0.8'),
+  ],
+)
+
+jar_library(
   name = 'jline',
   tags = [
     'opensource',
@@ -681,7 +689,7 @@ jar_library(
     # is good enough for now.
     jar(org = 'ch.qos.logback', name = 'logback-core', rev = '1.1.3'),
     # This is an optional dependency on logback-core, so we're adding it explicitly.
-    jar(org = 'org.codehaus.janino', name = 'janino',rev = '2.7.8')
+    jar(org = 'org.codehaus.janino', name = 'janino',rev = '3.0.8')
   ],
 )
 
@@ -1213,5 +1221,16 @@ jar_library(name = 'zookeeper',
   dependencies = [
     ':slf4j-log4j',
   ],
+)
+
+jar_library(
+  name = 'mockito-scala',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'org.mockito', name = 'mockito-scala', rev = '1.0.10')
+  ]
 )
 
