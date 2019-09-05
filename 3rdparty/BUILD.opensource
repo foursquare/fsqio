@@ -611,8 +611,17 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'joda-time', name = 'joda-time', rev = '2.9.7'),
-    jar(org = 'org.joda', name = 'joda-convert', rev = '1.2')
+    jar(org = 'joda-time', name = 'joda-time', rev = '2.10.3'),
+    jar(
+      org = 'org.joda',
+      name = 'joda-convert',
+      rev = '2.2.1',
+      # Exclude guava (even though it is only defined in the `test` scope) as a safeguard
+      # https://github.com/foursquare/foursquare.web/pull/16713#issuecomment-524566153
+      excludes = [
+          exclude(org = 'com.google.guava', name = 'guava'),
+      ]
+    )
   ]
 )
 
