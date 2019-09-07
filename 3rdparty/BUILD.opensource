@@ -981,6 +981,12 @@ jar_library(
         exclude(org = 'org.ow2.asm'),
       ],
     ),
+    scala_jar(org = 'com.twitter', name = 'scalding-parquet', rev = scalding_ver,
+      excludes=[
+        exclude(org = 'org.apache.hadoop', name = 'hadoop-core'),
+        exclude(org = 'org.ow2.asm'),
+      ],
+    ),
   ],
   dependencies = [
     ':algebird',
