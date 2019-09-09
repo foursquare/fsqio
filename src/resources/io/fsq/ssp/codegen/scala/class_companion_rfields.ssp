@@ -2,6 +2,7 @@
   // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
 
   import _root_.io.fsq.spindle.codegen.runtime.StructLike
+  import _root_.io.fsq.spindle.__shaded_for_spindle_bootstrap__.descriptors.Requiredness
 %>
 <%@ val cls: StructLike %>
   // Spindle Descriptors.
@@ -34,6 +35,8 @@
       id = ${field.identifier},
       annotations = Map(${field.annotations.toSeq.map(at => "\"%s\" -> \"%s\"".format(at._1, at._2)).mkString(", ")}),
       owner = this,
+      isRequired =#if (field.requirednessOption.exists(_ == Requiredness.REQUIRED)) true,#else false,#end
+
 #if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType])
 <% val structName = field.renderType.asInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType].className %>
       structMeta = ${structName},

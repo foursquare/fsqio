@@ -367,6 +367,7 @@ class ProgramMeta
       id = 1,
       annotations = Map(),
       owner = this,
+      isRequired = false,
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].namespacesUnset() }
@@ -383,6 +384,7 @@ class ProgramMeta
       id = 2,
       annotations = Map(),
       owner = this,
+      isRequired = false,
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].includesUnset() }
@@ -399,6 +401,7 @@ class ProgramMeta
       id = 3,
       annotations = Map(),
       owner = this,
+      isRequired = false,
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].constantsUnset() }
@@ -415,6 +418,7 @@ class ProgramMeta
       id = 4,
       annotations = Map(),
       owner = this,
+      isRequired = false,
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].enumsUnset() }
@@ -431,6 +435,7 @@ class ProgramMeta
       id = 5,
       annotations = Map(),
       owner = this,
+      isRequired = false,
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].typedefsUnset() }
@@ -447,6 +452,7 @@ class ProgramMeta
       id = 6,
       annotations = Map(),
       owner = this,
+      isRequired = false,
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].structsUnset() }
@@ -463,6 +469,7 @@ class ProgramMeta
       id = 7,
       annotations = Map(),
       owner = this,
+      isRequired = false,
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].unionsUnset() }
@@ -479,6 +486,7 @@ class ProgramMeta
       id = 8,
       annotations = Map(),
       owner = this,
+      isRequired = false,
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].exceptionsUnset() }
@@ -495,6 +503,7 @@ class ProgramMeta
       id = 9,
       annotations = Map(),
       owner = this,
+      isRequired = false,
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].servicesUnset() }
@@ -510,6 +519,7 @@ class ProgramMeta
       id = 98,
       annotations = Map(),
       owner = this,
+      isRequired = true,
       structMeta = io.fsq.common.thrift.descriptors.types.gen.TypeRegistry,
       manifest = manifest[io.fsq.common.thrift.descriptors.types.gen.TypeRegistry]
     ) {

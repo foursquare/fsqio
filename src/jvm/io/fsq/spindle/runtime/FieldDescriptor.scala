@@ -8,6 +8,7 @@ sealed trait UntypedFieldDescriptor {
   def id: Int
   def name: String
   def longName: String
+  def isRequired: Boolean
   def annotations: Map[String, String]
   def unsafeGetterOption(record: Any): Option[Any]
   def unsafeSetterRaw(record: Any, value: Any): Unit
@@ -82,6 +83,7 @@ abstract class OptionalFieldDescriptor[F, R <: Record[R], M <: MetaRecord[R, M]]
   override val id: Int,
   override val annotations: Map[String, String],
   override val owner: M,
+  override val isRequired: Boolean,
   override val manifest: Manifest[F]
 ) extends OptionalField[F, M]
   with FieldDescriptor[F, R, M]
@@ -92,6 +94,7 @@ abstract class ForeignKeyFieldDescriptor[F, R <: Record[R], M <: MetaRecord[R, M
   override val id: Int,
   override val annotations: Map[String, String],
   override val owner: M,
+  override val isRequired: Boolean,
   override val manifest: Manifest[F]
 ) extends OptionalField[F, M]
   with FieldDescriptor[F, R, M]
@@ -103,6 +106,7 @@ abstract class ForeignKeySeqFieldDescriptor[F, R <: Record[R], M <: MetaRecord[R
   override val id: Int,
   override val annotations: Map[String, String],
   override val owner: M,
+  override val isRequired: Boolean,
   override val manifest: Manifest[Seq[F]]
 ) extends OptionalField[Seq[F], M]
   with FieldDescriptor[Seq[F], R, M]
@@ -121,6 +125,7 @@ abstract class BitfieldFieldDescriptor[
   override val id: Int,
   override val annotations: Map[String, String],
   override val owner: M,
+  override val isRequired: Boolean,
   override val structMeta: FM,
   override val manifest: Manifest[F]
 ) extends OptionalField[F, M]
@@ -134,6 +139,7 @@ abstract class StructFieldDescriptor[R <: Record[R], M <: MetaRecord[R, M], ER <
   override val id: Int,
   override val annotations: Map[String, String],
   override val owner: M,
+  override val isRequired: Boolean,
   override val structMeta: EM,
   override val manifest: Manifest[ER]
 ) extends OptionalField[ER, M]
@@ -153,6 +159,7 @@ abstract class ExceptionFieldDescriptor[
   override val id: Int,
   override val annotations: Map[String, String],
   override val owner: M,
+  override val isRequired: Boolean,
   override val structMeta: EM,
   override val manifest: Manifest[E]
 ) extends OptionalField[E, M]
