@@ -17,9 +17,9 @@ object EmitUsedSymbolsPlugin {
 class EmitUsedSymbolsPlugin(override val global: Global) extends Plugin {
   override val name = EmitUsedSymbolsPlugin.name
   override val description = EmitUsedSymbolsPlugin.description
-  override val components = List[PluginComponent](new EmitUsedSymbolsPluginComponent)
+  override val components = List[PluginComponent](EmitUsedSymbolsPluginComponent)
 
-  class EmitUsedSymbolsPluginComponent extends PluginComponent {
+  private object EmitUsedSymbolsPluginComponent extends PluginComponent {
     import global._
     import global.definitions._
 
@@ -27,6 +27,15 @@ class EmitUsedSymbolsPlugin(override val global: Global) extends Plugin {
     override val phaseName = EmitUsedSymbolsPlugin.name
     override val runsAfter = List("parser")
     override val runsBefore = List("namer")
+
+    private val whitelist = Option(System.getProperty("io.fsq.buildgen.plugin.used.whitelist"))
+      .map(whitelistPath => {
+        Source.fromFile(whitelistPath).getLines().toSet
+      })
+      .getOrElse({
+        println("io.fsq.buildgen.plugin.used.whitelist not specified, will not gather fully qualified names")
+        Set.empty[String]
+      })
 
     class UsedSymbolTraverser(
       unit: CompilationUnit,
@@ -92,15 +101,6 @@ class EmitUsedSymbolsPlugin(override val global: Global) extends Plugin {
       override def name: String = EmitUsedSymbolsPlugin.name
       override def description: String = EmitUsedSymbolsPlugin.description
       override def apply(unit: CompilationUnit): Unit = {
-        val whitelist = Option(System.getProperty("io.fsq.buildgen.plugin.used.whitelist"))
-          .map(whitelistPath => {
-            Source.fromFile(whitelistPath).getLines.toSet
-          })
-          .getOrElse({
-            println("io.fsq.buildgen.plugin.used.whitelist not specified, will not gather fully qualified names")
-            Set.empty[String]
-          })
-
         val outputWriter = Option(System.getProperty("io.fsq.buildgen.plugin.used.outputDir"))
           .map(outputDir => {
             val pathSafeSource = unit.source.path.replaceAllLiterally("/", ".")
