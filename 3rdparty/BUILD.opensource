@@ -38,6 +38,16 @@ managed_jar_dependencies(
     ':jetty-util',
     ':joda-time',
     ':json4s',
+    ':lift-actor',
+    ':lift-common',
+    ':lift-db',
+    ':lift-json',
+    ':lift-json-ext',
+    ':lift-mapper',
+    ':lift-proto',
+    ':lift-record',
+    ':lift-util',
+    ':lift-webkit',
     ':logback',
     ':mockito',
     ':mockito-scala',
@@ -713,6 +723,192 @@ jar_library(
   ]
 )
 
+liftVer = '3.1.1'
+# TODO(ryan): this should probably be deprecated in favor of finer grained deps
+target(
+  name = 'liftweb',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  dependencies = [
+    ':lift-actor',
+    ':lift-common',
+    ':lift-db',
+    ':lift-json',
+    ':lift-json-ext',
+    ':lift-mapper',
+    ':lift-proto',
+    ':lift-record',
+    ':lift-util',
+    ':lift-webkit',
+    ':lift-mongodb',
+    ':lift-mongodb-record',
+  ],
+)
+
+jar_library(
+  name = 'lift-actor',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'net.liftweb', name = 'lift-actor', rev = liftVer)
+  ]
+)
+
+jar_library(
+  name = 'lift-common',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'net.liftweb', name = 'lift-common', rev = liftVer)
+  ]
+)
+
+jar_library(
+  name = 'lift-db',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'net.liftweb', name = 'lift-db', rev = liftVer)
+  ]
+)
+
+jar_library(
+  name = 'lift-json',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'net.liftweb', name = 'lift-json', rev = liftVer)
+  ]
+)
+
+jar_library(
+  name = 'lift-json-ext',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'net.liftweb', name = 'lift-json-ext', rev = liftVer)
+  ]
+)
+
+jar_library(
+  name = 'lift-mapper',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'net.liftweb', name = 'lift-mapper', rev = liftVer)
+  ]
+)
+
+jar_library(
+  name = 'lift-mongodb',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'net.liftweb', name = 'lift-mongodb', rev = liftVer, intransitive = True),
+  ],
+  dependencies = [
+    ':mongo-java-driver-unpacked',
+  ],
+)
+
+jar_library(
+  name = 'lift-mongodb-record',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'net.liftweb', name = 'lift-mongodb-record', rev = liftVer, intransitive = True),
+  ],
+  dependencies = [
+    ':lift-mongodb',
+    ':lift-record',
+  ],
+)
+
+jar_library(
+  name = 'lift-proto',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'net.liftweb', name = 'lift-proto', rev = liftVer)
+  ]
+)
+
+jar_library(
+  name = 'lift-record',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'net.liftweb', name = 'lift-record', rev = liftVer)
+  ]
+)
+
+jar_library(
+  name = 'liftweb-testkit',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'net.liftweb', name = 'lift-testkit', rev = liftVer)
+  ]
+)
+
+jar_library(
+  name = 'lift-util',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'net.liftweb', name = 'lift-util', rev = liftVer)
+  ]
+)
+
+jar_library(
+  name = 'lift-webkit',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'net.liftweb', name = 'lift-webkit', rev = liftVer)
+  ]
+)
+
+# NOTE(ryan): this is just a convenient wrapper to depend on for anything in net.liftweb.mongodb._
+target(
+  name = 'lift-mongo',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  dependencies = [
+    ':lift-mongodb',
+    ':lift-mongodb-record',
+  ],
+)
 
 jar_library(
   name = 'mockito',

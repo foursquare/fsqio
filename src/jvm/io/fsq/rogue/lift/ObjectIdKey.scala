@@ -12,7 +12,9 @@ import org.bson.types.ObjectId
 trait ObjectIdKey[OwnerType <: MongoRecord[OwnerType]] {
   self: OwnerType =>
 
-  object _id extends ObjectIdField(this.asInstanceOf[OwnerType])
+  object _id extends ObjectIdField(this.asInstanceOf[OwnerType]) {
+    override def name = "_id"
+  }
 
   // convenience method that returns the value of _id
   def id: ObjectId = _id.value

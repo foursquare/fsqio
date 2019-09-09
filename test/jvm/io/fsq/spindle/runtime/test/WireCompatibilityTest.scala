@@ -39,7 +39,7 @@ import io.fsq.spindle.runtime.test.gen.{
   TestStructNoUnknownFieldsTrackingInnerStructNoStringNoUnknownFieldsTracking
 }
 import java.nio.ByteBuffer
-import net.liftweb.json.{Diff, JsonAST, JsonParser, Printer}
+import net.liftweb.json.{Diff, JsonAST, JsonParser}
 import org.apache.thrift.{TBase, TDeserializer, TFieldIdEnum}
 import org.apache.thrift.protocol.TType
 import org.apache.thrift.transport.{AutoExpandingBufferReadTransport, TMemoryBuffer}
@@ -102,7 +102,7 @@ class WireCompatibilityTest {
           .format(thriftResponse, diff, jsonString)
       )
     }
-    Assert.assertEquals(Printer.compact(JsonAST.render(jsonObj)), Printer.compact(JsonAST.render(backToJson)))
+    Assert.assertEquals(JsonAST.compactRender(jsonObj), JsonAST.compactRender(backToJson))
   }
 
   @Test
