@@ -53,13 +53,6 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
       help='Use this target as the scala templates for spindle codegen (required to be 1 target).',
     )
     register(
-      '--java-ssp-template',
-      fingerprint=True,
-      advanced=True,
-      type=target_option,
-      help='Use this target as the java templates for spindle codegen (required to be 1 target).',
-    )
-    register(
       '--write-annotations-json',
       fingerprint=True,
       advanced=True,
@@ -84,12 +77,6 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
   @staticmethod
   def scalate_workdir(cache_dir):
     return os.path.join(cache_dir, 'scalate')
-
-  @memoized_property
-  def java_template(self):
-    return self.get_ssp_templates(
-      self.context.build_graph.get_target_from_spec(self.get_options().java_ssp_template)
-    )
 
   @memoized_property
   def scala_template(self):
@@ -202,9 +189,6 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
       '--namespace_out', self.namespace_out(workdir),
       '--working_dir', self.scalate_workdir(workdir),
     ]
-    # Allow for the chance that the java templating is disabled (e.g. for IDE stubs).
-    if self.java_template:
-      tool_args.extend(['--java_template', self.java_template])
     bases = {tgt.target_base for tgt in target.closure() if self.is_gentarget(tgt)}
     tool_args.extend(['--thrift_include', ':'.join(bases)])
     if self._annotations:
@@ -239,7 +223,6 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
       '{0}.{1}'.format(source, 'scala')
       for source in self.sources_generated_by_target(target)
     ]
-    extra_sources = self._additional_generated_sources(target) or []
 
     # generate json.
     if ns_out is not None:
@@ -256,14 +239,7 @@ class SpindleGen(SpindleTask, SimpleCodegenTask):
       # note: this case is for SpindleStubsGen
       actual_json = []
 
-    return generated_scala_sources + extra_sources + actual_json
-
-  def _additional_generated_sources(self, target):
-    generated_java_sources = [
-      os.path.join(os.path.dirname(source), 'java_{0}.java'.format(os.path.basename(source)))
-      for source in self.sources_generated_by_target(target)
-    ]
-    return generated_java_sources if self.java_template else []
+    return generated_scala_sources + actual_json
 
   def sources_generated_by_target(self, target):
     return [

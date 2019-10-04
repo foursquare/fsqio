@@ -13,7 +13,7 @@ import org.junit.rules.TemporaryFolder
 class CodegenSampleTest {
   val SampleFolder = "test/jvm/io/fsq/spindle/codegen/binary/test/gen"
   val OutFolder = "io/fsq/spindle/codegen/binary/test/gen"
-  val Filenames = Vector("java_test_programs.java", "test_programs.scala")
+  val Filenames = Vector("test_programs.scala")
   val Message = "The thrift_descriptor samples didn't match. %s has been overwritten with the expected value."
 
   val outDir = new TemporaryFolder()
@@ -35,8 +35,6 @@ class CodegenSampleTest {
         Array(
           "--template",
           "src/resources/io/fsq/ssp/codegen/scala/record.ssp",
-          "--java_template",
-          "src/resources/io/fsq/ssp/codegen/javagen/record.ssp",
           "--extension",
           "scala",
           "--thrift_include",

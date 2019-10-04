@@ -6,9 +6,7 @@
 <%@ val cls: StructLike %>
 <%@ val clsContainer: String %>
 trait Mutable${cls.name} extends ${cls.name}
-    with #if(clsContainer.nonEmpty)Java${clsContainer}.#endJava${cls.name}Mutable[#if (cls.typeParameterFields.nonEmpty)${cls.typeParameterFields.map(_.text).distinct.mkString(", ")},#end<%----%>
-      ${cls.name}, Raw${cls.name}, ${cls.name}Meta
-    ] {
+    with _root_.io.fsq.spindle.runtime.MutableRecord[${cls.name}] {
 #for (field <- cls.fields)
 <% render(field.renderType.fieldMutableTemplate, Map("field" -> field)) %>
 #end

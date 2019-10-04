@@ -18,16 +18,15 @@ def escapeQuotes(str: String): String = str.replace("\"", "\\\"")
 // exhaustiveness checking when pattern matching on the enumeration.
 --%>
 sealed abstract class ${enum.name} private (
-    override val id: Int,
+    val id: Int,
     override val name: String,
     override val stringValue: String
 ) extends _root_.io.fsq.spindle.runtime.Enum[${enum.name}]
-  with Java${enum.name}
   with org.apache.thrift.TEnum
   with _root_.java.io.Serializable {
 
+  def getValue: Int = id
   override def toString: String = stringValue
-  override def getValue: Int = id
   override def meta = ${enum.name}
 }
 

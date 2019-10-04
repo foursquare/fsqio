@@ -9,10 +9,10 @@
   render("../" + renderType.ref.fieldDefTemplate, Map("field" -> field))
 %>
 
-def ${field.escapedName}: Int
-def ${field.name}Option: Option[Int]
-def ${field.name}OrDefault: Int
-def ${field.name}OrNull: Int
-def ${field.name}OrThrow: Int
-def ${field.isSetName}: Boolean
-def ${field.name}Struct: ${renderType.className}
+  def ${field.escapedName}: Int
+  def ${field.name}Option: Option[Int]
+  def ${field.name}OrDefault: Int
+  def ${field.name}OrNull: Int
+  def ${field.name}OrThrow: Int
+  def ${field.isSetName}: Boolean
+  def ${field.name}Struct: ${renderType.className}

@@ -39,8 +39,6 @@ package ${program.pkg}
 // WARNING: No package statement because no java namespace specified in Thrift file.
 #end
 
-import ${program.pkg}.java_${source.baseName}._
-
 #if (program.constants.nonEmpty)
 <% render("constants.ssp", Map("constants" -> program.constants, "baseName" -> source.capitalizedBaseName)) %>
 #end

@@ -28,7 +28,7 @@ object ${cls.name} extends ${cls.name}Meta {
 }
 
 class ${cls.name}Meta
-    extends #if(clsContainer.nonEmpty)Java${clsContainer}.#endJava${cls.name}Meta[${cls.name}, Raw${cls.name}, ${cls.name}Meta]
+    extends _root_.io.fsq.spindle.runtime.MetaRecord[${cls.name}, ${cls.name}Meta]
 #for (pkField <- cls.primaryKeyField)
     with _root_.io.fsq.spindle.runtime.HasMetaPrimaryKey[${pkField.renderType.text}, ${cls.name}]
 #end

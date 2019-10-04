@@ -58,7 +58,7 @@
     with _root_.io.fsq.spindle.runtime.EnumStringField  <%-- TODO(dan): This is a hack to support enum seq fields. A real solution would recurse. --%>
 #end {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[${cls.name}]): Unit = { r.asInstanceOf[Raw${cls.name}].${field.name}Unset() }
-      override def getter(r: ${cls.name}): Option[${field.renderType.text}] = r.${field.name}Option()
+      override def getter(r: ${cls.name}): Option[${field.renderType.text}] = r.${field.name}Option
       override def setterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[${cls.name}], v: ${field.renderType.text}): Unit = { r.asInstanceOf[Raw${cls.name}].${field.escapedName}_=(v) }
 #if (field.isForeignKey && field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.Container1RenderType])
 <% val elem = field.renderType.asInstanceOf[_root_.io.fsq.spindle.codegen.runtime.Container1RenderType].elem %>

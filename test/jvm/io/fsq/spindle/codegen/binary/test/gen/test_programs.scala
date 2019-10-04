@@ -9,8 +9,6 @@
 
 package io.fsq.spindle.codegen.binary.test.gen
 
-import io.fsq.spindle.codegen.binary.test.gen.java_test_programs._
-
 
 
 
@@ -186,7 +184,7 @@ object Program extends ProgramMeta {
 }
 
 class ProgramMeta
-    extends JavaProgramMeta[Program, RawProgram, ProgramMeta]
+    extends _root_.io.fsq.spindle.runtime.MetaRecord[Program, ProgramMeta]
     with _root_.io.fsq.spindle.runtime.RecordProvider[Program] {
   override def recordName: String = "Program"
 
@@ -371,7 +369,7 @@ class ProgramMeta
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].namespacesUnset() }
-      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]] = r.namespacesOption()
+      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]] = r.namespacesOption
       override def setterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program], v: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]): Unit = { r.asInstanceOf[RawProgram].namespaces_=(v) }
 
     }
@@ -388,7 +386,7 @@ class ProgramMeta
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].includesUnset() }
-      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]] = r.includesOption()
+      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]] = r.includesOption
       override def setterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program], v: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]): Unit = { r.asInstanceOf[RawProgram].includes_=(v) }
 
     }
@@ -405,7 +403,7 @@ class ProgramMeta
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].constantsUnset() }
-      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]] = r.constantsOption()
+      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]] = r.constantsOption
       override def setterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program], v: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]): Unit = { r.asInstanceOf[RawProgram].constants_=(v) }
 
     }
@@ -422,7 +420,7 @@ class ProgramMeta
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].enumsUnset() }
-      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]] = r.enumsOption()
+      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]] = r.enumsOption
       override def setterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program], v: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]): Unit = { r.asInstanceOf[RawProgram].enums_=(v) }
 
     }
@@ -439,7 +437,7 @@ class ProgramMeta
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].typedefsUnset() }
-      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]] = r.typedefsOption()
+      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]] = r.typedefsOption
       override def setterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program], v: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]): Unit = { r.asInstanceOf[RawProgram].typedefs_=(v) }
 
     }
@@ -456,7 +454,7 @@ class ProgramMeta
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].structsUnset() }
-      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]] = r.structsOption()
+      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]] = r.structsOption
       override def setterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program], v: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]): Unit = { r.asInstanceOf[RawProgram].structs_=(v) }
 
     }
@@ -473,7 +471,7 @@ class ProgramMeta
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].unionsUnset() }
-      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]] = r.unionsOption()
+      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]] = r.unionsOption
       override def setterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program], v: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]): Unit = { r.asInstanceOf[RawProgram].unions_=(v) }
 
     }
@@ -490,7 +488,7 @@ class ProgramMeta
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].exceptionsUnset() }
-      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]] = r.exceptionsOption()
+      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]] = r.exceptionsOption
       override def setterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program], v: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]): Unit = { r.asInstanceOf[RawProgram].exceptions_=(v) }
 
     }
@@ -507,7 +505,7 @@ class ProgramMeta
       manifest = manifest[scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].servicesUnset() }
-      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]] = r.servicesOption()
+      override def getter(r: Program): Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]] = r.servicesOption
       override def setterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program], v: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]): Unit = { r.asInstanceOf[RawProgram].services_=(v) }
 
     }
@@ -524,7 +522,7 @@ class ProgramMeta
       manifest = manifest[io.fsq.common.thrift.descriptors.types.gen.TypeRegistry]
     ) {
       override def unsetterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program]): Unit = { r.asInstanceOf[RawProgram].typeRegistryUnset() }
-      override def getter(r: Program): Option[io.fsq.common.thrift.descriptors.types.gen.TypeRegistry] = r.typeRegistryOption()
+      override def getter(r: Program): Option[io.fsq.common.thrift.descriptors.types.gen.TypeRegistry] = r.typeRegistryOption
       override def setterRaw(r: _root_.io.fsq.spindle.runtime.MutableRecord[Program], v: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry): Unit = { r.asInstanceOf[RawProgram].typeRegistry_=(v) }
 
     }
@@ -579,14 +577,81 @@ class ProgramCompanionProvider extends _root_.io.fsq.spindle.runtime.CompanionPr
 
 
 trait Program
-    extends JavaProgram[io.fsq.common.thrift.descriptors.constants.gen.Const, io.fsq.common.thrift.descriptors.enums.gen.Enum, io.fsq.common.thrift.descriptors.headers.gen.Include, io.fsq.common.thrift.descriptors.headers.gen.Namespace, io.fsq.common.thrift.descriptors.services.gen.Service, io.fsq.common.thrift.descriptors.structs.gen.Exception, io.fsq.common.thrift.descriptors.structs.gen.Struct, io.fsq.common.thrift.descriptors.structs.gen.Union, io.fsq.common.thrift.descriptors.types.gen.TypeRegistry, io.fsq.common.thrift.descriptors.types.gen.Typedef,
-      Program, RawProgram, ProgramMeta
-    ]
+    extends _root_.io.fsq.spindle.runtime.Record[Program]
     with _root_.scala.math.Ordered[Program]
     with org.apache.thrift.TBase[Program, Program._Fields] {
 
   override def meta: ProgramMeta
 
+  def namespaces: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]
+  def namespacesOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]]
+  def namespacesOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]
+  def namespacesOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]
+  def namespacesOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Namespace]
+  def namespacesIsSet: Boolean
+
+  def includes: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]
+  def includesOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]]
+  def includesOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]
+  def includesOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]
+  def includesOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.headers.gen.Include]
+  def includesIsSet: Boolean
+
+  def constants: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]
+  def constantsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]]
+  def constantsOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]
+  def constantsOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]
+  def constantsOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.constants.gen.Const]
+  def constantsIsSet: Boolean
+
+  def enums: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]
+  def enumsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]]
+  def enumsOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]
+  def enumsOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]
+  def enumsOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.enums.gen.Enum]
+  def enumsIsSet: Boolean
+
+  def typedefs: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]
+  def typedefsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]]
+  def typedefsOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]
+  def typedefsOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]
+  def typedefsOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.types.gen.Typedef]
+  def typedefsIsSet: Boolean
+
+  def structs: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]
+  def structsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]]
+  def structsOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]
+  def structsOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]
+  def structsOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Struct]
+  def structsIsSet: Boolean
+
+  def unions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]
+  def unionsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]]
+  def unionsOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]
+  def unionsOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]
+  def unionsOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Union]
+  def unionsIsSet: Boolean
+
+  def exceptions: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]
+  def exceptionsOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]]
+  def exceptionsOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]
+  def exceptionsOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]
+  def exceptionsOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.structs.gen.Exception]
+  def exceptionsIsSet: Boolean
+
+  def services: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]
+  def servicesOption: Option[scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]]
+  def servicesOrDefault: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]
+  def servicesOrNull: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]
+  def servicesOrThrow: scala.collection.Seq[io.fsq.common.thrift.descriptors.services.gen.Service]
+  def servicesIsSet: Boolean
+
+
+  def typeRegistry: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry
+  def typeRegistryOption: Option[io.fsq.common.thrift.descriptors.types.gen.TypeRegistry]
+  def typeRegistryOrNull: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry
+  def typeRegistryOrThrow: io.fsq.common.thrift.descriptors.types.gen.TypeRegistry
+  def typeRegistryIsSet: Boolean
   override def compare(that: Program): Int = {
     var cmp: Int = 0
     if (that == null) {
@@ -844,11 +909,12 @@ trait ProgramProxy extends Program {
 }
 
 
-final class RawProgram extends JavaProgramRaw[io.fsq.common.thrift.descriptors.constants.gen.Const, io.fsq.common.thrift.descriptors.enums.gen.Enum, io.fsq.common.thrift.descriptors.headers.gen.Include, io.fsq.common.thrift.descriptors.headers.gen.Namespace, io.fsq.common.thrift.descriptors.services.gen.Service, io.fsq.common.thrift.descriptors.structs.gen.Exception, io.fsq.common.thrift.descriptors.structs.gen.Struct, io.fsq.common.thrift.descriptors.structs.gen.Union, io.fsq.common.thrift.descriptors.types.gen.TypeRegistry, io.fsq.common.thrift.descriptors.types.gen.Typedef,
-      Program, RawProgram, ProgramMeta
-    
-    ] with Program {
-      override def meta: ProgramMeta = Program
+final class RawProgram
+  extends _root_.io.fsq.spindle.runtime.Record[Program]
+  with _root_.io.fsq.spindle.runtime.MutableRecord[Program]
+  with Program {
+
+  override def meta: ProgramMeta = Program
 
   // fields
   // Field #1 - namespaces

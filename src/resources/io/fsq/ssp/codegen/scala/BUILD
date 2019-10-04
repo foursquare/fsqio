@@ -9,7 +9,6 @@ ssp_template(
     'src/resources/io/fsq/ssp/codegen/scala/field',
     'src/resources/io/fsq/ssp/codegen/scala/read',
     'src/resources/io/fsq/ssp/codegen/scala/write',
-    'src/resources/io/fsq/ssp/codegen/javagen',
   ]
 )
 

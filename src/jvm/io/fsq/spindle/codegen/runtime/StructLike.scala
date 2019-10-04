@@ -7,7 +7,6 @@ trait StructLike extends HasAnnotations {
 
   def name: String
   def fields: Seq[ScalaField] = __fields
-  def typeParameterFields: Seq[RenderType] = fields.flatMap(_.renderType.javaTypeParameters).sortBy(_.text)
 
   val tstructName = name.toUpperCase + "_SDESC"
   def primaryKeyField: Option[ScalaField] = None

@@ -4,6 +4,16 @@
   import _root_.io.fsq.spindle.codegen.runtime.ScalaField
 %>
 <%@ val field: ScalaField %>
+#if (field.defaultValueIsSet || field.builderRequired)
+  def ${field.escapedName}: ${field.renderType.text}
+#end
+  def ${field.name}Option: Option[${field.renderType.text}]
+#if (field.defaultValueIsSet)
+  def ${field.name}OrDefault: ${field.renderType.text}
+#end
+  def ${field.name}OrNull: ${field.renderType.text}
+  def ${field.name}OrThrow: ${field.renderType.text}
+  def ${field.isSetName}: Boolean
 #if (field.isForeignKey)
 <% render("def_fk.ssp", Map("field" -> field)) %>
 #end

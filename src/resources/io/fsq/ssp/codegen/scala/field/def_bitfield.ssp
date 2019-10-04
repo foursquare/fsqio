@@ -8,3 +8,4 @@
   val renderType = field.renderType.asInstanceOf[BitfieldStructRenderType]
   render("../" + renderType.ref.fieldDefTemplate, Map("field" -> field))
 %>
+  def ${field.name}Struct: ${renderType.className}

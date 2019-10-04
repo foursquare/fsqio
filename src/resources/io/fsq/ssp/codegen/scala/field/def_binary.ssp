@@ -5,4 +5,5 @@
 %>
 <%@ val field: ScalaField %>
 <% render("def_ref.ssp", Map("field" -> field)) %>
-  def ${field.name}ByteArrayOption(): Option[Array[Byte]]
+  def ${field.name}ByteArray: Array[Byte]
+  def ${field.name}ByteArrayOption: Option[Array[Byte]]

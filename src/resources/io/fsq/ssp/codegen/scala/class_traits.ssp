@@ -8,9 +8,7 @@
 
 <% val brace = if (!cls.primaryKeyField.isDefined) "{" else "" %>
 trait ${cls.name}
-    extends #if(clsContainer.nonEmpty)Java${clsContainer}.#endJava${cls.name}[#if (cls.typeParameterFields.nonEmpty)${cls.typeParameterFields.map(_.text).distinct.mkString(", ")},#end<%----%>
-      ${cls.name}, Raw${cls.name}, ${cls.name}Meta
-    ]
+    extends _root_.io.fsq.spindle.runtime.Record[${cls.name}]
 #for (pkField <- cls.primaryKeyField)
     with _root_.io.fsq.spindle.runtime.HasPrimaryKey[${pkField.renderType.text}, ${cls.name}]
 #end
