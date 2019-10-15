@@ -22,7 +22,7 @@ class WebPackTestRun(NodeTestRun):
   being codegenned.
 
   WARNING: The node module must express a dependency on webpack
-  in its package.json / npm-shrinkwrap.json, or this task will
+  in its package.json / package-lock.json, or this task will
   fail.
   """
 

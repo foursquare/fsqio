@@ -14,11 +14,11 @@ class WebPackModule(NodeModule):
 
   @memoized_property
   def npm_json(self):
-    npm_json = os.path.join(self.address.spec_path, 'npm-shrinkwrap.json')
+    npm_json = os.path.join(self.address.spec_path, 'package-lock.json')
     if npm_json not in self.sources_relative_to_buildroot():
       raise TargetDefinitionException(
         self,
-        "WebPackModules are required to have a 'npm-shrinkwrap.json' file in sources.",
+        "WebPackModules are required to have a 'package-lock.json' file in sources.",
       )
     return npm_json
 

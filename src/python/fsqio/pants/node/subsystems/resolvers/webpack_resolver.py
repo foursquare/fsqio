@@ -38,11 +38,11 @@ class WebPackResolver(NpmResolver):
       if not os.path.exists('package.json'):
         raise TaskError(
           'Cannot find package.json. Did you forget to put it in target sources?')
-        if os.path.exists('npm-shrinkwrap.json'):
-          node_task.context.log.info('Found npm-shrinkwrap.json, will not inject package.json')
+        if os.path.exists('package-lock.json'):
+          node_task.context.log.info('Found package-lock.json, will not inject package.json')
         else:
           node_task.context.log.warn(
-            'Cannot find npm-shrinkwrap.json. Did you forget to put it in target sources? '
+            'Cannot find package-lock.json. Did you forget to put it in target sources? '
             'This package will fall back to inject package.json with pants BUILD dependencies '
             'including node_remote_module and other node dependencies. However, this is '
             'not fully supported.')
@@ -84,7 +84,7 @@ class WebPackResolver(NpmResolver):
 
   def _rewrite_package_descriptor(self, node_task, target, results_dir, node_paths):
     package_json_path = os.path.join(results_dir, 'package.json')
-    npm_shrinkwrap_path = os.path.join(results_dir, 'npm-shrinkwrap.json')
+    package_lock_json_path = os.path.join(results_dir, 'package-lock.json')
 
     def version_or_path(dep):
       return node_paths.node_path(dep) if node_task.is_node_module(dep) else dep.version
@@ -106,8 +106,8 @@ class WebPackResolver(NpmResolver):
         package['dependencies'] = {}
       package['dependencies'].update(dependencies_to_add)
 
-    with self._json_file(npm_shrinkwrap_path) as npm_shrinkwrap:
-      # Modify the `version` field in npm-shrinkwrap.json with the updated path
+    with self._json_file(package_lock_json_path) as package_lock_json:
+      # Modify the `version` field in package-lock.json with the updated path
       for dep in target.dependencies:
-        if dep.package_name in npm_shrinkwrap['dependencies']:
-          npm_shrinkwrap['dependencies'][dep.package_name]['resolved'] = version_or_path(dep)
+        if dep.package_name in package_lock_json['dependencies']:
+          package_lock_json['dependencies'][dep.package_name]['resolved'] = version_or_path(dep)
