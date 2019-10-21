@@ -15,7 +15,7 @@ object ${cls.name} extends ${cls.name}Meta {
   implicit val __$comparator: _root_.java.util.Comparator[${cls.name}]
 }
 
-class ${cls.name}Meta extends io.fsq.spindle.runtime.MetaRecord[${cls.name}, ${cls.name}Meta]
+class ${cls.name}Meta extends _root_.io.fsq.spindle.runtime.MetaRecord[${cls.name}, ${cls.name}Meta]
 #for (pkField <- cls.primaryKeyField)
     with _root_.io.fsq.spindle.runtime.HasMetaPrimaryKey[${pkField.renderType.text}, ${cls.name}]
 #end
@@ -25,6 +25,7 @@ class ${cls.name}Meta extends io.fsq.spindle.runtime.MetaRecord[${cls.name}, ${c
 #end
 {
 <% render("class_companion_tfields.ssp", Map("cls" -> cls)) %>
+override def createRawRecord: Raw${cls.name}
 <% render("class_companion_rfields.ssp", Map("cls" -> cls)) %>
   def apply(
       ${cls.fields.map(field => "%s: %s".format(field.escapedName, field.renderType.text)).mkString(",\n      ")}
