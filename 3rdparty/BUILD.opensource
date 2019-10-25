@@ -145,8 +145,8 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.apache.httpcomponents', name = 'httpclient', rev = '4.5.9'),
-    jar(org = 'org.apache.httpcomponents', name = 'httpcore', rev = '4.4.11'),
+    jar(org = 'org.apache.httpcomponents', name = 'httpclient', rev = '4.5.10'),
+    jar(org = 'org.apache.httpcomponents', name = 'httpcore', rev = '4.4.12'),
   ],
 )
 
