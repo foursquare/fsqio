@@ -132,12 +132,12 @@ class BuildFileManipulator(object):
           if isinstance(keyword.value, ast.Str):
             return keyword.value.s
           else:
-            logger.warn('Saw a non-string-literal name argument to a target while '
-                        'looking through {address}.  Target type was {target_type}.'
-                        'name value was {name_value}'
-                        .format(address=address,
-                                target_type=call.func.id,
-                                name_value=keyword.value))
+            logger.warning('Saw a non-string-literal name argument to a target while '
+                           'looking through {address}.  Target type was {target_type}.'
+                           'name value was {name_value}'
+                           .format(address=address,
+                                   target_type=call.func.id,
+                                   name_value=keyword.value))
       return os.path.basename(address.spec_path)
 
     calls_by_name = dict((name_from_call(call), call) for call in target_calls)
