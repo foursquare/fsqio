@@ -576,8 +576,8 @@ jar_library(
 jar_library(
   name = 'janino-compiler',
   jars = [
-    jar(org = 'org.codehaus.janino', name = 'janino',rev = '3.0.8'),
-    jar(org = 'org.codehaus.janino', name = 'commons-compiler', rev = '3.0.8'),
+    jar(org = 'org.codehaus.janino', name = 'janino', rev = '3.0.9'),
+    jar(org = 'org.codehaus.janino', name = 'commons-compiler', rev = '3.0.9'),
   ],
 )
 
@@ -708,7 +708,7 @@ jar_library(
     # is good enough for now.
     jar(org = 'ch.qos.logback', name = 'logback-core', rev = '1.1.3'),
     # This is an optional dependency on logback-core, so we're adding it explicitly.
-    jar(org = 'org.codehaus.janino', name = 'janino',rev = '3.0.8')
+    jar(org = 'org.codehaus.janino', name = 'janino', rev = '3.0.9')
   ],
 )
 
