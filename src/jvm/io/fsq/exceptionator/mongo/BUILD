@@ -16,4 +16,12 @@ scala_library(
     'src/jvm/io/fsq/spindle/rogue/adapter',
     'src/jvm/io/fsq/spindle/runtime',
   ],
+  provides=scala_artifact(
+    org='io.fsq',
+    name='exceptionator-mongo',
+    repo=oss_sonatype_repo,
+    publication_metadata=io_fsq_library("""
+      Foursquare's exception aggregator built on top of twitter finagle and mongodb.
+    """),
+  ),
 )
