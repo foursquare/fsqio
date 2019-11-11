@@ -59,7 +59,7 @@ if (len(options.hotfix) > 0):
 if options.vm_map_count:
   command_args += ['--vm_map_count', options.vm_map_count]
 
-cmd = './pants -ldebug %s src/jvm/io/fsq/twofishes/server:server-bin %s' % (
+cmd = './pants -ldebug --resolve-ivy-args=-debug %s src/jvm/io/fsq/twofishes/server:server-bin %s' % (
   goal,
   ' '.join(['--jvm-run-jvm-program-args=%s' % (a) for a in command_args])
 )
