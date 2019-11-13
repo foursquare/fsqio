@@ -1,27 +1,31 @@
 # coding=utf-8
-# Copyright 2014 Pants project contributors (see CONTRIBUTORS.md).
-# Licensed under the Apache License, Version 2.0 (see LICENSE).
+# Copyright 2019 Foursquare Labs Inc. All Rights Reserved.
+# fixlint=skip
+# pylint: skip-file
 
-from __future__ import (absolute_import, division, generators, nested_scopes, print_function,
-                        unicode_literals, with_statement)
+from __future__ import (
+  absolute_import,
+  division,
+  generators,
+  nested_scopes,
+  print_function,
+  unicode_literals,
+  with_statement,
+)
 
+from collections import OrderedDict
+from contextlib import contextmanager
 import itertools
 import json
 import os
 import shutil
+from textwrap import dedent
 import time
 import traceback
 import uuid
-from collections import OrderedDict
-from contextlib import contextmanager
-from textwrap import dedent
-
-from six import StringIO
-from six.moves import configparser
 
 from pants.backend.python.targets.python_tests import PythonTests
 from pants.backend.python.tasks.gather_sources import GatherSources
-from pants.backend.python.tasks.pytest_prep import PytestPrep
 from pants.base.build_environment import get_buildroot
 from pants.base.exceptions import ErrorWhileTesting, TaskError
 from pants.base.fingerprint_strategy import DefaultFingerprintStrategy
@@ -37,6 +41,20 @@ from pants.util.objects import datatype
 from pants.util.process_handler import SubprocessProcessHandler
 from pants.util.strutil import safe_shlex_split
 from pants.util.xml_parser import XmlParser
+from six import StringIO
+from six.moves import configparser
+
+from fsqio.pants.python.tasks.pytest_prep import PytestPrep
+
+# This almost an exact copy of upstream. Changes are:
+# - Change import of PytestPrep to pull fsqio version
+# - Add fixlint and pylint headers
+# - Couple of style fixes to get pep8 passing
+# We need this copy as the upstream version imports PytestPrep and
+# uses that import to declare it's required input type. As we
+# redifine PytestPrep this "changes" the input type. So we have to
+# change the import. That means we copy the file.
+# -- Mathieu
 
 
 class _Workdirs(datatype(['root_dir', 'partition'])):
@@ -334,6 +352,7 @@ class PytestRun(PartitionedTestRunnerTaskMixin, Task):
         env = {
           'PEX_MODULE': 'coverage.cmdline:main'
         }
+
         def coverage_run(subcommand, arguments):
           return self._pex_run(pex,
                                workunit_name='coverage-{}'.format(subcommand),
@@ -535,12 +554,16 @@ class PytestRun(PartitionedTestRunnerTaskMixin, Task):
   def _map_relsrc_to_targets(self, targets):
     pex_src_root = os.path.relpath(self._source_chroot_path, get_buildroot())
     # First map chrooted sources back to their targets.
-    relsrc_to_target = {os.path.join(pex_src_root, src): target for target in targets
-      for src in target.sources_relative_to_source_root()}
+    relsrc_to_target = {
+      os.path.join(pex_src_root, src): target for target in targets
+      for src in target.sources_relative_to_source_root()
+    }
     # Also map the source tree-rooted sources, because in some cases (e.g., a failure to even
     # eval the test file during test collection), that's the path pytest will use in the junit xml.
-    relsrc_to_target.update({src: target for target in targets
-      for src in target.sources_relative_to_buildroot()})
+    relsrc_to_target.update({
+      src: target for target in targets
+      for src in target.sources_relative_to_buildroot()
+    })
 
     return relsrc_to_target
 

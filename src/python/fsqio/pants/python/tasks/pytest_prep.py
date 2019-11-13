@@ -1,17 +1,28 @@
 # coding=utf-8
-# Copyright 2017 Pants project contributors (see CONTRIBUTORS.md).
-# Licensed under the Apache License, Version 2.0 (see LICENSE).
+# Copyright 2019 Foursquare Labs Inc. All Rights Reserved.
+# fixlint=skip
 
-from __future__ import (absolute_import, division, generators, nested_scopes, print_function,
-                        unicode_literals, with_statement)
+from __future__ import (
+  absolute_import,
+  division,
+  generators,
+  nested_scopes,
+  print_function,
+  unicode_literals,
+  with_statement,
+)
 
 import os
 
-import pkg_resources
-from pex.pex_info import PexInfo
-
 from pants.backend.python.subsystems.pytest import PyTest
 from pants.backend.python.tasks.python_execution_task_base import PythonExecutionTaskBase
+from pex.pex_info import PexInfo
+import pkg_resources
+
+# This is pretty much a full copy of upstream. We made two changes:
+# - We add a `requirements` option to the task
+# - We add the contents from that option to the output of `extra_requirements`
+# We do this so that we can add extra constraints to pytest dependencies.
 
 
 class PytestPrep(PythonExecutionTaskBase):
@@ -50,8 +61,19 @@ class PytestPrep(PythonExecutionTaskBase):
       return cls._COVERAGE_PLUGIN_MODULE_NAME
 
   @classmethod
+  def register_options(cls, register):
+    super(PytestPrep, cls).register_options(register)
+    register(
+      '--requirements',
+      advanced=True,
+      fingerprint=True,
+      type=list,
+      help='Add more constraints to pytest requiements',
+    )
+
+  @classmethod
   def implementation_version(cls):
-    return super(PytestPrep, cls).implementation_version() + [('PytestPrep', 2)]
+    return super(PytestPrep, cls).implementation_version() + [('PytestPrep', 3)]
 
   @classmethod
   def product_types(cls):
@@ -62,7 +84,7 @@ class PytestPrep(PythonExecutionTaskBase):
     return super(PytestPrep, cls).subsystem_dependencies() + (PyTest,)
 
   def extra_requirements(self):
-    return PyTest.global_instance().get_requirement_strings()
+    return tuple(self.get_options().requirements) + PyTest.global_instance().get_requirement_strings()
 
   def extra_files(self):
     yield self.ExtraFile.empty('pytest.ini')
