@@ -4,7 +4,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
-import subprocess
 
 from pants.backend.python.interpreter_cache import PythonInterpreterCache
 from pants.backend.python.subsystems.python_setup import PythonSetup
@@ -19,6 +18,7 @@ from pants.option.custom_types import file_option
 from pants.python.python_repos import PythonRepos
 from pants.util.memo import memoized_property
 from pants.util.process_handler import subprocess
+from typing import List, Set
 
 
 class MypyTask(ResolveRequirementsTaskBase):

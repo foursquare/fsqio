@@ -6,5 +6,6 @@ python_library(
     '3rdparty/python:pex',
     '3rdparty/python:setuptools',
     '3rdparty/python:six',
+    '3rdparty/python:typing',
   ],
 )
