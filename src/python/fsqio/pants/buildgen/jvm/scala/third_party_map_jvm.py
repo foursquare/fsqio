@@ -427,6 +427,7 @@ jvm_third_party_map = {
         'mrunit': 'mrunit',
         'security': 'hadoop-common',
         'util': 'hadoop-common',
+        'tools': 'hadoop-distcp',
       },
       'hive': {
         'jdbc': 'hive-jdbc',
