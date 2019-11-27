@@ -80,7 +80,7 @@ class ScalacBuildgenTaskMixin(JvmToolTaskMixin):
 
     output_dir = tempfile.mkdtemp()
     try:
-      jvm_options.append('-Dio.fsq.buildgen.plugin.emit_exported_symbols.outputDir={0}'
+      jvm_options.append('-Dio.fsq.buildgen.plugin.exported.outputDir={0}'
                          .format(output_dir))
       java_runner(classpath=classpath,
                   main=self._SCALAC_MAIN,
@@ -127,7 +127,7 @@ class ScalacBuildgenTaskMixin(JvmToolTaskMixin):
       '-Xmx6g',
       '-Xss4096k',
       '-Xbootclasspath/a:{bootclasspath}'.format(bootclasspath=bootclasspath),
-      '-Dio.fsq.buildgen.plugin.used_symbol_emitter.whitelist={0}'.format(whitelist_path),
+      '-Dio.fsq.buildgen.plugin.used.whitelist={0}'.format(whitelist_path),
     ]
     scalac_args = [
       '-Xplugin:{}'.format(plugin_jar),
@@ -136,7 +136,7 @@ class ScalacBuildgenTaskMixin(JvmToolTaskMixin):
 
     output_dir = tempfile.mkdtemp()
     try:
-      jvm_options.append('-Dio.fsq.buildgen.plugin.used_symbol_emitter.outputDir={0}'
+      jvm_options.append('-Dio.fsq.buildgen.plugin.used.outputDir={0}'
                          .format(output_dir))
       java_runner(classpath=classpath,
                   main=self._SCALAC_MAIN,

@@ -41,7 +41,7 @@ jar_library(
 jar_library(
   name = 'buildgen-emit-exported-symbols',
   jars = [
-    scala_jar(org = 'io.fsq', name = 'buildgen-emit-exported-symbols', rev = '1.2.0'),
+    scala_jar(org = 'io.fsq', name = 'buildgen-emit-exported-symbols', rev = '2.3.0'),
   ],
   tags = [
     'exempt',
@@ -52,7 +52,7 @@ jar_library(
 jar_library(
   name = 'buildgen-emit-used-symbols',
   jars = [
-    scala_jar(org = 'io.fsq', name = 'buildgen-emit-used-symbols', rev = '1.2.0'),
+    scala_jar(org = 'io.fsq', name = 'buildgen-emit-used-symbols', rev = '2.3.0'),
   ],
   tags = [
     'exempt',
