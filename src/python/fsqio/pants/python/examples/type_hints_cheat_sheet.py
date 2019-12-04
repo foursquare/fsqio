@@ -2,7 +2,7 @@
 # Copyright 2018 Foursquare Labs Inc. All Rights Reserved.
 
 """
-To run: `./fs mypy src/python/path/to/target`
+To run: `./pants mypy src/python/path/to/target`
 
 See https://docs.python.org/3/library/typing.html and http://mypy.readthedocs.io/en/latest/cheat_sheet.html
 for more extensive documentation.
