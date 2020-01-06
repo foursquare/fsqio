@@ -9,8 +9,11 @@ import os
 import pkgutil
 import sys
 
+from typing import Tuple
+
 
 def is_importable(root, name, exts=()):
+  # type: (str, str, Tuple) -> bool
   extensions = exts or ('py', 'so', 'pyd')
   attempt = os.path.join(root, name)
   if os.path.isdir(attempt) or os.path.isfile(attempt):

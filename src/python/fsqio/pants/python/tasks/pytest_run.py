@@ -46,6 +46,8 @@ from six.moves import configparser
 
 from fsqio.pants.python.tasks.pytest_prep import PytestPrep
 
+from typing import Any
+
 # This almost an exact copy of upstream. Changes are:
 # - Change import of PytestPrep to pull fsqio version
 # - Add fixlint and pylint headers
@@ -56,8 +58,11 @@ from fsqio.pants.python.tasks.pytest_prep import PytestPrep
 # change the import. That means we copy the file.
 # -- Mathieu
 
+# This is a workaround for a mypy limitation with dynamic base classes. See https://github.com/python/mypy/issues/2477
+_WorkDirsBaseClass = datatype(['root_dir', 'partition'])  # type: Any
 
-class _Workdirs(datatype(['root_dir', 'partition'])):
+
+class _Workdirs(_WorkDirsBaseClass):
   @classmethod
   def for_partition(cls, work_dir, partition):
     root_dir = os.path.join(work_dir, Target.maybe_readable_identify(partition))

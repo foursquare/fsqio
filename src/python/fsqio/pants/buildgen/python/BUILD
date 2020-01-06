@@ -4,6 +4,7 @@ python_library(
   sources = globs('*.py'),
   dependencies = [
     '3rdparty/python:pantsbuild.pants',
+    '3rdparty/python:typing',
     'src/python/fsqio/pants/buildgen/core',
     'src/python/fsqio/pants/buildgen/python/source_analysis',
   ],

@@ -16,6 +16,7 @@ from pants.base.hash_utils import stable_json_hash
 from pants.build_graph.address import Address
 from pants.util.dirutil import safe_mkdir
 from pants.util.memo import memoized_property
+from typing import Any, DefaultDict, Dict, List, Set, Text, Tuple
 
 from fsqio.pants.buildgen.core.buildgen_task import BuildgenTask
 from fsqio.pants.buildgen.core.symbol_tree import SymbolTreeNode
@@ -27,8 +28,8 @@ from fsqio.pants.buildgen.python.third_party_map_python import get_venv_map
 logger = logging.getLogger(__name__)
 
 # TODO(mateo): Make these properties of pluggable, per-lang subsystems.
-_SOURCE_FILE_TO_ADDRESS_MAP = defaultdict(set)
-_SYMBOLS_TO_SOURCES_MAP = defaultdict(set)
+_SOURCE_FILE_TO_ADDRESS_MAP = defaultdict(set)  # type: DefaultDict[str, Set[Text]]
+_SYMBOLS_TO_SOURCES_MAP = defaultdict(set)  # type: DefaultDict[str, Set[Text]]
 
 
 class PythonBuildgenError(TaskError):
@@ -106,6 +107,7 @@ class BuildgenPython(BuildgenTask):
 
   @classmethod
   def product_types(cls):
+    # type: () -> List[Text]
     return [
       'buildgen_python',
     ]
@@ -116,14 +118,17 @@ class BuildgenPython(BuildgenTask):
 
   @property
   def cache_target_dirs(self):
+    # type: () -> bool
     return True
 
   @memoized_property
   def supported_target_aliases(self):
+    # type: () -> Tuple[Text, Text]
     return ('python_library', 'python_tests')
 
   @memoized_property
   def third_party_target_aliases(self):
+    # type: () -> List[Text]
     return ['python_requirement_library']
 
   @memoized_property
@@ -140,10 +145,11 @@ class BuildgenPython(BuildgenTask):
 
   @memoized_property
   def map_python_deps(self):
+    # type: () -> Tuple[Set[str], Dict[str, Any]]
     address_mapper = self.context.address_mapper
     source_dirs = self.get_options().third_party_dirs
-    module_list = {}
-    reqs = set()
+    module_list = {}  # type: Dict[str, Any]
+    reqs = set()  # type: Set[str]
     for source_dir in source_dirs:
       # TODO(mateo): Before Pants 1.7.0, this was able to derive the addressable without hydrating the target.
       for address in address_mapper.scan_addresses(os.path.join(get_buildroot(), source_dir)):
@@ -156,6 +162,7 @@ class BuildgenPython(BuildgenTask):
 
   @memoized_property
   def python_virtual_envs(self):
+    # type: () -> List[str]
     """Return the standard_lib directory of any configured virtualenv."""
     # Additional venvs can be passed as options but this falls back to using the pants virtualenv.
     pantsenv = os.path.join(os.path.dirname(os.__file__))
@@ -196,6 +203,7 @@ class BuildgenPython(BuildgenTask):
 
   @memoized_property
   def symbol_to_source_tree(self):
+    # type: () -> SymbolTreeNode
     tree = SymbolTreeNode()
     python_source_to_exported_symbols = self.context.products.get_data('python_source_to_exported_symbols')
     for source, symbols in python_source_to_exported_symbols.items():
@@ -231,9 +239,10 @@ class BuildgenPython(BuildgenTask):
     hasher.update(str(self.implementation_version()))
     return hasher.hexdigest()
 
-  _source_to_symbols_map = defaultdict(set)
+  _source_to_symbols_map = defaultdict(set)  # type: DefaultDict[str, Set[Text]]
 
   def get_used_symbols(self, source):
+    # type: (str) -> Set[Text]
     if source not in self._source_to_symbols_map:
       import_linter = PythonImportParser(source, self.first_party_packages)
       imported_symbols = set()
