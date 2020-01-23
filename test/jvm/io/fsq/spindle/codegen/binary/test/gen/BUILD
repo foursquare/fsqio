@@ -1,7 +1,7 @@
 
 files(
   name = 'files',
-  sources = globs('*.java', '*.scala', '*.thrift'),
+  sources = globs('*.scala', '*.thrift'),
   dependencies = [
     'src/thrift/io/fsq/common/thrift/descriptors/constants/gen:files',
     'src/thrift/io/fsq/common/thrift/descriptors/enums/gen:files',
