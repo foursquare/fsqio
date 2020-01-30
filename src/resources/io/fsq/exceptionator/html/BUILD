@@ -3,7 +3,5 @@
 resources(
   name='html',
   sources = globs('*.html'),
-  tags = [
-    'fscommon'
-  ],
+  tags = [],
 )

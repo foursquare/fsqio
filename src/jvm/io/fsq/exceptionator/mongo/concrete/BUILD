@@ -23,7 +23,6 @@ scala_library(
     """),
   ),
   tags = [
-    'fscommon',
     'opensource',
     'dependencies_must_have:opensource',
   ],

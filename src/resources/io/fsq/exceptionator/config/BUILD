@@ -5,7 +5,5 @@ resources(
   sources = [
     'config.json'
   ],
-  tags = [
-    'fscommon'
-  ],
+  tags = [],
 )

@@ -7,12 +7,7 @@ scala_library(
   dependencies = [
     'src/jvm/io/fsq/common/scala',
   ],
-  tags = [
-    'opensource',
-    'fscommon',
-    'dependencies_must_have:opensource',
-    'dependencies_must_have:fscommon',
-  ],
+  tags = [],
   provides = scala_artifact(
     org = 'io.fsq',
     name = 'common-algorithm',

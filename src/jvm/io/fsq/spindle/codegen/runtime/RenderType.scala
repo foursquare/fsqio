@@ -375,7 +375,7 @@ case class LocalDateRenderType(ref: RenderType) extends RefRenderType with Enhan
 }
 
 case class DollarAmountRenderType(ref: RenderType) extends RefRenderType with EnhancedRenderType {
-  override def text: String = "com.foursquare.common.base.DollarAmount"
+  override def text: String = "_root_.io.fsq.dollar.DollarAmount"
   override def fieldWriteTemplate: String = "write/dollaramount.ssp"
   override def fieldReadTemplate: String = "read/dollaramount.ssp"
   override def underlying: RenderType = ref.underlying

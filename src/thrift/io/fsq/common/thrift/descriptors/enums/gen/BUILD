@@ -6,12 +6,7 @@ scala_record_library(
     'src/jvm/io/fsq/spindle/runtime',
     'src/thrift/io/fsq/common/thrift/descriptors/headers/gen',
   ],
-  tags = [
-    'fscommon',
-    'opensource',
-    'dependencies_must_have:fscommon',
-    'dependencies_must_have:opensource',
-  ],
+  tags = [],
 )
 
 # Required to bring the thrift files into an integration test's chroot.

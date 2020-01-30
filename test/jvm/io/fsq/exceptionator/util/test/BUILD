@@ -3,9 +3,7 @@
 junit_tests(
   name = 'test',
   sources = globs('*.scala'),
-  tags = [
-    'fscommon'
-  ],
+  tags = [],
   dependencies = [
     '3rdparty:junit',
     'src/jvm/io/fsq/exceptionator/util',

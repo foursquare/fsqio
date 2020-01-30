@@ -3,7 +3,5 @@
 resources(
   name='js',
   sources = globs('*.js'),
-  tags = [
-    'fscommon'
-  ],
+  tags = [],
 )

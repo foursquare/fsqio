@@ -5,7 +5,6 @@ scala_library(
   sources = globs('*.scala'),
   tags = [
     'opensource',
-    'fscommon',
   ],
   dependencies = [
     '3rdparty:reflections',

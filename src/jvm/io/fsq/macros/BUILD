@@ -14,10 +14,5 @@ scala_library(
       Fsq.io Scala Macros, from Foursquare.
     """),
   ),
-  tags = [
-    'fscommon',
-    'opensource',
-    'dependencies_must_have:fscommon',
-    'dependencies_must_have:opensource',
-  ],
+  tags = [],
 )

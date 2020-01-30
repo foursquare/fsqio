@@ -1,10 +1,10 @@
 # If we internally fork an otherwise publicly available jar, add the public jar targets here.
 
+
 jar_library(
   name = 's2',
   tags = [
     'opensource',
-    'fscommon',
   ],
   jars = [
     jar(org = 'org.jnegre.google', name = 's2-geometry', rev = '1.0')

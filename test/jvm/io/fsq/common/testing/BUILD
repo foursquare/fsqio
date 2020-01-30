@@ -7,5 +7,5 @@ scala_library(
     '3rdparty:junit',
     'src/jvm/io/fsq/common/scala',
   ],
-  tags = ['fscommon'],
+  tags = [],
 )

@@ -3,7 +3,5 @@
 resources(
   name='soy',
   sources = globs('*.soy'),
-  tags = [
-    'fscommon'
-  ],
+  tags = [],
 )

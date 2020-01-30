@@ -3,7 +3,5 @@
 resources(
   name='css',
   sources = globs('*.css'),
-  tags = [
-    'fscommon'
-  ],
+  tags = [],
 )

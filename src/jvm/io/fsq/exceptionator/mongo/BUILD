@@ -3,11 +3,7 @@
 scala_library(
   name = 'mongo',
   sources = globs('*.scala'),
-  tags = [
-    'fscommon',
-    'opensource',
-    'dependencies_must_have:opensource',
-  ],
+  tags = [],
   dependencies = [
     '3rdparty:mongodb-drivers',
     'src/jvm/io/fsq/rogue/adapter',

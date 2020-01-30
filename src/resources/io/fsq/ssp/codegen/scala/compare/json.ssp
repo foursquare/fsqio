@@ -4,4 +4,4 @@
   import _root_.io.fsq.spindle.codegen.runtime.ScalaField
 %>
 <%@ val field: ScalaField %>
-{com.foursquare.common.types.ThriftJsonHelper.compareJson(this.${field.name}OrNull, that.${field.name}OrNull)}
+{io.fsq.spindle.runtime.json.ThriftJsonHelper.compareJson(this.${field.name}OrNull, that.${field.name}OrNull)}

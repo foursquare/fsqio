@@ -1,4 +1,4 @@
-<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.DollarAmountRenderType %>
+<%@ val renderType: io.fsq.spindle.codegen.runtime.DollarAmountRenderType %>
 <%@ val lhs: String %>
 <%@ val indent: String %>
 <%@ val wrapLeft: String = "" %>
@@ -8,5 +8,5 @@
       "renderType" -> renderType.ref,
       "lhs" -> lhs,
       "indent" -> indent,
-      "wrapLeft" -> (wrapLeft + "com.foursquare.common.base.DollarAmount.fromMicros("),
+      "wrapLeft" -> (wrapLeft + "_root_.io.fsq.dollar.DollarAmount.fromMicros("),
       "wrapRight" -> (")" + wrapRight))) %>

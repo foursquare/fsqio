@@ -3,4 +3,4 @@
 <%@ val indent: String %>
 <%@ val wrapLeft: String = "" %>
 <%@ val wrapRight: String = "" %>
-${indent}${lhs} ${wrapLeft}com.foursquare.common.types.ThriftJsonHelper.readJson(iprot)${wrapRight}
+${indent}${lhs} ${wrapLeft}io.fsq.spindle.runtime.json.ThriftJsonHelper.readJson(iprot)${wrapRight}

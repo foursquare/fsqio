@@ -12,9 +12,6 @@ scala_library(
     """),
   ),
   tags = [
-    'opensource',
     'spindle_codegen',
-    'dependencies_must_have:fscommon',
-    'dependencies_must_have:opensource',
   ],
 )

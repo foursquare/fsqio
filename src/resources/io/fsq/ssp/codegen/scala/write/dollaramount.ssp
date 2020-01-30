@@ -1,4 +1,4 @@
-<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.DollarAmountRenderType %>
+<%@ val renderType: io.fsq.spindle.codegen.runtime.DollarAmountRenderType %>
 <%@ val valueExpr: String %>
 <%@ val indent: String %>
 ${indent}oprot.writeI64(${valueExpr}.asMicros)

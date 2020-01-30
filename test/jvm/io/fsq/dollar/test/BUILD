@@ -1,11 +1,10 @@
-# Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
+# Copyright 2020 Foursquare Labs Inc. All Rights Reserved.
 
 junit_tests(
   name = 'test',
   sources = globs('*.scala'),
-  tags = [],
   dependencies = [
     '3rdparty:junit',
-    'src/jvm/io/fsq/macros',
+    'src/jvm/io/fsq/dollar',
   ],
 )
