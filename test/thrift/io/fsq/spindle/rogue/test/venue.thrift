@@ -57,6 +57,7 @@ struct ThriftVenue {
   // just for testing set<>, doesn't reflect actual venue thrift
   18: optional set<string> setOfStrings
   19: optional set<ThriftClaimStatus> setOfEnums
+  20: optional i64 checkin_count (wire_name="checkin_count")
 } (
    primary_key="id"
    index="id:asc"

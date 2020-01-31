@@ -741,6 +741,20 @@ class QueryTest extends JUnitMustMatchers {
       .modify(_.mayor_count bitXor 3)
       .toString() must_== query + """{ "$bit" : { "mayor_count" : { "xor" : 3 } } }""" + suffix
 
+    // $bit with longs
+    Q(ThriftVenue)
+      .where(_.legacyid eqs 1)
+      .modify(_.checkin_count bitAnd 3L)
+      .toString() must_== query + """{ "$bit" : { "checkin_count" : { "and" : { "$numberLong" : "3" } } } }""" + suffix
+    Q(ThriftVenue)
+      .where(_.legacyid eqs 1)
+      .modify(_.checkin_count bitOr 3L)
+      .toString() must_== query + """{ "$bit" : { "checkin_count" : { "or" : { "$numberLong" : "3" } } } }""" + suffix
+    Q(ThriftVenue)
+      .where(_.legacyid eqs 1)
+      .modify(_.checkin_count bitXor 3L)
+      .toString() must_== query + """{ "$bit" : { "checkin_count" : { "xor" : { "$numberLong" : "3" } } } }""" + suffix
+
     // $rename
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)

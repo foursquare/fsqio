@@ -191,6 +191,12 @@ class ModifyBitClause(fieldName: String, value: Int, op: BitOps.Value) extends M
   }
 }
 
+class ModifyLongBitClause(fieldName: String, value: Long, op: BitOps.Value) extends ModifyClause(ModOps.Bit) {
+  override def extend(q: BasicDBObjectBuilder): Unit = {
+    q.push(fieldName).add(op.toString, value).pop
+  }
+}
+
 class ModifyPullWithPredicateClause[V](fieldName: String, clauses: Seq[QueryClause[_]])
   extends ModifyClause(ModOps.Pull) {
   override def extend(q: BasicDBObjectBuilder): Unit = {

@@ -444,6 +444,10 @@ class NumericModifyField[V, M](override val field: Field[V, M]) extends Abstract
   def bitAnd(v: Int) = new ModifyBitClause(field.name, v, BitOps.And)
   def bitOr(v: Int) = new ModifyBitClause(field.name, v, BitOps.Or)
   def bitXor(v: Int) = new ModifyBitClause(field.name, v, BitOps.Xor)
+
+  def bitAnd(v: Long) = new ModifyLongBitClause(field.name, v, BitOps.And)
+  def bitOr(v: Long) = new ModifyLongBitClause(field.name, v, BitOps.Or)
+  def bitXor(v: Long) = new ModifyLongBitClause(field.name, v, BitOps.Xor)
 }
 
 class BsonRecordModifyField[M, B](field: Field[B, M], asDBObject: B => DBObject)
