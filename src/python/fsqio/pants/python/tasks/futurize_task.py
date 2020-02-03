@@ -18,7 +18,7 @@ from pants.base.workunit import WorkUnit, WorkUnitLabel
 from pants.python.python_repos import PythonRepos
 from pants.util.memo import memoized_property
 from pants.util.process_handler import subprocess
-from typing import List, Set
+from typing import List, Optional, Set
 
 
 class FuturizeTask(ResolveRequirementsTaskBase):
@@ -56,7 +56,7 @@ class FuturizeTask(ResolveRequirementsTaskBase):
     return not target.is_synthetic and isinstance(target, (PythonLibrary, PythonBinary, PythonTests))
 
   def _calculate_python_sources(self, targets, tag):
-    # type: (List[PythonTarget]) -> List[str]
+    # type: (List[PythonTarget], Optional[str]) -> List[str]
     """Generate a set of source files from the given targets."""
     python_eval_targets = list(filter(self.is_non_synthetic_python_target, targets))
     sources = set()  # type: Set[str]
