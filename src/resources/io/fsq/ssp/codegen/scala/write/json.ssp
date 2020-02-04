@@ -1,4 +1,0 @@
-<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.ThriftJsonRenderType %>
-<%@ val valueExpr: String %>
-<%@ val indent: String %>
-${indent}io.fsq.spindle.runtime.json.ThriftJsonHelper.writeJson(oprot, ${valueExpr})

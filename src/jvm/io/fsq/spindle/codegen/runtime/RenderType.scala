@@ -151,16 +151,6 @@ case class ExceptionRenderType(override val text: String) extends RefRenderType 
   override def isRecord: Boolean = true
 }
 
-case class ThriftJsonRenderType(ref: RenderType) extends RefRenderType with EnhancedRenderType {
-  override def text: String = "net.liftweb.json.JObject"
-  override def fieldWriteTemplate: String = "write/json.ssp"
-  override def fieldReadTemplate: String = "read/json.ssp"
-  override def compareTemplate = "compare/json.ssp"
-  override def underlying: RenderType = ref.underlying
-  override def ttype: TType = TType.STRING
-  override def hasOrdering: Boolean = false
-}
-
 trait ContainerRenderType extends RefRenderType {
   def container: String
   def emptyContainer: String = container // In cases where a SubClass is preferred for creating an empty container
@@ -448,10 +438,6 @@ case class BitfieldStructRenderType(
 }
 
 object RenderType {
-
-  // Allow fs:JsonX so we can add more meta-data to the type for javascript codegen.
-  val JsonEnhancedType = """fs:Json(.*)""".r
-
   def apply(tpe: TypeReference, annotations: Annotations): RenderType = {
     tpe match {
       case BoolRef => PrimitiveRenderType("Boolean", "java.lang.Boolean", "false", TType.BOOL)
@@ -484,8 +470,6 @@ object RenderType {
       case EnhancedTypeRef("java:Date", ref @ StringRef) => JavaDateRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("java:UUID", ref @ BinaryRef) => UUIDRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("fs:DollarAmount", ref @ I64Ref) => DollarAmountRenderType(RenderType(ref, annotations))
-      case EnhancedTypeRef(JsonEnhancedType(suffix), ref @ StringRef) =>
-        ThriftJsonRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("fs:MessageSet", ref: StructRef) => MessageSetRenderType(RenderType(ref, annotations))
       case EnhancedTypeRef("fs:S2CellId", _) => new S2CellIdRenderType
       case EnhancedTypeRef(name, _) => throw new CodegenException("Unknown enhanced type: " + name)

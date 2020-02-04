@@ -1,6 +1,0 @@
-<%@ val renderType: _root_.io.fsq.spindle.codegen.runtime.ThriftJsonRenderType %>
-<%@ val lhs: String %>
-<%@ val indent: String %>
-<%@ val wrapLeft: String = "" %>
-<%@ val wrapRight: String = "" %>
-${indent}${lhs} ${wrapLeft}io.fsq.spindle.runtime.json.ThriftJsonHelper.readJson(iprot)${wrapRight}

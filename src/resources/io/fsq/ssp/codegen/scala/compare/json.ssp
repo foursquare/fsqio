@@ -1,7 +1,0 @@
-<%
-  // Copyright 2013 Foursquare Labs Inc. All Rights Reserved.
-
-  import _root_.io.fsq.spindle.codegen.runtime.ScalaField
-%>
-<%@ val field: ScalaField %>
-{io.fsq.spindle.runtime.json.ThriftJsonHelper.compareJson(this.${field.name}OrNull, that.${field.name}OrNull)}
