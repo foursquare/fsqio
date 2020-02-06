@@ -511,6 +511,7 @@ jvm_third_party_map = {
       'model': 'jpmml-model',
     },
     'json4s': 'json4s',
+    'json4s_spark': 'json4s_spark',
     'jsoup': 'jsoup',
     'junit': 'junit',
     'mockito': 'mockito',

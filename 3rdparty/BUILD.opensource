@@ -37,7 +37,6 @@ managed_jar_dependencies(
     ':jetty',
     ':jetty-util',
     ':joda-time',
-    ':json4s',
     ':lift-actor',
     ':lift-common',
     ':lift-db',
@@ -635,6 +634,11 @@ jar_library(
   ]
 )
 
+# Note: 
+
+json4s_ver = '3.2.11'
+json4s_spark_ver = '3.5.3'
+
 jar_library(
   name = 'json4s',
   tags = [
@@ -642,9 +646,22 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    scala_jar(org = 'org.json4s', name = 'json4s-native', rev = '3.2.11'),
-    scala_jar(org = 'org.json4s', name = 'json4s-jackson', rev = '3.2.11'),
-    scala_jar(org = 'org.json4s', name = 'json4s-core', rev = '3.2.11'),
+    scala_jar(org = 'org.json4s', name = 'json4s-native', rev = json4s_ver),
+    scala_jar(org = 'org.json4s', name = 'json4s-jackson', rev = json4s_ver),
+    scala_jar(org = 'org.json4s', name = 'json4s-core', rev = json4s_ver),
+  ]
+)
+
+jar_library(
+  name = 'json4s_spark',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    scala_jar(org = 'org.json4s', name = 'json4s-native', rev = json4s_spark_ver),
+    scala_jar(org = 'org.json4s', name = 'json4s-jackson', rev = json4s_spark_ver),
+    scala_jar(org = 'org.json4s', name = 'json4s-core', rev = json4s_spark_ver),
   ]
 )
 
