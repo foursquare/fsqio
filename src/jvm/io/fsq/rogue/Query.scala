@@ -60,25 +60,25 @@ case class Query[M, R, +State](
   /**
     * Adds a where clause to a query.
     */
-  def where[F](clause: M => QueryClause[F]) =
+  def where[F](clause: M => QueryClause[F]): Query[M, R, State] =
     addClause(clause, expectedIndexBehavior = Index)
 
   /**
     * Adds another and-connected clause to the query.
     */
-  def and[F](clause: M => QueryClause[F]) =
+  def and[F](clause: M => QueryClause[F]): Query[M, R, State] =
     addClause(clause, expectedIndexBehavior = Index)
 
   /**
     * Adds an iscan clause to a query.
     */
-  def iscan[F](clause: M => QueryClause[F]) =
+  def iscan[F](clause: M => QueryClause[F]): Query[M, R, State] =
     addClause(clause, expectedIndexBehavior = IndexScan)
 
   /**
     * Adds a scan clause to a query.
     */
-  def scan[F](clause: M => QueryClause[F]) =
+  def scan[F](clause: M => QueryClause[F]): Query[M, R, State] =
     addClause(clause, expectedIndexBehavior = DocumentScan)
 
   /**
@@ -103,16 +103,16 @@ case class Query[M, R, +State](
     }
   }
 
-  def whereOpt[V, F](opt: Option[V])(clause: (M, V) => QueryClause[F]) =
+  def whereOpt[V, F](opt: Option[V])(clause: (M, V) => QueryClause[F]): Query[M, R, State] =
     addClauseOpt(opt)(clause, expectedIndexBehavior = Index)
 
-  def andOpt[V, F](opt: Option[V])(clause: (M, V) => QueryClause[F]) =
+  def andOpt[V, F](opt: Option[V])(clause: (M, V) => QueryClause[F]): Query[M, R, State] =
     addClauseOpt(opt)(clause, expectedIndexBehavior = Index)
 
-  def iscanOpt[V, F](opt: Option[V])(clause: (M, V) => QueryClause[F]) =
+  def iscanOpt[V, F](opt: Option[V])(clause: (M, V) => QueryClause[F]): Query[M, R, State] =
     addClauseOpt(opt)(clause, expectedIndexBehavior = IndexScan)
 
-  def scanOpt[V, F](opt: Option[V])(clause: (M, V) => QueryClause[F]) =
+  def scanOpt[V, F](opt: Option[V])(clause: (M, V) => QueryClause[F]): Query[M, R, State] =
     addClauseOpt(opt)(clause, expectedIndexBehavior = DocumentScan)
 
   def raw(f: BasicDBObjectBuilder => Unit): Query[M, R, State] = {
@@ -682,8 +682,8 @@ case class ModifyQuery[M, +State](
     this.copy(mod = MongoModify(clause(query.meta) :: mod.clauses))
   }
 
-  def modify(clause: M => ModifyClause) = addClause(clause)
-  def and(clause: M => ModifyClause) = addClause(clause)
+  def modify(clause: M => ModifyClause): ModifyQuery[M, State] = addClause(clause)
+  def and(clause: M => ModifyClause): ModifyQuery[M, State] = addClause(clause)
 
   private def addClauseOpt[V](opt: Option[V])(clause: (M, V) => ModifyClause) = {
     opt match {
@@ -692,15 +692,15 @@ case class ModifyQuery[M, +State](
     }
   }
 
-  def modifyOpt[V](opt: Option[V])(clause: (M, V) => ModifyClause) =
+  def modifyOpt[V](opt: Option[V])(clause: (M, V) => ModifyClause): ModifyQuery[M, State] =
     addClauseOpt(opt)(clause)
 
-  def andOpt[V](opt: Option[V])(clause: (M, V) => ModifyClause) =
+  def andOpt[V](opt: Option[V])(clause: (M, V) => ModifyClause): ModifyQuery[M, State] =
     addClauseOpt(opt)(clause)
 
   override def toString: String = MongoBuilder.buildModifyString(query.collectionName, this)
 
-  def asDBObject = (this.query.asDBObject, MongoBuilder.buildModify(this.mod))
+  def asDBObject: (DBObject, DBObject) = (this.query.asDBObject, MongoBuilder.buildModify(this.mod))
 }
 
 // *******************************************************
@@ -716,8 +716,8 @@ case class FindAndModifyQuery[M, R](
     this.copy(mod = MongoModify(clause(query.meta) :: mod.clauses))
   }
 
-  def findAndModify[F](clause: M => ModifyClause) = addClause(clause)
-  def and[F](clause: M => ModifyClause) = addClause(clause)
+  def findAndModify[F](clause: M => ModifyClause): FindAndModifyQuery[M, R] = addClause(clause)
+  def and[F](clause: M => ModifyClause): FindAndModifyQuery[M, R] = addClause(clause)
 
   private def addClauseOpt[V](opt: Option[V])(clause: (M, V) => ModifyClause) = {
     opt match {
@@ -726,10 +726,10 @@ case class FindAndModifyQuery[M, R](
     }
   }
 
-  def findAndModifyOpt[V](opt: Option[V])(clause: (M, V) => ModifyClause) =
+  def findAndModifyOpt[V](opt: Option[V])(clause: (M, V) => ModifyClause): FindAndModifyQuery[M, R] =
     addClauseOpt(opt)(clause)
 
-  def andOpt[V](opt: Option[V])(clause: (M, V) => ModifyClause) =
+  def andOpt[V](opt: Option[V])(clause: (M, V) => ModifyClause): FindAndModifyQuery[M, R] =
     addClauseOpt(opt)(clause)
 
   override def toString: String = MongoBuilder.buildFindAndModifyString(query.collectionName, this, false, false, false)

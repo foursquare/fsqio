@@ -135,11 +135,12 @@ trait Rogue {
   class Flattened[A, B]
   implicit def anyValIsFlattened[A <: AnyVal]: Flattened[A, A] = new Flattened[A, A]
   implicit def enumIsFlattened[A <: Enumeration#Value]: Flattened[A, A] = new Flattened[A, A]
-  implicit val stringIsFlattened = new Flattened[String, String]
-  implicit val objectIdIsFlattened = new Flattened[ObjectId, ObjectId]
-  implicit val dateIsFlattened = new Flattened[java.util.Date, java.util.Date]
-  implicit def recursiveFlattenList[A, B](implicit ev: Flattened[A, B]) = new Flattened[List[A], B]
-  implicit def recursiveFlattenSeq[A, B](implicit ev: Flattened[A, B]) = new Flattened[Seq[A], B]
+  implicit val stringIsFlattened: Flattened[String, String] = new Flattened[String, String]
+  implicit val objectIdIsFlattened: Flattened[ObjectId, ObjectId] = new Flattened[ObjectId, ObjectId]
+  implicit val dateIsFlattened: Flattened[Date, Date] = new Flattened[java.util.Date, java.util.Date]
+  implicit def recursiveFlattenList[A, B](implicit ev: Flattened[A, B]): Flattened[List[A], B] =
+    new Flattened[List[A], B]
+  implicit def recursiveFlattenSeq[A, B](implicit ev: Flattened[A, B]): Flattened[Seq[A], B] = new Flattened[Seq[A], B]
 }
 
 object Rogue extends Rogue

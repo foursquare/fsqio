@@ -60,7 +60,7 @@ object QueryHelpers {
 
   class DefaultQueryValidator extends QueryValidator {
     override def validateList[T](xs: Traversable[T]) {}
-    override def validateRadius(d: Degrees) = d
+    override def validateRadius(d: Degrees): Degrees = d
     override def validateQuery[M](query: Query[M, _, _], indexes: Option[Seq[UntypedMongoIndex]]) {}
     override def validateModify[M](modify: ModifyQuery[M, _], indexes: Option[Seq[UntypedMongoIndex]]) {} // todo possibly validate for update without upsert, yet setOnInsert present -- ktoso
     override def validateFindAndModify[M, R](
@@ -129,7 +129,7 @@ object QueryHelpers {
 
   def list(vs: Double*): java.util.List[Double] = list(vs)
 
-  def radius(d: Degrees) = {
+  def radius(d: Degrees): Double = {
     validator.validateRadius(d).value
   }
 
@@ -139,21 +139,21 @@ object QueryHelpers {
     map
   }
 
-  def inListClause[V](fieldName: String, vs: Traversable[V]) = {
+  def inListClause[V](fieldName: String, vs: Traversable[V]): IndexableQueryClause[java.util.List[V], Index] = {
     if (vs.isEmpty)
       new EmptyQueryClause[java.util.List[V]](fieldName)
     else
       new InQueryClause(fieldName, QueryHelpers.validatedList(vs.toSet))
   }
 
-  def allListClause[V](fieldName: String, vs: Traversable[V]) = {
+  def allListClause[V](fieldName: String, vs: Traversable[V]): IndexableQueryClause[java.util.List[V], Index] = {
     if (vs.isEmpty)
       new EmptyQueryClause[java.util.List[V]](fieldName)
     else
       new AllQueryClause(fieldName, QueryHelpers.validatedList(vs.toSet))
   }
 
-  def orConditionFromQueries(subqueries: List[Query[_, _, _]]) = {
+  def orConditionFromQueries(subqueries: List[Query[_, _, _]]): MongoHelpers.OrCondition = {
     MongoHelpers.OrCondition(subqueries.flatMap(subquery => {
       subquery match {
         case q: Query[_, _, _] if q.condition.isEmpty => None

@@ -12,69 +12,69 @@ import scala.util.matching.Regex
 
 object CondOps extends Enumeration {
   type Op = Value
-  val Ne = Value("$ne")
-  val Lt = Value("$lt")
-  val Gt = Value("$gt")
-  val LtEq = Value("$lte")
-  val GtEq = Value("$gte")
-  val In = Value("$in")
-  val Nin = Value("$nin")
-  val Near = Value("$near")
-  val All = Value("$all")
-  val Size = Value("$size")
-  val Exists = Value("$exists")
-  val Type = Value("$type")
-  val Mod = Value("$mod")
-  val NearSphere = Value("$nearSphere")
-  val MaxDistance = Value("$maxDistance")
+  val Ne: Op = Value("$ne")
+  val Lt: Op = Value("$lt")
+  val Gt: Op = Value("$gt")
+  val LtEq: Op = Value("$lte")
+  val GtEq: Op = Value("$gte")
+  val In: Op = Value("$in")
+  val Nin: Op = Value("$nin")
+  val Near: Op = Value("$near")
+  val All: Op = Value("$all")
+  val Size: Op = Value("$size")
+  val Exists: Op = Value("$exists")
+  val Type: Op = Value("$type")
+  val Mod: Op = Value("$mod")
+  val NearSphere: Op = Value("$nearSphere")
+  val MaxDistance: Op = Value("$maxDistance")
 }
 
 object ModOps extends Enumeration {
   type Op = Value
-  val Inc = Value("$inc")
-  val Mul = Value("$mul")
-  val Set = Value("$set")
-  val SetOnInsert = Value("$setOnInsert")
-  val Unset = Value("$unset")
-  val Push = Value("$push")
-  val PushAll = Value("$pushAll")
-  val AddToSet = Value("$addToSet")
-  val Pop = Value("$pop")
-  val Pull = Value("$pull")
-  val PullAll = Value("$pullAll")
-  val Bit = Value("$bit")
-  val Rename = Value("$rename")
-  val Min = Value("$min")
-  val Max = Value("$max")
-  val CurrentDate = Value("$currentDate")
+  val Inc: Op = Value("$inc")
+  val Mul: Op = Value("$mul")
+  val Set: Op = Value("$set")
+  val SetOnInsert: Op = Value("$setOnInsert")
+  val Unset: Op = Value("$unset")
+  val Push: Op = Value("$push")
+  val PushAll: Op = Value("$pushAll")
+  val AddToSet: Op = Value("$addToSet")
+  val Pop: Op = Value("$pop")
+  val Pull: Op = Value("$pull")
+  val PullAll: Op = Value("$pullAll")
+  val Bit: Op = Value("$bit")
+  val Rename: Op = Value("$rename")
+  val Min: Op = Value("$min")
+  val Max: Op = Value("$max")
+  val CurrentDate: Op = Value("$currentDate")
 }
 
 object BitOps extends Enumeration {
   type Op = Value
-  val And = Value("and")
-  val Or = Value("or")
-  val Xor = Value("xor")
+  val And: Op = Value("and")
+  val Or: Op = Value("or")
+  val Xor: Op = Value("xor")
 }
 
 object MongoType extends Enumeration {
   type MongoType = Value
-  val Double = Value(1)
-  val String = Value(2)
-  val Object = Value(3)
-  val Array = Value(4)
-  val Binary = Value(5)
-  val ObjectId = Value(7)
-  val Boolean = Value(8)
-  val Date = Value(9)
-  val Null = Value(10)
-  val RegEx = Value(11)
-  val JavaScript = Value(13)
-  val Symbol = Value(15)
-  val Int32 = Value(16)
-  val Timestamp = Value(17)
-  val Int64 = Value(18)
-  val MaxKey = Value(127)
-  val MinKey = Value(255)
+  val Double: MongoType = Value(1)
+  val String: MongoType = Value(2)
+  val Object: MongoType = Value(3)
+  val Array: MongoType = Value(4)
+  val Binary: MongoType = Value(5)
+  val ObjectId: MongoType = Value(7)
+  val Boolean: MongoType = Value(8)
+  val Date: MongoType = Value(9)
+  val Null: MongoType = Value(10)
+  val RegEx: MongoType = Value(11)
+  val JavaScript: MongoType = Value(13)
+  val Symbol: MongoType = Value(15)
+  val Int32: MongoType = Value(16)
+  val Timestamp: MongoType = Value(17)
+  val Int64: MongoType = Value(18)
+  val MaxKey: MongoType = Value(127)
+  val MinKey: MongoType = Value(255)
 }
 
 // ********************************************************************************
@@ -94,11 +94,12 @@ object MongoType extends Enumeration {
   */
 abstract class AbstractQueryField[F, V, DB, M](val field: Field[F, M]) {
   def valueToDB(v: V): DB
-  def valuesToDB(vs: Traversable[V]) = vs.map(valueToDB)
+  def valuesToDB(vs: Traversable[V]): Traversable[DB] = vs.map(valueToDB)
 
-  def eqs(v: V) = EqClause(field.name, valueToDB(v))
+  def eqs(v: V): EqClause[DB, Nothing] = EqClause(field.name, valueToDB(v))
   def neqs(v: V) = new NeQueryClause(field.name, valueToDB(v))
-  def in[L <% Traversable[V]](vs: L) = QueryHelpers.inListClause(field.name, valuesToDB(vs))
+  def in[L <% Traversable[V]](vs: L): IndexableQueryClause[java.util.List[DB], Index] =
+    QueryHelpers.inListClause(field.name, valuesToDB(vs))
   def nin[L <% Traversable[V]](vs: L) = new NinQueryClause(field.name, QueryHelpers.validatedList(valuesToDB(vs)))
 
   def lt(v: V) = new LtQueryClause(field.name, valueToDB(v))
@@ -106,10 +107,10 @@ abstract class AbstractQueryField[F, V, DB, M](val field: Field[F, M]) {
   def lte(v: V) = new LtEqQueryClause(field.name, valueToDB(v))
   def gte(v: V) = new GtEqQueryClause(field.name, valueToDB(v))
 
-  def <(v: V) = lt(v)
-  def <=(v: V) = lte(v)
-  def >(v: V) = gt(v)
-  def >=(v: V) = gte(v)
+  def <(v: V): LtQueryClause[DB] = lt(v)
+  def <=(v: V): LtEqQueryClause[DB] = lte(v)
+  def >(v: V): GtQueryClause[DB] = gt(v)
+  def >=(v: V): GtEqQueryClause[DB] = gte(v)
 
   def between(v1: V, v2: V) =
     new BetweenQueryClause(field.name, valueToDB(v1), valueToDB(v2))
@@ -132,9 +133,9 @@ class QueryField[V: BSONType, M](field: Field[V, M]) extends AbstractQueryField[
 }
 
 class DateQueryField[M](field: Field[Date, M]) extends AbstractQueryField[Date, DateTime, Date, M](field) {
-  override def valueToDB(d: DateTime) = d.toDate
+  override def valueToDB(d: DateTime): Date = d.toDate
 
-  def eqs(d: Date) = EqClause(field.name, d)
+  def eqs(d: Date): EqClause[Date, Nothing] = EqClause(field.name, d)
   def neqs(d: Date) = new NeQueryClause(field.name, d)
 
   def between(d1: Date, d2: Date) =
@@ -152,7 +153,7 @@ class DateQueryField[M](field: Field[Date, M]) extends AbstractQueryField[Date, 
 }
 
 class DateTimeQueryField[M](field: Field[DateTime, M]) extends AbstractQueryField[DateTime, DateTime, Date, M](field) {
-  override def valueToDB(d: DateTime) = d.toDate
+  override def valueToDB(d: DateTime): Date = d.toDate
 
   def before(d: DateTime) = new LtQueryClause(field.name, d.toDate)
   def after(d: DateTime) = new GtQueryClause(field.name, d.toDate)
@@ -162,19 +163,19 @@ class DateTimeQueryField[M](field: Field[DateTime, M]) extends AbstractQueryFiel
 
 class EnumNameQueryField[M, E <: Enumeration#Value](field: Field[E, M])
   extends AbstractQueryField[E, E, String, M](field) {
-  override def valueToDB(e: E) = e.toString
+  override def valueToDB(e: E): String = e.toString
 }
 
 class EnumIdQueryField[M, E <: Enumeration#Value](field: Field[E, M]) extends AbstractQueryField[E, E, Int, M](field) {
-  override def valueToDB(e: E) = e.id
+  override def valueToDB(e: E): Int = e.id
 }
 
 class GeoQueryField[M](field: Field[LatLong, M])
   extends AbstractQueryField[LatLong, LatLong, java.util.List[Double], M](field) {
-  override def valueToDB(ll: LatLong) =
+  override def valueToDB(ll: LatLong): java.util.List[Double] =
     QueryHelpers.list(List(ll.lat, ll.long))
 
-  def eqs(lat: Double, lng: Double) =
+  def eqs(lat: Double, lng: Double): EqClause[java.util.List[Double], Nothing] =
     EqClause(field.name, QueryHelpers.list(List(lat, lng)))
 
   def neqs(lat: Double, lng: Double) =
@@ -196,7 +197,7 @@ class GeoQueryField[M](field: Field[LatLong, M])
 class NumericQueryField[V, M](field: Field[V, M]) extends AbstractQueryField[V, V, V, M](field) {
   def mod(by: Int, eq: Int) =
     new ModQueryClause(field.name, QueryHelpers.list(List(by, eq)))
-  override def valueToDB(v: V) = v
+  override def valueToDB(v: V): V = v
 }
 
 class ObjectIdQueryField[F <: ObjectId, M](override val field: Field[F, M]) extends NumericQueryField(field) {
@@ -227,7 +228,7 @@ class ForeignObjectIdQueryField[F <: ObjectId, M, T](
 ) extends ObjectIdQueryField[F, M](field) {
   // The implicit parameter is solely to get around the fact that because of
   // erasure, this method and the method in AbstractQueryField look the same.
-  def eqs(obj: T)(implicit ev: T =:= T) =
+  def eqs(obj: T)(implicit ev: T =:= T): EqClause[F, Nothing] =
     EqClause(field.name, getId(obj))
 
   // The implicit parameter is solely to get around the fact that because of
@@ -237,7 +238,7 @@ class ForeignObjectIdQueryField[F <: ObjectId, M, T](
 
   // The implicit parameter is solely to get around the fact that because of
   // erasure, this method and the method in AbstractQueryField look the same.
-  def in(objs: Traversable[T])(implicit ev: T =:= T) =
+  def in(objs: Traversable[T])(implicit ev: T =:= T): IndexableQueryClause[java.util.List[F], Index] =
     QueryHelpers.inListClause(field.name, objs.map(getId))
 
   // The implicit parameter is solely to get around the fact that because of
@@ -258,7 +259,7 @@ trait StringRegexOps[V, M] {
   def matches(r: Regex): RegexQueryClause[DocumentScan] =
     matches(r.pattern)
 
-  def regexWarningNotIndexed(p: Pattern) =
+  def regexWarningNotIndexed(p: Pattern): RegexQueryClause[DocumentScan] =
     matches(p)
 }
 
@@ -271,7 +272,7 @@ class StringQueryField[F <: String, M](override val field: Field[F, M])
 
 class BsonRecordQueryField[M, B](field: Field[B, M], asDBObject: B => DBObject, defaultValue: B)
   extends AbstractQueryField[B, B, DBObject, M](field) {
-  override def valueToDB(b: B) = asDBObject(b)
+  override def valueToDB(b: B): DBObject = asDBObject(b)
 
   def subfield[V](subfield: B => Field[V, B]): SelectableDummyField[V, M] = {
     new SelectableDummyField[V, M](field.name + "." + subfield(defaultValue).name, field.owner)
@@ -287,10 +288,10 @@ class BsonRecordQueryField[M, B](field: Field[B, M], asDBObject: B => DBObject, 
 abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Iterable[X]](field: Field[CC[F], M])
   extends AbstractQueryField[CC[F], V, DB, M](field) {
 
-  def all(vs: Traversable[V]) =
+  def all(vs: Traversable[V]): IndexableQueryClause[java.util.List[DB], Index] =
     QueryHelpers.allListClause(field.name, valuesToDB(vs))
 
-  def eqs(vs: Traversable[V]) =
+  def eqs(vs: Traversable[V]): EqClause[java.util.List[DB], Nothing] =
     EqClause(field.name, QueryHelpers.validatedList(valuesToDB(vs)))
 
   def neqs(vs: Traversable[V]) =
@@ -299,7 +300,7 @@ abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Iterable[X]](field: 
   def size(s: Int) =
     new SizeQueryClause(field.name, s)
 
-  def contains(v: V) =
+  def contains(v: V): EqClause[DB, Nothing] =
     EqClause(field.name, valueToDB(v))
 
   def notcontains(v: V) =
@@ -320,7 +321,7 @@ class StringsListQueryField[M](override val field: Field[List[String], M])
   extends AbstractListQueryField[String, String, String, M, List](field)
   with StringRegexOps[List[String], M] {
 
-  override def valueToDB(v: String) = v
+  override def valueToDB(v: String): String = v
 }
 
 class SeqQueryField[V: BSONType, M](field: Field[Seq[V], M])
@@ -335,7 +336,7 @@ class SetQueryField[V: BSONType, M](field: Field[Set[V], M])
 
 class BsonRecordListQueryField[M, B](field: Field[List[B], M], rec: B, asDBObject: B => DBObject)
   extends AbstractListQueryField[B, B, DBObject, M, List](field) {
-  override def valueToDB(b: B) = asDBObject(b)
+  override def valueToDB(b: B): DBObject = asDBObject(b)
 
   def subfield[V, V1](f: B => Field[V, B])(implicit ev: Rogue.Flattened[V, V1]): SelectableDummyField[List[V1], M] = {
     new SelectableDummyField[List[V1], M](field.name + "." + f(rec).name, field.owner)
@@ -349,7 +350,7 @@ class BsonRecordListQueryField[M, B](field: Field[List[B], M], rec: B, asDBObjec
     new DummyField[V, M](field.name + "." + name, field.owner)
   }
 
-  def elemMatch[V](clauseFuncs: (B => QueryClause[_])*) = {
+  def elemMatch[V](clauseFuncs: (B => QueryClause[_])*): ElemMatchWithPredicateClause[Nothing] = {
     new ElemMatchWithPredicateClause(
       field.name,
       clauseFuncs.map(cf => cf(rec))
@@ -401,7 +402,7 @@ class ModifyField[V: BSONType, M](field: Field[V, M]) extends AbstractModifyFiel
 }
 
 class DateModifyField[M](field: Field[Date, M]) extends AbstractModifyField[Date, Date, M](field) {
-  override def valueToDB(d: Date) = d
+  override def valueToDB(d: Date): Date = d
 
   def setTo(d: DateTime) = new ModifyClause(ModOps.Set, field.name -> d.toDate)
   def setOnInsertTo(d: DateTime): ModifyClause = new ModifyClause(ModOps.SetOnInsert, field.name -> d.toDate)
@@ -412,19 +413,19 @@ class DateModifyField[M](field: Field[Date, M]) extends AbstractModifyField[Date
 }
 
 class DateTimeModifyField[M](field: Field[DateTime, M]) extends AbstractModifyField[DateTime, Date, M](field) {
-  override def valueToDB(d: DateTime) = d.toDate
+  override def valueToDB(d: DateTime): Date = d.toDate
 
   def currentDate = new ModifyClause(ModOps.CurrentDate, field.name -> true)
 }
 
 class EnumerationModifyField[M, E <: Enumeration#Value](field: Field[E, M])
   extends AbstractModifyField[E, String, M](field) {
-  override def valueToDB(e: E) = e.toString
+  override def valueToDB(e: E): String = e.toString
 }
 
 class GeoModifyField[M](field: Field[LatLong, M])
   extends AbstractModifyField[LatLong, java.util.List[Double], M](field) {
-  override def valueToDB(ll: LatLong) =
+  override def valueToDB(ll: LatLong): java.util.List[Double] =
     QueryHelpers.list(List(ll.lat, ll.long))
 
   def setTo(lat: Double, long: Double) =
@@ -452,18 +453,18 @@ class NumericModifyField[V, M](override val field: Field[V, M]) extends Abstract
 
 class BsonRecordModifyField[M, B](field: Field[B, M], asDBObject: B => DBObject)
   extends AbstractModifyField[B, DBObject, M](field) {
-  override def valueToDB(b: B) = asDBObject(b)
+  override def valueToDB(b: B): DBObject = asDBObject(b)
 }
 
 class MapModifyField[V, M](field: Field[Map[String, V], M])
   extends AbstractModifyField[Map[String, V], java.util.Map[String, V], M](field) {
-  override def valueToDB(m: Map[String, V]) = QueryHelpers.makeJavaMap(m)
+  override def valueToDB(m: Map[String, V]): java.util.Map[String, V] = QueryHelpers.makeJavaMap(m)
 }
 
 abstract class AbstractListModifyField[V, DB, M, CC[X] <: Iterable[X]](val field: Field[CC[V], M]) {
   def valueToDB(v: V): DB
 
-  def valuesToDB(vs: Traversable[V]) = vs.map(valueToDB _)
+  def valuesToDB(vs: Traversable[V]): Traversable[DB] = vs.map(valueToDB _)
 
   def setTo(vs: Traversable[V]) =
     new ModifyClause(ModOps.Set, field.name -> QueryHelpers.list(valuesToDB(vs)))
@@ -537,7 +538,7 @@ class EnumerationSetModifyField[V <: Enumeration#Value, M](field: Field[Set[V], 
 class BsonRecordListModifyField[M, B](field: Field[List[B], M], rec: B, asDBObject: B => DBObject)(
   implicit mf: Manifest[B]
 ) extends AbstractListModifyField[B, DBObject, M, List](field) {
-  override def valueToDB(b: B) = asDBObject(b)
+  override def valueToDB(b: B): DBObject = asDBObject(b)
 
   // override def $: BsonRecordField[M, B] = {
   //   new BsonRecordField[M, B](field.owner, rec.meta)(mf) {
@@ -545,7 +546,7 @@ class BsonRecordListModifyField[M, B](field: Field[List[B], M], rec: B, asDBObje
   //   }
   // }
 
-  def pullObjectWhere(clauseFuncs: (B => QueryClause[_])*) = {
+  def pullObjectWhere(clauseFuncs: (B => QueryClause[_])*): ModifyPullObjWithPredicateClause[Nothing] = {
     new ModifyPullObjWithPredicateClause(
       field.name,
       clauseFuncs.map(cf => cf(rec))
