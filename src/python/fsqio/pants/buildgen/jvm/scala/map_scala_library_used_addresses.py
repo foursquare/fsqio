@@ -4,18 +4,21 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from collections import defaultdict
-from copy import deepcopy
 from itertools import chain
 
 from pants.backend.jvm.targets.junit_tests import JUnitTests
 from pants.backend.jvm.targets.scala_library import ScalaLibrary
 from pants.base.exceptions import TaskError
 from pants.build_graph.address import Address
+from pants.option.custom_types import file_option
 from pants.util.memo import memoized_property
 
 from fsqio.pants.buildgen.core.buildgen_base import BuildgenBase
-from fsqio.pants.buildgen.core.third_party_map_util import check_manually_defined, merge_map
-from fsqio.pants.buildgen.jvm.scala.third_party_map_jvm import jvm_third_party_map
+from fsqio.pants.buildgen.core.third_party_map_util import (
+  check_manually_defined,
+  merge_map,
+  read_config_map,
+)
 
 
 class UsedSymbolException(TaskError):
@@ -54,6 +57,11 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
       help='A dict that defines additional third party mappings (may be nested). See third_party_map_jvm.py \
         for defaults. Mappings passed to this option will take precedence over the defaults.'
     )
+    register(
+      '--third-party-map-file',
+      type=file_option,
+      help='A configuration file mapping imported packages to 3rdparty libraries.',
+    )
 
   @classmethod
   def implementation_version(cls):
@@ -85,9 +93,10 @@ class MapScalaLibraryUsedAddresses(BuildgenBase):
 
     Entries passed to the option system take priority.
     """
-    merged_map = deepcopy(jvm_third_party_map)
-    merge_map(merged_map, self.get_options().additional_third_party_map)
-    return merged_map
+    third_party_map_file = self.get_options().third_party_map_file
+    third_party_map_jvm = read_config_map(third_party_map_file, 'scala') if third_party_map_file else {}
+    merge_map(third_party_map_jvm, self.get_options().additional_third_party_map)
+    return third_party_map_jvm
 
   def _is_test(self, target):
     """A little hack to determine if an address lives in one of the testing directories."""

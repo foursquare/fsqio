@@ -3,6 +3,10 @@
 
 from __future__ import absolute_import, division, print_function
 
+import collections
+
+import configparser
+
 
 def merge_map(a, b):
   """Recursively merge two nested dictionaries, with any given subtree in b recursively taking priority over a."""
@@ -42,3 +46,34 @@ def check_manually_defined(symbol, subtree=None):
       return None
   else:
     return check_manually_defined('.'.join(parts[1:]), subtree[parts[0]])
+
+
+def read_config_map(config_path, map_type):
+  config = configparser.RawConfigParser()
+  config.optionxform = str
+  config.read(config_path)
+  config_for_type = config[map_type]
+  return flat_to_tree(config_for_type)
+
+
+def flat_to_tree(third_party_flat):
+  third_party_map = {}
+  for k, v in third_party_flat.items():
+    k_split = k.split('.')
+    curr_items = third_party_map
+    for k_part in k_split[:-1]:
+      if k_part not in curr_items:
+        curr_items[k_part] = {}
+      elif not isinstance(curr_items[k_part], collections.Mapping):
+        curr_items[k_part] = {'DEFAULT': curr_items[k_part]}
+      curr_items = curr_items[k_part]
+    last = k_split[-1]
+    if last in curr_items:
+      curr_items = curr_items[last]
+      last = 'DEFAULT'
+    if last in curr_items:
+      raise ValueError('Failed to map ' + k + ' to ' + v + '. Defined twice?')
+    if v == 'NONE':
+      v = None
+    curr_items[last] = v
+  return third_party_map
