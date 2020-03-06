@@ -25,8 +25,8 @@ you can try these in `./pants repl src/jvm/io/fsq/fhttp/`
     import io.fsq.fhttp.FHttpRequest._
     import com.twitter.conversions.storage._
     import com.twitter.conversions.time._
+    import com.twitter.finagle.Http
     import com.twitter.finagle.builder.ClientBuilder
-    import com.twitter.finagle.http.Http
 
     // Create the singleton client object using a default client spec (hostConnectionLimit=1, no SSL)
     val clientDefault = new FHttpClient("test", "localhost:80").releaseOnShutdown()
@@ -34,7 +34,7 @@ you can try these in `./pants repl src/jvm/io/fsq/fhttp/`
     // or customize the ClientBuilder
     val client = new FHttpClient("test2", "localhost:80",
         ClientBuilder()
-          .codec(Http(_maxRequestSize = 1024.bytes,_maxResponseSize = 1024.bytes))
+          .stack(Http.client.withMaxRequestSize(1024.bytes).withMaxResponseSize(1024.bytes))
           .hostConnectionLimit(15)
           .tcpConnectTimeout(30.milliseconds)
           .retries(0)).releaseOnShutdown()
@@ -79,15 +79,15 @@ Here's a slightly more complicated oauth (and HTTPS) example, using a [Dropbox A
     import io.fsq.fhttp.FHttpRequest._
     import com.twitter.conversions.storage._
     import com.twitter.conversions.time._
+    import com.twitter.finagle.Http
     import com.twitter.finagle.builder.ClientBuilder
-    import com.twitter.finagle.http.Http
 
     // Using the App key and App Secret, fill out the consumer token here:
     val consumer = Token(dbApiKey, dbApiSecret)
 
     val api = new FHttpClient("dropbox-api", "api.dropbox.com:443",
         ClientBuilder()
-          .codec(Http())
+          .stack(Http.client)
           .tls("api.dropbox.com")
           .tcpConnectTimeout(1.second)
           .hostConnectionLimit(1)

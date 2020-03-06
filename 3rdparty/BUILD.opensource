@@ -310,7 +310,7 @@ jar_library(
   ]
 )
 
-finagle_rev = '6.41.0'
+finagle_rev = '6.44.0'
 jar_library(
   name = 'finagle',
   tags = [
@@ -634,7 +634,7 @@ jar_library(
   ]
 )
 
-# Note: 
+# Note:
 
 json4s_ver = '3.2.11'
 json4s_spark_ver = '3.5.3'
@@ -1408,7 +1408,7 @@ jar_library(
   ],
 )
 
-twitter_util_rev = '6.40.0'
+twitter_util_rev = '6.43.0'
 jar_library(
   name = 'twitter-util',
   tags = [

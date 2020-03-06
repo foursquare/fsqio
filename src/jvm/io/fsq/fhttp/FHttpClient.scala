@@ -3,17 +3,17 @@
 package io.fsq.fhttp
 
 import com.twitter.conversions.time._
-import com.twitter.finagle.Service
+import com.twitter.finagle.{Http, Service}
 import com.twitter.finagle.builder.ClientBuilder
 import com.twitter.finagle.builder.ClientConfig.Yes
-import com.twitter.finagle.http.{Http, Request, Response}
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.util.{Await, Future}
 
 class FHttpClient(
   val name: String,
   val hostPort: String, // host:port
   builder: ClientBuilder[Request, Response, Nothing, Yes, Yes] =
-    ClientBuilder().codec(Http()).tcpConnectTimeout(1.second).hostConnectionLimit(1)
+    ClientBuilder().stack(Http.client).tcpConnectTimeout(1.second).hostConnectionLimit(1)
 ) {
 
   // hackazor!

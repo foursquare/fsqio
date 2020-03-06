@@ -3,9 +3,9 @@
 package io.fsq.fhttp.test
 
 import com.twitter.conversions.time._
-import com.twitter.finagle.{Service, TimeoutException}
+import com.twitter.finagle.{Http, Service, TimeoutException}
 import com.twitter.finagle.builder.{ClientBuilder, ServerBuilder}
-import com.twitter.finagle.http.{Http, Message, Request, Response, Status}
+import com.twitter.finagle.http.{Message, Request, Response, Status}
 import com.twitter.io.Buf
 import com.twitter.util.{Await, Future}
 import io.fsq.common.scala.Identity._
@@ -73,7 +73,7 @@ class FHttpTestHelper {
   }
 
   val server = ServerBuilder()
-    .codec(Http())
+    .stack(Http.server)
     .bindTo(new InetSocketAddress("127.0.0.1", 0)) // 0 allocates an ephemeral port
     .name("HttpServer")
     .maxConcurrentRequests(20)
@@ -308,7 +308,7 @@ class FHttpClientTest {
           "oauth",
           "oauthbin.appspot.com:80",
           (ClientBuilder()
-            .codec(Http())
+            .stack(Http.client)
             .hostConnectionLimit(1))
             .tcpConnectTimeout(1.seconds)
         )

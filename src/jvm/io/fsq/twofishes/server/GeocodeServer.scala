@@ -2,10 +2,11 @@
 package io.fsq.twofishes.server
 
 import com.google.common.geometry.S2CellId
-import com.twitter.finagle.{Service, SimpleFilter}
+import com.twitter.finagle.{Http, Service, SimpleFilter, Thrift}
 import com.twitter.finagle.builder.{Server, ServerBuilder}
-import com.twitter.finagle.http.{Http, Request, Response, Status, Version}
-import com.twitter.finagle.thrift.ThriftServerFramedCodec
+import com.twitter.finagle.http.{Request, Response, Status, Version}
+import com.twitter.finagle.stats.NullStatsReceiver
+import com.twitter.finagle.thrift.Protocols
 import com.twitter.io.Buf
 import com.twitter.ostrich.admin.{AdminServiceFactory, RuntimeEnvironment, StatsFactory, TimeSeriesCollectorFactory, _}
 import com.twitter.ostrich.stats.Stats
@@ -621,7 +622,7 @@ object GeocodeFinagleServer extends Logging {
 
     val server: Server = ServerBuilder()
       .bindTo(new InetSocketAddress(config.host, config.thriftServerPort))
-      .codec(ThriftServerFramedCodec())
+      .stack(Thrift.server.withProtocolFactory(Protocols.binaryFactory(statsReceiver = NullStatsReceiver)))
       .reportTo(new FoursquareStatsReceiver)
       .name("geocoder")
       .build(service)
@@ -634,7 +635,7 @@ object GeocodeFinagleServer extends Logging {
     if (config.runHttpServer) {
       ServerBuilder()
         .bindTo(new InetSocketAddress(config.host, config.thriftServerPort + 1))
-        .codec(Http())
+        .stack(Http.server)
         .name("geocoder-http")
         .reportTo(new FoursquareStatsReceiver)
         .build(handleExceptions andThen new GeocoderHttpService(processor))
@@ -642,7 +643,7 @@ object GeocodeFinagleServer extends Logging {
 
     ServerBuilder()
       .bindTo(new InetSocketAddress(config.host, config.thriftServerPort + 3))
-      .codec(Http())
+      .stack(Http.server)
       .name("geocoder-slow-query-http")
       .reportTo(new FoursquareStatsReceiver)
       .build(handleExceptions andThen processor.slowQueryHttpHandler)
