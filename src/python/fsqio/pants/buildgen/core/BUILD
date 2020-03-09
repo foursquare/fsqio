@@ -5,6 +5,7 @@ python_library(
   dependencies = [
     '3rdparty/python:ansicolors',
     '3rdparty/python:configparser',
+    '3rdparty/python:future',
     '3rdparty/python:pantsbuild.pants',
     'src/python/fsqio/pants/buildgen/core/subsystems',
   ],

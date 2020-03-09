@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import collections
 
+from builtins import str
 import configparser
 
 
@@ -51,7 +52,7 @@ def check_manually_defined(symbol, subtree=None):
 def read_config_map(config_path, map_type):
   config = configparser.RawConfigParser()
   config.optionxform = str
-  config.read(config_path)
+  config.read(str(config_path))
   config_for_type = config[map_type]
   return flat_to_tree(config_for_type)
 
