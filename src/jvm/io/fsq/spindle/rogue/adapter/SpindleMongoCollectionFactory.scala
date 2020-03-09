@@ -34,6 +34,10 @@ class SpindleMongoCollectionFactory[
     new ConcurrentHashMap[UntypedMetaRecord, Option[Seq[UntypedMongoIndex]]].asScala
   }
 
+  protected def getIdentifier(meta: UntypedMetaRecord): MongoIdentifier = {
+    MongoIdentifier(SpindleHelpers.getIdentifier(meta))
+  }
+
   override def documentClass: Class[BasicDBObject] = classOf[BasicDBObject]
 
   override def documentToString(document: BasicDBObject): String = document.toString
@@ -41,7 +45,7 @@ class SpindleMongoCollectionFactory[
   override def getCodecRegistryFromQuery[M <: UntypedMetaRecord](
     query: Query[M, _, _]
   ): CodecRegistry = {
-    clientManager.getCodecRegistryOrThrow(MongoIdentifier(SpindleHelpers.getIdentifier(query.meta)))
+    clientManager.getCodecRegistryOrThrow(getIdentifier(query.meta))
   }
 
   override def getMongoCollectionFromQuery[M <: UntypedMetaRecord](
@@ -50,7 +54,7 @@ class SpindleMongoCollectionFactory[
     writeConcernOpt: Option[WriteConcern] = None
   ): MongoCollection[BasicDBObject] = {
     clientManager.useCollection(
-      MongoIdentifier(SpindleHelpers.getIdentifier(query.meta)),
+      getIdentifier(query.meta),
       query.collectionName,
       documentClass,
       readPreferenceOpt,
@@ -66,7 +70,7 @@ class SpindleMongoCollectionFactory[
     writeConcernOpt: Option[WriteConcern] = None
   ): MongoCollection[BasicDBObject] = {
     clientManager.useCollection(
-      MongoIdentifier(SpindleHelpers.getIdentifier(meta)),
+      getIdentifier(meta),
       SpindleHelpers.getCollection(meta),
       documentClass,
       readPreferenceOpt,
@@ -91,11 +95,11 @@ class SpindleMongoCollectionFactory[
   override def getInstanceNameFromQuery[M <: UntypedMetaRecord](
     query: Query[M, _, _]
   ): String = {
-    MongoIdentifier(SpindleHelpers.getIdentifier(query.meta)).toString
+    getIdentifier(query.meta).toString
   }
 
   override def getInstanceNameFromRecord[R <: UntypedRecord](record: R): String = {
-    MongoIdentifier(SpindleHelpers.getIdentifier(record.meta)).toString
+    getIdentifier(record.meta).toString
   }
 
   private def fieldNameToWireName(
