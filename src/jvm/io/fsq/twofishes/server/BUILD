@@ -21,6 +21,7 @@ scala_library(
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/geo/quadtree',
+    'src/jvm/io/fsq/net/stats',
     'src/jvm/io/fsq/spindle/common/thrift/json',
     'src/jvm/io/fsq/spindle/runtime',
     'src/jvm/io/fsq/twofishes/core',

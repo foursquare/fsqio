@@ -13,6 +13,7 @@ import com.twitter.ostrich.stats.Stats
 import com.twitter.util.{Await, Future, FuturePool}
 import com.vividsolutions.jts.io.WKTWriter
 import io.fsq.common.scala.Lists.Implicits._
+import io.fsq.net.stats.FoursquareStatsReceiver
 import io.fsq.spindle.common.thrift.json.TReadableJSONProtocol
 import io.fsq.spindle.runtime.{MetaRecord, Record}
 import io.fsq.twofishes.gen.{
