@@ -33,6 +33,10 @@ class LiftMongoCollectionFactory[
     MongoRecord[_]
   ] {
 
+  protected def getIdentifier(meta: MongoMetaRecord[_]): MongoIdentifier = {
+    MongoIdentifier(meta.connectionIdentifier.jndiName)
+  }
+
   override def documentClass: Class[BasicDBObject] = classOf[BasicDBObject]
 
   override def documentToString(document: BasicDBObject): String = document.toString
@@ -40,7 +44,7 @@ class LiftMongoCollectionFactory[
   override def getCodecRegistryFromQuery[M <: MongoRecord[_] with MongoMetaRecord[_]](
     query: Query[M, _, _]
   ): CodecRegistry = {
-    clientManager.getCodecRegistryOrThrow(MongoIdentifier(query.meta.connectionIdentifier.jndiName))
+    clientManager.getCodecRegistryOrThrow(getIdentifier(query.meta))
   }
 
   override def getMongoCollectionFromQuery[M <: MongoRecord[_] with MongoMetaRecord[_]](
@@ -49,7 +53,7 @@ class LiftMongoCollectionFactory[
     writeConcernOpt: Option[WriteConcern] = None
   ): MongoCollection[BasicDBObject] = {
     clientManager.useCollection(
-      MongoIdentifier(query.meta.connectionIdentifier.jndiName),
+      getIdentifier(query.meta),
       query.collectionName,
       documentClass,
       readPreferenceOpt,
@@ -65,7 +69,7 @@ class LiftMongoCollectionFactory[
     writeConcernOpt: Option[WriteConcern] = None
   ): MongoCollection[BasicDBObject] = {
     clientManager.useCollection(
-      MongoIdentifier(meta.connectionIdentifier.jndiName),
+      getIdentifier(meta),
       meta.collectionName,
       documentClass,
       readPreferenceOpt,
@@ -81,7 +85,7 @@ class LiftMongoCollectionFactory[
     writeConcernOpt: Option[WriteConcern] = None
   ): MongoCollection[BasicDBObject] = {
     clientManager.useCollection(
-      MongoIdentifier(record.meta.connectionIdentifier.jndiName),
+      getIdentifier(record.meta),
       record.meta.collectionName,
       documentClass,
       readPreferenceOpt,
@@ -94,11 +98,11 @@ class LiftMongoCollectionFactory[
   override def getInstanceNameFromQuery[M <: MongoRecord[_] with MongoMetaRecord[_]](
     query: Query[M, _, _]
   ): String = {
-    MongoIdentifier(query.meta.connectionIdentifier.jndiName).toString
+    getIdentifier(query.meta).toString
   }
 
   override def getInstanceNameFromRecord[R <: MongoRecord[_]](record: R): String = {
-    MongoIdentifier(record.meta.connectionIdentifier.jndiName).toString
+    getIdentifier(record.meta).toString
   }
 
   override def getIndexes(
