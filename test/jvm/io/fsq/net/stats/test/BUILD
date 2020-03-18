@@ -5,7 +5,7 @@ junit_tests(
   dependencies = [
     '3rdparty:junit',
     '3rdparty:mockito',
-    '3rdparty:ostrich',
+    'src/jvm/com/twitter/ostrich/stats',
     'src/jvm/io/fsq/net/stats',
   ],
   sources = globs('*.scala'),

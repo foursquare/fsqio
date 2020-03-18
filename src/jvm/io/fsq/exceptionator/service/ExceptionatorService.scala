@@ -9,7 +9,6 @@ import com.twitter.finagle.http.{Method, Response, Status, Version}
 import com.twitter.finagle.http.filter.ExceptionFilter
 import com.twitter.finagle.stats.OstrichStatsReceiver
 import com.twitter.io.Buf
-import com.twitter.ostrich.admin.{AdminServiceFactory, RuntimeEnvironment, StatsFactory, TimeSeriesCollectorFactory}
 import com.twitter.util.{Future, FuturePool}
 import io.fsq.common.logging.Logger
 import io.fsq.exceptionator.actions.{HasBucketActions, HasHistoryActions, HasNoticeActions}
@@ -111,7 +110,6 @@ class ExceptionatorHttpService(
 
 object ExceptionatorServer extends Logger {
   val defaultPort = 8080
-  val defaultStatsPort = defaultPort + 1
   val defaultDbHost = "localhost:27017"
   val defaultDbName = "test"
   val defaultMongoIdentifier = new DefaultMongoIdentifier("exceptionator")
@@ -191,13 +189,6 @@ object ExceptionatorServer extends Logger {
     }
 
     val backgroundActions = new ConcreteBackgroundActions(services)
-
-    // Start ostrich
-    val runtime = new RuntimeEnvironment(this)
-
-    AdminServiceFactory(httpPort = (Config.opt(_.getInt("stats.port")).getOrElse(defaultStatsPort)))
-      .addStatsFactory(StatsFactory(reporters = List(TimeSeriesCollectorFactory())))
-      .apply(runtime)
 
     val httpPort = Config.opt(_.getInt("http.port")).getOrElse(defaultPort)
     val pathPrefix = Config.opt(_.getString("web.pathPrefix")).getOrElse("")

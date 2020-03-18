@@ -55,7 +55,6 @@ managed_jar_dependencies(
     ':mongodb-driver-async',
     ':netty',
     ':janino-compiler',
-    ':ostrich',
     ':reflections',
     ':scalacheck',
     jar(org = 'org.scala-lang', name = 'scalap', rev = scala_version),
@@ -1024,17 +1023,6 @@ jar_library(
     jar(org = 'io.netty', name = 'netty-all', rev = '4.1.37.Final'),
   ],
   managed_dependencies=':fsqio-management',
-)
-
-jar_library(
-  name = 'ostrich',
-  tags = [
-    'opensource',
-    'fscommon',
-  ],
-  jars = [
-    scala_jar(org = 'com.twitter', name = 'ostrich', rev = '9.23.0')
-  ]
 )
 
 

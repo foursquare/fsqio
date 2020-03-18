@@ -1,0 +1,265 @@
+/*
+ * Copyright 2009 Twitter, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.twitter.ostrich.stats
+
+import com.twitter.conversions.string._
+import java.lang.management._
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
+import scala.collection.mutable
+import scala.util.control.NonFatal
+
+/**
+  * Concrete StatsProvider that tracks counters and timings.
+  */
+class StatsCollection extends StatsProvider {
+  import scala.collection.JavaConverters._
+
+  protected val counterMap = new ConcurrentHashMap[String, Counter]()
+  protected val metricMap = new ConcurrentHashMap[String, Metric]()
+  protected val gaugeMap = new ConcurrentHashMap[String, () => Double]()
+  protected val labelMap = new ConcurrentHashMap[String, String]()
+
+  private val listeners = new mutable.ListBuffer[StatsListener]
+
+  /** Set this to true to have the collection fill in a set of automatic gauges from the JVM. */
+  @volatile
+  var includeJvmStats = false
+
+  /**
+    * Use JMX (shudder) to fill in stats about the JVM into a mutable map.
+    */
+  def fillInJvmGauges(out: mutable.Map[String, Double]) {
+    val mem = ManagementFactory.getMemoryMXBean()
+
+    val heap = mem.getHeapMemoryUsage()
+    out += ("jvm_heap_committed" -> heap.getCommitted())
+    out += ("jvm_heap_max" -> heap.getMax())
+    out += ("jvm_heap_used" -> heap.getUsed())
+
+    val nonheap = mem.getNonHeapMemoryUsage()
+    out += ("jvm_nonheap_committed" -> nonheap.getCommitted())
+    out += ("jvm_nonheap_max" -> nonheap.getMax())
+    out += ("jvm_nonheap_used" -> nonheap.getUsed())
+
+    val threads = ManagementFactory.getThreadMXBean()
+    out += ("jvm_thread_daemon_count" -> threads.getDaemonThreadCount().toLong)
+    out += ("jvm_thread_count" -> threads.getThreadCount().toLong)
+    out += ("jvm_thread_peak_count" -> threads.getPeakThreadCount().toLong)
+
+    val runtime = ManagementFactory.getRuntimeMXBean()
+    out += ("jvm_start_time" -> runtime.getStartTime())
+    out += ("jvm_uptime" -> runtime.getUptime())
+
+    val os = ManagementFactory.getOperatingSystemMXBean()
+    out += ("jvm_num_cpus" -> os.getAvailableProcessors().toLong)
+    os match {
+      case unix: com.sun.management.UnixOperatingSystemMXBean =>
+        out += ("jvm_fd_count" -> unix.getOpenFileDescriptorCount)
+        out += ("jvm_fd_limit" -> unix.getMaxFileDescriptorCount)
+      case _ => // ew, Windows... or something
+    }
+
+    val compilation = ManagementFactory.getCompilationMXBean()
+    out += ("jvm_compilation_time_msec" -> compilation.getTotalCompilationTime())
+
+    val classes = ManagementFactory.getClassLoadingMXBean()
+    out += ("jvm_classes_total_loaded" -> classes.getTotalLoadedClassCount())
+    out += ("jvm_classes_total_unloaded" -> classes.getUnloadedClassCount())
+    out += ("jvm_classes_current_loaded" -> classes.getLoadedClassCount().toLong)
+
+    var postGCTotalUsage = 0L
+    var currentTotalUsage = 0L
+    ManagementFactory.getMemoryPoolMXBeans().asScala.foreach { pool =>
+      val name = pool.getName.regexSub("""[^\w]""".r) { m =>
+        "_"
+      }
+      Option(pool.getCollectionUsage).foreach { usage =>
+        out += ("jvm_post_gc_" + name + "_used" -> usage.getUsed)
+        postGCTotalUsage += usage.getUsed
+        out += ("jvm_post_gc_" + name + "_max" -> usage.getMax)
+      }
+      Option(pool.getUsage) foreach { usage =>
+        out += ("jvm_current_mem_" + name + "_used" -> usage.getUsed)
+        currentTotalUsage += usage.getUsed
+        out += ("jvm_current_mem_" + name + "_max" -> usage.getMax)
+      }
+    }
+    out += ("jvm_post_gc_used" -> postGCTotalUsage)
+    out += ("jvm_current_mem_used" -> currentTotalUsage)
+
+    ManagementFactory.getPlatformMXBeans(classOf[BufferPoolMXBean]).asScala.foreach { bp =>
+      val name = bp.getName
+      out += ("jvm_buffer_" + name + "_count" -> bp.getCount)
+      out += ("jvm_buffer_" + name + "_used" -> bp.getMemoryUsed)
+      out += ("jvm_buffer_" + name + "_max" -> bp.getTotalCapacity)
+    }
+  }
+
+  def fillInJvmCounters(out: mutable.Map[String, Long]) {
+    var totalCycles = 0L
+    var totalTime = 0L
+
+    ManagementFactory.getGarbageCollectorMXBeans().asScala.foreach { gc =>
+      val name = gc.getName.regexSub("""[^\w]""".r) { m =>
+        "_"
+      }
+      val collectionCount = gc.getCollectionCount
+      out += ("jvm_gc_" + name + "_cycles" -> collectionCount)
+      val collectionTime = gc.getCollectionTime
+      out += ("jvm_gc_" + name + "_msec" -> collectionTime)
+      // note, these could be -1 if the collector doesn't have support for it.
+      if (collectionCount > 0)
+        totalCycles += collectionCount
+      if (collectionTime > 0)
+        totalTime += gc.getCollectionTime
+    }
+    out += ("jvm_gc_cycles" -> totalCycles)
+    out += ("jvm_gc_msec" -> totalTime)
+  }
+
+  /**
+    * Attach a new StatsListener to this collection. Additions to metrics will be passed along to
+    * each listener.
+    */
+  def addListener(listener: StatsListener) {
+    synchronized {
+      listeners += listener
+    }
+  }
+
+  def addGauge(name: String)(gauge: => Double) {
+    gaugeMap.put(name, { () =>
+      gauge
+    })
+  }
+
+  def clearGauge(name: String) {
+    gaugeMap.remove(name)
+  }
+
+  def setLabel(name: String, value: String) {
+    labelMap.put(name, value)
+  }
+
+  def clearLabel(name: String) {
+    labelMap.remove(name)
+  }
+
+  private[this] def getCounter(name: String, f: => Counter): Counter = {
+    var counter = counterMap.get(name)
+    if (counter == null) {
+      counter = counterMap.putIfAbsent(name, f)
+      counter = counterMap.get(name)
+    }
+    counter
+  }
+
+  def getCounter(name: String): Counter = getCounter(name, newCounter(name))
+
+  def makeCounter(name: String, atomic: AtomicLong): Counter = {
+    getCounter(name, new Counter(atomic))
+  }
+
+  def removeCounter(name: String) {
+    counterMap.remove(name)
+  }
+
+  protected def newCounter(name: String) = {
+    new Counter()
+  }
+
+  def getMetric(name: String) = {
+    var metric = metricMap.get(name)
+    if (metric == null) {
+      metric = metricMap.putIfAbsent(name, newMetric(name))
+      metric = metricMap.get(name)
+    }
+    metric
+  }
+
+  protected def newMetric(name: String) = {
+    new Metric()
+  }
+
+  def removeMetric(name: String): Option[Metric] = {
+    Option(metricMap.remove(name))
+  }
+
+  def getLabel(name: String) = {
+    val value = labelMap.get(name)
+    if (value == null) None else Some(value)
+  }
+
+  def getGauge(name: String) = {
+    val gauge = gaugeMap.get(name)
+    if (gauge != null) {
+      try {
+        Some(gauge())
+      } catch {
+        case NonFatal(e) =>
+          log.error(e, "Gauge error: %s", name)
+          None
+      }
+    } else None
+  }
+
+  def getCounters() = {
+    val counters = new mutable.HashMap[String, Long]
+    if (includeJvmStats) fillInJvmCounters(counters)
+    for ((key, counter) <- counterMap.asScala) {
+      counters += (key -> counter())
+    }
+    counters
+  }
+
+  def getMetrics() = {
+    val metrics = new mutable.HashMap[String, Distribution]
+    for ((key, metric) <- metricMap.asScala) {
+      metrics += (key -> metric())
+    }
+    metrics
+  }
+
+  def getGauges() = {
+    val gauges = new mutable.HashMap[String, Double]
+    if (includeJvmStats) fillInJvmGauges(gauges)
+    for ((key, gauge) <- gaugeMap.asScala) {
+      try {
+        gauges += (key -> gauge())
+      } catch {
+        case NonFatal(e) =>
+          log.error(e, "Gauge error: %s", key)
+      }
+    }
+    gauges
+  }
+
+  def getLabels() = {
+    new mutable.HashMap[String, String] ++ labelMap.asScala
+  }
+
+  def clearAll() {
+    counterMap.clear()
+    metricMap.clear()
+    gaugeMap.clear()
+    labelMap.clear()
+    listeners.clear()
+  }
+
+  def toJson() = get().toJson()
+}

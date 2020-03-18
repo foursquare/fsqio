@@ -2,9 +2,9 @@
 
 scala_library(
   name = 'stats',
-  sources = globs('*.scala'),
   dependencies = [
-    '3rdparty:finagle',
-    'src/jvm/com/twitter/ostrich/stats',
+    '3rdparty:jackson-scala',
+    '3rdparty:twitter-util',
   ],
+  sources = globs('*.scala'),
 )

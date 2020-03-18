@@ -8,7 +8,6 @@ import com.twitter.finagle.http.{Request, Response, Status, Version}
 import com.twitter.finagle.stats.NullStatsReceiver
 import com.twitter.finagle.thrift.Protocols
 import com.twitter.io.Buf
-import com.twitter.ostrich.admin.{AdminServiceFactory, RuntimeEnvironment, StatsFactory, TimeSeriesCollectorFactory, _}
 import com.twitter.ostrich.stats.Stats
 import com.twitter.util.{Await, Future, FuturePool}
 import com.vividsolutions.jts.io.WKTWriter
@@ -618,8 +617,7 @@ object GeocodeFinagleServer extends Logging {
 
     log.info("serving finagle-thrift on port %d".format(config.thriftServerPort))
     log.info("serving http/json on port %d".format(config.thriftServerPort + 1))
-    log.info("serving debug info on port %d".format(config.thriftServerPort + 2))
-    log.info("serving slow query http/json on port %d".format(config.thriftServerPort + 3))
+    log.info("serving slow query http/json on port %d".format(config.thriftServerPort + 2))
 
     val server: Server = ServerBuilder()
       .bindTo(new InetSocketAddress(config.host, config.thriftServerPort))
@@ -627,11 +625,6 @@ object GeocodeFinagleServer extends Logging {
       .reportTo(new FoursquareStatsReceiver)
       .name("geocoder")
       .build(service)
-
-    val runtime = new RuntimeEnvironment(this)
-    val adminConfig = AdminServiceFactory(httpPort = config.thriftServerPort + 2)
-      .addStatsFactory(StatsFactory(reporters = List(TimeSeriesCollectorFactory())))
-      .apply(runtime)
 
     if (config.runHttpServer) {
       ServerBuilder()
@@ -643,7 +636,7 @@ object GeocodeFinagleServer extends Logging {
     }
 
     ServerBuilder()
-      .bindTo(new InetSocketAddress(config.host, config.thriftServerPort + 3))
+      .bindTo(new InetSocketAddress(config.host, config.thriftServerPort + 2))
       .stack(Http.server)
       .name("geocoder-slow-query-http")
       .reportTo(new FoursquareStatsReceiver)

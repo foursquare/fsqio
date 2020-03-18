@@ -2,7 +2,6 @@
 package io.fsq.twofishes.indexer.importers.geonames
 
 import akka.actor.{ActorSystem, Props}
-import com.twitter.ostrich.admin.{AdminServiceFactory, RuntimeEnvironment}
 import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBWriter, WKTReader}
@@ -57,10 +56,6 @@ object GeonamesParser extends DurationUtils {
   var countryLangMap = new HashMap[String, List[String]]()
   var countryNameMap = new HashMap[String, String]()
   var adminIdMap = new HashMap[String, String]()
-
-  val runtime = new RuntimeEnvironment(this)
-  val admin = AdminServiceFactory(httpPort = 7655)
-    .apply(runtime)
 
   lazy val naturalEarthPopulatedPlacesMap: Map[StoredFeatureId, SimpleFeature] = {
     new ShapefileIterator("src/jvm/io/fsq/twofishes/indexer/data/downloaded/ne_10m_populated_places_simple.shp")
@@ -134,8 +129,7 @@ object GeonamesParser extends DurationUtils {
     implicit val formats = Serialization.formats(NoTypeHints)
     val prettyJsonStats = Serialization.writePretty(JsonMethods.parse(Stats.get().toJson))
     log.info(prettyJsonStats)
-    log.info("all done with parse, trying to shutdown admin server and exit")
-    admin.shutdown()
+    log.info("all done with parse, trying to exit")
     System.exit(0)
   }
 
