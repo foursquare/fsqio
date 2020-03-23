@@ -37,6 +37,7 @@ managed_jar_dependencies(
     ':jetty',
     ':jetty-util',
     ':joda-time',
+    ':json4s_spark',
     ':lift-actor',
     ':lift-common',
     ':lift-db',
@@ -542,6 +543,29 @@ jar_library(
 )
 
 # A new version of jackson with different org and fully qualified class names. It won't conflict with other jackson.
+# The reason for two jacksons. The former is UNUSED, but is necessary for using Finatra.
+# 2.9.10 breaks EMR usage. 2.6.7 breaks finatra.
+# Jackson is currently pinned meaning we can only have 1 version of it in our repo.
+# The goal is to pin 2.9.10 somehow without breaking EMR.
+# This is a placeholder for now and to allow for development of finatra services
+# while the dependency issue is being resolved. (@jwlodarczyk)
+# jackson_finatra_rev = '2.9.10'
+# jar_library(
+#   name = 'jackson-scala',
+#   jars = [
+#     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-annotations', rev = jackson_finatra_rev),
+#     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-core', rev = jackson_finatra_rev),
+#     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-databind', rev = '2.9.10.1'),
+#     # NOTE(iant): 2.6.7.1 for 2.12 support; should be jackson_rev in the future
+#     scala_jar(org = 'com.fasterxml.jackson.module', name = 'jackson-module-scala', rev = jackson_finatra_rev),
+#     jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-joda', rev = jackson_finatra_rev),
+#     jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-guava', rev = jackson_finatra_rev),
+#     jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jdk8', rev = jackson_finatra_rev),
+#     jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jsr310', rev = jackson_finatra_rev),
+#     jar(org = 'com.fasterxml.jackson.dataformat', name = 'jackson-dataformat-cbor', rev = jackson_finatra_rev),
+#   ],
+# )
+
 jackson_rev = '2.6.7'
 jar_library(
   name = 'jackson-scala',
@@ -558,6 +582,7 @@ jar_library(
     jar(org = 'com.fasterxml.jackson.dataformat', name = 'jackson-dataformat-cbor', rev = jackson_rev),
   ],
 )
+
 
 jar_library(
   name = 'janino-compiler',
