@@ -2,12 +2,13 @@
 
 package io.fsq.fhttp
 
-import com.twitter.conversions.time._
+import com.twitter.conversions.DurationOps._
 import com.twitter.finagle.{Filter, IndividualRequestTimeoutException, Service, SimpleFilter}
 import com.twitter.finagle.http.{Message, Method, Request, RequestBuilder, Response, Version}
 import com.twitter.finagle.service.TimeoutFilter
+import com.twitter.finagle.util.DefaultTimer
 import com.twitter.io.Buf
-import com.twitter.util.{Await, Future}
+import com.twitter.util.{Await, Future, Timer}
 import java.nio.charset.Charset
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.httpclient.methods.multipart._
@@ -197,14 +198,14 @@ case class FHttpRequest(
     *    and attach a useful stack trace to it via a proxied Exception, ensuring the
     *    service name is set as we do.
     */
-  def timeout(millis: Int): FHttpRequest = {
+  def timeout(millis: Int, timer: Timer = DefaultTimer): FHttpRequest = {
     val exception = new IndividualRequestTimeoutException(millis.milliseconds) {
       val creationStackException = new Exception
       override def getStackTrace: Array[StackTraceElement] = creationStackException.getStackTrace
     }
     exception.serviceName = client.name
 
-    filter(new TimeoutFilter(millis.milliseconds, exception, FTimer.finagleTimer))
+    filter(new TimeoutFilter(millis.milliseconds, exception, timer))
   }
 
   /**

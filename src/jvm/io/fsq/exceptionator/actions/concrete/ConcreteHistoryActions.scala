@@ -2,7 +2,7 @@
 
 package io.fsq.exceptionator.actions.concrete
 
-import com.twitter.conversions.time._
+import com.twitter.conversions.DurationOps._
 import com.twitter.ostrich.stats.Stats
 import com.twitter.util.ScheduledThreadPoolTimer
 import io.fsq.common.logging.Logger

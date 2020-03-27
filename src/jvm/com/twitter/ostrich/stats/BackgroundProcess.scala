@@ -16,7 +16,7 @@
 
 package com.twitter.ostrich.stats
 
-import com.twitter.conversions.time._
+import com.twitter.conversions.DurationOps._
 import com.twitter.logging.Logger
 import com.twitter.util.{Duration, Time}
 import java.util.concurrent.CountDownLatch

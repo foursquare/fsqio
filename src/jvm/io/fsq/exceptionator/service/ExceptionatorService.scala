@@ -4,10 +4,9 @@ package io.fsq.exceptionator.service
 
 import com.mongodb.{MongoClient, MongoClientOptions, ServerAddress}
 import com.twitter.finagle.{Http, Service}
-import com.twitter.finagle.builder.{Server, ServerBuilder}
+import com.twitter.finagle.builder.ServerBuilder
 import com.twitter.finagle.http.{Method, Response, Status, Version}
 import com.twitter.finagle.http.filter.ExceptionFilter
-import com.twitter.finagle.stats.OstrichStatsReceiver
 import com.twitter.io.Buf
 import com.twitter.util.{Future, FuturePool}
 import io.fsq.common.logging.Logger
@@ -26,6 +25,7 @@ import io.fsq.exceptionator.model.gen.{BucketRecord, BucketRecordHistogram, Hist
 import io.fsq.exceptionator.mongo.HasExceptionatorMongoService
 import io.fsq.exceptionator.mongo.concrete.ConcreteExceptionatorMongoService
 import io.fsq.exceptionator.util.Config
+import io.fsq.net.stats.FoursquareStatsReceiver
 import io.fsq.rogue.connection.DefaultMongoIdentifier
 import io.fsq.spindle.runtime.UntypedMetaRecord
 import java.io.InputStream
@@ -202,11 +202,11 @@ object ExceptionatorServer extends Logger {
         new IncomingHttpService(incomingActions, backgroundActions)
       )
 
-    val server: Server = ServerBuilder()
+    ServerBuilder()
       .bindTo(new InetSocketAddress(httpPort))
       .stack(Http.server)
       .name("exceptionator-http")
-      .reportTo(new OstrichStatsReceiver)
+      .reportTo(new FoursquareStatsReceiver)
       .build(service)
   }
 }

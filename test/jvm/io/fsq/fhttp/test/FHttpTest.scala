@@ -2,7 +2,7 @@
 
 package io.fsq.fhttp.test
 
-import com.twitter.conversions.time._
+import com.twitter.conversions.DurationOps._
 import com.twitter.finagle.{Http, Service, TimeoutException}
 import com.twitter.finagle.builder.{ClientBuilder, ServerBuilder}
 import com.twitter.finagle.http.{Message, Request, Response, Status}
@@ -229,7 +229,6 @@ class FHttpClientTest {
       case HttpStatusException(code, reason, response) if code =? Status.NotFound.code =>
       // do nothing
     }
-
   }
 
   @Test
@@ -359,14 +358,14 @@ class FHttpClientTest {
 
   @Test
   def testEncodedURLQuery(): Unit = {
-    val expected1 = "/ラーメン"
-    val req1 = client("/ラーメン")
-    val res1 = req1.get_!()
-    assertEquals(res1, "")
+    // neither FHttp nor finagle auto-url-encode request URIs
+    try {
+      client("/ラーメン").get_!()
+      throw new Exception("expected HttpStatusException")
+    } catch {
+      case HttpStatusException(400, "Bad Request", _) => ()
+    }
 
-    val expected2 = "/%E3%83%A9%E3%83%BC%E3%83%A1%E3%83%B3"
-    val req2 = client("/%E3%83%A9%E3%83%BC%E3%83%A1%E3%83%B3")
-    val res2 = req2.get_!()
-    assertEquals(res2, "")
+    assertEquals(client("/%E3%83%A9%E3%83%BC%E3%83%A1%E3%83%B3").get_!(), "")
   }
 }

@@ -6,6 +6,7 @@ junit_tests(
   dependencies = [
     '3rdparty:finagle',
     '3rdparty:junit',
+    '3rdparty:netty4',  # runtime
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/fhttp',

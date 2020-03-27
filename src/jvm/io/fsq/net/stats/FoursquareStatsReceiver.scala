@@ -2,7 +2,14 @@
 
 package io.fsq.net.stats
 
-import com.twitter.finagle.stats.{Counter, Stat, StatsReceiverWithCumulativeGauges}
+import com.twitter.finagle.stats.{
+  Counter,
+  CounterSchema,
+  HistogramSchema,
+  Stat,
+  StatsReceiverWithCumulativeGauges,
+  Verbosity
+}
 import com.twitter.ostrich.stats.{Stats, StatsProvider}
 
 /**
@@ -19,36 +26,46 @@ class FoursquareStatsReceiver(
 
   override val repr: AnyRef = statsProvider
 
-  override protected[this] def registerGauge(name: Seq[String], f: => Float): Unit = {
+  override protected def registerGauge(
+    verbosity: Verbosity,
+    name: Seq[String],
+    f: => Float
+  ): Unit = {
     statsProvider.addGauge(variableName(name)) {
       f.toDouble
     }
   }
 
-  override protected[this] def deregisterGauge(name: Seq[String]): Unit = {
+  override protected def deregisterGauge(name: Seq[String]): Unit = {
     statsProvider.clearGauge(variableName(name))
   }
 
+  override def counter(schema: CounterSchema): Counter = counter(schema.metricBuilder.name: _*)
+
   override def counter(name: String*): Counter = new Counter {
-    override def incr(delta: Int): Unit = {
-      statsProvider.incr(variableName(name), delta)
+    val sanitizedName = variableName(name)
+    override def incr(delta: Long): Unit = {
+      statsProvider.incr(sanitizedName, delta.toInt)
     }
   }
+
+  override def stat(schema: HistogramSchema): Stat = stat(schema.metricBuilder.name: _*)
 
   override def stat(name: String*): Stat = new Stat {
+    val sanitizedName = variableName(name)
     override def add(value: Float): Unit = {
-      statsProvider.addMetric(variableName(name), value.toInt)
+      statsProvider.addMetric(sanitizedName, value.toInt)
     }
   }
 
-  private[this] val baseSize = prefix.foldLeft(0)((sum, str) => sum + str.length) + prefix.size
+  private val baseSize = prefix.foldLeft(0)((sum, str) => sum + str.length) + prefix.size
 
   /*
    * NOTE(jackson): this method gets called a lot and was generating too much garbage. Some scalay-ness has been
    * sacrificed to make it more efficient (no scala collection recopy sillyness, no StringBuilder reallocs).
    * Still generates 2 char[] (1 in StringBuilder and 1 when copied to String), but fixing that requires lots of tricks
    */
-  private[this] def variableName(name: Seq[String]): String = {
+  private def variableName(name: Seq[String]): String = {
     val newSize = name.foldLeft(0)((sum, str) => sum + str.length) + name.size
     val sb = new StringBuilder(baseSize + newSize + 1)
 

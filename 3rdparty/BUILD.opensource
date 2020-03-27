@@ -309,7 +309,7 @@ jar_library(
   ]
 )
 
-finagle_rev = '6.44.0'
+finagle_rev = '20.1.0'
 jar_library(
   name = 'finagle',
   tags = [
@@ -329,19 +329,7 @@ jar_library(
         exclude(org="org.slf4j", name="slf4j-log4j12"),
       ],
     ),
-    scala_jar(org = 'com.twitter', name = 'finagle-stream', rev = finagle_rev,
-      excludes = [
-        exclude(org="org.slf4j", name="slf4j-jdk14"),
-        exclude(org="org.slf4j", name="slf4j-log4j12"),
-      ],
-    ),
-    scala_jar(org = 'com.twitter', name = 'finagle-kestrel', rev = finagle_rev,
-      excludes = [
-        exclude(org="org.slf4j", name="slf4j-jdk14"),
-        exclude(org="org.slf4j", name="slf4j-log4j12"),
-      ],
-    ),
-    scala_jar(org = 'com.twitter', name = 'finagle-ostrich4', rev = finagle_rev,
+    scala_jar(org = 'com.twitter', name = 'finagle-memcached', rev = finagle_rev,
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
@@ -353,7 +341,7 @@ jar_library(
         exclude(org="org.slf4j", name="slf4j-log4j12"),
       ],
     ),
-    scala_jar(org = 'com.twitter', name = 'finagle-memcached', rev = finagle_rev,
+    scala_jar(org = 'com.twitter', name = 'finagle-thrift', rev = finagle_rev,
       excludes = [
         exclude(org="org.slf4j", name="slf4j-jdk14"),
         exclude(org="org.slf4j", name="slf4j-log4j12"),
@@ -632,8 +620,6 @@ jar_library(
     )
   ]
 )
-
-# Note:
 
 json4s_ver = '3.2.11'
 json4s_spark_ver = '3.5.3'
@@ -1020,7 +1006,7 @@ jar_library(
 jar_library(
   name = 'netty4',
   jars = [
-    jar(org = 'io.netty', name = 'netty-all', rev = '4.1.37.Final'),
+    jar(org = 'io.netty', name = 'netty-all', rev = '4.1.45.Final'),
   ],
   managed_dependencies=':fsqio-management',
 )
@@ -1396,7 +1382,7 @@ jar_library(
   ],
 )
 
-twitter_util_rev = '6.43.0'
+twitter_util_rev = '20.1.0'
 jar_library(
   name = 'twitter-util',
   tags = [
@@ -1406,7 +1392,6 @@ jar_library(
   jars = [
     scala_jar(org = 'com.twitter', name = 'util-codec', rev = twitter_util_rev),
     scala_jar(org = 'com.twitter', name = 'util-core', rev = twitter_util_rev),
-    scala_jar(org = 'com.twitter', name = 'util-eval', rev = twitter_util_rev),
     scala_jar(org = 'com.twitter', name = 'util-hashing', rev = twitter_util_rev),
     scala_jar(org = 'com.twitter', name = 'util-logging', rev = twitter_util_rev),
   ],

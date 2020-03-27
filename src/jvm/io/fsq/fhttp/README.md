@@ -23,8 +23,8 @@ you can try these in `./pants repl src/jvm/io/fsq/fhttp/`
 
     import io.fsq.fhttp._
     import io.fsq.fhttp.FHttpRequest._
-    import com.twitter.conversions.storage._
-    import com.twitter.conversions.time._
+    import com.twitter.conversions.StorageUnitOps._
+    import com.twitter.conversions.DurationOps._
     import com.twitter.finagle.Http
     import com.twitter.finagle.builder.ClientBuilder
 
@@ -77,8 +77,8 @@ Here's a slightly more complicated oauth (and HTTPS) example, using a [Dropbox A
 
     import io.fsq.fhttp._
     import io.fsq.fhttp.FHttpRequest._
-    import com.twitter.conversions.storage._
-    import com.twitter.conversions.time._
+    import com.twitter.conversions.StorageUnitOps._
+    import com.twitter.conversions.DurationOps._
     import com.twitter.finagle.Http
     import com.twitter.finagle.builder.ClientBuilder
 

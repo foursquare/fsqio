@@ -20,6 +20,7 @@ scala_library(
     'src/jvm/io/fsq/exceptionator/mongo',
     'src/jvm/io/fsq/exceptionator/mongo/concrete',
     'src/jvm/io/fsq/exceptionator/util',
+    'src/jvm/io/fsq/net/stats',
     'src/jvm/io/fsq/rogue/connection',
     'src/jvm/io/fsq/spindle/runtime',
     'src/resources/io/fsq/exceptionator/css',

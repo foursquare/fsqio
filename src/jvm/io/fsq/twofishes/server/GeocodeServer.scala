@@ -3,7 +3,7 @@ package io.fsq.twofishes.server
 
 import com.google.common.geometry.S2CellId
 import com.twitter.finagle.{Http, Service, SimpleFilter, Thrift}
-import com.twitter.finagle.builder.{Server, ServerBuilder}
+import com.twitter.finagle.builder.ServerBuilder
 import com.twitter.finagle.http.{Request, Response, Status, Version}
 import com.twitter.finagle.stats.NullStatsReceiver
 import com.twitter.finagle.thrift.Protocols
@@ -619,7 +619,7 @@ object GeocodeFinagleServer extends Logging {
     log.info("serving http/json on port %d".format(config.thriftServerPort + 1))
     log.info("serving slow query http/json on port %d".format(config.thriftServerPort + 2))
 
-    val server: Server = ServerBuilder()
+    ServerBuilder()
       .bindTo(new InetSocketAddress(config.host, config.thriftServerPort))
       .stack(Thrift.server.withProtocolFactory(Protocols.binaryFactory(statsReceiver = NullStatsReceiver)))
       .reportTo(new FoursquareStatsReceiver)

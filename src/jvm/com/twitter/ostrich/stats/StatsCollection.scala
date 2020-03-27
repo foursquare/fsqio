@@ -16,7 +16,7 @@
 
 package com.twitter.ostrich.stats
 
-import com.twitter.conversions.string._
+import com.twitter.conversions.StringOps._
 import java.lang.management._
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
