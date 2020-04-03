@@ -104,6 +104,13 @@ class BuildgenPython(BuildgenTask):
       help="Pass a list of virtualenv roots for buildgen. As long as not opted-out, buildgen will walk these dirs to"
            "map imports. If none are passed then buildgen will default to walking just the pants virtualenv."
     )
+    register(
+      '--force-third-party',
+      default=[],
+      advanced=True,
+      type=list,
+      help="Force buildgen to considered these packages as 3rd party and not system packages."
+    )
 
   @classmethod
   def product_types(cls):
@@ -191,6 +198,11 @@ class BuildgenPython(BuildgenTask):
           logger.debug("Could not read the buildgen analysis file, regenerating: {}.".format(f))
           mapping = get_venv_map(self.python_virtual_envs, deps)
           os.remove(analysis_file)
+
+    for override in self.get_options().force_third_party:
+      if override in mapping['python_modules']:
+        mapping['python_modules'].remove(override)
+
     return mapping
 
   @memoized_property
