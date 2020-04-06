@@ -1,4 +1,3 @@
-
 python_library(
   name = 'core',
   sources = globs('*.py'),
@@ -7,6 +6,7 @@ python_library(
     '3rdparty/python:configparser',
     '3rdparty/python:future',
     '3rdparty/python:pantsbuild.pants',
+    '3rdparty/python:typing',
     'src/python/fsqio/pants/buildgen/core/subsystems',
   ],
   tags = [

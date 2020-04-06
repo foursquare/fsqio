@@ -12,6 +12,7 @@ import sys
 
 import colors
 from pants.build_graph.address import Address
+from typing import List
 
 
 logger = logging.getLogger(__name__)
@@ -28,10 +29,11 @@ class DependencySpec(object):
   dependency specs in a BUILD target's dependencies section.
   """
 
-  def __init__(self, spec, comments_above=None, side_comment=None):
+  def __init__(self, spec, comments_above=None, side_comment=None, indent=4):
     self.spec = spec
     self.comments_above = comments_above or []
     self.side_comment = side_comment
+    self.indent = indent
 
   def comments_above_lines(self):
     for line in self.comments_above:
@@ -41,23 +43,25 @@ class DependencySpec(object):
       else:
         yield ''
 
-  def indented_lines(self, lines, indent=4):
-    indent_spaces = ' ' * indent
+  def indented_lines(self, lines):
+    indent_spaces = ' ' * self.indent
+
     for line in lines:
       line = line.strip()
+
       if not line:
         yield ''
       else:
         yield '{indent_spaces}{line}'.format(indent_spaces=indent_spaces, line=line)
 
-  def lines(self, indent=4):
+  def lines(self):
     spec_line = "'{0}',".format(self.spec)
     if self.side_comment is not None:
       spec_line = '{spec_line}  # {comment}'.format(spec_line=spec_line,
                                                     comment=self.side_comment)
     comments_above = list(self.comments_above_lines())
     lines = comments_above + [spec_line]
-    return list(self.indented_lines(lines, indent))
+    return list(self.indented_lines(lines))
 
   def has_comment(self):
     # If all of the comments above are whitespace, don't consider this forced,
@@ -73,6 +77,29 @@ class BuildFileManipulator(object):
 
   Use BuildFileManipulator.load(...) for construction, rather than constructing it directly.
   """
+
+  @classmethod
+  def detect_indentation(cls, lines):
+    # type: (List[str]) -> int
+    DEFAULT_INDENT = 2
+    rg = re.compile(r"(^[ \t]{2,})")
+
+    guess = None
+    for l in lines:
+      if not l.startswith(' '):
+        continue
+
+      m = rg.match(l)
+      if not m:
+        continue
+
+      indent = len(m.group())
+      if guess is None or indent < guess:
+        guess = indent
+      elif indent % guess != 0:
+        return DEFAULT_INDENT
+
+    return guess or DEFAULT_INDENT
 
   @classmethod
   def load(cls, address, target_aliases):
@@ -93,6 +120,7 @@ class BuildFileManipulator(object):
     with open(address.rel_path, 'r') as f:
       source = f.read()
     source_lines = source.split('\n')
+    indent = cls.detect_indentation(source_lines)
     tree = ast.parse(source)
 
     # Since we're not told what the last line of an expression is, we have
@@ -289,9 +317,12 @@ class BuildFileManipulator(object):
         side_comment = None
         if len(dep_with_comments) == 2:
           side_comment = dep_with_comments[1].strip()
-        dep = DependencySpec(dep_node.s,
-                             comments_above=comments_above,
-                             side_comment=side_comment)
+        dep = DependencySpec(
+          dep_node.s,
+          comments_above=comments_above,
+          side_comment=side_comment,
+          indent=indent * 2,
+        )
         # TODO(pl): Logging here
         dependencies.append(dep)
         last_lineno = dep_node.lineno
@@ -318,7 +349,8 @@ class BuildFileManipulator(object):
                target_source_lines=target_source_lines,
                target_interval=(target_start, target_end),
                dependencies=dependencies,
-               dependencies_interval=(deps_start, deps_end))
+               dependencies_interval=(deps_start, deps_end),
+               indent=indent)
 
   def __init__(self,
                name,
@@ -327,7 +359,8 @@ class BuildFileManipulator(object):
                target_source_lines,
                target_interval,
                dependencies,
-               dependencies_interval):
+               dependencies_interval,
+               indent=2):
     """See BuildFileManipulator.load() for how to construct one as a user."""
     self.name = name
     self.target_address = address
@@ -336,6 +369,7 @@ class BuildFileManipulator(object):
     self._target_interval = target_interval
     self._dependencies_interval = dependencies_interval
     self._dependencies_by_address = {}
+    self._indent = indent
 
     for dep in dependencies:
       dep_address = Address.parse(dep.spec, relative_to=address.spec_path)
@@ -359,7 +393,7 @@ class BuildFileManipulator(object):
                     .format(address=address.spec, target_address=self.target_address.spec))
         return
     spec = address.reference(referencing_path=self.target_address.spec_path)
-    self._dependencies_by_address[address] = DependencySpec(spec)
+    self._dependencies_by_address[address] = DependencySpec(spec, indent=self._indent * 2)
 
   def clear_unforced_dependencies(self):
     """Remove all dependencies not forced by a comment.
@@ -382,11 +416,11 @@ class BuildFileManipulator(object):
     deps = sorted(self._dependencies_by_address.values(), key=lambda d: d.spec)
 
     def dep_lines():
-      yield '  dependencies = ['
+      yield '{}dependencies = ['.format(' ' * self._indent)
       for dep in deps:
         for line in dep.lines():
           yield line
-      yield '  ],'
+      yield '{}],'.format(' ' * self._indent)
     return list(dep_lines()) if deps else []
 
   def target_lines(self):
