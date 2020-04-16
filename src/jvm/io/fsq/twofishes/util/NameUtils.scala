@@ -246,6 +246,32 @@ object CountryConstants {
   val countryUsesCountyAsState = Set("TW", "IE", "BE", "GB")
 }
 
+/**
+  * Heuristically defined points for the name scorer; their absolute values do not matter much, it is their
+  * relative (higher/lower) values that matter
+  */
+object FeatureNameScorerConstants {
+  val correctLanguagePoints = 40
+  val englishLanguagePoints = 20
+  val wrongLanguagePoints = -20
+
+  val historicFlagPoints = -100
+  val colloquialFlagBadSizePoints = -1
+  val colloquialFlagGoodSizePoints = 1
+  val shortNameFlagPoints = 11
+  val neverDisplayFlagPoints = -10000
+  val lowQualityFlagPoints = -20
+  val preferredFlagPoints = 5
+  val abbreviationFlagPoints = 1000
+  val preferAbbreviationLengthPoints = 50 // it is > preferredFlagPoints and < abbreviationFlagPoints
+  val aliasFlagPoints = -1
+  val deaccentFlagPoints = -1
+  val altNameFlagPoints = -1
+  val localLangFlagPoints = 5
+
+  val nameSizePenaltyFactor = 0.0001 // it penalizes the length of the name, i.e., shorter names are favored
+}
+
 trait NameUtils {
   def countryUsesStateAbbrev(cc: String) =
     CountryConstants.countryUsesStateAbbrev.has(cc)
@@ -266,19 +292,19 @@ trait NameUtils {
 
   // Given an optional language and an abbreviation preference, find the best name
   // for a feature in the current context.
-  class FeatureNameScorer(lang: Option[String], preferAbbrev: Boolean) {
+  class FeatureNameScorer(lang: Option[String], preferAbbrev: Boolean, preferredLengthOpt: Option[Int]) {
     def scoreName(name: FeatureName): Double = {
       var score = 0.0
 
       lang match {
         case Some(l) => {
           if (name.lang == l) {
-            score += 40
+            score += FeatureNameScorerConstants.correctLanguagePoints
           } else if (name.lang == "en") {
             // make english the most likely fallback if name does not exist in requested language
-            score += 20
+            score += FeatureNameScorerConstants.englishLanguagePoints
           } else {
-            score += -20
+            score += FeatureNameScorerConstants.wrongLanguagePoints
           }
         }
         case _ =>
@@ -290,37 +316,41 @@ trait NameUtils {
         while (it.hasNext) {
           val flag = it.next
           score += (flag match {
-            case FeatureNameFlags.HISTORIC => -100
+            case FeatureNameFlags.HISTORIC => FeatureNameScorerConstants.historicFlagPoints
             case FeatureNameFlags.COLLOQUIAL => {
               // by itself, colloquial tends to be stupid things like "Frisco" for SF
               if (name.flags.size == 1) {
-                -1
+                FeatureNameScorerConstants.colloquialFlagBadSizePoints
               } else {
                 // With other things, it helps, especially countries
-                1
+                FeatureNameScorerConstants.colloquialFlagGoodSizePoints
               }
             }
-            case FeatureNameFlags.SHORT_NAME => 11
-            case FeatureNameFlags.NEVER_DISPLAY => -10000
-            case FeatureNameFlags.LOW_QUALITY => -20
-            case FeatureNameFlags.PREFERRED => 5
-            case FeatureNameFlags.ALIAS => -1
-            case FeatureNameFlags.DEACCENT => -1
+            case FeatureNameFlags.SHORT_NAME => FeatureNameScorerConstants.shortNameFlagPoints
+            case FeatureNameFlags.NEVER_DISPLAY => FeatureNameScorerConstants.neverDisplayFlagPoints
+            case FeatureNameFlags.LOW_QUALITY => FeatureNameScorerConstants.lowQualityFlagPoints
+            case FeatureNameFlags.PREFERRED => FeatureNameScorerConstants.preferredFlagPoints
+            case FeatureNameFlags.ALIAS => FeatureNameScorerConstants.aliasFlagPoints
+            case FeatureNameFlags.DEACCENT => FeatureNameScorerConstants.deaccentFlagPoints
             case FeatureNameFlags.ABBREVIATION => {
               if (preferAbbrev) {
-                1000
+                FeatureNameScorerConstants.abbreviationFlagPoints
               } else {
                 0
               }
             }
-            case FeatureNameFlags.ALT_NAME => -1
-            case FeatureNameFlags.LOCAL_LANG => 5
+            case FeatureNameFlags.ALT_NAME => FeatureNameScorerConstants.altNameFlagPoints
+            case FeatureNameFlags.LOCAL_LANG => FeatureNameScorerConstants.localLangFlagPoints
             case _ => 0
           })
         }
       }
 
-      score -= name.name.size * 0.0001
+      if (preferAbbrev && preferredLengthOpt.has(name.name.length)) {
+        score += FeatureNameScorerConstants.preferAbbreviationLengthPoints
+      }
+
+      score -= name.name.size * FeatureNameScorerConstants.nameSizePenaltyFactor
 
       score
     }
@@ -330,7 +360,8 @@ trait NameUtils {
     f: GeocodeFeature,
     names: Seq[FeatureName],
     lang: Option[String],
-    preferAbbrev: Boolean
+    preferAbbrev: Boolean,
+    preferredLengthOpt: Option[Int] = None
   ): Option[FeatureName] = {
     if (preferAbbrev && f.woeTypeOption.exists(_ =? YahooWoeType.COUNTRY)) {
       names.find(n => n.name.size == 2 && Option(n.flags).exists(_.contains(FeatureNameFlags.ABBREVIATION)))
@@ -338,7 +369,7 @@ trait NameUtils {
       val modifiedPreferAbbrev = preferAbbrev &&
         f.woeTypeOption.exists(_ =? YahooWoeType.ADMIN1) &&
         countryUsesStateAbbrev(f.ccOrThrow)
-      val scorer = new FeatureNameScorer(lang, modifiedPreferAbbrev)
+      val scorer = new FeatureNameScorer(lang, modifiedPreferAbbrev, preferredLengthOpt)
       var bestScore = 0.0
       var bestName = names.headOption
       for {
@@ -358,7 +389,14 @@ trait NameUtils {
     f: GeocodeFeature,
     lang: Option[String],
     preferAbbrev: Boolean
-  ): Option[FeatureName] = bestNameFromList(f, f.names, lang, preferAbbrev)
+  ): Option[FeatureName] = bestName(f, lang, preferAbbrev, None)
+
+  def bestName(
+    f: GeocodeFeature,
+    lang: Option[String],
+    preferAbbrev: Boolean,
+    preferredLengthOpt: Option[Int]
+  ): Option[FeatureName] = bestNameFromList(f, f.names, lang, preferAbbrev, preferredLengthOpt)
 
   type BestNameMatch = (FeatureName, Option[String])
 
