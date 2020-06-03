@@ -1,7 +1,7 @@
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
 scala_version = '2.11.8'
-HADOOP_VERSION = '2.6.0-cdh5.4.3'
+HADOOP_VERSION = '2.8.5'
 
 
 ### START Managed Dependencies START ###
