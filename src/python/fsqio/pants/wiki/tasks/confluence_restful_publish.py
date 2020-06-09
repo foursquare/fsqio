@@ -3,9 +3,12 @@
 
 from __future__ import absolute_import, division, print_function
 
+import os
+import shutil
 import textwrap
 
 from pants.base.exceptions import TaskError
+from pants.build_graph.resources import Resources
 from pants.contrib.confluence.tasks.confluence_publish import ConfluencePublish
 from pants.contrib.confluence.util.confluence_util import ConfluenceError
 from pants.util.memo import memoized_property
@@ -90,9 +93,13 @@ class ConfluenceRestfulPublish(ConfluencePublish):
     wiki = self.login()
     existing = wiki.getpage(space, title)
     if existing:
-      if not self.force and wiki.get_content_value(existing).strip() == body.strip():
-        self.context.log.warn('Skipping publish of {} - no changes'.format(title))
-        return
+      # NOTE: Disabled the no-op detection for publish (no consequences on user build time at all).
+      # We need the page to be generated before we attach resources.
+      # TODO(mateo): Restore or deep-six after we land on a solution for displaying inline attachments.
+      #
+      # if not self.force and wiki.get_content_value(existing).strip() == body.strip():
+      #   return
+
       pageopts['id'] = existing['id']
       pageopts['version'] = existing['version']
 
@@ -100,6 +107,21 @@ class ConfluenceRestfulPublish(ConfluencePublish):
       page = wiki.create_html_page(space, title, body, parent, **pageopts)
     except ConfluenceError as e:
       raise TaskError('Failed to update confluence: {}'.format(e))
+
+    # Copy any resource files into the html dist of the dependent page target.
+    # This is not required for Confluence attachment - if the final image tag
+    # doesn't work for both markdown and confluence, maybe just pass the source location to the API and otherwise
+    # leave the filesystem alone
+    page_target = self.context.build_graph.get_target(address)
+    outdir = os.path.join(self.get_options().pants_distdir, 'markdown', 'html')
+    page_outdir = os.path.join(outdir, page_target.sources_relative_to_target_base().rel_root)
+
+    for target in page_target.dependencies:
+      if isinstance(target, Resources):
+        # Copy next to rendered HTML in dist for local use and attach to newly published page for the wiki.
+        for resource_file in target.sources_relative_to_buildroot():
+          shutil.copy2(resource_file, page_outdir)
+          wiki.addattachment(page, resource_file)
     return wiki.get_url(page)
 
   def login(self):

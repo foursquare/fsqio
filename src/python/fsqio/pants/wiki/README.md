@@ -4,18 +4,14 @@ This is a quickly-hacked together extension of an XMLRpc Confluence plugin used 
 
 We use Atlassian Cloud, so this is an updated plugin that adapted the API to use the [Atlassian Cloud RESTful API](https://developer.atlassian.com/cloud/confluence/rest/).
 
-
 ## Wiki
-
 This uses Pants to grab markdown files (`README.md` preferred) and builds html pages.
 This auto-generated batch of html files is intended to be rebuilt on change and update the published wiki.
 
 Moving links will result in build breaks until fixed, documentation requires code review, and it is easy to recognize code changes that should include documentation updates.
 
-
 ## Preview the HTML
 `./pants markdown --open path/to/your:page`
-
 
 ## Adding a wiki page
 Add a `page()` target to the directory with your `README.md` file
@@ -39,7 +35,6 @@ Example:
 Pants uses the [Python Markdown module](http://pythonhosted.org/Markdown/) allows defining code snippets and links in the target so that your docs stay up to date!
 
 [The Pants `page` docs are here](https://www.pantsbuild.org/page.html)
-
 
 ## Publishing
 The wiki is meant to be published by CI. But the general workflow is like any other Pants task.
@@ -65,10 +60,42 @@ This requires an API key (not your Atlassian password!) ([directions here](https
 ```
 
 ## TODOs
-1. Parent page and heirarchical structure is not quite working, all loose pages for now
-1. Uploading images and attachments is untested
-1. Github auto-renders markdown and converting the pure markdown links to Pants links breaks the Github version.
-1. Should add "Edit" link to every page that redirects to the Github interface, edits in Confluence will be overwritten for auto-generated content.
-1. Buildgen support with a built-in understanding of the page hierarchy
-1. Inline source code from non-markdown only works with relative paths. Fine for explaining a single target and not fine for a doc tying multiple big ideas togther.
-1. more?
+### Wiki structure and buildgen support
+The worst parts of the user experience:
+   * managing the BUILD files
+   * relative file paths in the markdown links
+   * Constructing a Wiki Hierarchy by manually declaring a parent in BUILD file
+
+I believe buildgen can support all of the above.
+1. generate a `page` target every directory with `README.md`
+1. generate the wiki hierarchy using the file path of the README (relative to source root)
+1. codegen the relative paths in the markdown for Pants managed files
+
+I did this same basic thing for terraform because I hate having user-supplied strings as indexes
+
+### Add user restrictions to generated pages
+The generated Wiki should be distinct from any hand-edited Wiki spaces.
+Users will riot if their edits get wiped by CI tasks and we'd deserve it.
+
+* Read-only except for some admins and the service token
+* Guardrails for file extensions allowed as attachments?
+
+### Delete path
+There is nothing wired up to call `removepage` or code to delete an attachment.
+I think I would take the easy way out:
+* Read-only space for users
+* Tear it down once a day, during off hours
+
+### Blessed path for displaying images
+Pants can now attach images to the published pages.
+But the generated HTML is not yet connected to those attached resources.
+
+Potential Options:
+    * Create an `images` page and push all resource files there.
+      * Add `confluence_attachment` that mimics the `pants` tag and generates the image url
+    * Upload images to s3 static hosting and use their URLs
+    * Only support `img` tags using absolute URLs from foursquare s3 or google drive
+    * Macro or Markdown tag that displays images that are attached to theConfluence page.
+
+### Publish from CI
+No sweat.

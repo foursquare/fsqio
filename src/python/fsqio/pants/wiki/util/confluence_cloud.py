@@ -7,6 +7,7 @@ import base64
 import getpass
 import json
 import logging
+import os
 
 from pants.contrib.confluence.util.confluence_util import Confluence, ConfluenceError
 import requests
@@ -221,7 +222,7 @@ class ConfluenceCloud(Confluence):
       self._server_url + '/content/' + page_id, headers=self.rest_headers(self._session_token)
     )
     if not resp.ok:
-      raise ConfluenceError('Failed to delete page: %s' % resp.raise_for_status())
+      raise ConfluenceError('Failed to delete page: {}'.format(resp.raise_for_status()))
 
   def addattachment(self, page, filename):
     """Add an attachment to an existing page.
@@ -229,29 +230,28 @@ class ConfluenceCloud(Confluence):
     PUT /wiki/rest/api/content/{id}/child/attachment
     https://developer.atlassian.com/cloud/confluence/rest/#api-content-id-child-attachment-put
     """
-    # NOTE(mateo): unran and untested, natch.
-    try:
-      with open(filename, 'rb') as payload:
-        headers = self.rest_headers(self._session_token)
-        headers.update({'X-Atlassian-Token': 'nocheck'})
-        space = page['space']['key']
-        title = page['title']
-        page = self.getpage(space, title)
-        page_id = page['id']
-        resp = self._api_entrypoint.put(
-          self._server_url + '/content/' + page_id + '/child/attachment',
-          headers=headers,
-          files={
-            'file': payload,
-            'minorEdit': 'True',
-          },
-        )
-    except (IOError, OSError) as e:
-      log.error('Failed to read data from file {}: {}'.format(filename, str(e)))
-      return None
-    except Exception as e:
-      log.error('Failed to add file attachment {} to page: {}'.format(filename, self.get_url(page)))
-      return None
+    if not os.path.isfile(filename):
+      raise ConfluenceError('No file found: {}'.format(filename))
+    space = page['space']['key']
+    title = page['title']
+    # Fetches the current page data from Confluence.
+    page_instance = self.getpage(space, title)
+
+    with open(filename, 'rb') as file_payload:
+      resp = self._api_entrypoint.put(
+        '{}/content/{}/child/attachment'.format(self._server_url, page_instance['id']),
+        headers={
+          'Authorization': self.rest_headers(self._session_token)['Authorization'],
+          'X-Atlassian-Token': 'nocheck'
+        },
+        files={
+            'file': (os.path.basename(filename), file_payload),
+            'minorEdit': 'true',
+            'comment': 'Posted by Pants!',
+        },
+      )
+      if not resp.ok:
+        raise ConfluenceError('Failed to add attachment: {}\nError: {}'.format(filename, resp.raise_for_status()))
 
   def logout(self):
     """Terminates the session and connection to the server.
