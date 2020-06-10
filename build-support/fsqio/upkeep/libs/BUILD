@@ -10,3 +10,14 @@ resources(
   ],
   scope='runtime',
 )
+
+page(
+  name='page',
+  source='README.md',
+  provides=[
+    wiki_artifact(wiki=confluence,
+      space='ENG',
+      title='Foursquare.web: Upkeep Cache Management',
+    ),
+  ],
+)
