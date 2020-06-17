@@ -158,13 +158,10 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
     executor.findAndDeleteOne(query)
   }
 
-  def iterate[S](state: S)(handler: (S, Iter.Event[R]) => Iter.Command[S]): S = {
-    executor.iterate(query, state)(handler)
+  def iterate[S](state: S, batchSizeOpt: Option[Int] = None)(handler: (S, Iter.Event[R]) => Iter.Command[S]): S = {
+    executor.iterate(query, state, batchSizeOpt = batchSizeOpt)(handler)
   }
 
-  def iterateBatch[S](batchSize: Int, state: S)(handler: (S, Iter.Event[Seq[R]]) => Iter.Command[S]): S = {
-    executor.iterateBatch(query, batchSize, state)(handler)
-  }
 }
 
 case class ExecutableModifyQuery[MB, M <: MB, RB, State](

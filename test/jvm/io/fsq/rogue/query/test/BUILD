@@ -14,7 +14,7 @@ junit_tests(
     'src/jvm/io/fsq/field',
     'src/jvm/io/fsq/rogue',
     'src/jvm/io/fsq/rogue/adapter',
-    'src/jvm/io/fsq/rogue/adapter/callback/twitter',
+    'src/jvm/io/fsq/rogue/adapter/twitter',
     'src/jvm/io/fsq/rogue/connection',
     'src/jvm/io/fsq/rogue/index',
     'src/jvm/io/fsq/rogue/query',

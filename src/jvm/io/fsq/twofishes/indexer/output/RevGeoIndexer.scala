@@ -46,7 +46,7 @@ class RevGeoIndexer(
       0
     )((index: Int, event: Iter.Event[ThriftRevGeoIndex]) => {
       event match {
-        case Iter.Item(unwrapped) => {
+        case Iter.OnNext(unwrapped) => {
           val revgeoIndexRecord = new RevGeoIndex(unwrapped)
           for {
             (geoid, woeType) <- polygonMap.getOrElse(revgeoIndexRecord.polyIdOrThrow, Nil)
@@ -74,8 +74,8 @@ class RevGeoIndexer(
           }
           Iter.Continue(index + 1)
         }
-        case Iter.EOF => Iter.Return(index)
-        case Iter.Error(e) => throw e
+        case Iter.OnComplete => Iter.Return(index)
+        case Iter.OnError(e) => throw e
       }
     })
 

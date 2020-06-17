@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.adapter
 
-import com.mongodb.{Block, MongoNamespace, ReadPreference, WriteConcern}
+import com.mongodb.{MongoNamespace, ReadPreference, WriteConcern}
 import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.client.model.{
   BulkWriteOptions,
@@ -44,6 +44,7 @@ import java.util.concurrent.TimeUnit
 import org.bson.{BsonDocument, BsonDocumentReader, BsonInt32, BsonString, BsonValue}
 import org.bson.codecs.DecoderContext
 import org.bson.conversions.Bson
+import scala.util.{Success, Try}
 
 object MongoClientAdapter {
   // NOTE(jacob): This restriction is technically unnecessary, we could also define some
@@ -74,8 +75,8 @@ abstract class MongoClientAdapter[
     */
   type Cursor
 
-  /** Wrap a result for a no-op query. */
-  def wrapResult[T](value: => T): Result[T]
+  /** Wrap a result for a no-op query. May throw given Failure, depending on implementation. */
+  def wrapResult[T](value: Try[T]): Result[T]
 
   /* TODO(jacob): Can we move this to a better place? It needs access to the
    *    implementation of MongoCollection used, so currently our options are either
@@ -111,7 +112,7 @@ abstract class MongoClientAdapter[
 
   protected def distinctImpl[T](
     resultAccessor: => T, // call by name
-    accumulator: Block[BsonValue]
+    accumulator: BsonValue => Unit
   )(
     collection: MongoCollection[Document]
   )(
@@ -124,7 +125,7 @@ abstract class MongoClientAdapter[
     */
   protected def forEachProcessor[T](
     resultAccessor: => T, // call by name
-    accumulator: Block[Document]
+    accumulator: Document => Unit
   )(
     cursor: Cursor
   ): Result[T]
@@ -137,19 +138,6 @@ abstract class MongoClientAdapter[
     initialIterState: T,
     deserializer: Document => R,
     handler: (T, Iter.Event[R]) => Iter.Command[T]
-  )(
-    cursor: Cursor
-  ): Result[T]
-
-  /** A constructor for iterative cursor processors used in find queries. This uses the
-    * lower level cursor abstraction to allow short-circuiting consumption of the entire
-    * cursor.
-    */
-  protected def iterateBatchProcessor[R, T](
-    initialIterState: T,
-    deserializer: Document => R,
-    batchSize: Int,
-    handler: (T, Iter.Event[Seq[R]]) => Iter.Command[T]
   )(
     cursor: Cursor
   ): Result[T]
@@ -300,7 +288,7 @@ abstract class MongoClientAdapter[
 
   private def distinctRunner[M <: MetaRecord, T](
     resultAccessor: => T, // call by name
-    accumulator: Block[BsonValue]
+    accumulator: BsonValue => Unit
   )(
     query: Query[M, _, _],
     fieldName: String,
@@ -327,11 +315,9 @@ abstract class MongoClientAdapter[
     fieldName: String,
     readPreferenceOpt: Option[ReadPreference]
   ): Result[Long] = {
-    var count = 0L
-    val counter = new Block[BsonValue] {
-      override def apply(value: BsonValue): Unit = {
-        count += 1
-      }
+    @volatile var count = 0L
+    def counter(value: BsonValue): Unit = {
+      count += 1
     }
 
     distinctRunner(count, counter)(query, fieldName, readPreferenceOpt)
@@ -364,15 +350,13 @@ abstract class MongoClientAdapter[
     val container = new BsonDocument
     val documentCodec = collectionFactory.getCodecRegistryFromQuery(query).get(collectionFactory.documentClass)
 
-    val appender = new Block[BsonValue] {
-      override def apply(value: BsonValue): Unit = {
-        container.put("value", value)
-        val document = documentCodec.decode(
-          new BsonDocumentReader(container),
-          DecoderContext.builder.build()
-        )
-        fieldsBuilder += resultTransformer(document.get("value"))
-      }
+    def appender(value: BsonValue): Unit = {
+      container.put("value", value)
+      val document = documentCodec.decode(
+        new BsonDocumentReader(container),
+        DecoderContext.builder.build()
+      )
+      fieldsBuilder += resultTransformer(document.get("value"))
     }
 
     distinctRunner(fieldsBuilder.result(): Seq[FieldType], appender)(query, fieldName, readPreferenceOpt)
@@ -448,7 +432,7 @@ abstract class MongoClientAdapter[
           insertAllImpl(collection)(records, documents)
         )
       })
-      .getOrElse(wrapResult(records))
+      .getOrElse(wrapResult(Success(records)))
   }
 
   // NOTE(jacob): For better or for worse, the globally configured batch size takes
@@ -509,11 +493,7 @@ abstract class MongoClientAdapter[
     batchSizeOpt: Option[Int],
     readPreferenceOpt: Option[ReadPreference]
   ): Result[T] = {
-    val accumulator = new Block[Document] {
-      override def apply(value: Document): Unit = singleResultProcessor(value)
-    }
-
-    queryRunner(forEachProcessor(resultAccessor, accumulator))(
+    queryRunner(forEachProcessor(resultAccessor, singleResultProcessor))(
       "find",
       query,
       batchSizeOpt,
@@ -568,7 +548,7 @@ abstract class MongoClientAdapter[
     val modifyClause = queryHelpers.transformer.transformModify(modifyQuery)
 
     if (modifyClause.mod.clauses.isEmpty) {
-      wrapResult(0L)
+      wrapResult(Success(0L))
 
     } else {
       queryHelpers.validator.validateModify(
@@ -626,7 +606,7 @@ abstract class MongoClientAdapter[
     //    did not match anything". We should probably return some sort of datatype that
     //    can encode that state.
     if (findAndModifyClause.mod.clauses.isEmpty) {
-      wrapResult(None)
+      wrapResult(Success(None))
 
     } else {
       queryHelpers.validator.validateFindAndModify(
@@ -730,31 +710,15 @@ abstract class MongoClientAdapter[
     query: Query[M, R, _],
     initialIterState: T,
     deserializer: Document => R,
-    readPreferenceOpt: Option[ReadPreference]
+    readPreferenceOpt: Option[ReadPreference],
+    batchSizeOpt: Option[Int]
   )(
     handler: (T, Iter.Event[R]) => Iter.Command[T]
   ): Result[T] = {
     queryRunner(iterateProcessor(initialIterState, deserializer, handler))(
       "find",
       query,
-      None,
-      readPreferenceOpt
-    )
-  }
-
-  def iterateBatch[M <: MetaRecord, R, T](
-    query: Query[M, R, _],
-    batchSize: Int,
-    initialIterState: T,
-    deserializer: Document => R,
-    readPreferenceOpt: Option[ReadPreference]
-  )(
-    handler: (T, Iter.Event[Seq[R]]) => Iter.Command[T]
-  ): Result[T] = {
-    queryRunner(iterateBatchProcessor(initialIterState, deserializer, batchSize, handler))(
-      "find",
-      query,
-      Some(batchSize),
+      batchSizeOpt,
       readPreferenceOpt
     )
   }
@@ -897,7 +861,7 @@ abstract class MongoClientAdapter[
         }
       })
       .getOrElse(
-        wrapResult(None)
+        wrapResult(Success(None))
       )
   }
 }

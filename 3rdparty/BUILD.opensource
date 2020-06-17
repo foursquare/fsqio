@@ -53,7 +53,7 @@ managed_jar_dependencies(
     ':mockito-scala',
     ':mongodb-core',
     ':mongodb-driver',
-    ':mongodb-driver-async',
+    ':mongodb-driver-reactivestreams',
     ':netty',
     ':janino-compiler',
     ':reflections',
@@ -948,7 +948,7 @@ jar_library(
   ]
 )
 
-mongo_rev = '3.8.2'
+mongo_rev = '3.11.2'
 
 jar_library(
   name = 'bson',
@@ -987,13 +987,24 @@ jar_library(
 )
 
 jar_library(
-  name = 'mongodb-driver-async',
+  name = 'mongodb-driver-reactivestreams',
   tags = [
     'opensource',
     'fscommon',
   ],
   jars = [
-    jar(org = 'org.mongodb', name = 'mongodb-driver-async', rev = mongo_rev),
+    jar(org = 'org.mongodb', name = 'mongodb-driver-reactivestreams', rev = '1.12.0'),
+  ],
+)
+
+jar_library(
+  name = 'reactive-streams',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
+  jars = [
+    jar(org = 'org.reactivestreams', name = 'reactive-streams', rev = '1.0.2'),
   ],
 )
 
@@ -1006,7 +1017,7 @@ target(
   dependencies = [
     ':mongodb-core',
     ':mongodb-driver',
-    ':mongodb-driver-async',
+    ':mongodb-driver-reactivestreams',
   ],
 )
 

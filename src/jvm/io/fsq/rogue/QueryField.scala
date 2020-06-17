@@ -202,23 +202,23 @@ class NumericQueryField[V, M](field: Field[V, M]) extends AbstractQueryField[V, 
 
 class ObjectIdQueryField[F <: ObjectId, M](override val field: Field[F, M]) extends NumericQueryField(field) {
   def before(d: DateTime) =
-    new LtQueryClause(field.name, ObjectId.createFromLegacyFormat((d.toDate.getTime / 1000).toInt, 0, 0))
+    new LtQueryClause(field.name, new ObjectId((d.toDate.getTime / 1000).toInt, 0))
 
   def after(d: DateTime) =
-    new GtQueryClause(field.name, ObjectId.createFromLegacyFormat((d.toDate.getTime / 1000).toInt, 0, 0))
+    new GtQueryClause(field.name, new ObjectId((d.toDate.getTime / 1000).toInt, 0))
 
   def between(d1: DateTime, d2: DateTime) =
     new StrictBetweenQueryClause(
       field.name,
-      ObjectId.createFromLegacyFormat((d1.toDate.getTime / 1000).toInt, 0, 0),
-      ObjectId.createFromLegacyFormat((d2.toDate.getTime / 1000).toInt, 0, 0)
+      new ObjectId((d1.toDate.getTime / 1000).toInt, 0),
+      new ObjectId((d2.toDate.getTime / 1000).toInt, 0)
     )
 
   def between(range: (DateTime, DateTime)) =
     new StrictBetweenQueryClause(
       field.name,
-      ObjectId.createFromLegacyFormat((range._1.toDate.getTime / 1000).toInt, 0, 0),
-      ObjectId.createFromLegacyFormat((range._2.toDate.getTime / 1000).toInt, 0, 0)
+      new ObjectId((range._1.toDate.getTime / 1000).toInt, 0),
+      new ObjectId((range._2.toDate.getTime / 1000).toInt, 0)
     )
 }
 

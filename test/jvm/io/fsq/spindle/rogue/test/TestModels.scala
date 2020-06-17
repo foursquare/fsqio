@@ -3,6 +3,7 @@
 package io.fsq.spindle.rogue.test
 
 import com.mongodb.DB
+import io.fsq.rogue.LegacyMongo
 import io.fsq.rogue.test.TrivialORM
 import io.fsq.spindle.rogue.{SpindleDBCollectionFactory, SpindleDatabaseService, SpindleHelpers}
 import io.fsq.spindle.runtime.UntypedMetaRecord
@@ -19,7 +20,7 @@ class TestDBCollectionFactory extends SpindleDBCollectionFactory {
         "The mongo_identifier annotation in the Thrift definition must be rogue_mongo for these tests."
       )
     }
-    new DB(mongoClient, identifierStr)
+    LegacyMongo.getDB(mongoClient, identifierStr)
   }
   override val indexCache = None
 }

@@ -2,7 +2,7 @@
 
 package io.fsq.spindle.rogue.test
 
-import com.mongodb.DB
+import io.fsq.rogue.LegacyMongo
 import io.fsq.rogue.Rogue._
 import io.fsq.rogue.test.TrivialORM
 import io.fsq.spindle.rogue.{SpindleDBCollectionFactory, SpindleDatabaseService, SpindleQuery}
@@ -16,7 +16,7 @@ class TestSpindleDBService {
   def testSimpleStruct {
     val dbService = new SpindleDatabaseService(
       new SpindleDBCollectionFactory {
-        override def getPrimaryDB(meta: UntypedMetaRecord) = new DB(TrivialORM.mongoClient, "test")
+        override def getPrimaryDB(meta: UntypedMetaRecord) = LegacyMongo.getDB(TrivialORM.mongoClient, "test")
         override def indexCache = None
       }
     )
@@ -30,7 +30,7 @@ class TestSpindleDBService {
 
     val q = SpindleQuery(TestStruct).where(_.id eqs 1)
 
-    assertEquals("query string", "db.test_structs.find({ \"_id\" : 1 })", q.toString)
+    assertEquals("query string", "db.test_structs.find({\"_id\": 1})", q.toString)
 
     val res = dbService.fetch(q)
     assertEquals("result length", 1, res.length)

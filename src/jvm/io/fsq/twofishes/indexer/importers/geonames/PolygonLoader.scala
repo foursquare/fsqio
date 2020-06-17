@@ -10,7 +10,7 @@ import com.vividsolutions.jts.io.{WKBReader, WKBWriter}
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.geo.quadtree.CountryRevGeo
-import io.fsq.rogue.Iter
+import io.fsq.rogue.{Iter, IterUtil}
 import io.fsq.twofishes.country.CountryInfo
 import io.fsq.twofishes.gen._
 import io.fsq.twofishes.indexer.mongo.{GeocodeStorageWriteService, IndexerQueryExecutor, PolygonIndex}
@@ -244,7 +244,7 @@ class PolygonLoader(
       0
     )((index: Int, event: Iter.Event[ThriftPolygonIndex]) => {
       event match {
-        case Iter.Item(polyRecord) => {
+        case Iter.OnNext(polyRecord) => {
           for {
             featureRecord <- getFeaturesByPolyId(polyRecord.id)
             polyData = polyRecord.polygonOrThrow
@@ -265,8 +265,8 @@ class PolygonLoader(
           }
           Iter.Continue(index + 1)
         }
-        case Iter.EOF => Iter.Return(index)
-        case Iter.Error(e) => throw e
+        case Iter.OnComplete => Iter.Return(index)
+        case Iter.OnError(e) => throw e
       }
     })
     log.info("done reading in polys")
@@ -279,20 +279,13 @@ class PolygonLoader(
 
   def rebuildRevGeoIndex {
     IndexerQueryExecutor.dropCollection(ThriftRevGeoIndex)
-    executor.iterateBatch(
+    executor.iterate(
       Q(ThriftPolygonIndex),
-      1000,
-      ()
-    )((_: Unit, event: Iter.Event[Seq[ThriftPolygonIndex]]) => {
-      event match {
-        case Iter.Item(group) => {
-          parser.s2CoveringMaster.foreach(_ ! CalculateCoverFromMongo(group.map(_.id).toList, coverOptions))
-          Iter.Continue(())
-        }
-        case Iter.EOF => Iter.Return(())
-        case Iter.Error(e) => throw e
-      }
-    })
+      ((), Vector[ThriftPolygonIndex]()),
+      batchSizeOpt = Some(1000)
+    )(IterUtil.batch(1000, (_: Unit, group: Vector[ThriftPolygonIndex]) => {
+      parser.s2CoveringMaster.foreach(_ ! CalculateCoverFromMongo(group.map(_.id).toList, coverOptions))
+    }))
     log.info("done reading in polys")
     parser.s2CoveringMaster.foreach(_ ! Done())
   }

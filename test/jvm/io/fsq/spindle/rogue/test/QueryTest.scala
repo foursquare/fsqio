@@ -40,70 +40,70 @@ class QueryTest extends JUnitMustMatchers {
 
     val d1 = new DateTime(2010, 5, 1, 0, 0, 0, 0, DateTimeZone.UTC)
     val d2 = new DateTime(2010, 5, 2, 0, 0, 0, 0, DateTimeZone.UTC)
-    val oid1 = ObjectId.createFromLegacyFormat((d1.toDate.getTime / 1000).toInt, 0, 0)
-    val oid2 = ObjectId.createFromLegacyFormat((d2.toDate.getTime / 1000).toInt, 0, 0)
+    val oid1 = new ObjectId((d1.toDate.getTime / 1000).toInt, 0)
+    val oid2 = new ObjectId((d2.toDate.getTime / 1000).toInt, 0)
     val oid = new ObjectId
     val ven1 = ThriftVenue.newBuilder.id(VenueId(oid1)).result()
 
     // eqs
-    Q(ThriftVenue).where(_.mayor eqs 1).toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } })"""
+    Q(ThriftVenue).where(_.mayor eqs 1).toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}})"""
     Q(ThriftVenue)
       .where(_.venuename eqs "Starbucks")
-      .toString() must_== """db.venues.find({ "venuename" : "Starbucks" })"""
-    Q(ThriftVenue).where(_.closed eqs true).toString() must_== """db.venues.find({ "closed" : true })"""
+      .toString() must_== """db.venues.find({"venuename": "Starbucks"})"""
+    Q(ThriftVenue).where(_.closed eqs true).toString() must_== """db.venues.find({"closed": true})"""
     Q(ThriftVenue)
       .where(_.id eqs VenueId(oid))
-      .toString() must_== ("""db.venues.find({ "_id" : { "$oid" : "%s" } })""" format oid.toString)
+      .toString() must_== ("""db.venues.find({"_id": {"$oid": "%s"}})""" format oid.toString)
     Q(ThriftVenueClaim)
       .where(_.status eqs ThriftClaimStatus.approved)
-      .toString() must_== """db.venueclaims.find({ "status" : 1 })"""
+      .toString() must_== """db.venueclaims.find({"status": 1})"""
     Q(ThriftVenueClaim)
       .where(_.venueId eqs VenueId(oid))
-      .toString() must_== ("""db.venueclaims.find({ "vid" : { "$oid" : "%s" } })""" format oid.toString)
+      .toString() must_== ("""db.venueclaims.find({"vid": {"$oid": "%s"}})""" format oid.toString)
     Q(ThriftVenueClaim)
       .where(_.venueId eqs ven1.id)
-      .toString() must_== ("""db.venueclaims.find({ "vid" : { "$oid" : "%s" } })""" format oid1.toString)
+      .toString() must_== ("""db.venueclaims.find({"vid": {"$oid": "%s"}})""" format oid1.toString)
     Q(ThriftVenueClaim)
       .where(_.venueId eqs ven1.id)
-      .toString() must_== ("""db.venueclaims.find({ "vid" : { "$oid" : "%s" } })""" format oid1.toString)
+      .toString() must_== ("""db.venueclaims.find({"vid": {"$oid": "%s"}})""" format oid1.toString)
 
     // neq,lt,gt
     Q(ThriftVenue)
       .where(_.mayor_count neqs 5)
-      .toString() must_== """db.venues.find({ "mayor_count" : { "$ne" : 5 } })"""
-    Q(ThriftVenue).where(_.mayor_count < 5).toString() must_== """db.venues.find({ "mayor_count" : { "$lt" : 5 } })"""
-    Q(ThriftVenue).where(_.mayor_count lt 5).toString() must_== """db.venues.find({ "mayor_count" : { "$lt" : 5 } })"""
-    Q(ThriftVenue).where(_.mayor_count <= 5).toString() must_== """db.venues.find({ "mayor_count" : { "$lte" : 5 } })"""
+      .toString() must_== """db.venues.find({"mayor_count": {"$ne": 5}})"""
+    Q(ThriftVenue).where(_.mayor_count < 5).toString() must_== """db.venues.find({"mayor_count": {"$lt": 5}})"""
+    Q(ThriftVenue).where(_.mayor_count lt 5).toString() must_== """db.venues.find({"mayor_count": {"$lt": 5}})"""
+    Q(ThriftVenue).where(_.mayor_count <= 5).toString() must_== """db.venues.find({"mayor_count": {"$lte": 5}})"""
     Q(ThriftVenue)
       .where(_.mayor_count lte 5)
-      .toString() must_== """db.venues.find({ "mayor_count" : { "$lte" : 5 } })"""
-    Q(ThriftVenue).where(_.mayor_count > 5).toString() must_== """db.venues.find({ "mayor_count" : { "$gt" : 5 } })"""
-    Q(ThriftVenue).where(_.mayor_count gt 5).toString() must_== """db.venues.find({ "mayor_count" : { "$gt" : 5 } })"""
-    Q(ThriftVenue).where(_.mayor_count >= 5).toString() must_== """db.venues.find({ "mayor_count" : { "$gte" : 5 } })"""
+      .toString() must_== """db.venues.find({"mayor_count": {"$lte": 5}})"""
+    Q(ThriftVenue).where(_.mayor_count > 5).toString() must_== """db.venues.find({"mayor_count": {"$gt": 5}})"""
+    Q(ThriftVenue).where(_.mayor_count gt 5).toString() must_== """db.venues.find({"mayor_count": {"$gt": 5}})"""
+    Q(ThriftVenue).where(_.mayor_count >= 5).toString() must_== """db.venues.find({"mayor_count": {"$gte": 5}})"""
     Q(ThriftVenue)
       .where(_.mayor_count gte 5)
-      .toString() must_== """db.venues.find({ "mayor_count" : { "$gte" : 5 } })"""
+      .toString() must_== """db.venues.find({"mayor_count": {"$gte": 5}})"""
     Q(ThriftVenue)
       .where(_.mayor_count between (3, 5))
-      .toString() must_== """db.venues.find({ "mayor_count" : { "$gte" : 3, "$lte" : 5 } })"""
-    Q(ThriftVenue).where(_.popularity < 4).toString() must_== """db.venues.find({ "popularity" : { "$lt" : 4 } })"""
+      .toString() must_== """db.venues.find({"mayor_count": {"$gte": 3, "$lte": 5}})"""
+    Q(ThriftVenue).where(_.popularity < 4).toString() must_== """db.venues.find({"popularity": {"$lt": 4}})"""
 
     Q(ThriftVenueClaim)
       .where(_.status neqs ThriftClaimStatus.approved)
-      .toString() must_== """db.venueclaims.find({ "status" : { "$ne" : 1 } })"""
+      .toString() must_== """db.venueclaims.find({"status": {"$ne": 1}})"""
 
     Q(ThriftVenueClaim)
       .where(_.reason eqs ThriftRejectReason.tooManyClaims)
-      .toString() must_== """db.venueclaims.find({ "reason" : 0 })"""
+      .toString() must_== """db.venueclaims.find({"reason": 0})"""
     Q(ThriftVenueClaim)
       .where(_.reason eqs ThriftRejectReason.cheater)
-      .toString() must_== """db.venueclaims.find({ "reason" : 1 })"""
+      .toString() must_== """db.venueclaims.find({"reason": 1})"""
     Q(ThriftVenueClaim)
       .where(_.reason eqs ThriftRejectReason.wrongCode)
-      .toString() must_== """db.venueclaims.find({ "reason" : 2 })"""
+      .toString() must_== """db.venueclaims.find({"reason": 2})"""
     Q(ThriftVenueClaim)
       .where(_.reasonString eqs ThriftRejectReason.cheater)
-      .toString() must_== """db.venueclaims.find({ "reasonString" : "cheater" })"""
+      .toString() must_== """db.venueclaims.find({"reasonString": "cheater"})"""
 
     // Comparison operators on arbitrary fields.
     // Warning: arbitraryFieldToQueryField is dangerous if T is not a serializable type by DBObject
@@ -112,127 +112,127 @@ class QueryTest extends JUnitMustMatchers {
       Q(meta).where(r => arbitraryFieldToQueryField(f(r)) < otherVal)
     }
     doLessThan[ThriftVenue, ThriftVenueMeta, Int](ThriftVenue, _.mayor_count, 5)
-      .toString() must_== """db.venues.find({ "mayor_count" : { "$lt" : 5 } })"""
+      .toString() must_== """db.venues.find({"mayor_count": {"$lt": 5}})"""
 
     // in,nin
     Q(ThriftVenue)
       .where(_.legacyid in List(123L, 456L))
-      .toString() must_== """db.venues.find({ "legid" : { "$in" : [{ "$numberLong" : "123" }, { "$numberLong" : "456" }] } })"""
+      .toString() must_== """db.venues.find({"legid": {"$in": [{"$numberLong": "123"}, {"$numberLong": "456"}]}})"""
     Q(ThriftVenue)
       .where(_.venuename nin List("Starbucks", "Whole Foods"))
-      .toString() must_== """db.venues.find({ "venuename" : { "$nin" : ["Starbucks", "Whole Foods"] } })"""
+      .toString() must_== """db.venues.find({"venuename": {"$nin": ["Starbucks", "Whole Foods"]}})"""
 
     Q(ThriftVenueClaim)
       .where(_.status in List(ThriftClaimStatus.approved, ThriftClaimStatus.pending))
-      .toString() must_== """db.venueclaims.find({ "status" : { "$in" : [1, 0] } })"""
+      .toString() must_== """db.venueclaims.find({"status": {"$in": [1, 0]}})"""
     Q(ThriftVenueClaim)
       .where(_.status nin List(ThriftClaimStatus.approved, ThriftClaimStatus.pending))
-      .toString() must_== """db.venueclaims.find({ "status" : { "$nin" : [1, 0] } })"""
+      .toString() must_== """db.venueclaims.find({"status": {"$nin": [1, 0]}})"""
 
     Q(ThriftVenueClaim)
       .where(_.venueId in List(ven1.id))
-      .toString() must_== ("""db.venueclaims.find({ "vid" : { "$in" : [{ "$oid" : "%s" }] } })""" format oid1.toString)
+      .toString() must_== ("""db.venueclaims.find({"vid": {"$in": [{"$oid": "%s"}]}})""" format oid1.toString)
 
     Q(ThriftVenueClaim)
       .where(_.venueId in List(ven1.id))
-      .toString() must_== ("""db.venueclaims.find({ "vid" : { "$in" : [{ "$oid" : "%s" }] } })""" format oid1.toString)
+      .toString() must_== ("""db.venueclaims.find({"vid": {"$in": [{"$oid": "%s"}]}})""" format oid1.toString)
 
     Q(ThriftVenueClaim)
       .where(_.venueId nin List(ven1.id))
-      .toString() must_== ("""db.venueclaims.find({ "vid" : { "$nin" : [{ "$oid" : "%s" }] } })""" format oid1.toString)
+      .toString() must_== ("""db.venueclaims.find({"vid": {"$nin": [{"$oid": "%s"}]}})""" format oid1.toString)
 
     Q(ThriftVenueClaim)
       .where(_.venueId nin List(ven1.id))
-      .toString() must_== ("""db.venueclaims.find({ "vid" : { "$nin" : [{ "$oid" : "%s" }] } })""" format oid1.toString)
+      .toString() must_== ("""db.venueclaims.find({"vid": {"$nin": [{"$oid": "%s"}]}})""" format oid1.toString)
 
     // exists
-    Q(ThriftVenue).where(_.id exists true).toString() must_== """db.venues.find({ "_id" : { "$exists" : true } })"""
+    Q(ThriftVenue).where(_.id exists true).toString() must_== """db.venues.find({"_id": {"$exists": true}})"""
 
     // startsWith, regex
     Q(ThriftVenue)
       .where(_.venuename startsWith "Starbucks")
-      .toString() must_== """db.venues.find({ "venuename" : { "$regex" : "^\\QStarbucks\\E", "$options" : "" } })"""
+      .toString() must_== """db.venues.find({"venuename": {"$regex": "^\\QStarbucks\\E", "$options": ""}})"""
     val p1 = Pattern.compile("Star.*")
     Q(ThriftVenue)
       .where(_.venuename regexWarningNotIndexed p1)
-      .toString() must_== """db.venues.find({ "venuename" : { "$regex" : "Star.*", "$options" : "" } })"""
+      .toString() must_== """db.venues.find({"venuename": {"$regex": "Star.*", "$options": ""}})"""
     Q(ThriftVenue)
       .where(_.venuename matches p1)
-      .toString() must_== """db.venues.find({ "venuename" : { "$regex" : "Star.*", "$options" : "" } })"""
+      .toString() must_== """db.venues.find({"venuename": {"$regex": "Star.*", "$options": ""}})"""
     val p2 = Pattern.compile("Star.*", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE)
     Q(ThriftVenue)
       .where(_.venuename matches p2)
-      .toString() must_== """db.venues.find({ "venuename" : { "$regex" : "Star.*", "$options" : "im" } })"""
+      .toString() must_== """db.venues.find({"venuename": {"$regex": "Star.*", "$options": "im"}})"""
     Q(ThriftVenue)
       .where(_.venuename matches p2)
       .and(_.venuename nin List("a", "b"))
-      .toString() must_== """db.venues.find({ "venuename" : { "$nin" : ["a", "b"], "$regex" : "Star.*", "$options" : "im" } })"""
+      .toString() must_== """db.venues.find({"venuename": {"$nin": ["a", "b"], "$regex": "Star.*", "$options": "im"}})"""
 
     // all, in, size, contains, at
     Q(ThriftVenue)
       .where(_.tags all List("db", "ka"))
-      .toString() must_== """db.venues.find({ "tags" : { "$all" : ["db", "ka"] } })"""
+      .toString() must_== """db.venues.find({"tags": {"$all": ["db", "ka"]}})"""
     Q(ThriftVenue)
       .where(_.tags in List("db", "ka"))
-      .toString() must_== """db.venues.find({ "tags" : { "$in" : ["db", "ka"] } })"""
+      .toString() must_== """db.venues.find({"tags": {"$in": ["db", "ka"]}})"""
     Q(ThriftVenue)
       .where(_.tags nin List("db", "ka"))
-      .toString() must_== """db.venues.find({ "tags" : { "$nin" : ["db", "ka"] } })"""
+      .toString() must_== """db.venues.find({"tags": {"$nin": ["db", "ka"]}})"""
     Q(ThriftVenue)
       .where(_.tags neqs List("db", "ka"))
-      .toString() must_== """db.venues.find({ "tags" : { "$ne" : ["db", "ka"] } })"""
-    Q(ThriftVenue).where(_.tags size 3).toString() must_== """db.venues.find({ "tags" : { "$size" : 3 } })"""
-    Q(ThriftVenue).where(_.tags contains "karaoke").toString() must_== """db.venues.find({ "tags" : "karaoke" })"""
+      .toString() must_== """db.venues.find({"tags": {"$ne": ["db", "ka"]}})"""
+    Q(ThriftVenue).where(_.tags size 3).toString() must_== """db.venues.find({"tags": {"$size": 3}})"""
+    Q(ThriftVenue).where(_.tags contains "karaoke").toString() must_== """db.venues.find({"tags": "karaoke"})"""
     Q(ThriftVenue)
       .where(_.tags notcontains "karaoke")
-      .toString() must_== """db.venues.find({ "tags" : { "$ne" : "karaoke" } })"""
-    Q(ThriftVenue).where(_.popularity contains 3).toString() must_== """db.venues.find({ "popularity" : 3 })"""
-    Q(ThriftVenue).where(_.popularity at 0 eqs 3).toString() must_== """db.venues.find({ "popularity.0" : 3 })"""
+      .toString() must_== """db.venues.find({"tags": {"$ne": "karaoke"}})"""
+    Q(ThriftVenue).where(_.popularity contains 3).toString() must_== """db.venues.find({"popularity": 3})"""
+    Q(ThriftVenue).where(_.popularity at 0 eqs 3).toString() must_== """db.venues.find({"popularity.0": 3})"""
     Q(ThriftVenue)
       .where(_.categories at 0 eqs oid)
-      .toString() must_== """db.venues.find({ "categories.0" : { "$oid" : "%s" } })""".format(oid.toString)
+      .toString() must_== """db.venues.find({"categories.0": {"$oid": "%s"}})""".format(oid.toString)
     Q(ThriftVenue)
       .where(_.tags at 0 startsWith "kara")
-      .toString() must_== """db.venues.find({ "tags.0" : { "$regex" : "^\\Qkara\\E", "$options" : "" } })"""
+      .toString() must_== """db.venues.find({"tags.0": {"$regex": "^\\Qkara\\E", "$options": ""}})"""
     // alternative syntax
     Q(ThriftVenue)
       .where(_.tags idx 0 startsWith "kara")
-      .toString() must_== """db.venues.find({ "tags.0" : { "$regex" : "^\\Qkara\\E", "$options" : "" } })"""
+      .toString() must_== """db.venues.find({"tags.0": {"$regex": "^\\Qkara\\E", "$options": ""}})"""
 
     // maps
-    Q(ThriftTip).where(_.counts at "foo" eqs 3).toString() must_== """db.tips.find({ "counts.foo" : 3 })"""
+    Q(ThriftTip).where(_.counts at "foo" eqs 3).toString() must_== """db.tips.find({"counts.foo": 3})"""
     Q(ThriftVenue)
       .where(_.lastCheckins.at("123").sub.field(_.id) eqs oid)
-      .toString must_== """db.venues.find({ "lastCheckins.123._id" : { "$oid" : "%s" } })""".format(oid.toString)
+      .toString must_== """db.venues.find({"lastCheckins.123._id": {"$oid": "%s"}})""".format(oid.toString)
 
     // TODO(rogue-latlng)
 
     Q(ThriftVenue)
       .where(_.geolatlng eqs List(45.0, 50.0))
-      .toString() must_== """db.venues.find({ "latlng" : [45.0, 50.0] })"""
+      .toString() must_== """db.venues.find({"latlng": [45.0, 50.0]})"""
     Q(ThriftVenue)
       .where(_.geolatlng neqs List(31.0, 23.0))
-      .toString() must_== """db.venues.find({ "latlng" : { "$ne" : [31.0, 23.0] } })"""
+      .toString() must_== """db.venues.find({"latlng": {"$ne": [31.0, 23.0]}})"""
 
     // ObjectId before, after, between
     Q(ThriftVenue)
       .where(_.id before d2)
-      .toString() must_== """db.venues.find({ "_id" : { "$lt" : { "$oid" : "%s" } } })"""
+      .toString() must_== """db.venues.find({"_id": {"$lt": {"$oid": "%s"}}})"""
       .format(oid2.toString)
     Q(ThriftVenue)
       .where(_.id after d1)
-      .toString() must_== """db.venues.find({ "_id" : { "$gt" : { "$oid" : "%s" } } })"""
+      .toString() must_== """db.venues.find({"_id": {"$gt": {"$oid": "%s"}}})"""
       .format(oid1.toString)
     Q(ThriftVenue)
       .where(_.id between (d1, d2))
-      .toString() must_== """db.venues.find({ "_id" : { "$gt" : { "$oid" : "%s" }, "$lt" : { "$oid" : "%s" } } })"""
+      .toString() must_== """db.venues.find({"_id": {"$gt": {"$oid": "%s"}, "$lt": {"$oid": "%s"}}})"""
       .format(
         oid1.toString,
         oid2.toString
       )
     Q(ThriftVenue)
       .where(_.id between Tuple2(d1, d2))
-      .toString() must_== """db.venues.find({ "_id" : { "$gt" : { "$oid" : "%s" }, "$lt" : { "$oid" : "%s" } } })"""
+      .toString() must_== """db.venues.find({"_id": {"$gt": {"$oid": "%s"}, "$lt": {"$oid": "%s"}}})"""
       .format(
         oid1.toString,
         oid2.toString
@@ -241,27 +241,27 @@ class QueryTest extends JUnitMustMatchers {
     // DateTime before, after, between
     Q(ThriftVenue)
       .where(_.last_updated before d2)
-      .toString() must_== """db.venues.find({ "last_updated" : { "$lt" : { "$date" : 1272758400000 } } })"""
+      .toString() must_== """db.venues.find({"last_updated": {"$lt": {"$date": 1272758400000}}})"""
     Q(ThriftVenue)
       .where(_.last_updated after d1)
-      .toString() must_== """db.venues.find({ "last_updated" : { "$gt" : { "$date" : 1272672000000 } } })"""
+      .toString() must_== """db.venues.find({"last_updated": {"$gt": {"$date": 1272672000000}}})"""
     Q(ThriftVenue)
       .where(_.last_updated between (d1, d2))
-      .toString() must_== """db.venues.find({ "last_updated" : { "$gte" : { "$date" : 1272672000000 }, "$lte" : { "$date" : 1272758400000 } } })"""
+      .toString() must_== """db.venues.find({"last_updated": {"$gte": {"$date": 1272672000000}, "$lte": {"$date": 1272758400000}}})"""
     Q(ThriftVenue)
       .where(_.last_updated between Tuple2(d1, d2))
-      .toString() must_== """db.venues.find({ "last_updated" : { "$gte" : { "$date" : 1272672000000 }, "$lte" : { "$date" : 1272758400000 } } })"""
+      .toString() must_== """db.venues.find({"last_updated": {"$gte": {"$date": 1272672000000}, "$lte": {"$date": 1272758400000}}})"""
     Q(ThriftVenue)
       .where(_.last_updated eqs d1)
-      .toString() must_== """db.venues.find({ "last_updated" : { "$date" : 1272672000000 } })"""
+      .toString() must_== """db.venues.find({"last_updated": {"$date": 1272672000000}})"""
 
     // sub queries on listfield
     Q(ThriftComment)
       .where(_.comments.unsafeField[Int]("z") contains 123)
-      .toString() must_== """db.comments.find({ "comments.z" : 123 })"""
+      .toString() must_== """db.comments.find({"comments.z": 123})"""
     Q(ThriftComment)
       .where(_.comments.unsafeField[String]("comment") contains "hi")
-      .toString() must_== """db.comments.find({ "comments.comment" : "hi" })"""
+      .toString() must_== """db.comments.find({"comments.comment": "hi"})"""
 
     // BsonRecordField subfield queries
 
@@ -269,390 +269,390 @@ class QueryTest extends JUnitMustMatchers {
 
     Q(ThriftVenue)
       .where(_.lastClaim.sub.field(_.userid) eqs 123)
-      .toString() must_== """db.venues.find({ "last_claim.uid" : { "$numberLong" : "123" } })"""
+      .toString() must_== """db.venues.find({"last_claim.uid": {"$numberLong": "123"}})"""
 
     // Field type
     Q(ThriftVenue)
       .where(_.legacyid hastype MongoType.String)
-      .toString() must_== """db.venues.find({ "legid" : { "$type" : 2 } })"""
+      .toString() must_== """db.venues.find({"legid": {"$type": 2}})"""
 
     // Modulus
     Q(ThriftVenue)
       .where(_.legacyid mod (5, 1))
-      .toString() must_== """db.venues.find({ "legid" : { "$mod" : [5, 1] } })"""
+      .toString() must_== """db.venues.find({"legid": {"$mod": [5, 1]}})"""
 
     // compound queries
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .and(_.tags contains "karaoke")
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" }, "tags" : "karaoke" })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}, "tags": "karaoke"})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .and(_.mayor_count eqs 5)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" }, "mayor_count" : 5 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}, "mayor_count": 5})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .and(_.mayor_count lt 5)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" }, "mayor_count" : { "$lt" : 5 } })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}, "mayor_count": {"$lt": 5}})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .and(_.mayor_count gt 3)
       .and(_.mayor_count lt 5)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" }, "mayor_count" : { "$lt" : 5, "$gt" : 3 } })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}, "mayor_count": {"$lt": 5, "$gt": 3}})"""
 
     // queries with no clauses
-    Q(ThriftVenue).toString() must_== "db.venues.find({ })"
-    Q(ThriftVenue).orderDesc(_.id).toString() must_== """db.venues.find({ }).sort({ "_id" : -1 })"""
+    Q(ThriftVenue).toString() must_== "db.venues.find({})"
+    Q(ThriftVenue).orderDesc(_.id).toString() must_== """db.venues.find({}).sort({"_id": -1})"""
 
     // ordered queries
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .orderAsc(_.legacyid)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }).sort({ "legid" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}).sort({"legid": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .orderDesc(_.legacyid)
       .andAsc(_.userid)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }).sort({ "legid" : -1, "userid" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}).sort({"legid": -1, "userid": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .orderNaturalAsc
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }).sort({ "$natural" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}).sort({"$natural": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .orderNaturalDesc
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }).sort({ "$natural" : -1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}).sort({"$natural": -1})"""
 
     // select queries
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .select(_.legacyid)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }, { "legid" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legid": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .select(_.legacyid, _.userid)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }, { "legid" : 1, "userid" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legid": 1, "userid": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .select(_.legacyid, _.userid, _.mayor)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }, { "legid" : 1, "userid" : 1, "mayor" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legid": 1, "userid": 1, "mayor": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .select(_.legacyid, _.userid, _.mayor, _.mayor_count)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }, { "legid" : 1, "userid" : 1, "mayor" : 1, "mayor_count" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legid": 1, "userid": 1, "mayor": 1, "mayor_count": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }, { "legid" : 1, "userid" : 1, "mayor" : 1, "mayor_count" : 1, "closed" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legid": 1, "userid": 1, "mayor": 1, "mayor_count": 1, "closed": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }, { "legid" : 1, "userid" : 1, "mayor" : 1, "mayor_count" : 1, "closed" : 1, "tags" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legid": 1, "userid": 1, "mayor": 1, "mayor_count": 1, "closed": 1, "tags": 1})"""
 
     // select case queries
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .selectCase(_.legacyid, V1)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }, { "legid" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legid": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .selectCase(_.legacyid, _.userid, V2)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }, { "legid" : 1, "userid" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legid": 1, "userid": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .selectCase(_.legacyid, _.userid, _.mayor, V3)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }, { "legid" : 1, "userid" : 1, "mayor" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legid": 1, "userid": 1, "mayor": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, V4)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }, { "legid" : 1, "userid" : 1, "mayor" : 1, "mayor_count" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legid": 1, "userid": 1, "mayor": 1, "mayor_count": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, V5)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }, { "legid" : 1, "userid" : 1, "mayor" : 1, "mayor_count" : 1, "closed" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legid": 1, "userid": 1, "mayor": 1, "mayor_count": 1, "closed": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags, V6)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }, { "legid" : 1, "userid" : 1, "mayor" : 1, "mayor_count" : 1, "closed" : 1, "tags" : 1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legid": 1, "userid": 1, "mayor": 1, "mayor_count": 1, "closed": 1, "tags": 1})"""
 
     // select subfields
     Q(ThriftTip)
       .where(_.legacyid eqs 1)
       .select(_.counts at "foo")
-      .toString() must_== """db.tips.find({ "legid" : { "$numberLong" : "1" } }, { "counts.foo" : 1 })"""
+      .toString() must_== """db.tips.find({"legid": {"$numberLong": "1"}}, {"counts.foo": 1})"""
 
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .select(_.lastClaim.sub.select(_.status))
-      .toString() must_== """db.venues.find({ "legid" : { "$numberLong" : "1" } }, { "last_claim.status" : 1 })"""
+      .toString() must_== """db.venues.find({"legid": {"$numberLong": "1"}}, {"last_claim.status": 1})"""
 
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .select(_.claims.sub.select(_.userid))
-      .toString() must_== """db.venues.find({ "legid" : { "$numberLong" : "1" } }, { "claims.uid" : 1 })"""
+      .toString() must_== """db.venues.find({"legid": {"$numberLong": "1"}}, {"claims.uid": 1})"""
 
     // select slice
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .select(_.tags)
-      .toString() must_== """db.venues.find({ "legid" : { "$numberLong" : "1" } }, { "tags" : 1 })"""
+      .toString() must_== """db.venues.find({"legid": {"$numberLong": "1"}}, {"tags": 1})"""
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .select(_.tags.slice(4))
-      .toString() must_== """db.venues.find({ "legid" : { "$numberLong" : "1" } }, { "tags" : { "$slice" : 4 } })"""
+      .toString() must_== """db.venues.find({"legid": {"$numberLong": "1"}}, {"tags": {"$slice": 4}})"""
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .select(_.tags.slice(4, 7))
-      .toString() must_== """db.venues.find({ "legid" : { "$numberLong" : "1" } }, { "tags" : { "$slice" : [4, 7] } })"""
+      .toString() must_== """db.venues.find({"legid": {"$numberLong": "1"}}, {"tags": {"$slice": [4, 7]}})"""
 
     Q(ThriftComment)
       .select(_.comments.unsafeField[Long]("userid"))
-      .toString() must_== """db.comments.find({ }, { "comments.userid" : 1 })"""
+      .toString() must_== """db.comments.find({}, {"comments.userid": 1})"""
 
     // out of order and doesn't screw up earlier params
     Q(ThriftVenue)
       .limit(10)
       .where(_.mayor eqs 1)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }).limit(10)"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}).limit(10)"""
     Q(ThriftVenue)
       .orderDesc(_.id)
       .and(_.mayor eqs 1)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }).sort({ "_id" : -1 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}).sort({"_id": -1})"""
     Q(ThriftVenue)
       .orderDesc(_.id)
       .skip(3)
       .and(_.mayor eqs 1)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }).sort({ "_id" : -1 }).skip(3)"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}).sort({"_id": -1}).skip(3)"""
 
     // Scan should be the same as and/where
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .scan(_.tags contains "karaoke")
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" }, "tags" : "karaoke" })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}, "tags": "karaoke"})"""
     Q(ThriftVenue)
       .scan(_.mayor eqs 1)
       .and(_.mayor_count eqs 5)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" }, "mayor_count" : 5 })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}, "mayor_count": 5})"""
     Q(ThriftVenue)
       .scan(_.mayor eqs 1)
       .scan(_.mayor_count lt 5)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" }, "mayor_count" : { "$lt" : 5 } })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}, "mayor_count": {"$lt": 5}})"""
 
     // limit, limitOpt, skip, skipOpt
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .limit(10)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }).limit(10)"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}).limit(10)"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .limitOpt(Some(10))
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }).limit(10)"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}).limit(10)"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .limitOpt(None)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .skip(10)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }).skip(10)"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}).skip(10)"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .skipOpt(Some(10))
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } }).skip(10)"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}}).skip(10)"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .skipOpt(None)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" } })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}})"""
 
     // raw query clauses
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .raw(_.add("$where", "this.a > 3"))
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" }, "$where" : "this.a > 3" })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}, "$where": "this.a > 3"})"""
 
     // $not tests
     Q(ThriftVenue)
       .scan(_.mayor eqs 1)
       .scan(_.mayor_count not (_ lt 5))
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" }, "mayor_count" : { "$not" : { "$lt" : 5 } } })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}, "mayor_count": {"$not": {"$lt": 5}}})"""
     Q(ThriftVenue)
       .scan(_.mayor eqs 1)
       .scan(_.mayor_count not (_ lt 5))
       .and(_.mayor_count not (_ gt 6))
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" }, "mayor_count" : { "$not" : { "$gt" : 6, "$lt" : 5 } } })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}, "mayor_count": {"$not": {"$gt": 6, "$lt": 5}}})"""
     Q(ThriftVenue)
       .scan(_.mayor eqs 1)
       .scan(_.mayor_count not (_ lt 5))
       .and(_.mayor_count gt 3)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "1" }, "mayor_count" : { "$gt" : 3, "$not" : { "$lt" : 5 } } })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "1"}, "mayor_count": {"$gt": 3, "$not": {"$lt": 5}}})"""
     Q(ThriftVenue)
       .scan(_.id not (_ before d1))
-      .toString() must_== """db.venues.find({ "_id" : { "$not" : { "$lt" : { "$oid" : "%s" } } } })""".format(
+      .toString() must_== """db.venues.find({"_id": {"$not": {"$lt": {"$oid": "%s"}}}})""".format(
       oid1.toString
     )
     Q(ThriftVenue)
       .scan(_.last_updated not (_ between (d1, d2)))
-      .toString() must_== """db.venues.find({ "last_updated" : { "$not" : { "$gte" : { "$date" : 1272672000000 }, "$lte" : { "$date" : 1272758400000 } } } })"""
+      .toString() must_== """db.venues.find({"last_updated": {"$not": {"$gte": {"$date": 1272672000000}, "$lte": {"$date": 1272758400000}}}})"""
     Q(ThriftVenue)
       .scan(_.tags not (_ in List("a", "b")))
-      .toString() must_== """db.venues.find({ "tags" : { "$not" : { "$in" : ["a", "b"] } } })"""
+      .toString() must_== """db.venues.find({"tags": {"$not": {"$in": ["a", "b"]}}})"""
     Q(ThriftVenue)
       .scan(_.tags not (_ size 0))
-      .toString() must_== """db.venues.find({ "tags" : { "$not" : { "$size" : 0 } } })"""
+      .toString() must_== """db.venues.find({"tags": {"$not": {"$size": 0}}})"""
     Q(ThriftVenue)
       .scan(_.popularity at 0 not (_ lt 0))
-      .toString() must_== """db.venues.find({ "popularity.0" : { "$not" : { "$lt" : 0 } } })"""
+      .toString() must_== """db.venues.find({"popularity.0": {"$not": {"$lt": 0}}})"""
   }
 
   @Test
   def testModifyQueryShouldProduceACorrectJSONQueryString {
     val d1 = new DateTime(2010, 5, 1, 0, 0, 0, 0, DateTimeZone.UTC)
 
-    val query = """db.venues.update({ "legid" : { "$numberLong" : "1" } }, """
+    val query = """db.venues.update({"legid": {"$numberLong": "1"}}, """
     val suffix = ", false, false)"
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.venuename setTo "fshq")
-      .toString() must_== query + """{ "$set" : { "venuename" : "fshq" } }""" + suffix
+      .toString() must_== query + """{"$set": {"venuename": "fshq"}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.mayor_count setTo 3)
-      .toString() must_== query + """{ "$set" : { "mayor_count" : 3 } }""" + suffix
+      .toString() must_== query + """{"$set": {"mayor_count": 3}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.mayor_count unset)
-      .toString() must_== query + """{ "$unset" : { "mayor_count" : 1 } }""" + suffix
+      .toString() must_== query + """{"$unset": {"mayor_count": 1}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.mayor_count setTo Some(3))
-      .toString() must_== query + """{ "$set" : { "mayor_count" : 3 } }""" + suffix
+      .toString() must_== query + """{"$set": {"mayor_count": 3}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.mayor_count setTo None)
-      .toString() must_== query + """{ "$unset" : { "mayor_count" : 1 } }""" + suffix
+      .toString() must_== query + """{"$unset": {"mayor_count": 1}}""" + suffix
 
     // Numeric
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.mayor_count inc 3)
-      .toString() must_== query + """{ "$inc" : { "mayor_count" : 3 } }""" + suffix
+      .toString() must_== query + """{"$inc": {"mayor_count": 3}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.mayor_count mul 3)
-      .toString() must_== query + """{ "$mul" : { "mayor_count" : 3 } }""" + suffix
+      .toString() must_== query + """{"$mul": {"mayor_count": 3}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.mayor_count min 3)
-      .toString() must_== query + """{ "$min" : { "mayor_count" : 3 } }""" + suffix
+      .toString() must_== query + """{"$min": {"mayor_count": 3}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.mayor_count max 3)
-      .toString() must_== query + """{ "$max" : { "mayor_count" : 3 } }""" + suffix
+      .toString() must_== query + """{"$max": {"mayor_count": 3}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.last_updated min d1)
-      .toString() must_== query + """{ "$min" : { "last_updated" : { "$date" : 1272672000000 } } }""" + suffix
+      .toString() must_== query + """{"$min": {"last_updated": {"$date": 1272672000000}}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.last_updated max d1)
-      .toString() must_== query + """{ "$max" : { "last_updated" : { "$date" : 1272672000000 } } }""" + suffix
+      .toString() must_== query + """{"$max": {"last_updated": {"$date": 1272672000000}}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.last_updated currentDate)
-      .toString() must_== query + """{ "$currentDate" : { "last_updated" : true } }""" + suffix
+      .toString() must_== query + """{"$currentDate": {"last_updated": true}}""" + suffix
 
     // Enumeration
 
-    val query2 = """db.venueclaims.update({ "uid" : 1 }, """
+    val query2 = """db.venueclaims.update({"uid": 1}, """
 
     // TODO(Tansy) fails with:
     // value userid is not a member of io.fsq.spindle.rogue.test.gen.ThriftVenueClaimMeta
-    // Q(ThriftVenueClaim).where(_.userid eqs 1).modify(_.status setTo ThriftClaimStatus.approved).toString() must_== query2 + """{ "$set" : { "status" : "Approved" } }""" + suffix
+    // Q(ThriftVenueClaim).where(_.userid eqs 1).modify(_.status setTo ThriftClaimStatus.approved).toString() must_== query2 + """{"$set": {"status": "Approved"}}""" + suffix
 
     Q(ThriftVenueClaim)
       .modify(_.reason setTo ThriftRejectReason.cheater)
-      .toString() must_== """db.venueclaims.update({ }, { "$set" : { "reason" : 1 } }, false, false)"""
+      .toString() must_== """db.venueclaims.update({}, {"$set": {"reason": 1}}, false, false)"""
     Q(ThriftVenueClaim)
       .modify(_.reasonString setTo ThriftRejectReason.cheater)
-      .toString() must_== """db.venueclaims.update({ }, { "$set" : { "reasonString" : "cheater" } }, false, false)"""
+      .toString() must_== """db.venueclaims.update({}, {"$set": {"reasonString": "cheater"}}, false, false)"""
 
     // Calendar
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.last_updated setTo d1)
-      .toString() must_== query + """{ "$set" : { "last_updated" : { "$date" : 1272672000000 } } }""" + suffix
+      .toString() must_== query + """{"$set": {"last_updated": {"$date": 1272672000000}}}""" + suffix
 
     // TODO(Tansy) fails with:
     // overloaded method value setTo with alternatives:
     //      (vOpt: Option[org.joda.time.DateTime])io.fsq.rogue.ModifyClause <and> (v: org.joda.time.DateTime)io.fsq.rogue.ModifyClause
     //      cannot be applied to (java.util.Date)
 
-    // Q(ThriftVenue).where(_.legacyid eqs 1).modify(_.last_updated setTo d1.toDate).toString() must_== query + """{ "$set" : { "last_updated" : { "$date" : 1272672000000 } } }""" + suffix
+    // Q(ThriftVenue).where(_.legacyid eqs 1).modify(_.last_updated setTo d1.toDate).toString() must_== query + """{"$set": {"last_updated": {"$date": 1272672000000}}}""" + suffix
 
     // LatLong
     val ll = List(37.4, -73.9)
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.geolatlng setTo ll)
-      .toString() must_== query + """{ "$set" : { "latlng" : [37.4, -73.9] } }""" + suffix
+      .toString() must_== query + """{"$set": {"latlng": [37.4, -73.9]}}""" + suffix
 
     // Lists
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.popularity setTo List(5))
-      .toString() must_== query + """{ "$set" : { "popularity" : [5] } }""" + suffix
+      .toString() must_== query + """{"$set": {"popularity": [5]}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.popularity push 5)
-      .toString() must_== query + """{ "$push" : { "popularity" : 5 } }""" + suffix
+      .toString() must_== query + """{"$push": {"popularity": 5}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.tags pushAll List("a", "b"))
-      .toString() must_== query + """{ "$pushAll" : { "tags" : ["a", "b"] } }""" + suffix
+      .toString() must_== query + """{"$pushAll": {"tags": ["a", "b"]}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.tags addToSet "a")
-      .toString() must_== query + """{ "$addToSet" : { "tags" : "a" } }""" + suffix
+      .toString() must_== query + """{"$addToSet": {"tags": "a"}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.popularity addToSet List(1, 2))
-      .toString() must_== query + """{ "$addToSet" : { "popularity" : { "$each" : [1, 2] } } }""" + suffix
+      .toString() must_== query + """{"$addToSet": {"popularity": {"$each": [1, 2]}}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.tags popFirst)
-      .toString() must_== query + """{ "$pop" : { "tags" : -1 } }""" + suffix
+      .toString() must_== query + """{"$pop": {"tags": -1}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.tags popLast)
-      .toString() must_== query + """{ "$pop" : { "tags" : 1 } }""" + suffix
+      .toString() must_== query + """{"$pop": {"tags": 1}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.tags pull "a")
-      .toString() must_== query + """{ "$pull" : { "tags" : "a" } }""" + suffix
+      .toString() must_== query + """{"$pull": {"tags": "a"}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.popularity pullAll List(2, 3))
-      .toString() must_== query + """{ "$pullAll" : { "popularity" : [2, 3] } }""" + suffix
+      .toString() must_== query + """{"$pullAll": {"popularity": [2, 3]}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.popularity at 0 inc 1)
-      .toString() must_== query + """{ "$inc" : { "popularity.0" : 1 } }""" + suffix
+      .toString() must_== query + """{"$inc": {"popularity.0": 1}}""" + suffix
     // alternative syntax
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.popularity idx 0 inc 1)
-      .toString() must_== query + """{ "$inc" : { "popularity.0" : 1 } }""" + suffix
+      .toString() must_== query + """{"$inc": {"popularity.0": 1}}""" + suffix
 
     // Enumeration list
     Q(ThriftOAuthConsumer)
       .modify(_.privileges addToSet ThriftConsumerPrivilege.awardBadges)
-      .toString() must_== """db.oauthconsumers.update({ }, { "$addToSet" : { "privileges" : 0 } }""" + suffix
+      .toString() must_== """db.oauthconsumers.update({}, {"$addToSet": {"privileges": 0}}""" + suffix
 
     // Set
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.setOfStrings addToSet "abc")
-      .toString() must_== query + """{ "$addToSet" : { "setOfStrings" : "abc" } }""" + suffix
+      .toString() must_== query + """{"$addToSet": {"setOfStrings": "abc"}}""" + suffix
 
     // BsonRecordField and BsonRecordListField with nested Enumeration
     val src = ThriftSourceBson.newBuilder.name("").url("").result()
@@ -661,125 +661,125 @@ class QueryTest extends JUnitMustMatchers {
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.claims setTo claims)
-      .toString() must_== query + """{ "$set" : { "claims" : [{ "uid" : { "$numberLong" : "1" }, "status" : 1, "source" : { "name" : "", "url" : "" } }] } }""" + suffix
+      .toString() must_== query + """{"$set": {"claims": [{"uid": {"$numberLong": "1"}, "status": 1, "source": {"name": "", "url": ""}}]}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.lastClaim setTo claims.head)
-      .toString() must_== query + """{ "$set" : { "last_claim" : { "uid" : { "$numberLong" : "1" }, "status" : 1, "source" : { "name" : "", "url" : "" } } } }""" + suffix
+      .toString() must_== query + """{"$set": {"last_claim": {"uid": {"$numberLong": "1"}, "status": 1, "source": {"name": "", "url": ""}}}}""" + suffix
 
     // Map
     val m = Map("foo" -> 1)
-    val query3 = """db.tips.update({ "legid" : { "$numberLong" : "1" } }, """
+    val query3 = """db.tips.update({"legid": {"$numberLong": "1"}}, """
     Q(ThriftTip)
       .where(_.legacyid eqs 1)
       .modify(_.counts setTo m)
-      .toString() must_== query3 + """{ "$set" : { "counts" : { "foo" : 1 } } }""" + suffix
+      .toString() must_== query3 + """{"$set": {"counts": {"foo": 1}}}""" + suffix
     Q(ThriftTip)
       .where(_.legacyid eqs 1)
       .modify(_.counts at "foo" setTo 3)
-      .toString() must_== query3 + """{ "$set" : { "counts.foo" : 3 } }""" + suffix
+      .toString() must_== query3 + """{"$set": {"counts.foo": 3}}""" + suffix
     Q(ThriftTip)
       .where(_.legacyid eqs 1)
       .modify(_.counts at "foo" inc 5)
-      .toString() must_== query3 + """{ "$inc" : { "counts.foo" : 5 } }""" + suffix
+      .toString() must_== query3 + """{"$inc": {"counts.foo": 5}}""" + suffix
     Q(ThriftTip)
       .where(_.legacyid eqs 1)
       .modify(_.counts at "foo" unset)
-      .toString() must_== query3 + """{ "$unset" : { "counts.foo" : 1 } }""" + suffix
+      .toString() must_== query3 + """{"$unset": {"counts.foo": 1}}""" + suffix
     Q(ThriftTip)
       .where(_.legacyid eqs 1)
       .modify(_.counts setTo Map("foo" -> 3, "bar" -> 5))
-      .toString() must_== query3 + """{ "$set" : { "counts" : { "bar" : 5, "foo" : 3 } } }""" + suffix
+      .toString() must_== query3 + """{"$set": {"counts": {"bar": 5, "foo": 3}}}""" + suffix
 
     // Multiple updates
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.venuename setTo "fshq")
       .and(_.mayor_count setTo 3)
-      .toString() must_== query + """{ "$set" : { "mayor_count" : 3, "venuename" : "fshq" } }""" + suffix
+      .toString() must_== query + """{"$set": {"mayor_count": 3, "venuename": "fshq"}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.venuename setTo "fshq")
       .and(_.mayor_count inc 1)
-      .toString() must_== query + """{ "$set" : { "venuename" : "fshq" }, "$inc" : { "mayor_count" : 1 } }""" + suffix
+      .toString() must_== query + """{"$set": {"venuename": "fshq"}, "$inc": {"mayor_count": 1}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.venuename setTo "fshq")
       .and(_.mayor_count setTo 3)
       .and(_.mayor_count inc 1)
-      .toString() must_== query + """{ "$set" : { "mayor_count" : 3, "venuename" : "fshq" }, "$inc" : { "mayor_count" : 1 } }""" + suffix
+      .toString() must_== query + """{"$set": {"mayor_count": 3, "venuename": "fshq"}, "$inc": {"mayor_count": 1}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.popularity addToSet 3)
       .and(_.tags addToSet List("a", "b"))
-      .toString() must_== query + """{ "$addToSet" : { "tags" : { "$each" : ["a", "b"] }, "popularity" : 3 } }""" + suffix
+      .toString() must_== query + """{"$addToSet": {"tags": {"$each": ["a", "b"]}, "popularity": 3}}""" + suffix
 
     // Noop query
-    Q(ThriftVenue).where(_.legacyid eqs 1).noop().toString() must_== query + "{ }" + suffix
+    Q(ThriftVenue).where(_.legacyid eqs 1).noop().toString() must_== query + "{}" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .noop()
       .modify(_.venuename setTo "fshq")
-      .toString() must_== query + """{ "$set" : { "venuename" : "fshq" } }""" + suffix
+      .toString() must_== query + """{"$set": {"venuename": "fshq"}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .noop()
       .and(_.venuename setTo "fshq")
-      .toString() must_== query + """{ "$set" : { "venuename" : "fshq" } }""" + suffix
+      .toString() must_== query + """{"$set": {"venuename": "fshq"}}""" + suffix
 
     // $bit
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.mayor_count bitAnd 3)
-      .toString() must_== query + """{ "$bit" : { "mayor_count" : { "and" : 3 } } }""" + suffix
+      .toString() must_== query + """{"$bit": {"mayor_count": {"and": 3}}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.mayor_count bitOr 3)
-      .toString() must_== query + """{ "$bit" : { "mayor_count" : { "or" : 3 } } }""" + suffix
+      .toString() must_== query + """{"$bit": {"mayor_count": {"or": 3}}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.mayor_count bitXor 3)
-      .toString() must_== query + """{ "$bit" : { "mayor_count" : { "xor" : 3 } } }""" + suffix
+      .toString() must_== query + """{"$bit": {"mayor_count": {"xor": 3}}}""" + suffix
 
     // $bit with longs
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.checkin_count bitAnd 3L)
-      .toString() must_== query + """{ "$bit" : { "checkin_count" : { "and" : { "$numberLong" : "3" } } } }""" + suffix
+      .toString() must_== query + """{"$bit": {"checkin_count": {"and": {"$numberLong": "3"}}}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.checkin_count bitOr 3L)
-      .toString() must_== query + """{ "$bit" : { "checkin_count" : { "or" : { "$numberLong" : "3" } } } }""" + suffix
+      .toString() must_== query + """{"$bit": {"checkin_count": {"or": {"$numberLong": "3"}}}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.checkin_count bitXor 3L)
-      .toString() must_== query + """{ "$bit" : { "checkin_count" : { "xor" : { "$numberLong" : "3" } } } }""" + suffix
+      .toString() must_== query + """{"$bit": {"checkin_count": {"xor": {"$numberLong": "3"}}}}""" + suffix
 
     // $rename
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.venuename rename "vn")
-      .toString() must_== query + """{ "$rename" : { "venuename" : "vn" } }""" + suffix
+      .toString() must_== query + """{"$rename": {"venuename": "vn"}}""" + suffix
 
     // pullWhere
     /*
-    tags is list<string>
-    popularity is list<i32>
-    categories is list<ObjectId>
-    claims is list<ThriftVenueClaimBson>
+     tags is list<string>
+     popularity is list<i32>
+     categories is list<ObjectId>
+     claims is list<ThriftVenueClaimBson>
      */
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.tags pullWhere (_ startsWith "prefix"))
-      .toString() must_== query + """{ "$pull" : { "tags" : { "$regex" : "^\\Qprefix\\E", "$options" : "" } } }""" + suffix
+      .toString() must_== query + """{"$pull": {"tags": {"$regex": "^\\Qprefix\\E", "$options": ""}}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.popularity pullWhere (_ gt 2))
-      .toString() must_== query + """{ "$pull" : { "popularity" : { "$gt" : 2 } } }""" + suffix
+      .toString() must_== query + """{"$pull": {"popularity": {"$gt": 2}}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.popularity pullWhere (_ gt 2, _ lt 5))
-      .toString() must_== query + """{ "$pull" : { "popularity" : { "$gt" : 2, "$lt" : 5 } } }""" + suffix
+      .toString() must_== query + """{"$pull": {"popularity": {"$gt": 2, "$lt": 5}}}""" + suffix
 
     // TODO(rogue-pullObjectWhere)
   }
@@ -791,139 +791,139 @@ class QueryTest extends JUnitMustMatchers {
     val oid = new ObjectId
 
     // basic ops
-    Q(ThriftVenue).where(_.mayor eqs 1).signature() must_== """db.venues.find({ "mayor" : 0 })"""
-    Q(ThriftVenue).where(_.venuename eqs "Starbucks").signature() must_== """db.venues.find({ "venuename" : 0 })"""
-    Q(ThriftVenue).where(_.closed eqs true).signature() must_== """db.venues.find({ "closed" : 0 })"""
-    Q(ThriftVenue).where(_.id eqs VenueId(oid)).signature() must_== """db.venues.find({ "_id" : 0 })"""
+    Q(ThriftVenue).where(_.mayor eqs 1).signature() must_== """db.venues.find({"mayor": 0})"""
+    Q(ThriftVenue).where(_.venuename eqs "Starbucks").signature() must_== """db.venues.find({"venuename": 0})"""
+    Q(ThriftVenue).where(_.closed eqs true).signature() must_== """db.venues.find({"closed": 0})"""
+    Q(ThriftVenue).where(_.id eqs VenueId(oid)).signature() must_== """db.venues.find({"_id": 0})"""
     Q(ThriftVenueClaim)
       .where(_.status eqs ThriftClaimStatus.approved)
-      .signature() must_== """db.venueclaims.find({ "status" : 0 })"""
+      .signature() must_== """db.venueclaims.find({"status": 0})"""
     Q(ThriftVenue)
       .where(_.mayor_count gte 5)
-      .signature() must_== """db.venues.find({ "mayor_count" : { "$gte" : 0 } })"""
+      .signature() must_== """db.venues.find({"mayor_count": {"$gte": 0}})"""
     Q(ThriftVenueClaim)
       .where(_.status neqs ThriftClaimStatus.approved)
-      .signature() must_== """db.venueclaims.find({ "status" : { "$ne" : 0 } })"""
+      .signature() must_== """db.venueclaims.find({"status": {"$ne": 0}})"""
     Q(ThriftVenue)
       .where(_.legacyid in List(123L, 456L))
-      .signature() must_== """db.venues.find({ "legid" : { "$in" : 0 } })"""
-    Q(ThriftVenue).where(_.id exists true).signature() must_== """db.venues.find({ "_id" : { "$exists" : 0 } })"""
+      .signature() must_== """db.venues.find({"legid": {"$in": 0}})"""
+    Q(ThriftVenue).where(_.id exists true).signature() must_== """db.venues.find({"_id": {"$exists": 0}})"""
     Q(ThriftVenue)
       .where(_.venuename startsWith "Starbucks")
-      .signature() must_== """db.venues.find({ "venuename" : { "$regex" : 0, "$options" : 0 } })"""
+      .signature() must_== """db.venues.find({"venuename": {"$regex": 0, "$options": 0}})"""
 
     // list
     Q(ThriftVenue)
       .where(_.tags all List("db", "ka"))
-      .signature() must_== """db.venues.find({ "tags" : { "$all" : 0 } })"""
+      .signature() must_== """db.venues.find({"tags": {"$all": 0}})"""
     Q(ThriftVenue)
       .where(_.tags in List("db", "ka"))
-      .signature() must_== """db.venues.find({ "tags" : { "$in" : 0 } })"""
-    Q(ThriftVenue).where(_.tags size 3).signature() must_== """db.venues.find({ "tags" : { "$size" : 0 } })"""
-    Q(ThriftVenue).where(_.tags contains "karaoke").signature() must_== """db.venues.find({ "tags" : 0 })"""
-    Q(ThriftVenue).where(_.popularity contains 3).signature() must_== """db.venues.find({ "popularity" : 0 })"""
-    Q(ThriftVenue).where(_.popularity at 0 eqs 3).signature() must_== """db.venues.find({ "popularity.0" : 0 })"""
-    Q(ThriftVenue).where(_.categories at 0 eqs oid).signature() must_== """db.venues.find({ "categories.0" : 0 })"""
+      .signature() must_== """db.venues.find({"tags": {"$in": 0}})"""
+    Q(ThriftVenue).where(_.tags size 3).signature() must_== """db.venues.find({"tags": {"$size": 0}})"""
+    Q(ThriftVenue).where(_.tags contains "karaoke").signature() must_== """db.venues.find({"tags": 0})"""
+    Q(ThriftVenue).where(_.popularity contains 3).signature() must_== """db.venues.find({"popularity": 0})"""
+    Q(ThriftVenue).where(_.popularity at 0 eqs 3).signature() must_== """db.venues.find({"popularity.0": 0})"""
+    Q(ThriftVenue).where(_.categories at 0 eqs oid).signature() must_== """db.venues.find({"categories.0": 0})"""
     Q(ThriftVenue)
       .where(_.tags at 0 startsWith "kara")
-      .signature() must_== """db.venues.find({ "tags.0" : { "$regex" : 0, "$options" : 0 } })"""
+      .signature() must_== """db.venues.find({"tags.0": {"$regex": 0, "$options": 0}})"""
     Q(ThriftVenue)
       .where(_.tags idx 0 startsWith "kara")
-      .signature() must_== """db.venues.find({ "tags.0" : { "$regex" : 0, "$options" : 0 } })"""
+      .signature() must_== """db.venues.find({"tags.0": {"$regex": 0, "$options": 0}})"""
 
     // set
     Q(ThriftVenue)
       .where(_.setOfStrings contains "123")
-      .signature() must_== """db.venues.find({ "setOfStrings" : 0 })"""
+      .signature() must_== """db.venues.find({"setOfStrings": 0})"""
 
     Q(ThriftVenue)
       .where(_.setOfEnums contains ThriftClaimStatus.approved)
-      .signature() must_== """db.venues.find({ "setOfEnums" : 0 })"""
+      .signature() must_== """db.venues.find({"setOfEnums": 0})"""
 
     Q(ThriftVenue)
       .where(_.setOfEnums size 3)
-      .signature() must_== """db.venues.find({ "setOfEnums" : { "$size" : 0 } })"""
+      .signature() must_== """db.venues.find({"setOfEnums": {"$size": 0}})"""
 
     // map
-    Q(ThriftTip).where(_.counts at "foo" eqs 3).signature() must_== """db.tips.find({ "counts.foo" : 0 })"""
+    Q(ThriftTip).where(_.counts at "foo" eqs 3).signature() must_== """db.tips.find({"counts.foo": 0})"""
 
     // near
     // TODO(rogue-latlng)
 
     // id, date range
-    Q(ThriftVenue).where(_.id before d2).signature() must_== """db.venues.find({ "_id" : { "$lt" : 0 } })"""
+    Q(ThriftVenue).where(_.id before d2).signature() must_== """db.venues.find({"_id": {"$lt": 0}})"""
     Q(ThriftVenue)
       .where(_.last_updated before d2)
-      .signature() must_== """db.venues.find({ "last_updated" : { "$lt" : 0 } })"""
+      .signature() must_== """db.venues.find({"last_updated": {"$lt": 0}})"""
 
     // Case class list field
 
     Q(ThriftComment)
       .where(_.comments.unsafeField[Int]("z") contains 123)
-      .signature() must_== """db.comments.find({ "comments.z" : 0 })"""
+      .signature() must_== """db.comments.find({"comments.z": 0})"""
     Q(ThriftComment)
       .where(_.comments.unsafeField[String]("comment") contains "hi")
-      .signature() must_== """db.comments.find({ "comments.comment" : 0 })"""
+      .signature() must_== """db.comments.find({"comments.comment": 0})"""
 
     // Enumeration list
     Q(ThriftOAuthConsumer)
       .where(_.privileges contains ThriftConsumerPrivilege.awardBadges)
-      .toString() must_== """db.oauthconsumers.find({ "privileges" : 0 })"""
+      .toString() must_== """db.oauthconsumers.find({"privileges": 0})"""
     Q(ThriftOAuthConsumer)
       .where(_.privileges in Seq(ThriftConsumerPrivilege.awardBadges))
-      .toString() must_== """db.oauthconsumers.find({ "privileges" : { "$in" : [0] } })"""
+      .toString() must_== """db.oauthconsumers.find({"privileges": {"$in": [0]}})"""
     Q(ThriftVenue)
       .where(_.lastClaim.sub.enumIntField(_.status) in Seq(ThriftClaimStatus.approved))
-      .toString() must_== """db.venues.find({ "last_claim.status" : { "$in" : [1] } })"""
+      .toString() must_== """db.venues.find({"last_claim.status": {"$in": [1]}})"""
 
     // TODO(dan): Fix this.
     // Fails with:
     // value eqs is not a member of io.fsq.rogue.DummyField[io.fsq.spindle.rogue.test.gen.ThriftConsumerPrivilege,io.fsq.spindle.rogue.test.gen.ThriftOAuthConsumerMeta]
 
-    // Q(ThriftOAuthConsumer).where(_.privileges at 0 eqs ThriftConsumerPrivilege.awardBadges).signature() must_== """db.oauthconsumers.find({ "privileges.0" : 0 })"""
+    // Q(ThriftOAuthConsumer).where(_.privileges at 0 eqs ThriftConsumerPrivilege.awardBadges).signature() must_== """db.oauthconsumers.find({"privileges.0": 0})"""
 
     // Field type
     Q(ThriftVenue)
       .where(_.legacyid hastype MongoType.String)
-      .signature() must_== """db.venues.find({ "legid" : { "$type" : 0 } })"""
+      .signature() must_== """db.venues.find({"legid": {"$type": 0}})"""
 
     // Modulus
-    Q(ThriftVenue).where(_.legacyid mod (5, 1)).signature() must_== """db.venues.find({ "legid" : { "$mod" : 0 } })"""
+    Q(ThriftVenue).where(_.legacyid mod (5, 1)).signature() must_== """db.venues.find({"legid": {"$mod": 0}})"""
 
     // compound queries
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .and(_.tags contains "karaoke")
-      .signature() must_== """db.venues.find({ "mayor" : 0, "tags" : 0 })"""
+      .signature() must_== """db.venues.find({"mayor": 0, "tags": 0})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .and(_.mayor_count gt 3)
       .and(_.mayor_count lt 5)
-      .signature() must_== """db.venues.find({ "mayor" : 0, "mayor_count" : { "$lt" : 0, "$gt" : 0 } })"""
+      .signature() must_== """db.venues.find({"mayor": 0, "mayor_count": {"$lt": 0, "$gt": 0}})"""
 
     // queries with no clauses
-    Q(ThriftVenue).signature() must_== "db.venues.find({ })"
-    Q(ThriftVenue).orderDesc(_.id).signature() must_== """db.venues.find({ }).sort({ "_id" : -1 })"""
+    Q(ThriftVenue).signature() must_== "db.venues.find({})"
+    Q(ThriftVenue).orderDesc(_.id).signature() must_== """db.venues.find({}).sort({"_id": -1})"""
 
     // ordered queries
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .orderAsc(_.legacyid)
-      .signature() must_== """db.venues.find({ "mayor" : 0 }).sort({ "legid" : 1 })"""
+      .signature() must_== """db.venues.find({"mayor": 0}).sort({"legid": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .orderDesc(_.legacyid)
       .andAsc(_.userid)
-      .signature() must_== """db.venues.find({ "mayor" : 0 }).sort({ "legid" : -1, "userid" : 1 })"""
+      .signature() must_== """db.venues.find({"mayor": 0}).sort({"legid": -1, "userid": 1})"""
 
     // select queries
-    Q(ThriftVenue).where(_.mayor eqs 1).select(_.legacyid).signature() must_== """db.venues.find({ "mayor" : 0 })"""
+    Q(ThriftVenue).where(_.mayor eqs 1).select(_.legacyid).signature() must_== """db.venues.find({"mayor": 0})"""
 
     // Scan should be the same as and/where
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
       .scan(_.tags contains "karaoke")
-      .signature() must_== """db.venues.find({ "mayor" : 0, "tags" : 0 })"""
+      .signature() must_== """db.venues.find({"mayor": 0, "tags": 0})"""
   }
 
   @Test
@@ -933,7 +933,7 @@ class QueryTest extends JUnitMustMatchers {
       .findAndModify(_.venuename setTo "fshq")
       .toString()
       .must_==(
-        """db.venues.findAndModify({ query: { "legid" : { "$numberLong" : "1" } }, update: { "$set" : { "venuename" : "fshq" } }, new: false, upsert: false })"""
+        """db.venues.findAndModify({ query: {"legid": {"$numberLong": "1"}}, update: {"$set": {"venuename": "fshq"}}, new: false, upsert: false })"""
       )
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
@@ -941,7 +941,7 @@ class QueryTest extends JUnitMustMatchers {
       .findAndModify(_.venuename setTo "fshq")
       .toString()
       .must_==(
-        """db.venues.findAndModify({ query: { "legid" : { "$numberLong" : "1" } }, sort: { "popularity" : 1 }, update: { "$set" : { "venuename" : "fshq" } }, new: false, upsert: false })"""
+        """db.venues.findAndModify({ query: {"legid": {"$numberLong": "1"}}, sort: {"popularity": 1}, update: {"$set": {"venuename": "fshq"}}, new: false, upsert: false })"""
       )
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
@@ -949,7 +949,7 @@ class QueryTest extends JUnitMustMatchers {
       .findAndModify(_.venuename setTo "fshq")
       .toString()
       .must_==(
-        """db.venues.findAndModify({ query: { "legid" : { "$numberLong" : "1" } }, update: { "$set" : { "venuename" : "fshq" } }, new: false, fields: { "mayor" : 1, "closed" : 1 }, upsert: false })"""
+        """db.venues.findAndModify({ query: {"legid": {"$numberLong": "1"}}, update: {"$set": {"venuename": "fshq"}}, new: false, fields: {"mayor": 1, "closed": 1}, upsert: false })"""
       )
   }
 
@@ -958,19 +958,19 @@ class QueryTest extends JUnitMustMatchers {
     // Simple $or
     Q(ThriftVenue)
       .or(_.where(_.legacyid eqs 1), _.where(_.mayor eqs 2))
-      .toString() must_== """db.venues.find({ "$or" : [{ "legid" : { "$numberLong" : "1" } }, { "mayor" : { "$numberLong" : "2" } }] })"""
+      .toString() must_== """db.venues.find({"$or": [{"legid": {"$numberLong": "1"}}, {"mayor": {"$numberLong": "2"}}]})"""
 
     // Compound $or
     Q(ThriftVenue)
       .where(_.tags size 0)
       .or(_.where(_.legacyid eqs 1), _.where(_.mayor eqs 2))
-      .toString() must_== """db.venues.find({ "tags" : { "$size" : 0 }, "$or" : [{ "legid" : { "$numberLong" : "1" } }, { "mayor" : { "$numberLong" : "2" } }] })"""
+      .toString() must_== """db.venues.find({"tags": {"$size": 0}, "$or": [{"legid": {"$numberLong": "1"}}, {"mayor": {"$numberLong": "2"}}]})"""
 
     // $or with additional "and" clauses
     Q(ThriftVenue)
       .where(_.tags size 0)
       .or(_.where(_.legacyid eqs 1).and(_.closed eqs true), _.where(_.mayor eqs 2))
-      .toString() must_== """db.venues.find({ "tags" : { "$size" : 0 }, "$or" : [{ "legid" : { "$numberLong" : "1" }, "closed" : true }, { "mayor" : { "$numberLong" : "2" } }] })"""
+      .toString() must_== """db.venues.find({"tags": {"$size": 0}, "$or": [{"legid": {"$numberLong": "1"}, "closed": true}, {"mayor": {"$numberLong": "2"}}]})"""
 
     // Nested $or
     Q(ThriftVenue)
@@ -979,13 +979,13 @@ class QueryTest extends JUnitMustMatchers {
           .or(_.where(_.closed eqs true), _.where(_.closed exists false)),
         _.where(_.mayor eqs 2)
       )
-      .toString() must_== """db.venues.find({ "$or" : [{ "legid" : { "$numberLong" : "1" }, "$or" : [{ "closed" : true }, { "closed" : { "$exists" : false } }] }, { "mayor" : { "$numberLong" : "2" } }] })"""
+      .toString() must_== """db.venues.find({"$or": [{"legid": {"$numberLong": "1"}, "$or": [{"closed": true}, {"closed": {"$exists": false}}]}, {"mayor": {"$numberLong": "2"}}]})"""
 
     // $or with modify
     Q(ThriftVenue)
       .or(_.where(_.legacyid eqs 1), _.where(_.mayor eqs 2))
       .modify(_.userid setTo 1)
-      .toString() must_== """db.venues.update({ "$or" : [{ "legid" : { "$numberLong" : "1" } }, { "mayor" : { "$numberLong" : "2" } }] }, { "$set" : { "userid" : { "$numberLong" : "1" } } }, false, false)"""
+      .toString() must_== """db.venues.update({"$or": [{"legid": {"$numberLong": "1"}}, {"mayor": {"$numberLong": "2"}}]}, {"$set": {"userid": {"$numberLong": "1"}}}, false, false)"""
 
     // TODO(rogue-missing-OrQuery)
 
@@ -1004,7 +1004,7 @@ class QueryTest extends JUnitMustMatchers {
       .where(_.legacyid eqs 1)
       .and(_.tags contains "sometag")
       .modify(_.tags.$ setTo "othertag")
-      .toString() must_== """db.venues.update({ "legid" : { "$numberLong" : "1" }, "tags" : "sometag" }, { "$set" : { "tags.$" : "othertag" } }, false, false)"""
+      .toString() must_== """db.venues.update({"legid": {"$numberLong": "1"}, "tags": "sometag"}, {"$set": {"tags.$": "othertag"}}, false, false)"""
   }
 
   @Test
@@ -1017,22 +1017,22 @@ class QueryTest extends JUnitMustMatchers {
     // whereOpt
     Q(ThriftVenue)
       .whereOpt(someId)(_.legacyid eqs _)
-      .toString() must_== """db.venues.find({ "legid" : { "$numberLong" : "1" } })"""
-    Q(ThriftVenue).whereOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({ })"""
+      .toString() must_== """db.venues.find({"legid": {"$numberLong": "1"}})"""
+    Q(ThriftVenue).whereOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({})"""
     Q(ThriftVenue)
       .whereOpt(someId)(_.legacyid eqs _)
       .and(_.mayor eqs 2)
-      .toString() must_== """db.venues.find({ "legid" : { "$numberLong" : "1" }, "mayor" : { "$numberLong" : "2" } })"""
+      .toString() must_== """db.venues.find({"legid": {"$numberLong": "1"}, "mayor": {"$numberLong": "2"}})"""
     Q(ThriftVenue)
       .whereOpt(noId)(_.legacyid eqs _)
       .and(_.mayor eqs 2)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "2" } })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "2"}})"""
 
     // whereOpt: lists
     Q(ThriftVenue)
       .whereOpt(someList)(_.legacyid in _)
-      .toString() must_== """db.venues.find({ "legid" : { "$in" : [{ "$numberLong" : "1" }, { "$numberLong" : "2" }] } })"""
-    Q(ThriftVenue).whereOpt(noList)(_.legacyid in _).toString() must_== """db.venues.find({ })"""
+      .toString() must_== """db.venues.find({"legid": {"$in": [{"$numberLong": "1"}, {"$numberLong": "2"}]}})"""
+    Q(ThriftVenue).whereOpt(noList)(_.legacyid in _).toString() must_== """db.venues.find({})"""
 
     // whereOpt: enum
 
@@ -1044,72 +1044,72 @@ class QueryTest extends JUnitMustMatchers {
 
     // val noEnum: Option[ThriftVenueStatus.type#Value] = None
 
-    Q(ThriftVenue).whereOpt(someEnum)(_.status eqs _).toString() must_== """db.venues.find({ "status" : 0 })"""
+    Q(ThriftVenue).whereOpt(someEnum)(_.status eqs _).toString() must_== """db.venues.find({"status": 0})"""
 
     // val noEnum is defined above, but does not compile.
 
-    // Q(ThriftVenue).whereOpt(noEnum)(_.status eqs _).toString() must_== """db.venues.find({ })"""
+    // Q(ThriftVenue).whereOpt(noEnum)(_.status eqs _).toString() must_== """db.venues.find({})"""
 
     // whereOpt: date
     val someDate = Some(new DateTime(2010, 5, 1, 0, 0, 0, 0, DateTimeZone.UTC))
     val noDate: Option[DateTime] = None
     Q(ThriftVenue)
       .whereOpt(someDate)(_.last_updated after _)
-      .toString() must_== """db.venues.find({ "last_updated" : { "$gt" : { "$date" : 1272672000000 } } })"""
-    Q(ThriftVenue).whereOpt(noDate)(_.last_updated after _).toString() must_== """db.venues.find({ })"""
+      .toString() must_== """db.venues.find({"last_updated": {"$gt": {"$date": 1272672000000}}})"""
+    Q(ThriftVenue).whereOpt(noDate)(_.last_updated after _).toString() must_== """db.venues.find({})"""
 
     // andOpt
     Q(ThriftVenue)
       .where(_.mayor eqs 2)
       .andOpt(someId)(_.legacyid eqs _)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "2" }, "legid" : { "$numberLong" : "1" } })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "2"}, "legid": {"$numberLong": "1"}})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 2)
       .andOpt(noId)(_.legacyid eqs _)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "2" } })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "2"}})"""
 
     // scanOpt
     Q(ThriftVenue)
       .scanOpt(someId)(_.legacyid eqs _)
-      .toString() must_== """db.venues.find({ "legid" : { "$numberLong" : "1" } })"""
-    Q(ThriftVenue).scanOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({ })"""
+      .toString() must_== """db.venues.find({"legid": {"$numberLong": "1"}})"""
+    Q(ThriftVenue).scanOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({})"""
     Q(ThriftVenue)
       .scanOpt(someId)(_.legacyid eqs _)
       .and(_.mayor eqs 2)
-      .toString() must_== """db.venues.find({ "legid" : { "$numberLong" : "1" }, "mayor" : { "$numberLong" : "2" } })"""
+      .toString() must_== """db.venues.find({"legid": {"$numberLong": "1"}, "mayor": {"$numberLong": "2"}})"""
     Q(ThriftVenue)
       .scanOpt(noId)(_.legacyid eqs _)
       .and(_.mayor eqs 2)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "2" } })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "2"}})"""
 
     // iscanOpt
     Q(ThriftVenue)
       .iscanOpt(someId)(_.legacyid eqs _)
-      .toString() must_== """db.venues.find({ "legid" : { "$numberLong" : "1" } })"""
-    Q(ThriftVenue).iscanOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({ })"""
+      .toString() must_== """db.venues.find({"legid": {"$numberLong": "1"}})"""
+    Q(ThriftVenue).iscanOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({})"""
     Q(ThriftVenue)
       .iscanOpt(someId)(_.legacyid eqs _)
       .and(_.mayor eqs 2)
-      .toString() must_== """db.venues.find({ "legid" : { "$numberLong" : "1" }, "mayor" : { "$numberLong" : "2" } })"""
+      .toString() must_== """db.venues.find({"legid": {"$numberLong": "1"}, "mayor": {"$numberLong": "2"}})"""
     Q(ThriftVenue)
       .iscanOpt(noId)(_.legacyid eqs _)
       .and(_.mayor eqs 2)
-      .toString() must_== """db.venues.find({ "mayor" : { "$numberLong" : "2" } })"""
+      .toString() must_== """db.venues.find({"mayor": {"$numberLong": "2"}})"""
 
     // modify
     val q = Q(ThriftVenue).where(_.legacyid eqs 1)
-    val prefix = """db.venues.update({ "legid" : { "$numberLong" : "1" } }, """
+    val prefix = """db.venues.update({"legid": {"$numberLong": "1"}}, """
     val suffix = ", false, false)"
 
     q.modifyOpt(someId)(_.legacyid setTo _)
-      .toString() must_== prefix + """{ "$set" : { "legid" : { "$numberLong" : "1" } } }""" + suffix
-    q.modifyOpt(noId)(_.legacyid setTo _).toString() must_== prefix + """{ }""" + suffix
+      .toString() must_== prefix + """{"$set": {"legid": {"$numberLong": "1"}}}""" + suffix
+    q.modifyOpt(noId)(_.legacyid setTo _).toString() must_== prefix + """{}""" + suffix
 
-    q.modifyOpt(someEnum)(_.status setTo _).toString() must_== prefix + """{ "$set" : { "status" : 0 } }""" + suffix
+    q.modifyOpt(someEnum)(_.status setTo _).toString() must_== prefix + """{"$set": {"status": 0}}""" + suffix
 
     // val noEnum is defined above, but does not compile.
 
-    // q.modifyOpt(noEnum)(_.status setTo _).toString() must_== prefix + """{ }""" + suffix
+    // q.modifyOpt(noEnum)(_.status setTo _).toString() must_== prefix + """{}""" + suffix
 
   }
 
@@ -1119,43 +1119,43 @@ class QueryTest extends JUnitMustMatchers {
 
     Q(ThriftLike)
       .where(_.checkin eqs 123)
-      .toString() must_== """db.likes.find({ "checkin" : { "$numberLong" : "123" } })"""
+      .toString() must_== """db.likes.find({"checkin": {"$numberLong": "123"}})"""
     Q(ThriftLike)
       .where(_.userid eqs 123)
-      .toString() must_== """db.likes.find({ "userid" : { "$numberLong" : "123" } })"""
+      .toString() must_== """db.likes.find({"userid": {"$numberLong": "123"}})"""
     Q(ThriftLike)
       .where(_.userid eqs 123)
       .allShards
-      .toString() must_== """db.likes.find({ "userid" : { "$numberLong" : "123" } })"""
+      .toString() must_== """db.likes.find({"userid": {"$numberLong": "123"}})"""
     Q(ThriftLike)
       .where(_.userid eqs 123)
       .allShards
       .noop()
-      .toString() must_== """db.likes.update({ "userid" : { "$numberLong" : "123" } }, { }, false, false)"""
+      .toString() must_== """db.likes.update({"userid": {"$numberLong": "123"}}, {}, false, false)"""
     // TODO(Tansy) Fails with:
     // type mismatch;
     // [error]  found   : io.fsq.rogue.EqClause[Long,Nothing]
     // [error]  required: io.fsq.rogue.QueryClause[?] with io.fsq.rogue.ShardKeyClause
 
-    // Q(ThriftLike).withShardKey(_.userid eqs 123).toString() must_== """db.likes.find({ "userid" : 123 })"""
+    // Q(ThriftLike).withShardKey(_.userid eqs 123).toString() must_== """db.likes.find({"userid": 123})"""
 
     // TODO(Tansy) Fails with:
     // No implicit view available from List[Int] => Traversable[Long].
 
-    // Q(ThriftLike).withShardKey(_.userid in List(123, 456)).toString() must_== """db.likes.find({ "userid" : { "$in" : [123, 456] } })"""
+    // Q(ThriftLike).withShardKey(_.userid in List(123, 456)).toString() must_== """db.likes.find({"userid": {"$in": [123, 456]}})"""
 
     // TODO(Tansy) Fails with:
     // type mismatch;
     // [error]  found   : io.fsq.rogue.EqClause[Long,Nothing]
     // [error]  required: io.fsq.rogue.QueryClause[?] with io.fsq.rogue.ShardKeyClause
 
-    // Q(ThriftLike).withShardKey(_.userid eqs 123).and(_.checkin eqs 1).toString() must_== """db.likes.find({ "userid" : 123, "checkin" : 1 })"""
+    // Q(ThriftLike).withShardKey(_.userid eqs 123).and(_.checkin eqs 1).toString() must_== """db.likes.find({"userid": 123, "checkin": 1})"""
 
     // TODO(Tansy) Fails with:
     // type mismatch;
     // [error]  found   : io.fsq.rogue.EqClause[Long,Nothing]
     // [error]  required: io.fsq.rogue.QueryClause[?] with io.fsq.rogue.ShardKeyClause
-    // Q(ThriftLike).where(_.checkin eqs 1).withShardKey(_.userid eqs 123).toString() must_== """db.likes.find({ "checkin" : 1, "userid" : 123 })"""
+    // Q(ThriftLike).where(_.checkin eqs 1).withShardKey(_.userid eqs 123).toString() must_== """db.likes.find({"checkin": 1, "userid": 123})"""
 
   }
   @Test
@@ -1167,8 +1167,8 @@ class QueryTest extends JUnitMustMatchers {
       }
     }
 
-    maybeLimit(1, None).toString() must_== """db.venues.find({ "legid" : { "$numberLong" : "1" } })"""
-    maybeLimit(1, Some(5)).toString() must_== """db.venues.find({ "legid" : { "$numberLong" : "1" } }).limit(5)"""
+    maybeLimit(1, None).toString() must_== """db.venues.find({"legid": {"$numberLong": "1"}})"""
+    maybeLimit(1, Some(5)).toString() must_== """db.venues.find({"legid": {"$numberLong": "1"}}).limit(5)"""
   }
 
   @Test

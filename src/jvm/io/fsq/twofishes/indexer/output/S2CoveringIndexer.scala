@@ -1,6 +1,6 @@
 package io.fsq.twofishes.indexer.output
 
-import io.fsq.rogue.Iter
+import io.fsq.rogue.IterUtil
 import io.fsq.twofishes.core.Indexes
 import io.fsq.twofishes.indexer.mongo.RogueImplicits._
 import io.fsq.twofishes.indexer.util.GeocodeRecord
@@ -32,15 +32,16 @@ class S2CoveringIndexer(
     var numUsedPolygon = 0
     val groupSize = 1000
     // would be great to unify this with featuresIndex
-    executor.iterateBatch(
+    executor.iterate(
       Q(ThriftGeocodeRecord)
         .where(_.hasPoly eqs true)
         .orderAsc(_.id),
-      groupSize,
-      0
-    )((groupIndex: Int, event: Iter.Event[Seq[ThriftGeocodeRecord]]) => {
-      event match {
-        case Iter.Item(unwrappedGroup) => {
+      (0, Vector[ThriftGeocodeRecord]()),
+      batchSizeOpt = Some(groupSize)
+    )(
+      IterUtil.batch(
+        groupSize,
+        (groupIndex: Int, unwrappedGroup: Vector[ThriftGeocodeRecord]) => {
           val group = unwrappedGroup.map(new GeocodeRecord(_))
           val toFindCovers: Map[Long, ObjectId] = group.filter(f => f.hasPoly).map(r => (r.id, r.polyIdOrThrow)).toMap
           val coverMap: Map[ObjectId, ThriftS2CoveringIndex] = executor
@@ -62,12 +63,10 @@ class S2CoveringIndexer(
             numUsedPolygon += 1
             writer.append(f.featureId, covering.cellIds)
           }
-          Iter.Continue(groupIndex + 1)
+          groupIndex + 1
         }
-        case Iter.EOF => Iter.Return(groupIndex)
-        case Iter.Error(e) => throw e
-      }
-    })
+      )
+    )
 
     writer.close()
 

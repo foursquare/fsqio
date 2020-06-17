@@ -4,7 +4,6 @@ package io.fsq.rogue.lift.test
 
 import com.mongodb.{ReadPreference, WriteConcern}
 import io.fsq.rogue.{Iter, LatLong, QueryOptimizer}
-import io.fsq.rogue.Iter._
 import io.fsq.rogue.adapter.{BlockingMongoClientAdapter, BlockingResult}
 import io.fsq.rogue.adapter.lift.LiftMongoCollectionFactory
 import io.fsq.rogue.connection.testlib.RogueMongoTest
@@ -303,13 +302,13 @@ class EndToEndTest extends RogueMongoTest with JUnitMustMatchers with BlockingRe
       .iterate[List[Venue]](Nil) {
         case (accum, event) => {
           if (accum.length >= 3) {
-            Return(accum)
+            Iter.Return(accum)
           } else {
             event match {
-              case Item(i) if i.legacyid.value % 2 == 0 => Continue(i :: accum)
-              case Item(_) => Continue(accum)
-              case EOF => Return(accum)
-              case Error(e) => Return(accum)
+              case Iter.OnNext(i) if i.legacyid.value % 2 == 0 => Iter.Continue(i :: accum)
+              case Iter.OnNext(_) => Iter.Continue(accum)
+              case Iter.OnComplete => Iter.Return(accum)
+              case Iter.OnError(e) => Iter.Return(accum)
             }
           }
         }
@@ -317,37 +316,17 @@ class EndToEndTest extends RogueMongoTest with JUnitMustMatchers with BlockingRe
 
     items1.map(_.legacyid.value) must_== List(6, 4, 2)
 
-    val items2 = Venue
-      .where(_._id in ids)
-      .iterateBatch[List[Venue]](2, Nil) {
-        case (accum, event) => {
-          if (accum.length >= 3) {
-            Return(accum)
-          } else {
-            event match {
-              case Item(items) => {
-                Continue(accum ++ items.filter(_.legacyid.value % 3 == 1))
-              }
-              case EOF => Return(accum)
-              case Error(e) => Return(accum)
-            }
-          }
-        }
-      }
-
-    items2.map(_.legacyid.value) must_== List(1, 4, 7)
-
     def findIndexOfWithLimit(id: Long, limit: Int) = {
       Venue.where(_._id in ids).iterate(1) {
         case (idx, event) => {
           if (idx >= limit) {
-            Return(-1)
+            Iter.Return(-1)
           } else {
             event match {
-              case Item(i) if i.legacyid.value == id => Return(idx)
-              case Item(i) => Continue(idx + 1)
-              case EOF => Return(-2)
-              case Error(e) => Return(-3)
+              case Iter.OnNext(i) if i.legacyid.value == id => Iter.Return(idx)
+              case Iter.OnNext(i) => Iter.Continue(idx + 1)
+              case Iter.OnComplete => Iter.Return(-2)
+              case Iter.OnError(e) => Iter.Return(-3)
             }
           }
         }
@@ -367,11 +346,11 @@ class EndToEndTest extends RogueMongoTest with JUnitMustMatchers with BlockingRe
     val q = CalendarFld select (_.inner.subfield(_.date))
     val cnt = q.count()
     val list = q.iterate(List[Calendar]()) {
-      case (list, Iter.Item(cal)) =>
+      case (list, Iter.OnNext(cal)) =>
         val c: Calendar = cal.get //class cast exception was here
         c.set(Calendar.HOUR_OF_DAY, 0)
         Iter.Continue(c :: list)
-      case (list, Iter.Error(e)) => e.printStackTrace(); Iter.Continue(list)
+      case (list, Iter.OnError(e)) => e.printStackTrace(); Iter.Continue(list)
       case (list, _) => Iter.Return(list)
     }
     list.length must_== (cnt)

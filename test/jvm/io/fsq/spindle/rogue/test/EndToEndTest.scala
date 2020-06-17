@@ -3,7 +3,16 @@
 package io.fsq.spindle.rogue.test
 
 import com.mongodb.ReadPreference
-import io.fsq.rogue.{BulkInsertOne, BulkRemove, BulkRemoveOne, BulkReplaceOne, BulkUpdateMany, BulkUpdateOne, Iter}
+import io.fsq.rogue.{
+  BulkInsertOne,
+  BulkRemove,
+  BulkRemoveOne,
+  BulkReplaceOne,
+  BulkUpdateMany,
+  BulkUpdateOne,
+  Iter,
+  IterUtil
+}
 import io.fsq.spindle.rogue.SpindleQuery
 import io.fsq.spindle.rogue.SpindleRogue._
 import io.fsq.spindle.rogue.test.gen.{
@@ -313,41 +322,37 @@ class EndToEndTest extends JUnitMustMatchers {
     }
     val ids = vs.map(_.id)
 
-    val empty: Seq[ThriftVenue] = Vector.empty
+    val empty: Vector[ThriftVenue] = Vector.empty
     val items1 = db.iterate(Q(ThriftVenue).where(_.id in ids), empty) {
       case (accum, event) => {
         if (accum.length >= 3) {
           Iter.Return(accum)
         } else {
           event match {
-            case Iter.Item(i) if i.legacyid % 2 == 0 => Iter.Continue(i +: accum)
-            case Iter.Item(_) => Iter.Continue(accum)
-            case Iter.EOF => Iter.Return(accum)
-            case Iter.Error(e) => Iter.Return(accum)
+            case Iter.OnNext(i) if i.legacyid % 2 == 0 => Iter.Continue(i +: accum)
+            case Iter.OnNext(_) => Iter.Continue(accum)
+            case Iter.OnComplete => Iter.Return(accum)
+            case Iter.OnError(e) => Iter.Return(accum)
           }
         }
       }
     }
 
-    items1.map(_.legacyid) must_== List(6, 4, 2)
+    items1.map(_.legacyid) must_== Vector(6, 4, 2)
 
-    val items2 = db.iterateBatch(Q(ThriftVenue).where(_.id in ids), 2, empty) {
-      case (accum, event) => {
-        if (accum.length >= 3) {
-          Iter.Return(accum)
-        } else {
-          event match {
-            case Iter.Item(items) => {
-              Iter.Continue(accum ++ items.filter(_.legacyid % 3 == 1))
-            }
-            case Iter.EOF => Iter.Return(accum)
-            case Iter.Error(e) => Iter.Return(accum)
+    val items2: Vector[ThriftVenue] = db
+      .iterate(Q(ThriftVenue).where(_.id in ids), (empty, empty), batchSizeOpt = Some(2))(
+        IterUtil.batchCommand[Vector[ThriftVenue], ThriftVenue](2, (accum, items) => {
+          if (accum.length >= 3) {
+            Iter.Return(accum)
+          } else {
+            Iter.Continue(accum ++ items.filter(_.legacyid % 3 == 1))
           }
-        }
-      }
-    }
+        })
+      )
+      ._1
 
-    items2.map(_.legacyid) must_== List(1, 4, 7)
+    items2.map(_.legacyid) must_== Vector(1, 4, 7)
 
     def findIndexOfWithLimit(id: Long, limit: Int) = {
       db.iterate(Q(ThriftVenue).where(_.id in ids), 1) {
@@ -356,10 +361,10 @@ class EndToEndTest extends JUnitMustMatchers {
             Iter.Return(-1)
           } else {
             event match {
-              case Iter.Item(i) if i.legacyid == id => Iter.Return(idx)
-              case Iter.Item(i) => Iter.Continue(idx + 1)
-              case Iter.EOF => Iter.Return(-2)
-              case Iter.Error(e) => Iter.Return(-3)
+              case Iter.OnNext(i) if i.legacyid == id => Iter.Return(idx)
+              case Iter.OnNext(i) => Iter.Continue(idx + 1)
+              case Iter.OnComplete => Iter.Return(-2)
+              case Iter.OnError(e) => Iter.Return(-3)
             }
           }
         }

@@ -6,9 +6,7 @@ scala_library(
   dependencies = [
     '3rdparty:bson',
     '3rdparty:mongodb-drivers',
-    'src/jvm/io/fsq/common/scala',
     'src/jvm/io/fsq/rogue',
-    'src/jvm/io/fsq/rogue/adapter/callback',
     'src/jvm/io/fsq/rogue/index',
     'src/jvm/io/fsq/rogue/util',
   ],

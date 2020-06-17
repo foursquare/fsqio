@@ -7,6 +7,7 @@ import io.fsq.field.OptionalField
 import io.fsq.rogue.{
   DBCollectionFactory,
   InitialState,
+  LegacyMongo,
   MongoJavaDriverAdapter,
   Query,
   QueryExecutor,
@@ -75,7 +76,7 @@ object TrivialORM {
 
   class MyQueryExecutor extends QueryExecutor[Meta[_], Record] {
     override val adapter = new MongoJavaDriverAdapter[Meta[_], Record](
-      new MyDBCollectionFactory(new DB(mongoClient, "test"))
+      new MyDBCollectionFactory(LegacyMongo.getDB(mongoClient, "test"))
     )
     override val optimizer = new QueryOptimizer
     override val defaultWriteConcern: WriteConcern = WriteConcern.ACKNOWLEDGED
@@ -160,8 +161,8 @@ class TrivialORMQueryTest extends JUnitMustMatchers {
   @Test
   def canBuildQuery: Unit = {
     (SimpleRecord: Query[SimpleRecord.type, SimpleRecord, InitialState])
-      .toString() must_== """db.simple_records.find({ })"""
-    SimpleRecord.where(_.a eqs 1).toString() must_== """db.simple_records.find({ "a" : 1 })"""
+      .toString() must_== """db.simple_records.find({})"""
+    SimpleRecord.where(_.a eqs 1).toString() must_== """db.simple_records.find({"a": 1})"""
   }
 
   @Test

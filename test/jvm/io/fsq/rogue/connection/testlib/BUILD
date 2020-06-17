@@ -7,6 +7,7 @@ scala_library(
     '3rdparty:junit',
     '3rdparty:mongodb-drivers',
     '3rdparty:netty4',
+    '3rdparty:reactive-streams',
     'src/jvm/io/fsq/rogue/connection',
   ],
 )

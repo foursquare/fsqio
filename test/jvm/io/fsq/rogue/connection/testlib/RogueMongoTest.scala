@@ -11,9 +11,9 @@ import com.mongodb.{
   MongoClientURI,
   ServerAddress
 }
-import com.mongodb.async.client.{MongoClient => AsyncMongoClient, MongoClients => AsyncMongoClients}
 import com.mongodb.connection.ClusterSettings
 import com.mongodb.connection.netty.NettyStreamFactoryFactory
+import com.mongodb.reactivestreams.client.{MongoClient => AsyncMongoClient, MongoClients => AsyncMongoClients}
 import io.netty.channel.nio.NioEventLoopGroup
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicInteger

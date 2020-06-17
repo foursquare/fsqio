@@ -1,17 +1,20 @@
-# Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
+# Copyright 2020 Foursquare Labs Inc. All Rights Reserved.
 
 scala_library(
   name = 'twitter',
   sources = globs('*.scala'),
   dependencies = [
+    '3rdparty:bson',
     '3rdparty:mongodb-drivers',
+    '3rdparty:reactive-streams',
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/rogue',
-    'src/jvm/io/fsq/rogue/adapter/callback',
+    'src/jvm/io/fsq/rogue/adapter',
+    'src/jvm/io/fsq/rogue/util',
   ],
   provides=scala_artifact(
     org='io.fsq',
-    name='rogue-adapter-callback-twitter',
+    name='rogue-adapter-twitter',
     repo=oss_sonatype_repo,
     publication_metadata=io_fsq_library("""
       Foursquare's Scala DSL for constructing and executing find and modify commands against

@@ -2,7 +2,7 @@
 
 scala_library(
   name = 'rogue',
-  sources = globs('*.scala'),
+  sources = globs('*.scala', '*.java'),
   dependencies = [
     '3rdparty:bson',
     '3rdparty:joda-time',

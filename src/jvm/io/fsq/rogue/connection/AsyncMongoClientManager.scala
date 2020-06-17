@@ -3,7 +3,7 @@
 package io.fsq.rogue.connection
 
 import com.mongodb.{ReadPreference, WriteConcern}
-import com.mongodb.async.client.{MongoClient, MongoCollection, MongoDatabase}
+import com.mongodb.reactivestreams.client.{MongoClient, MongoCollection, MongoDatabase}
 import io.fsq.common.scala.Identity._
 import org.bson.codecs.configuration.CodecRegistry
 

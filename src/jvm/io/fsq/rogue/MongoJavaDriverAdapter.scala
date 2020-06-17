@@ -12,11 +12,9 @@ import com.mongodb.{
   ReadPreference,
   WriteConcern
 }
-import io.fsq.rogue.Iter._
-import io.fsq.rogue.Rogue._
+import com.mongodb.client.model.DBCollectionCountOptions
 import io.fsq.rogue.index.UntypedMongoIndex
 import java.util.concurrent.TimeUnit
-import scala.collection.mutable.ListBuffer
 
 trait DBCollectionFactory[MB, RB] {
   def getDBCollection[M <: MB](query: Query[M, _, _]): DBCollection
@@ -70,13 +68,11 @@ class MongoJavaDriverAdapter[MB, RB](
 
     runCommand(descriptionFunc, queryClause) {
       val coll = dbCollectionFactory.getDBCollection(query)
-      coll.getCount(
-        condition,
-        null, // fields
-        queryClause.lim.getOrElse(0).toLong,
-        queryClause.sk.getOrElse(0).toLong,
-        readPreference.getOrElse(coll.getReadPreference)
-      )
+      val options = new DBCollectionCountOptions()
+        .limit(queryClause.lim.getOrElse(0).toLong)
+        .skip(queryClause.sk.getOrElse(0).toLong)
+        .readPreference(readPreference.getOrElse(coll.getReadPreference))
+      coll.count(condition, options)
     }
   }
 
@@ -227,8 +223,9 @@ class MongoJavaDriverAdapter[MB, RB](
     query: Query[M, R, _],
     initialState: S,
     f: DBObject => R,
-    readPreference: Option[ReadPreference] = None
-  )(handler: (S, Event[R]) => Command[S]): S = {
+    readPreference: Option[ReadPreference] = None,
+    batchSizeOpt: Option[Int] = None
+  )(handler: (S, Iter.Event[R]) => Iter.Command[S]): S = {
     def getObject(cursor: DBCursor): Either[Exception, R] = {
       try {
         Right(f(cursor.next))
@@ -241,64 +238,20 @@ class MongoJavaDriverAdapter[MB, RB](
     def iter(cursor: DBCursor, curState: S): S = {
       if (cursor.hasNext) {
         getObject(cursor) match {
-          case Left(e) => handler(curState, Error(e)).state
+          case Left(e) => handler(curState, Iter.OnError(e)).state
           case Right(r) =>
-            handler(curState, Item(r)) match {
-              case Continue(s) => iter(cursor, s)
-              case Return(s) => s
+            handler(curState, Iter.OnNext(r)) match {
+              case Iter.Continue(s) => iter(cursor, s)
+              case Iter.Return(s) => s
             }
         }
       } else {
-        handler(curState, EOF).state
+        handler(curState, Iter.OnComplete).state
       }
     }
 
     doQuery("find", query, None, readPreference)(cursor => {
-      cursor.setDecoderFactory(decoderFactoryFunc(query.meta))
-      iter(cursor, initialState)
-    })
-  }
-
-  def iterateBatch[M <: MB, R, S](
-    query: Query[M, R, _],
-    batchSize: Int,
-    initialState: S,
-    f: DBObject => R,
-    readPreference: Option[ReadPreference] = None
-  )(handler: (S, Event[List[R]]) => Command[S]): S = {
-    val buf = new ListBuffer[R]
-
-    def getBatch(cursor: DBCursor): Either[Exception, List[R]] = {
-      try {
-        buf.clear()
-        // ListBuffer#length is O(1) vs ListBuffer#size is O(N) (true in 2.9.x, fixed in 2.10.x)
-        while (cursor.hasNext && buf.length < batchSize) {
-          buf += f(cursor.next)
-        }
-        Right(buf.toList)
-      } catch {
-        case e: Exception => Left(e)
-      }
-    }
-
-    @scala.annotation.tailrec
-    def iter(cursor: DBCursor, curState: S): S = {
-      if (cursor.hasNext) {
-        getBatch(cursor) match {
-          case Left(e) => handler(curState, Error(e)).state
-          case Right(Nil) => handler(curState, EOF).state
-          case Right(rs) =>
-            handler(curState, Item(rs)) match {
-              case Continue(s) => iter(cursor, s)
-              case Return(s) => s
-            }
-        }
-      } else {
-        handler(curState, EOF).state
-      }
-    }
-
-    doQuery("find", query, Some(batchSize), readPreference)(cursor => {
+      batchSizeOpt.foreach(cursor.batchSize)
       cursor.setDecoderFactory(decoderFactoryFunc(query.meta))
       iter(cursor, initialState)
     })
@@ -323,7 +276,7 @@ class MongoJavaDriverAdapter[MB, RB](
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd = buildCondition(queryClause.condition)
     val ord = queryClause.order.map(buildOrder)
-    val sel = queryClause.select.map(buildSelect).getOrElse(BasicDBObjectBuilder.start.get)
+    val sel = queryClause.select.map(buildSelect(_)).getOrElse(BasicDBObjectBuilder.start.get)
     val hnt = queryClause.hint.map(buildHint)
 
     val descriptionFunc: () => String = () => buildQueryString(operation, query.collectionName, queryClause)
@@ -356,8 +309,8 @@ class MongoJavaDriverAdapter[MB, RB](
         queryClause.sk.foreach(cursor.skip _)
         ord.foreach(cursor.sort _)
         readPreference.orElse(queryClause.readPreference).foreach(cursor.setReadPreference _)
-        queryClause.comment.foreach(cursor addSpecial ("$comment", _))
-        hnt.foreach(cursor hint _)
+        queryClause.comment.foreach(cursor.comment _)
+        hnt.foreach(cursor.hint _)
         if (setMaxTimeMS) {
           val configName = dbCollectionFactory.getDBCollection(query).getName
           config.maxTimeMSOpt(configName).foreach(maxTimeMS => cursor.maxTime(maxTimeMS, TimeUnit.MILLISECONDS))

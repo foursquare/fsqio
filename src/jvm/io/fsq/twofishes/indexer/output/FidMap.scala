@@ -22,7 +22,7 @@ class FidMap(preload: Boolean) extends DurationUtils {
         ()
       )((_: Unit, event: Iter.Event[ThriftGeocodeRecord]) => {
         event match {
-          case Iter.Item(unwrapped) => {
+          case Iter.OnNext(unwrapped) => {
             val geocodeRecord = new GeocodeRecord(unwrapped)
             geocodeRecord.featureIds.foreach(id => {
               fidMap(id) = Some(geocodeRecord.featureId)
@@ -33,8 +33,8 @@ class FidMap(preload: Boolean) extends DurationUtils {
             }
             Iter.Continue(())
           }
-          case Iter.EOF => Iter.Return(())
-          case Iter.Error(e) => throw e
+          case Iter.OnComplete => Iter.Return(())
+          case Iter.OnError(e) => throw e
         }
       })
     }

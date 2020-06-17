@@ -1,26 +1,33 @@
 // Copyright 2018 Foursquare Labs Inc. All Rights Reserved.
 
-package io.fsq.rogue.adapter.callback.twitter.test
+package io.fsq.rogue.adapter.twitter.test
 
 import com.mongodb.MongoInterruptedException
 import com.twitter.util.{Await, Future, Throw, Try}
 import io.fsq.common.testing.matchers.{FoursquareMatchers => FM}
 import io.fsq.rogue.RogueException
-import io.fsq.rogue.adapter.callback.twitter.TwitterFutureMongoCallback
+import io.fsq.rogue.adapter.twitter.TwitterBaseSubscriber
 import org.junit.{Assert, Test}
 
-class TwitterFutureMongoCallbackTest {
+class TwitterAsyncUtilTest {
+  // Handles a single element
+  class TwitterSingleElemSubscriber[T] extends TwitterBaseSubscriber[T, T] {
+    override def onNext(t: T): Unit = {
+      promise.setValue(t)
+    }
+  }
+
   @Test
   def testMongoInterruptExceptionWrapping(): Unit = {
     val testException = new MongoInterruptedException(
       "Knock, knock. Who's there? Interrupting cow. Interrupting cow wh- MOO!",
       new InterruptedException
     )
-    val callback = new TwitterFutureMongoCallback[Integer]
-    callback.onResult(null, testException)
+    val callback = new TwitterSingleElemSubscriber[Integer]
+    callback.onError(testException)
 
     try {
-      val value = Await.result(callback.result)
+      val value = Await.result(callback.promise)
       Assert.fail(s"Expected failed Future, but was successful with value '$value'")
     } catch {
       case re: RogueException => {
@@ -42,23 +49,16 @@ class TwitterFutureMongoCallbackTest {
     val testValue = 24601
     val testException = new Exception("This is fine.")
 
-    val successCallback = new TwitterFutureMongoCallback[Integer]
-    val successFuture = successCallback.result
+    val successCallback = new TwitterSingleElemSubscriber[Integer]
+    val successFuture = successCallback.promise
     Assert.assertThat(successFuture.poll, FM.isNone[Try[Integer]])
-    successCallback.onResult(testValue, null)
+    successCallback.onNext(testValue)
     Assert.assertEquals(testValue, Await.result(successFuture))
 
-    val errorCallback = new TwitterFutureMongoCallback[Integer]
-    val errorFuture = errorCallback.result
+    val errorCallback = new TwitterSingleElemSubscriber[Integer]
+    val errorFuture = errorCallback.promise
     Assert.assertThat(errorFuture.poll, FM.isNone[Try[Integer]])
-    errorCallback.onResult(null, testException)
+    errorCallback.onError(testException)
     Assert.assertEquals(Throw(testException), Await.result(errorFuture.liftToTry))
-
-    // exceptions take precedence
-    val bothCallback = new TwitterFutureMongoCallback[Integer]
-    val bothFuture = bothCallback.result
-    Assert.assertThat(bothFuture.poll, FM.isNone[Try[Integer]])
-    bothCallback.onResult(testValue, testException)
-    Assert.assertEquals(Throw(testException), Await.result(bothFuture.liftToTry))
   }
 }

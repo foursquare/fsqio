@@ -2,7 +2,7 @@ package io.fsq.twofishes.indexer.output
 
 import com.vividsolutions.jts.io.WKBReader
 import io.fsq.common.scala.Identity._
-import io.fsq.rogue.Iter
+import io.fsq.rogue.IterUtil
 import io.fsq.twofishes.core.Indexes
 import io.fsq.twofishes.indexer.mongo.PolygonIndex
 import io.fsq.twofishes.indexer.mongo.RogueImplicits._
@@ -25,13 +25,14 @@ class PolygonIndexer(override val basepath: String, override val fidMap: FidMap)
     var numUsedPolygon = 0
     val groupSize = 1000
     // would be great to unify this with featuresIndex
-    executor.iterateBatch(
+    executor.iterate(
       Q(ThriftGeocodeRecord).scan(_.hasPoly eqs true).orderAsc(_.id),
-      groupSize,
-      0
-    )((groupIndex: Int, event: Iter.Event[Seq[ThriftGeocodeRecord]]) => {
-      event match {
-        case Iter.Item(unwrappedGroup) => {
+      (0, Vector[ThriftGeocodeRecord]()),
+      batchSizeOpt = Some(groupSize)
+    )(
+      IterUtil.batch[Int, ThriftGeocodeRecord](
+        groupSize,
+        (groupIndex, unwrappedGroup) => {
           val group = unwrappedGroup.map(new GeocodeRecord(_))
           val toFindPolys: Map[Long, ObjectId] = group.filter(f => f.hasPoly).map(r => (r.id, r.polyIdOrThrow)).toMap
           val polyMap: Map[ObjectId, PolygonIndex] = executor
@@ -53,12 +54,10 @@ class PolygonIndexer(override val basepath: String, override val fidMap: FidMap)
             numUsedPolygon += 1
             writer.append(f.featureId, wkbReader.read(poly.polygonOrThrow.array()))
           }
-          Iter.Continue(groupIndex + 1)
+          groupIndex + 1
         }
-        case Iter.EOF => Iter.Return(groupIndex)
-        case Iter.Error(e) => throw e
-      }
-    })
+      )
+    )
 
     writer.close()
     log.info("done")

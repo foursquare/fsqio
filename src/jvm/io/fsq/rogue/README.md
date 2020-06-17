@@ -85,7 +85,6 @@ For "find" query objects
     query.findAndDeleteOne()
     query.explain()
     query.iterate(handler)
-    query.iterateBatch(batchSize, handler)
 
 For "modify" query objects
 

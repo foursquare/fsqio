@@ -3,7 +3,7 @@
 package io.fsq.rogue.lift.test
 
 import com.mongodb.{DB, DBCollection}
-import io.fsq.rogue.{LatLong, ShardKey, Sharded}
+import io.fsq.rogue.{LatLong, LegacyMongo, ShardKey, Sharded}
 import io.fsq.rogue.connection.{BlockingMongoClientManager, DefaultMongoIdentifier}
 import io.fsq.rogue.index.{Asc, Desc, IndexModifier, IndexedRecord, TwoD}
 import io.fsq.rogue.lift.{HasMongoForeignObjectId, ObjectIdKey}
@@ -37,7 +37,7 @@ trait RogueLiftTestMetaRecord[Record <: MongoRecord[Record]] extends MongoMetaRe
     val (client, dbName) = RogueLiftTestMetaRecord.clientManager.getClientOrThrow(
       RogueTestMongoIdentifier
     )
-    f(new DB(client, dbName))
+    f(LegacyMongo.getDB(client, dbName))
   }
 }
 

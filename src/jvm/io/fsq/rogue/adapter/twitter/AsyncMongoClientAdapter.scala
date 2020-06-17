@@ -1,10 +1,9 @@
 // Copyright 2016 Foursquare Labs Inc. All Rights Reserved.
 
-package io.fsq.rogue.adapter
+package io.fsq.rogue.adapter.twitter
 
 import com.mongodb.{DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException}
 import com.mongodb.bulk.BulkWriteResult
-import com.mongodb.client.{FindIterable, MongoCollection}
 import com.mongodb.client.model.{
   BulkWriteOptions,
   CountOptions,
@@ -15,32 +14,19 @@ import com.mongodb.client.model.{
   UpdateOptions,
   WriteModel
 }
+import com.mongodb.reactivestreams.client.{FindPublisher, MongoCollection}
+import com.twitter.util.{Future, Try => TwitterTry}
 import io.fsq.rogue.{Iter, Query, RogueException}
+import io.fsq.rogue.adapter.{MongoClientAdapter, MongoCollectionFactory}
 import io.fsq.rogue.util.QueryUtilities
 import java.util.{List => JavaList}
 import java.util.concurrent.TimeUnit
-import java.util.function.Consumer
 import org.bson.BsonValue
 import org.bson.conversions.Bson
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
 
-object BlockingResult {
-  trait Implicits {
-    implicit def wrap[T](value: T): BlockingResult[T] = new BlockingResult[T](value)
-    implicit def unwrap[T](wrapped: BlockingResult[T]): T = wrapped.unwrap
-  }
-
-  object Implicits extends Implicits
-}
-
-// TODO(jacob): Currently this can't be an AnyVal due to erasure causing a clash in the
-//    wrapEmptyResult method below, see if there is a workaround.
-class BlockingResult[T](val value: T) {
-  def unwrap: T = value
-}
-
-object BlockingMongoClientAdapter {
+object AsyncMongoClientAdapter {
   type CollectionFactory[
     DocumentValue,
     Document <: MongoClientAdapter.BaseDocument[DocumentValue],
@@ -55,38 +41,35 @@ object BlockingMongoClientAdapter {
   ]
 }
 
-class BlockingMongoClientAdapter[
+class AsyncMongoClientAdapter[
   DocumentValue,
   Document <: MongoClientAdapter.BaseDocument[DocumentValue],
   MetaRecord,
   Record
 ](
-  collectionFactory: BlockingMongoClientAdapter.CollectionFactory[DocumentValue, Document, MetaRecord, Record],
-  queryHelpers: QueryUtilities[BlockingResult]
-) extends MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, BlockingResult](
+  collectionFactory: AsyncMongoClientAdapter.CollectionFactory[DocumentValue, Document, MetaRecord, Record],
+  queryHelpers: QueryUtilities[Future]
+) extends MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, Future](
     collectionFactory,
     queryHelpers
-  )
-  with BlockingResult.Implicits {
+  ) {
 
-  type Cursor = FindIterable[Document]
-
-  override def wrapResult[T](value: Try[T]): BlockingResult[T] = {
-    new BlockingResult[T](value.get)
-  }
+  type Cursor = FindPublisher[Document]
 
   override protected def getCollectionNamespace(collection: MongoCollection[Document]): MongoNamespace = {
     collection.getNamespace
+  }
+
+  override def wrapResult[T](value: Try[T]): Future[T] = {
+    Future.const(TwitterTry.fromScala(value))
   }
 
   // TODO(jacob): I THINK the new clients opt to throw write exceptions instead of
   //    DuplicateKeyExceptions and that catching those here is unnecessary. This is a
   //    difficult condition to test however, so we will have to wait and see what the
   //    stats measure.
-  override protected def upsertWithDuplicateKeyRetry[T](upsert: => BlockingResult[T]): BlockingResult[T] = {
-    try {
-      upsert
-    } catch {
+  override protected def upsertWithDuplicateKeyRetry[T](upsert: => Future[T]): Future[T] = {
+    upsert.rescue({
       case rogueException: RogueException =>
         Option(rogueException.getCause) match {
           case Some(_: DuplicateKeyException) => {
@@ -100,40 +83,46 @@ class BlockingMongoClientAdapter[
                 queryHelpers.logger.logCounter("rogue.adapter.upsert.MongoWriteException-DUPLICATE_KEY")
                 upsert
               }
-              case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => throw rogueException
+              case ErrorCategory.EXECUTION_TIMEOUT | ErrorCategory.UNCATEGORIZED => {
+                Future.exception(rogueException)
+              }
             }
 
-          case _ => throw rogueException
+          case _ => Future.exception(rogueException)
         }
-    }
+    })
   }
 
   override protected def runCommand[M <: MetaRecord, T](
     descriptionFunc: () => String,
     query: Query[M, _, _]
   )(
-    f: => BlockingResult[T]
-  ): BlockingResult[T] = {
+    f: => Future[T]
+  ): Future[T] = {
     // Use nanoTime instead of currentTimeMillis to time the query since
     // currentTimeMillis only has 10ms granularity on many systems.
     val start = System.nanoTime
     val instanceName: String = collectionFactory.getInstanceNameFromQuery(query)
+
     // Note that it's expensive to call descriptionFunc, it does toString on the Query
     // the logger methods are call by name
-    try {
-      queryHelpers.logger.onExecuteQuery(query, instanceName, descriptionFunc(), f)
-    } catch {
-      // we only encode Exceptions
-      case e: Exception => {
+    queryHelpers.logger
+      .onExecuteQuery(query, instanceName, descriptionFunc(), f)
+      .transform(resultTry => {
         val timeMs = (System.nanoTime - start) / 1000000
-        throw new RogueException(
-          s"Mongo query on $instanceName [${descriptionFunc()}] failed after $timeMs ms",
-          e
-        )
-      }
-    } finally {
-      queryHelpers.logger.log(query, instanceName, descriptionFunc(), (System.nanoTime - start) / 1000000)
-    }
+        queryHelpers.logger.log(query, instanceName, descriptionFunc(), timeMs)
+
+        resultTry.asScala match {
+          case Failure(exception: Exception) =>
+            Future.exception(
+              new RogueException(
+                s"Mongo query on $instanceName [${descriptionFunc()}] failed after $timeMs ms",
+                exception
+              )
+            )
+          case _ => Future.const(resultTry)
+        }
+      })
   }
 
   override protected def countImpl(
@@ -141,15 +130,13 @@ class BlockingMongoClientAdapter[
   )(
     filter: Bson,
     options: CountOptions
-  ): BlockingResult[Long] = {
-    collection.countDocuments(filter, options)
-  }
-
-  // TODO(iant): Delete after Scala 2.12 upgrade with SAM support
-  implicit class IterableForEach[T](iterable: java.lang.Iterable[T]) {
-    def forEach(f: T => Unit): Unit = iterable.forEach(new Consumer[T] {
-      override def accept(t: T): Unit = f(t)
-    })
+  ): Future[Long] = {
+    TwitterAsyncUtil
+      .optResult(collection.countDocuments(filter, options))
+      .map({
+        case None => 0
+        case Some(javaLong) => javaLong: Long
+      })
   }
 
   override protected def distinctImpl[T](
@@ -160,9 +147,13 @@ class BlockingMongoClientAdapter[
   )(
     fieldName: String,
     filter: Bson
-  ): BlockingResult[T] = {
-    collection.distinct(fieldName, filter, classOf[BsonValue]).forEach(accumulator)
-    resultAccessor
+  ): Future[T] = {
+    TwitterAsyncUtil
+      .forEachResult(
+        collection.distinct(fieldName, filter, classOf[BsonValue]),
+        accumulator
+      )
+      .map(_ => resultAccessor)
   }
 
   override protected def forEachProcessor[T](
@@ -170,9 +161,8 @@ class BlockingMongoClientAdapter[
     accumulator: Document => Unit
   )(
     cursor: Cursor
-  ): BlockingResult[T] = {
-    cursor.forEach(accumulator)
-    resultAccessor
+  ): Future[T] = {
+    TwitterAsyncUtil.forEachResult(cursor, accumulator).map(_ => resultAccessor)
   }
 
   override protected def iterateProcessor[R, T](
@@ -181,39 +171,49 @@ class BlockingMongoClientAdapter[
     handler: (T, Iter.Event[R]) => Iter.Command[T]
   )(
     cursor: Cursor
-  ): BlockingResult[T] = {
-    var iterState = initialIterState
-    var continue = true
-    val iterator = cursor.iterator
-
-    while (continue) {
-      if (iterator.hasNext) {
-        Try(deserializer(iterator.next())) match {
-          case Success(record) =>
-            handler(iterState, Iter.OnNext(record)) match {
-              case Iter.Continue(newIterState) => iterState = newIterState
+  ): Future[T] = {
+    @volatile var state = initialIterState
+    val sub = new TwitterBaseSubscriber[Document, T] {
+      override def onNext(t: Document): Unit = {
+        Try(deserializer(t)) match {
+          case Success(record) => {
+            handler(state, Iter.OnNext(record)) match {
+              case Iter.Continue(newIterState) => {
+                state = newIterState
+                subscription.request(1)
+              }
               case Iter.Return(finalState) => {
-                iterState = finalState
-                continue = false
+                promise.setValue(finalState)
+                subscription.cancel()
               }
             }
-          case Failure(exception: Exception) => {
-            iterState = handler(iterState, Iter.OnError(exception)).state
-            continue = false
           }
-          case Failure(throwable) => throw throwable
+          case Failure(t) => {
+            subscription.cancel()
+            onError(t)
+          }
         }
-      } else {
-        iterState = handler(iterState, Iter.OnComplete).state
-        continue = false
+      }
+
+      override def onComplete(): Unit = {
+        if (!promise.isDefined) {
+          promise.setValue(handler(state, Iter.OnComplete).state)
+        }
+      }
+
+      override def onError(throwable: Throwable): Unit = {
+        throwable match {
+          case e: Exception => promise.setValue(handler(state, Iter.OnError(e)).state)
+          case _: Throwable => promise.setException(throwable)
+        }
       }
     }
-
-    iterState
+    cursor.subscribe(sub)
+    sub.promise
   }
 
   override protected def findImpl[T](
-    processor: Cursor => BlockingResult[T]
+    processor: Cursor => Future[T]
   )(
     collection: MongoCollection[Document]
   )(
@@ -227,10 +227,14 @@ class BlockingMongoClientAdapter[
     sortOpt: Option[Bson] = None,
     projectionOpt: Option[Bson] = None,
     maxTimeMSOpt: Option[Long] = None
-  ): BlockingResult[T] = {
+  ): Future[T] = {
     val cursor = collection.find(filter)
 
-    batchSizeOpt.foreach(cursor.batchSize(_))
+    // The default behavior in MongoIterableSubscription.java is to use
+    // an underlying batch size of 2 unless more is requested from the
+    // subscription. Setting it to 0 means to let the server decide an appropriate
+    // batch size, which used to be the default of the driver.
+    cursor.batchSize(batchSizeOpt.getOrElse(0))
     commentOpt.foreach(cursor.comment(_))
     hintOpt.foreach(cursor.hint(_))
     limitOpt.foreach(cursor.limit(_))
@@ -247,9 +251,8 @@ class BlockingMongoClientAdapter[
   )(
     record: R,
     document: Document
-  ): BlockingResult[R] = {
-    collection.insertOne(document)
-    record
+  ): Future[R] = {
+    TwitterAsyncUtil.unitResult(collection.insertOne(document)).map(_ => record)
   }
 
   override protected def insertAllImpl[R <: Record](
@@ -257,9 +260,8 @@ class BlockingMongoClientAdapter[
   )(
     records: Seq[R],
     documents: Seq[Document]
-  ): BlockingResult[Seq[R]] = {
-    collection.insertMany(documents.asJava)
-    records
+  ): Future[Seq[R]] = {
+    TwitterAsyncUtil.unitResult(collection.insertMany(documents.asJava)).map(_ => records)
   }
 
   override protected def replaceOneImpl[R <: Record](
@@ -269,9 +271,8 @@ class BlockingMongoClientAdapter[
     filter: Bson,
     document: Document,
     options: ReplaceOptions
-  ): BlockingResult[R] = {
-    collection.replaceOne(filter, document, options)
-    record
+  ): Future[R] = {
+    TwitterAsyncUtil.singleResult(collection.replaceOne(filter, document, options)).map(_ => record)
   }
 
   override protected def removeImpl[R <: Record](
@@ -279,18 +280,20 @@ class BlockingMongoClientAdapter[
   )(
     record: R,
     document: Document
-  ): BlockingResult[Long] = {
-    val deleteResult = collection.deleteOne(document)
-    deleteResult.getDeletedCount
+  ): Future[Long] = {
+    TwitterAsyncUtil
+      .singleResult(collection.deleteOne(document))
+      .map(_.getDeletedCount)
   }
 
   override protected def deleteImpl(
     collection: MongoCollection[Document]
   )(
     filter: Bson
-  ): BlockingResult[Long] = {
-    val deleteResult = collection.deleteMany(filter)
-    deleteResult.getDeletedCount
+  ): Future[Long] = {
+    TwitterAsyncUtil
+      .singleResult(collection.deleteMany(filter))
+      .map(_.getDeletedCount)
   }
 
   override protected def updateOneImpl(
@@ -299,9 +302,10 @@ class BlockingMongoClientAdapter[
     filter: Bson,
     update: Bson,
     options: UpdateOptions
-  ): BlockingResult[Long] = {
-    val updateResult = collection.updateOne(filter, update, options)
-    updateResult.getModifiedCount
+  ): Future[Long] = {
+    TwitterAsyncUtil
+      .singleResult(collection.updateOne(filter, update, options))
+      .map(_.getModifiedCount)
   }
 
   override protected def updateManyImpl(
@@ -310,9 +314,10 @@ class BlockingMongoClientAdapter[
     filter: Bson,
     update: Bson,
     options: UpdateOptions
-  ): BlockingResult[Long] = {
-    val updateResult = collection.updateMany(filter, update, options)
-    updateResult.getModifiedCount
+  ): Future[Long] = {
+    TwitterAsyncUtil
+      .singleResult(collection.updateMany(filter, update, options))
+      .map(_.getModifiedCount)
   }
 
   override protected def findOneAndUpdateImpl[R](
@@ -323,9 +328,12 @@ class BlockingMongoClientAdapter[
     filter: Bson,
     update: Bson,
     options: FindOneAndUpdateOptions
-  ): BlockingResult[Option[R]] = {
-    val document = collection.findOneAndUpdate(filter, update, options)
-    Option(document).map(deserializer)
+  ): Future[Option[R]] = {
+    TwitterAsyncUtil
+      .optResult(
+        collection.findOneAndUpdate(filter, update, options)
+      )
+      .map(_.map(deserializer))
   }
 
   override protected def findOneAndDeleteImpl[R](
@@ -335,17 +343,26 @@ class BlockingMongoClientAdapter[
   )(
     filter: Bson,
     options: FindOneAndDeleteOptions
-  ): BlockingResult[Option[R]] = {
-    val document = collection.findOneAndDelete(filter, options)
-    Option(document).map(deserializer)
+  ): Future[Option[R]] = {
+    TwitterAsyncUtil
+      .optResult(
+        collection.findOneAndDelete(filter)
+      )
+      .map(_.map(deserializer))
   }
 
   override protected def createIndexesImpl(
     collection: MongoCollection[Document]
   )(
     indexes: Seq[IndexModel]
-  ): BlockingResult[Seq[String]] = {
-    collection.createIndexes(indexes.asJava).asScala
+  ): Future[Seq[String]] = {
+    val indexNames = Vector.newBuilder[String]
+    TwitterAsyncUtil
+      .forEachResult(
+        collection.createIndexes(indexes.asJava),
+        (indexName: String) => indexNames += indexName
+      )
+      .map(_ => indexNames.result())
   }
 
   override protected def bulkWriteImpl(
@@ -353,7 +370,7 @@ class BlockingMongoClientAdapter[
   )(
     requests: JavaList[WriteModel[Document]],
     options: BulkWriteOptions
-  ): BlockingResult[Option[BulkWriteResult]] = {
-    Some(collection.bulkWrite(requests, options))
+  ): Future[Option[BulkWriteResult]] = {
+    TwitterAsyncUtil.optResult(collection.bulkWrite(requests, options))
   }
 }

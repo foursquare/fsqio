@@ -2,7 +2,7 @@ package io.fsq.twofishes.indexer.output
 
 import com.vividsolutions.jts.io.WKBReader
 import io.fsq.common.scala.Identity._
-import io.fsq.rogue.Iter
+import io.fsq.rogue.IterUtil
 import io.fsq.twofishes.core.Indexes
 import io.fsq.twofishes.gen.{GeocodeServingFeature, YahooWoeType}
 import io.fsq.twofishes.indexer.mongo.{IndexerQueryExecutor, PolygonIndex, RevGeoIndex}
@@ -96,13 +96,14 @@ class FeatureIndexer(
     var fidCount = 0
 
     val fidSize: Long = executor.count(Q(ThriftGeocodeRecord))
-    executor.iterateBatch(
+    executor.iterate(
       Q(ThriftGeocodeRecord).orderAsc(_.id),
-      1000,
-      ()
-    )((_: Unit, event: Iter.Event[Seq[ThriftGeocodeRecord]]) => {
-      event match {
-        case Iter.Item(group) => {
+      ((), Vector[ThriftGeocodeRecord]()),
+      batchSizeOpt = Some(1000)
+    )(
+      IterUtil.batch(
+        1000,
+        (_: Unit, group: Vector[ThriftGeocodeRecord]) => {
           val toFindPolys: Map[Long, ObjectId] = group.filter(f => f.hasPoly).map(r => (r.id, r.polyIdOrThrow)).toMap
           val polyMap: Map[ObjectId, PolygonIndex] = executor
             .fetch(
@@ -120,12 +121,9 @@ class FeatureIndexer(
               log.info("processed %d of %d features".format(fidCount, fidSize))
             }
           })
-          Iter.Continue(())
         }
-        case Iter.EOF => Iter.Return(())
-        case Iter.Error(e) => throw e
-      }
-    })
+      )
+    )
 
     writer.close()
   }

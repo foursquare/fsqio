@@ -31,7 +31,7 @@ class IdIndexer(
       List.empty[(String, StoredFeatureId)]
     )((acc: List[(String, StoredFeatureId)], event: Iter.Event[ThriftGeocodeRecord]) => {
       event match {
-        case Iter.Item(unwrapped) => {
+        case Iter.OnNext(unwrapped) => {
           val f = new GeocodeRecord(unwrapped)
           val items = (for {
             id <- f.ids.filterNot(_ =? f.id)
@@ -40,8 +40,8 @@ class IdIndexer(
           // Even though we build this list in reverse, it gets sorted anyway below. Yay O(1) prepend.
           Iter.Continue(items.toList ::: acc)
         }
-        case Iter.EOF => Iter.Return(acc)
-        case Iter.Error(e) => throw e
+        case Iter.OnComplete => Iter.Return(acc)
+        case Iter.OnError(e) => throw e
       }
     })
 

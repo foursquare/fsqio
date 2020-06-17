@@ -54,7 +54,7 @@ class NameIndexer(
       ()
     )((_: Unit, event: Iter.Event[ThriftNameIndex]) => {
       event match {
-        case Iter.Item(unwrapped) => {
+        case Iter.OnNext(unwrapped) => {
           val n = new NameIndex(unwrapped)
           if (n.nameOption.exists(_.nonEmpty)) {
             if (lastName != n.nameOrThrow) {
@@ -74,8 +74,8 @@ class NameIndexer(
           }
           Iter.Continue(())
         }
-        case Iter.EOF => Iter.Return(())
-        case Iter.Error(e) => throw e
+        case Iter.OnComplete => Iter.Return(())
+        case Iter.OnError(e) => throw e
       }
     })
 

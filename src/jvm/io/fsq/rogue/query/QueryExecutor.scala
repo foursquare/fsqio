@@ -30,6 +30,7 @@ import io.fsq.rogue.index.UntypedMongoIndex
 import io.fsq.rogue.types.MongoDisallowed
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.ArrayBuffer
+import scala.util.Success
 
 /** TODO(jacob): All of the collection methods implemented here should get rid of the
   *     option to send down a read preference, and just use the one on the query.
@@ -65,7 +66,7 @@ class QueryExecutor[
     ev2: M !<:< MongoDisallowed
   ): Result[Long] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(0L)
+      adapter.wrapResult(Success(0L))
     } else {
       adapter.count(query, readPreferenceOpt)
     }
@@ -81,7 +82,7 @@ class QueryExecutor[
     ev2: M !<:< MongoDisallowed
   ): Result[Long] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(0L)
+      adapter.wrapResult(Success(0L))
     } else {
       adapter.countDistinct(query, field(query.meta).name, readPreferenceOpt)
     }
@@ -98,7 +99,7 @@ class QueryExecutor[
     ev2: M !<:< MongoDisallowed
   ): Result[Seq[FieldType]] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(Vector.empty[FieldType])
+      adapter.wrapResult(Success(Vector.empty[FieldType]))
     } else {
       adapter.distinct(query, field(query.meta).name, resultTransformer, readPreferenceOpt)
     }
@@ -148,7 +149,7 @@ class QueryExecutor[
     val resultsBuilder = canBuildFrom()
 
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(resultsBuilder.result())
+      adapter.wrapResult(Success(resultsBuilder.result()))
     } else {
       def processor(document: Document): Unit = {
         resultsBuilder += serializer.readFromDocument(query.meta, query.select)(document)
@@ -166,7 +167,7 @@ class QueryExecutor[
     ev3: M !<:< MongoDisallowed
   ): Result[Option[R]] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(None)
+      adapter.wrapResult(Success(None))
     } else {
       var result: Option[R] = None
       def processor(document: Document): Unit = {
@@ -186,7 +187,7 @@ class QueryExecutor[
     ev2: M !<:< MongoDisallowed
   ): Result[Unit] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(())
+      adapter.wrapResult(Success(()))
     } else {
       def processor(document: Document): Unit = {
         f(serializer.readFromDocument(query.meta, query.select)(document))
@@ -209,7 +210,7 @@ class QueryExecutor[
     val resultsBuilder = canBuildFrom()
 
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(resultsBuilder.result())
+      adapter.wrapResult(Success(resultsBuilder.result()))
     } else {
       val batchBuffer = new ArrayBuffer[R]
 
@@ -248,7 +249,7 @@ class QueryExecutor[
     ev3: M !<:< MongoDisallowed
   ): Result[Long] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(0L)
+      adapter.wrapResult(Success(0L))
     } else {
       adapter.delete(query, Some(writeConcern))
     }
@@ -262,7 +263,7 @@ class QueryExecutor[
     ev2: M !<:< MongoDisallowed
   ): Result[Long] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(0L)
+      adapter.wrapResult(Success(0L))
     } else {
       adapter.modify(query, upsert = false, multi = false, Some(writeConcern))
     }
@@ -275,7 +276,7 @@ class QueryExecutor[
     implicit ev: M !<:< MongoDisallowed
   ): Result[Long] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(0L)
+      adapter.wrapResult(Success(0L))
     } else {
       adapter.modify(query, upsert = false, multi = true, Some(writeConcern))
     }
@@ -289,7 +290,7 @@ class QueryExecutor[
     ev2: M !<:< MongoDisallowed
   ): Result[Long] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(0L)
+      adapter.wrapResult(Success(0L))
     } else {
       adapter.modify(query, upsert = true, multi = false, Some(writeConcern))
     }
@@ -303,7 +304,7 @@ class QueryExecutor[
     implicit ev: M !<:< MongoDisallowed
   ): Result[Option[R]] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(None)
+      adapter.wrapResult(Success(None))
     } else {
       val deserializer = serializer.readFromDocument(query.query.meta, query.query.select)(_)
       adapter.findOneAndUpdate(deserializer)(query, returnNew = returnNew, upsert = false, Some(writeConcern))
@@ -318,7 +319,7 @@ class QueryExecutor[
     implicit ev: M !<:< MongoDisallowed
   ): Result[Option[R]] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(None)
+      adapter.wrapResult(Success(None))
     } else {
       val deserializer = serializer.readFromDocument(query.query.meta, query.query.select)(_)
       adapter.findOneAndUpdate(deserializer)(query, returnNew = returnNew, upsert = true, Some(writeConcern))
@@ -333,7 +334,7 @@ class QueryExecutor[
     ev2: M !<:< MongoDisallowed
   ): Result[Option[R]] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(None)
+      adapter.wrapResult(Success(None))
     } else {
       val deserializer = serializer.readFromDocument(query.meta, query.select)(_)
       adapter.findOneAndDelete(deserializer)(query, Some(writeConcern))
@@ -343,7 +344,8 @@ class QueryExecutor[
   def iterate[M <: MetaRecord, R, State, T](
     query: Query[M, R, State],
     initialIterState: T,
-    readPreferenceOpt: Option[ReadPreference] = None
+    readPreferenceOpt: Option[ReadPreference] = None,
+    batchSizeOpt: Option[Int] = None
   )(
     handler: (T, Iter.Event[R]) => Iter.Command[T]
   )(
@@ -351,29 +353,10 @@ class QueryExecutor[
     ev2: M !<:< MongoDisallowed
   ): Result[T] = {
     if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(handler(initialIterState, Iter.EOF).state)
+      adapter.wrapResult(Success(handler(initialIterState, Iter.OnComplete).state))
     } else {
       val deserializer = serializer.readFromDocument(query.meta, query.select)(_)
-      adapter.iterate(query, initialIterState, deserializer, readPreferenceOpt)(handler)
-    }
-  }
-
-  def iterateBatch[M <: MetaRecord, R, State, T](
-    query: Query[M, R, State],
-    batchSize: Int,
-    initialIterState: T,
-    readPreferenceOpt: Option[ReadPreference] = None
-  )(
-    handler: (T, Iter.Event[Seq[R]]) => Iter.Command[T]
-  )(
-    implicit ev: ShardingOk[M, State],
-    ev2: M !<:< MongoDisallowed
-  ): Result[T] = {
-    if (optimizer.isEmptyQuery(query)) {
-      adapter.wrapResult(handler(initialIterState, Iter.EOF).state)
-    } else {
-      val deserializer = serializer.readFromDocument(query.meta, query.select)(_)
-      adapter.iterateBatch(query, batchSize, initialIterState, deserializer, readPreferenceOpt)(handler)
+      adapter.iterate(query, initialIterState, deserializer, readPreferenceOpt, batchSizeOpt)(handler)
     }
   }
 
@@ -388,7 +371,7 @@ class QueryExecutor[
       case BulkModifyQueryOperation(modifyQuery, _) => optimizer.isEmptyQuery(modifyQuery)
     })
     if (nonEmptyOps.isEmpty) {
-      adapter.wrapResult(None)
+      adapter.wrapResult(Success(None))
     } else {
       adapter.bulk(serializer.writeToDocument[R])(nonEmptyOps, ordered, Some(writeConcern))
     }

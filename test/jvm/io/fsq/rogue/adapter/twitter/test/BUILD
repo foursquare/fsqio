@@ -8,7 +8,7 @@ junit_tests(
     '3rdparty:mongodb-drivers',
     '3rdparty:twitter-util',
     'src/jvm/io/fsq/rogue',
-    'src/jvm/io/fsq/rogue/adapter/callback/twitter',
+    'src/jvm/io/fsq/rogue/adapter/twitter',
     'test/jvm/io/fsq/common/testing/matchers',
   ],
 )

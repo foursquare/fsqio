@@ -293,30 +293,19 @@ trait QueryExecutor[MB, RB] extends Rogue {
     }
   }
 
-  def iterate[S, M <: MB, R, State](query: Query[M, R, State], state: S, readPreference: Option[ReadPreference] = None)(
+  def iterate[S, M <: MB, R, State](
+    query: Query[M, R, State],
+    state: S,
+    readPreference: Option[ReadPreference] = None,
+    batchSizeOpt: Option[Int] = None
+  )(
     handler: (S, Iter.Event[R]) => Iter.Command[S]
   )(implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): S = {
     if (optimizer.isEmptyQuery(query)) {
-      handler(state, Iter.EOF).state
+      handler(state, Iter.OnComplete).state
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
-      adapter.iterate(query, state, s.fromDBObject _, readPreference)(handler)
-    }
-  }
-
-  def iterateBatch[S, M <: MB, R, State](
-    query: Query[M, R, State],
-    batchSize: Int,
-    state: S,
-    readPreference: Option[ReadPreference] = None
-  )(
-    handler: (S, Iter.Event[Seq[R]]) => Iter.Command[S]
-  )(implicit ev: ShardingOk[M, State], ev2: M !<:< MongoDisallowed): S = {
-    if (optimizer.isEmptyQuery(query)) {
-      handler(state, Iter.EOF).state
-    } else {
-      val s = readSerializer[M, R](query.meta, query.select)
-      adapter.iterateBatch(query, batchSize, state, s.fromDBObject _, readPreference)(handler)
+      adapter.iterate(query, state, s.fromDBObject _, readPreference, batchSizeOpt)(handler)
     }
   }
 
