@@ -15,8 +15,6 @@ automatically without the overhead of publishing. This repo will always contain 
 internally, all of the tools can be built just as we use them, directly from HEAD.
 
 ## Projects include:
-* [Exceptionator](https://github.com/foursquare/fsqio/tree/master/src/jvm/io/fsq/exceptionator):
-An exception aggregator using mongodb.
 * [Fhttp](https://github.com/foursquare/fsqio/tree/master/src/jvm/io/fsq/fhttp):
 A request building interface similar to scalaj-http for Finagle http clients.
 * [Rogue](https://github.com/foursquare/fsqio/tree/master/src/jvm/io/fsq/rogue): A Scala DSL for MongoDB
