@@ -22,7 +22,11 @@ Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
       <ibiblio name="osgeo"
                m2compatible="true"
                usepoms="true"
-               root="http://download.osgeo.org/webdav/geotools//"/>
+               root="https://repo.osgeo.org/repository/release/"/>
+      <ibiblio name="osgeo-snapshot"
+               m2compatible="true"
+               usepoms="true"
+               root="https://repo.osgeo.org/repository/snapshot/"/>
       <ibiblio name="maven-central" m2compatible="true" descriptor="required"/>
       <!-- Maven Central. Preferred in a vacuum but the above geojson issue forces our hand. -->
       <ibiblio name="maven.twttr.com-maven"
