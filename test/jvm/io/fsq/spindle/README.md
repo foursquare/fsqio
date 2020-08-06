@@ -1,1 +1,1 @@
-src/jvm/io/fsq/spindle/README.md
+../../../../../src/jvm/io/fsq/spindle/README.md

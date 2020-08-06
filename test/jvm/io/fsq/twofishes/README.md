@@ -1,1 +1,1 @@
-src/jvm/io/fsq/twofishes/README.md
+../../../../../src/jvm/io/fsq/twofishes/README.md
