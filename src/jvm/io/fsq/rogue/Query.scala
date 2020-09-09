@@ -103,8 +103,17 @@ case class Query[M, R, +State](
     }
   }
 
+  private def addClauseIf[F](
+    cond: Boolean
+  )(clause: M => QueryClause[F], expectedIndexBehavior: MaybeIndexed) = {
+    if (cond) addClause(clause(_), expectedIndexBehavior) else this
+  }
+
   def whereOpt[V, F](opt: Option[V])(clause: (M, V) => QueryClause[F]): Query[M, R, State] =
     addClauseOpt(opt)(clause, expectedIndexBehavior = Index)
+
+  def whereIf[F](cond: Boolean)(clause: M => QueryClause[F]): Query[M, R, State] =
+    addClauseIf(cond)(clause, expectedIndexBehavior = Index)
 
   def andOpt[V, F](opt: Option[V])(clause: (M, V) => QueryClause[F]): Query[M, R, State] =
     addClauseOpt(opt)(clause, expectedIndexBehavior = Index)
