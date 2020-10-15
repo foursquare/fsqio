@@ -60,16 +60,30 @@ case $CURRENT_UNAME in
       ;;
 esac
 
-# Overrides for Fsq.io from the current Pants defaults due to more_itertools/pytest fiasco.
-# Remove from Fsq.io once upgraded past this bug:
-# https://github.com/pantsbuild/pants/issues/6282
+####
+# Pants options for python tooling
+#
 export FS_SETUPTOOLS_VERS="30.0.0"
 export FS_WHEEL_VERS="0.29.0"
+export FS_PYTEST_VERS="3.6.4"
+
 export PANTS_PYTHON_SETUP_SETUPTOOLS_VERSION="${PANTS_PYTHON_SETUP_SETUPTOOLS_VERSION:-$FS_SETUPTOOLS_VERS}"
 export PANTS_PYTHON_SETUP_WHEEL_VERSION="${PANTS_PYTHON_SETUP_WHEEL_VERSION:-$FS_WHEEL_VERS}"
-# Override from internal version due to more-itertools bug with pex resolution. Fixed in upcoming Pants upgrade.
-export PANTS_PYTEST_REQUIREMENTS=${PANTS_PYTEST_REQUIREMENTS:-"pytest==3.4.2"}
 
+# Pytest
+# At runtime, Pants bootstraps its own copy of pytest and bundles it into a Pex test runner.
+# These options thread the versions of python tools we expect.
+#
+#   * '--pytest-requirements': Accepts just a single requirement
+#   * '--test-pytest-prep-requirements': Accepts a list of additional requirements respected during resolve.
+
+export PANTS_PYTEST_REQUIREMENTS=${PANTS_PYTEST_REQUIREMENTS:-"pytest==$FS_PYTEST_VERS"}
+pytest_prep_defaults="['more-itertools<6.0.0', 'attrs<19.2.0', 'setuptools==$PANTS_PYTHON_SETUP_SETUPTOOLS_VERSION']"
+export PANTS_TEST_PYTEST_PREP_REQUIREMENTS=${PANTS_TEST_PYTEST_PREP_REQUIREMENTS:-$pytest_prep_defaults}
+export PANTS_PYTEST_COV_REQUIREMENTS=${PANTS_PYTEST_COV_REQUIREMENTS:-"pytest-cov>=2.5,<2.6"}
+
+# Pants JVM tooling options
+#
 # Only include if not set elsewhere.
 FSQIO_JVM_TEST_JUNIT_OPTIONS="+[\
   ' -Djava.util.logging.config.file=${BUILD_ROOT}/src/resources/io/fsq/props/logging.properties ' \
