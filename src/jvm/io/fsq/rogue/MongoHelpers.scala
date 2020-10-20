@@ -119,16 +119,19 @@ object MongoHelpers extends Rogue {
       builder.get
     }
 
-    val OidPattern = Pattern.compile("""\{ "\$oid" : "([0-9a-f]{24})"\}""")
-    def stringFromDBObject(dbo: DBObject): String = {
+    val OidPattern: Pattern = Pattern.compile("""\{\s*"\$oid"\s*:\s*"([0-9a-f]{24})"\s*\}""")
+    val LongPattern: Pattern = Pattern.compile("""\{\s*"\$numberLong"\s*:\s*"(\d+)"\s*\}""")
+    def reformattedDBObjectString(dbo: DBObject): String = {
       // DBObject.toString renders ObjectIds like { $oid: "..."" }, but we want ObjectId("...")
-      // because that's the format the Mongo REPL accepts.
-      OidPattern.matcher(dbo.toString).replaceAll("""ObjectId("$1")""")
+      // because that's the format the Mongo REPL accepts. Longs are similar -- {"$numberLong": "1234"}
+      // instead of NumberLong("1234").
+      val objectIdFormatted = OidPattern.matcher(dbo.toString).replaceAll("""ObjectId("$1")""")
+      LongPattern.matcher(objectIdFormatted).replaceAll("""NumberLong("$1")""")
     }
 
     def buildQueryString[R, M](operation: String, collectionName: String, query: Query[M, R, _]): String = {
       val sb = new StringBuilder("db.%s.%s(".format(collectionName, operation))
-      sb.append(stringFromDBObject(buildCondition(query.condition, signature = false)))
+      sb.append(reformattedDBObjectString(buildCondition(query.condition, signature = false)))
       query.select.foreach(s => sb.append(", " + buildSelect(s).toString))
       sb.append(")")
       query.order.foreach(o => sb.append(".sort(%s)" format buildOrder(o).toString))
@@ -154,8 +157,8 @@ object MongoHelpers extends Rogue {
     ): String = {
       "db.%s.update(%s, %s, %s, %s)".format(
         collectionName,
-        stringFromDBObject(buildCondition(modify.query.condition, signature = false)),
-        stringFromDBObject(buildModify(modify.mod)),
+        reformattedDBObjectString(buildCondition(modify.query.condition, signature = false)),
+        reformattedDBObjectString(buildModify(modify.mod)),
         upsert,
         multi
       )
@@ -194,11 +197,14 @@ object MongoHelpers extends Rogue {
     ): String = {
       val query = mod.query
       val sb = new StringBuilder(
-        "db.%s.findAndModify({ query: %s".format(collectionName, stringFromDBObject(buildCondition(query.condition)))
+        "db.%s.findAndModify({ query: %s".format(
+          collectionName,
+          reformattedDBObjectString(buildCondition(query.condition))
+        )
       )
       query.order.foreach(o => sb.append(", sort: " + buildOrder(o).toString))
       if (remove) sb.append(", remove: true")
-      sb.append(", update: " + stringFromDBObject(buildModify(mod.mod)))
+      sb.append(", update: " + reformattedDBObjectString(buildModify(mod.mod)))
       sb.append(", new: " + returnNew)
       query.select.foreach(s => sb.append(", fields: " + buildSelect(s).toString))
       sb.append(", upsert: " + upsert)
