@@ -19,7 +19,9 @@ jar_library(
 jar_library(
   name = 'scala-repl',
   jars = [
-    jar(org='com.lihaoyi', name = 'ammonite_2.11.8', rev='0.8.2')
+    # NOTE(jacob): The ammonite jar is named to the scala patch version rather than just
+    #   minor version, so scala_jar doesn't work for us here.
+    jar(org = 'com.lihaoyi', name = 'ammonite_' + scala_version, rev='1.6.7')
   ],
   tags = [
     'exempt',
