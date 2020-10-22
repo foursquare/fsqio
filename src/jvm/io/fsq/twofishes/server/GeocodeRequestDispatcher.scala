@@ -2,6 +2,7 @@
 package io.fsq.twofishes.server
 
 import com.twitter.ostrich.stats.Stats
+import io.fsq.geo.quadtree.CountryRevGeoImpl
 import io.fsq.twofishes.gen.{GeocodeRequest, GeocodeResponse, ResponseIncludes}
 import scala.collection.JavaConverters._
 
@@ -13,7 +14,7 @@ import scala.collection.JavaConverters._
 class GeocodeRequestDispatcher(store: GeocodeStorageReadService) {
 
   def geocode(req: GeocodeRequest): GeocodeResponse = {
-    val logger = new MemoryLogger(req)
+    val logger = MemoryLogger(req, CountryRevGeoImpl)
     Stats.incr("geocode-requests", 1)
     val finalReq = req.mutable
 

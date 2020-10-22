@@ -2,5 +2,6 @@
 
 scala_library(
   name = 'dollar',
-  sources = globs('*.scala')
+  sources = globs('*.scala'),
+  provides = scala_artifact(org='io.fsq.dollar', name='stats', repo=oss_sonatype_repo),
 )

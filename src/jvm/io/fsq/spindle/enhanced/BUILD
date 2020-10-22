@@ -11,4 +11,5 @@ scala_library(
     'opensource',
     'dependencies_must_have:opensource',
   ],
+  provides = scala_artifact(org='io.fsq.spindle', name='enhanced', repo=oss_sonatype_repo),
 )

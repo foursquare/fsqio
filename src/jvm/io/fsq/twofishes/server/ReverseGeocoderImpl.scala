@@ -4,6 +4,7 @@ package io.fsq.twofishes.server
 import com.vividsolutions.jts.geom.{Coordinate, Geometry, GeometryFactory, Point => JTSPoint}
 import com.vividsolutions.jts.io.WKBReader
 import io.fsq.common.scala.Lists.Implicits._
+import io.fsq.geo.quadtree.{CountryRevGeo, CountryRevGeoImpl}
 import io.fsq.twofishes.core.YahooWoeTypes
 import io.fsq.twofishes.gen.{
   BulkReverseGeocodeRequest,
@@ -19,7 +20,7 @@ import io.fsq.twofishes.gen.{
   ResponseIncludes,
   YahooWoeType
 }
-import io.fsq.twofishes.util.{GeoTools, GeometryUtils, StoredFeatureId}
+import io.fsq.twofishes.util.{GeoTools, GeometryUtils, StoredFeatureId, TwofishesLogger}
 import org.apache.thrift.TBaseHelper
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
@@ -52,7 +53,7 @@ object ReverseGeocodeParseOrdering {
 class ReverseGeocoderHelperImpl(
   store: GeocodeStorageReadService,
   req: CommonGeocodeRequestParams,
-  queryLogger: MemoryLogger,
+  queryLogger: TwofishesLogger,
   Stats: StatsInterface[_]
 ) extends GeocoderTypes
   with BulkImplHelpers {
@@ -282,14 +283,21 @@ class ReverseGeocoderHelperImpl(
   }
 }
 
+object ReverseGeocoderImpl {
+  def apply(store: GeocodeStorageReadService, req: GeocodeRequest): ReverseGeocoderImpl = {
+    new ReverseGeocoderImpl(store, req, MemoryLogger(req, CountryRevGeoImpl), CountryRevGeoImpl)
+  }
+}
+
 class ReverseGeocoderImpl(
   store: GeocodeStorageReadService,
-  req: GeocodeRequest
+  req: GeocodeRequest,
+  queryLogger: TwofishesLogger,
+  revGeo: CountryRevGeo
 ) extends AbstractGeocoderImpl[GeocodeResponse] {
   override val implName = "revgeo"
 
-  val queryLogger = new MemoryLogger(req)
-  val commonParams = GeocodeRequestUtils.geocodeRequestToCommonRequestParams(req)
+  val commonParams = GeocodeRequestUtils.geocodeRequestToCommonRequestParams(req, revGeo)
   val reverseGeocoder =
     new ReverseGeocoderHelperImpl(store, commonParams, queryLogger, Stats)
 

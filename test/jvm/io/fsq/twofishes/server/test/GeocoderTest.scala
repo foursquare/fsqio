@@ -3,6 +3,7 @@ package io.fsq.twofishes.server.test
 
 import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBWriter, WKTReader}
+import io.fsq.geo.quadtree.CountryRevGeo
 import io.fsq.specs2.FSSpecificationWithJUnit
 import io.fsq.twofishes.gen.{
   CellGeometry,
@@ -24,10 +25,28 @@ import io.fsq.twofishes.server.{
   GeocodeStorageReadService,
   ReverseGeocoderImpl
 }
-import io.fsq.twofishes.util.{GeometryUtils, GeonamesId, NameNormalizer, ShapefileS2Util, StoredFeatureId}
+import io.fsq.twofishes.util.{
+  GeometryUtils,
+  GeonamesId,
+  NameNormalizer,
+  ShapefileS2Util,
+  StoredFeatureId,
+  TwofishesLogger
+}
 import java.nio.ByteBuffer
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{HashMap, ListBuffer}
+
+object MockLogger extends TwofishesLogger {
+  def ifDebug(formatSpecifier: String, va: Any*): Unit = ()
+  def logDuration[T](ostrichKey: String, what: String)(f: => T): T = f
+  def ifLevelDebug(level: Int, formatSpecifier: String, va: Any*): Unit = ()
+  def getLines: List[String] = List()
+}
+
+object MockRevGeo extends CountryRevGeo {
+  def getNearestCountryCode(geolat: Double, geolong: Double): Option[String] = None
+}
 
 class MockGeocodeStorageReadService extends GeocodeStorageReadService {
   val nameMap = new HashMap[String, List[StoredFeatureId]]
@@ -689,17 +708,17 @@ class GeocoderSpec extends FSSpecificationWithJUnit {
     )
 
     var req = GeocodeRequest.newBuilder.ll(GeocodePoint(48.7996273507997, 2.43896484375)).result
-    var r = new ReverseGeocoderImpl(store, req).doGeocode()
+    var r = new ReverseGeocoderImpl(store, req, MockLogger, MockRevGeo).doGeocode()
     r.interpretations.size must_== 1
     r.interpretations(0).feature.nameOrNull must_== "Paris"
 
     // look up in kansas
     var req2 = GeocodeRequest.newBuilder.ll(GeocodePoint(-97.822265625, 38.06539235133249)).result
-    r = new ReverseGeocoderImpl(store, req2).doGeocode()
+    r = new ReverseGeocoderImpl(store, req2, MockLogger, MockRevGeo).doGeocode()
     r.interpretations.size must_== 0
 
     var req3 = GeocodeRequest.newBuilder.ll(GeocodePoint(40.74, -74)).result
-    r = new ReverseGeocoderImpl(store, req3).doGeocode()
+    r = new ReverseGeocoderImpl(store, req3, MockLogger, MockRevGeo).doGeocode()
     r.interpretations.size must_== 1
     r.interpretations(0).feature.nameOrNull must_== "New York"
   }

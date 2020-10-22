@@ -6,7 +6,11 @@ import io.fsq.geo.quadtree.ShapefileGeo.ShapeTrieNode
 import java.io.FileNotFoundException
 import java.net.URL
 
-object CountryRevGeo {
+trait CountryRevGeo {
+  def getNearestCountryCode(geolat: Double, geolong: Double): Option[String]
+}
+
+object CountryRevGeoImpl extends CountryRevGeo {
   // use empty country if unknown
   val fudgerCC = Some(new ShapefileGeo.MultiFudgerCC("XX"))
 

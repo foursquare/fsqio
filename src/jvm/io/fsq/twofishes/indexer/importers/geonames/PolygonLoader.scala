@@ -9,7 +9,7 @@ import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBReader, WKBWriter}
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
-import io.fsq.geo.quadtree.CountryRevGeo
+import io.fsq.geo.quadtree.CountryRevGeoImpl
 import io.fsq.rogue.{Iter, IterUtil}
 import io.fsq.twofishes.country.CountryInfo
 import io.fsq.twofishes.gen._
@@ -591,7 +591,7 @@ class PolygonLoader(
       centroid = geometry.getCentroid()
       if (config.getWoeTypes.headOption.exists(_.size == 1))
       woeType <- config.getWoeTypes.headOption.flatMap(_.headOption)
-      cc <- CountryRevGeo.getNearestCountryCode(centroid.getY, centroid.getX)
+      cc <- CountryRevGeoImpl.getNearestCountryCode(centroid.getY, centroid.getX)
     } yield {
       val id = (for {
         ns <- config.source.flatMap(FeatureNamespace.fromNameOpt)

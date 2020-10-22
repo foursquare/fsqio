@@ -7,4 +7,5 @@ scala_library(
     '3rdparty:twitter-util',
   ],
   sources = globs('*.scala'),
+  provides = scala_artifact(org='fsvendor.com.twitter.ostrich', name='stats', repo=internal_artifactory),
 )

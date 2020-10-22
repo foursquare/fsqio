@@ -7,7 +7,7 @@ import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBWriter, WKTReader}
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
-import io.fsq.geo.quadtree.CountryRevGeo
+import io.fsq.geo.quadtree.CountryRevGeoImpl
 import io.fsq.twofishes.gen._
 import io.fsq.twofishes.indexer.mongo.{
   GeocodeRecordIndexes,
@@ -105,7 +105,7 @@ object GeonamesParser extends DurationUtils {
     val parser = new GeonamesParser(store, slugIndexer)
 
     try {
-      CountryRevGeo.getNearestCountryCode(40.74, -74)
+      CountryRevGeoImpl.getNearestCountryCode(40.74, -74)
     } catch {
       case e: Exception => {
         println("caught exception in country revgeo warmup, no idea what's wrong")

@@ -20,7 +20,7 @@ import io.fsq.twofishes.gen.{
   ResponseIncludes,
   YahooWoeType
 }
-import io.fsq.twofishes.util.{NameUtils, StoredFeatureId}
+import io.fsq.twofishes.util.{NameUtils, StoredFeatureId, TwofishesLogger}
 import io.fsq.twofishes.util.NameUtils.BestNameMatch
 import java.nio.ByteBuffer
 import scala.collection.JavaConverters._
@@ -38,7 +38,7 @@ object GeocodeServingFeatureOrdering extends Ordering[GeocodeServingFeature] {
 class ResponseProcessor(
   req: CommonGeocodeRequestParams,
   store: GeocodeStorageReadService,
-  logger: MemoryLogger,
+  logger: TwofishesLogger,
   pickBestNamesForAutocomplete: Boolean = false
 ) extends GeocoderTypes {
   def responseIncludes(include: ResponseIncludes): Boolean = GeocodeRequestUtils.responseIncludes(req, include)

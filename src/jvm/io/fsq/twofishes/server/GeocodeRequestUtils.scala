@@ -4,7 +4,7 @@ package io.fsq.twofishes.server
 import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.Geometry
 import io.fsq.common.scala.Lists.Implicits._
-import io.fsq.geo.quadtree.CountryRevGeo
+import io.fsq.geo.quadtree.{CountryRevGeo, CountryRevGeoImpl}
 import io.fsq.twofishes.gen.{CommonGeocodeRequestParams, GeocodePoint, GeocodeRequest, ResponseIncludes}
 import io.fsq.twofishes.util.GeoTools
 import scala.collection.JavaConverters._
@@ -24,10 +24,13 @@ object GeocodeRequestUtils {
       responseIncludes(req, ResponseIncludes.WKB_GEOMETRY_SIMPLIFIED) ||
       responseIncludes(req, ResponseIncludes.WKT_GEOMETRY_SIMPLIFIED)
 
-  def geocodeRequestToCommonRequestParams(req: GeocodeRequest): CommonGeocodeRequestParams = {
+  def geocodeRequestToCommonRequestParams(
+    req: GeocodeRequest,
+    revGeo: CountryRevGeo = CountryRevGeoImpl
+  ): CommonGeocodeRequestParams = {
     val llToRevGeo: Option[GeocodePoint] = req.llOption.orElse(req.boundsOption.map(_.ne))
     val ccOpt: Option[String] =
-      req.ccOption.orElse(llToRevGeo.flatMap(ll => CountryRevGeo.getNearestCountryCode(ll.lat, ll.lng)))
+      req.ccOption.orElse(llToRevGeo.flatMap(ll => revGeo.getNearestCountryCode(ll.lat, ll.lng)))
 
     CommonGeocodeRequestParams.newBuilder
       .debug(req.debug)

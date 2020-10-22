@@ -4,7 +4,7 @@ package io.fsq.twofishes.indexer.scalding
 import com.twitter.scalding._
 import com.twitter.scalding.typed.TypedSink
 import com.vividsolutions.jts.geom.Geometry
-import io.fsq.geo.quadtree.CountryRevGeo
+import io.fsq.geo.quadtree.CountryRevGeoImpl
 import io.fsq.twofishes.gen.{YahooWoeType, _}
 import io.fsq.twofishes.indexer.util.{DisplayName, GeocodeRecord, SpindleSequenceFileSource}
 import io.fsq.twofishes.util.{GettyId, StoredFeatureId}
@@ -81,7 +81,7 @@ class BaseGettyFeaturesImporterJob(
           val geom = feature.getDefaultGeometry.asInstanceOf[Geometry]
           val centerLatLng: (Double, Double) = (geom.getCentroid().getY(), geom.getCentroid().getX())
 
-          val ccOpt = CountryRevGeo.getNearestCountryCode(centerLatLng._1, centerLatLng._2)
+          val ccOpt = CountryRevGeoImpl.getNearestCountryCode(centerLatLng._1, centerLatLng._2)
           val featureId = GettyId(id)
 
           val geocodeRecord = GeocodeRecord(

@@ -2,17 +2,20 @@
 package io.fsq.twofishes.server
 
 import com.twitter.ostrich.stats.Stats
+import io.fsq.geo.quadtree.CountryRevGeo
 import io.fsq.twofishes.gen.{CommonGeocodeRequestParams, GeocodeRequest}
 import io.fsq.twofishes.util.{DurationUtils, TwofishesLogger}
 import java.util.Date
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
-class MemoryLogger(req: CommonGeocodeRequestParams) extends TwofishesLogger {
-  def this(req: GeocodeRequest) {
-    this(GeocodeRequestUtils.geocodeRequestToCommonRequestParams(req))
+object MemoryLogger {
+  def apply(req: GeocodeRequest, revGeo: CountryRevGeo): MemoryLogger = {
+    new MemoryLogger(GeocodeRequestUtils.geocodeRequestToCommonRequestParams(req, revGeo))
   }
+}
 
+class MemoryLogger(req: CommonGeocodeRequestParams) extends TwofishesLogger {
   val startTime = new Date()
 
   def timeSinceStart = {

@@ -229,11 +229,11 @@ class GeocodeServerImpl(
           val work = Future.collect(batch.map { line =>
             queryFuturePool {
               val parts = line.split(",")
-              new ReverseGeocoderImpl(
+              ReverseGeocoderImpl(
                 store,
                 GeocodeRequest.newBuilder.ll(GeocodePoint(parts(0).toDouble, parts(1).toDouble)).result
               ).doGeocode()
-              new ReverseGeocoderImpl(
+              ReverseGeocoderImpl(
                 store,
                 GeocodeRequest.newBuilder.ll(GeocodePoint(parts(0).toDouble, parts(1).toDouble)).radius(300).result
               ).doGeocode()
@@ -267,7 +267,7 @@ class GeocodeServerImpl(
   }
 
   def reverseGeocode(r: GeocodeRequest): Future[GeocodeResponse] = queryFuturePool {
-    new ReverseGeocoderImpl(store, r).doGeocode()
+    ReverseGeocoderImpl(store, r).doGeocode()
   }
 
   def bulkReverseGeocode(r: BulkReverseGeocodeRequest): Future[BulkReverseGeocodeResponse] = queryFuturePool {
