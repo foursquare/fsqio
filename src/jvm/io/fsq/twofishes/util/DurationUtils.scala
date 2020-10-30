@@ -1,7 +1,7 @@
 package io.fsq.twofishes.util
 
-import com.twitter.ostrich.stats.Stats
 import com.twitter.util.{Duration, Stopwatch}
+import io.fsq.twitter.ostrich.stats.Stats
 import org.slf4s.Logging
 
 object DurationUtils {

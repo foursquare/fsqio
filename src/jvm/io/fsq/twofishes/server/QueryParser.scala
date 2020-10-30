@@ -1,7 +1,7 @@
 //  Copyright 2012 Foursquare Labs Inc. All Rights Reserved
 package io.fsq.twofishes.server
 
-import com.twitter.ostrich.stats.Stats
+import io.fsq.twitter.ostrich.stats.Stats
 import io.fsq.twofishes.util.{NameNormalizer, TwofishesLogger}
 
 case class ParseParams(

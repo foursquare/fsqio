@@ -1,7 +1,7 @@
 package io.fsq.twofishes.server
 
-import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.Geometry
+import io.fsq.twitter.ostrich.stats.Stats
 import io.fsq.twofishes.core.{Index, Indexes, MapFileUtils}
 import io.fsq.twofishes.gen.{CellGeometry, GeocodeServingFeature}
 import io.fsq.twofishes.util.{DurationUtils, StoredFeatureId}

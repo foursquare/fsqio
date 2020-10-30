@@ -2,8 +2,8 @@
 
 package io.fsq.hfile.reader.concrete.mmap
 
-import com.twitter.ostrich.stats.Stats
 import com.twitter.util.FuturePool
+import io.fsq.twitter.ostrich.stats.Stats
 import java.util.concurrent.Executors
 import scala.collection.mutable
 

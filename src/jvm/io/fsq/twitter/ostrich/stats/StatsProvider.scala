@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.twitter.ostrich.stats
+package io.fsq.twitter.ostrich.stats
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule

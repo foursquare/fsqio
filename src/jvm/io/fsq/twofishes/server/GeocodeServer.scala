@@ -8,13 +8,13 @@ import com.twitter.finagle.http.{Request, Response, Status, Version}
 import com.twitter.finagle.stats.NullStatsReceiver
 import com.twitter.finagle.thrift.Protocols
 import com.twitter.io.Buf
-import com.twitter.ostrich.stats.Stats
 import com.twitter.util.{Await, Future, FuturePool}
 import com.vividsolutions.jts.io.WKTWriter
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.net.stats.FoursquareStatsReceiver
 import io.fsq.spindle.common.thrift.json.TReadableJSONProtocol
 import io.fsq.spindle.runtime.{MetaRecord, Record}
+import io.fsq.twitter.ostrich.stats.Stats
 import io.fsq.twofishes.gen.{
   AutocompleteBias,
   BulkReverseGeocodeRequest,

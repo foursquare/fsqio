@@ -2,15 +2,15 @@ package io.fsq.twofishes.server
 
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 
-import com.twitter.ostrich.stats.Stats
+import io.fsq.twitter.ostrich.stats.Stats
 import java.util.concurrent.{
-  atomic,
   BlockingQueue,
   ExecutorService,
   LinkedBlockingQueue,
   ThreadFactory,
   ThreadPoolExecutor,
-  TimeUnit
+  TimeUnit,
+  atomic
 }
 
 case class NamedThreadFactory(name: String) extends ThreadFactory {

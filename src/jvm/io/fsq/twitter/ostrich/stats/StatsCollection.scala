@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.twitter.ostrich.stats
+package io.fsq.twitter.ostrich.stats
 
 import com.twitter.conversions.StringOps._
 import java.lang.management._

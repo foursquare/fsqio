@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.twitter.ostrich.stats
+package io.fsq.twitter.ostrich.stats
 
 import com.twitter.conversions.DurationOps._
 import com.twitter.logging.Logger

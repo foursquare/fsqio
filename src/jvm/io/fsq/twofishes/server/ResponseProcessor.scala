@@ -1,12 +1,12 @@
 //  Copyright 2012 Foursquare Labs Inc. All Rights Reserved
 package io.fsq.twofishes.server
 
-import com.twitter.ostrich.stats.Stats
 import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKBWriter, WKTWriter}
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
+import io.fsq.twitter.ostrich.stats.Stats
 import io.fsq.twofishes.core.YahooWoeTypes
 import io.fsq.twofishes.gen.{
   CommonGeocodeRequestParams,

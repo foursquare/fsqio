@@ -2,10 +2,10 @@
 
 package io.fsq.hfile.reader.concrete.mmap
 
-import com.twitter.ostrich.stats.Stats
 import io.fsq.common.logging.Logger
 import io.fsq.common.scala.Identity._
 import io.fsq.hfile.reader.service.{HFileReader, HFileScanner, MsgAndSize}
+import io.fsq.twitter.ostrich.stats.Stats
 import java.io.{EOFException, File, FileInputStream, IOException}
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel.MapMode.READ_ONLY

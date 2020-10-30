@@ -2,8 +2,8 @@
 
 package io.fsq.net.stats.test
 
-import com.twitter.ostrich.stats.StatsProvider
 import io.fsq.net.stats.FoursquareStatsReceiver
+import io.fsq.twitter.ostrich.stats.StatsProvider
 import org.junit.Test
 import org.mockito.Mockito.{mock, times, verify}
 

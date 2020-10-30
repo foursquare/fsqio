@@ -1,8 +1,8 @@
 //  Copyright 2012 Foursquare Labs Inc. All Rights Reserved
 package io.fsq.twofishes.server
 
-import com.twitter.ostrich.stats.Stats
 import io.fsq.geo.quadtree.CountryRevGeoImpl
+import io.fsq.twitter.ostrich.stats.Stats
 import io.fsq.twofishes.gen.{GeocodeRequest, GeocodeResponse, ResponseIncludes}
 import scala.collection.JavaConverters._
 

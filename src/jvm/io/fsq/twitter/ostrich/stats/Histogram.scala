@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.twitter.ostrich.stats
+package io.fsq.twitter.ostrich.stats
 
 import java.lang.{Math => JLMath}
 import java.util.Arrays

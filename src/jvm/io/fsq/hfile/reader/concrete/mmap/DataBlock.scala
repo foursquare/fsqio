@@ -2,9 +2,9 @@
 
 package io.fsq.hfile.reader.concrete.mmap
 
-import com.twitter.ostrich.stats.Stats
 import io.fsq.common.logging.Logger
 import io.fsq.common.scala.Identity._
+import io.fsq.twitter.ostrich.stats.Stats
 import java.nio.ByteBuffer
 import java.util.Arrays
 import org.xerial.snappy.Snappy

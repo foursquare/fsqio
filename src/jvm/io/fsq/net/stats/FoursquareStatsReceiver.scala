@@ -10,7 +10,7 @@ import com.twitter.finagle.stats.{
   StatsReceiverWithCumulativeGauges,
   Verbosity
 }
-import com.twitter.ostrich.stats.{Stats, StatsProvider}
+import io.fsq.twitter.ostrich.stats.{Stats, StatsProvider}
 
 /**
   * An adapter from our stats-gathering interface to finagle's StatsReceiver interface.

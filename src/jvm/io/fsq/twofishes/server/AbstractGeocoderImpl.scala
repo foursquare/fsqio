@@ -1,7 +1,7 @@
 //  Copyright 2012 Foursquare Labs Inc. All Rights Reserved
 package io.fsq.twofishes.server
 
-import com.twitter.ostrich.stats.{Stats => OstrichStats}
+import io.fsq.twitter.ostrich.stats.{Stats => OstrichStats}
 import java.util.concurrent.ConcurrentHashMap
 
 trait GeocoderTypes {
