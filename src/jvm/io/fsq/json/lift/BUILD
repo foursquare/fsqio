@@ -6,5 +6,12 @@ scala_library(
   dependencies = [
     '3rdparty:lift-json',
   ],
-  provides = scala_artifact(org='io.fsq.json', name='lift', repo=oss_sonatype_repo),
+  provides = scala_artifact(
+    org = 'io.fsq',
+    name = 'json-lift',
+    repo=oss_sonatype_repo,
+    publication_metadata=io_fsq_library("""
+      Fsq.io common libraries for using JSON with Lift framework, from Foursquare.
+    """),
+  ),
 )

@@ -3,5 +3,12 @@
 scala_library(
   name = 'dollar',
   sources = globs('*.scala'),
-  provides = scala_artifact(org='io.fsq.dollar', name='stats', repo=oss_sonatype_repo),
+  provides = scala_artifact(
+    org = 'io.fsq',
+    name = 'dollar-stats',
+    repo=oss_sonatype_repo,
+    publication_metadata=io_fsq_library("""
+      Fsq.io common libraries, from Foursquare.
+    """),
+  ),
 )

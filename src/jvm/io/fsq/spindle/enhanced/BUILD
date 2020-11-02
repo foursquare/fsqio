@@ -11,5 +11,12 @@ scala_library(
     'opensource',
     'dependencies_must_have:opensource',
   ],
-  provides = scala_artifact(org='io.fsq.spindle', name='enhanced', repo=oss_sonatype_repo),
+  provides = scala_artifact(
+    org = 'io.fsq',
+    name = 'spindle-enhanced',
+    repo=oss_sonatype_repo,
+    publication_metadata=io_fsq_library("""
+      Foursquare's Scala code generator for Thrift.
+    """),
+  ),
 )
