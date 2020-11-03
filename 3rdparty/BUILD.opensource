@@ -1173,6 +1173,16 @@ jar_library(
   ]
 )
 
+jar_library(
+  name = 'scalatest',
+  tags = [
+    'opensource',
+  ],
+  jars = [
+    scala_jar(org = 'org.scalatest', name = 'scalatest', rev = '3.0.8'),
+  ]
+)
+
 scalding_ver = '0.17.3'
 jar_library(
   name = 'scalding',
