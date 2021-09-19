@@ -7,7 +7,7 @@ jar_library(
     'opensource',
   ],
   jars = [
-    jar(org = 'org.jnegre.google', name = 's2-geometry', rev = '1.0')
+    jar(org = 'io.sgr', name = 's2-geometry-library-java', rev = '1.0.0')
   ]
 )
 
