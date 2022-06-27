@@ -4,7 +4,7 @@ package io.fsq.rogue.query.test
 
 import com.mongodb.{ErrorCategory, MongoBulkWriteException, MongoCommandException, MongoWriteException, WriteConcern}
 import com.mongodb.bulk.{BulkWriteResult, BulkWriteUpsert}
-import com.mongodb.client.{MongoCollection => BlockingMongoCollection}
+import com.mongodb.client.{MongoCollection => BlockingMongoCollection, MongoDatabase}
 import com.mongodb.client.model.CountOptions
 import com.mongodb.reactivestreams.client.{MongoCollection => AsyncMongoCollection}
 import com.twitter.util.{Await, Duration, Future}
@@ -49,6 +49,25 @@ import org.specs2.matcher.{JUnitMustMatchers, MatchersImplicits}
 import scala.collection.JavaConverters._
 import scala.math.min
 
+object SerializeUtil {
+  def nestedFieldValueFromDocument(document: Document): Map[String, Map[String, ObjectId]] = {
+    document.asScala.toMap
+      .asInstanceOf[Map[String, Object]]
+      .map({
+        case (key, value) => (key, value.asInstanceOf[Document].asScala.toMap.asInstanceOf[Map[String, ObjectId]])
+      })
+  }
+
+  def nestedFieldValueToDocument(nestedMapValue: Map[String, Map[String, ObjectId]]): Document = {
+    val document = new Document
+    nestedMapValue.foreach({
+      case (key, value) =>
+        document.append(key, new Document(value.asInstanceOf[Map[String, Object]].asJava))
+    })
+    document
+  }
+}
+
 case class SimpleRecord(
   id: ObjectId = new ObjectId,
   boolean: Option[Boolean] = None,
@@ -60,7 +79,7 @@ case class SimpleRecord(
   map: Option[Map[String, Int]] = None
 ) extends TrivialORMRecord {
   override type Self = SimpleRecord
-  override def meta = SimpleRecord
+  override def meta: SimpleRecord.type = SimpleRecord
 }
 
 object SimpleRecord extends TrivialORMMetaRecord[SimpleRecord] {
@@ -125,7 +144,6 @@ object SimpleRecord extends TrivialORMMetaRecord[SimpleRecord] {
 
   override def toDocument(record: SimpleRecord): Document = {
     val document = new Document
-
     document.append(id.name, record.id)
     record.boolean.foreach(document.append(boolean.name, _))
     record.int.foreach(document.append(int.name, _))
@@ -136,17 +154,56 @@ object SimpleRecord extends TrivialORMMetaRecord[SimpleRecord] {
     record.map.foreach(mapVal => {
       document.append(map.name, new Document(mapVal.asInstanceOf[Map[String, Object]].asJava))
     })
+    document
+  }
+}
 
+case class OptionalNestedIdRecord(id: Option[Map[String, Map[String, ObjectId]]] = None, int: Option[Int] = None)
+  extends TrivialORMRecord {
+  override type Self = OptionalNestedIdRecord
+  override def meta: OptionalNestedIdRecord.type = OptionalNestedIdRecord
+}
+
+object OptionalNestedIdRecord extends TrivialORMMetaRecord[OptionalNestedIdRecord] {
+
+  val id = new OptionalField[ObjectId, OptionalNestedIdRecord.type] {
+    override val owner = OptionalNestedIdRecord
+    override val name = "_id"
+  }
+
+  val int = new OptionalField[Int, OptionalNestedIdRecord.type] {
+    override val owner = OptionalNestedIdRecord
+    override val name = "int"
+  }
+
+  override val collectionName = "test_optional_nested_id_records"
+
+  override val mongoIdentifier = MongoIdentifier("test")
+
+  override def fromDocument(document: Document): OptionalNestedIdRecord = {
+    OptionalNestedIdRecord(
+      Option(document.get(id.name, classOf[Document])).map(SerializeUtil.nestedFieldValueFromDocument(_)),
+      Option(document.getInteger(int.name).asInstanceOf[Int])
+    )
+  }
+
+  override def toDocument(record: OptionalNestedIdRecord): Document = {
+    val document = new Document
+    record.int.foreach(document.append(int.name, _))
+    record.id.foreach({ value =>
+      document.append(id.name, SerializeUtil.nestedFieldValueToDocument(value))
+    })
     document
   }
 }
 
 case class OptionalIdRecord(
   id: Option[ObjectId] = None,
-  int: Option[Int] = None
+  int: Option[Int] = None,
+  nestedMap: Option[Map[String, Map[String, ObjectId]]] = None
 ) extends TrivialORMRecord {
   override type Self = OptionalIdRecord
-  override def meta = OptionalIdRecord
+  override def meta: OptionalIdRecord.type = OptionalIdRecord
 }
 
 object OptionalIdRecord extends TrivialORMMetaRecord[OptionalIdRecord] {
@@ -161,6 +218,11 @@ object OptionalIdRecord extends TrivialORMMetaRecord[OptionalIdRecord] {
     override val name = "int"
   }
 
+  val nestedMap = new OptionalField[Map[String, Map[String, ObjectId]], OptionalIdRecord.type] {
+    override val owner = OptionalIdRecord
+    override val name = "nested_map"
+  }
+
   override val collectionName = "test_optional_records"
 
   override val mongoIdentifier = MongoIdentifier("test")
@@ -168,7 +230,8 @@ object OptionalIdRecord extends TrivialORMMetaRecord[OptionalIdRecord] {
   override def fromDocument(document: Document): OptionalIdRecord = {
     OptionalIdRecord(
       Option(document.getObjectId(id.name)),
-      Option(document.getInteger(int.name).asInstanceOf[Int])
+      Option(document.getInteger(int.name).asInstanceOf[Int]),
+      Option(document.get(nestedMap.name, classOf[Document])).map(SerializeUtil.nestedFieldValueFromDocument(_))
     )
   }
 
@@ -176,6 +239,9 @@ object OptionalIdRecord extends TrivialORMMetaRecord[OptionalIdRecord] {
     val document = new Document
     record.id.foreach(document.append(id.name, _))
     record.int.foreach(document.append(int.name, _))
+    record.nestedMap.foreach({ value =>
+      document.append(nestedMap.name, SerializeUtil.nestedFieldValueToDocument(value))
+    })
     document
   }
 }
@@ -248,12 +314,12 @@ class TrivialORMQueryTest
   override def initClientManagers(): Unit = {
     asyncClientManager.defineDb(
       SimpleRecord.mongoIdentifier,
-      asyncMongoClient,
+      () => asyncMongoClient,
       TrivialORMQueryTest.dbName
     )
     blockingClientManager.defineDb(
       SimpleRecord.mongoIdentifier,
-      blockingMongoClient,
+      () => blockingMongoClient,
       TrivialORMQueryTest.dbName
     )
   }
@@ -331,7 +397,7 @@ class TrivialORMQueryTest
     * completion.
     */
   @Test
-  def testAsyncLogging: Unit = {
+  def testAsyncLogging(): Unit = {
     val barrier = new CyclicBarrier(2)
     var countRun = false
 
@@ -391,10 +457,10 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncSave: Unit = {
+  def testAsyncSave(): Unit = {
     val duplicateId = new ObjectId
     val noIdInt = 24601
-    val noIdRecord = OptionalIdRecord(int = Some(noIdInt))
+    val noIdRecord = OptionalIdRecord(int = Some(noIdInt), nestedMap = Some(Map("a" -> Map("b" -> new ObjectId()))))
 
     val testFutures = Future.join(
       testSingleAsyncSave(SimpleRecord()),
@@ -436,7 +502,114 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingSave: Unit = {
+  def testSaveWithShardKey(): Unit = {
+    val executor = buildBlockingExecutorWithOptionalShardKey(Some("nested_map.a.b"))
+    val id = new ObjectId()
+    val record = OptionalIdRecord(Some(id), int = None, nestedMap = Some(Map("a" -> Map("b" -> new ObjectId()))))
+    executor.save(record)
+    executor
+      .fetchOne(
+        OptionalIdRecord.where(_.id eqs id)
+      )
+      .unwrap must_== Some(record)
+  }
+
+  @Test
+  def testSaveMultipleWithSameShardKeySameId(): Unit = {
+    val executor = buildBlockingExecutorWithOptionalShardKey(Some("int"))
+    val id = new ObjectId()
+    val shardKeyValue = 3
+    val idRecord = SimpleRecord(id = id, int = Some(shardKeyValue))
+    executor.save(idRecord)
+    executor.count(SimpleRecord).unwrap must_== 1
+    executor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs id)
+      )
+      .unwrap must_== Some(idRecord)
+
+    val updatedRecord = SimpleRecord(id = id, int = Some(shardKeyValue), string = Some("abc"))
+    executor.save(updatedRecord)
+    executor.count(SimpleRecord).unwrap must_== 1
+    executor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs id)
+      )
+      .unwrap must_== Some(updatedRecord)
+  }
+
+  @Test
+  def testSaveMultipleWithSameShardKeyDifferentId(): Unit = {
+    val executor = buildBlockingExecutorWithOptionalShardKey(Some("int"))
+    val shardKeyValue = 3
+    val record1 = SimpleRecord(id = new ObjectId(), int = Some(shardKeyValue))
+    executor.save(record1)
+    executor.count(SimpleRecord).unwrap must_== 1
+    executor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs record1.id)
+      )
+      .unwrap must_== Some(record1)
+
+    val record2 = SimpleRecord(id = new ObjectId(), int = Some(shardKeyValue), string = Some("abc"))
+    executor.save(record2)
+    executor.count(SimpleRecord).unwrap must_== 2
+    executor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs record1.id)
+      )
+      .unwrap must_== Some(record1)
+    executor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs record2.id)
+      )
+      .unwrap must_== Some(record2)
+  }
+
+  @Test(expected = classOf[MongoWriteException])
+  def testSaveMultipleWithDifferentShardKeySameId(): Unit = {
+    val executor = buildBlockingExecutorWithOptionalShardKey(Some("int"))
+    val id = new ObjectId()
+    val record1ShardKeyValue = 3
+    val record1 = SimpleRecord(id = id, int = Some(record1ShardKeyValue))
+    executor.save(record1)
+    executor
+      .fetchOne(
+        SimpleRecord.where(_.id eqs id)
+      )
+      .unwrap must_== Some(record1)
+
+    val record2 = SimpleRecord(id = id, int = Some(4), string = Some("abc"))
+    // will attempt to insert a new record with same id as initial record since shard key is different, so duplicate
+    // key error is thrown
+    executor.save(record2)
+  }
+
+  @Test
+  def testSaveMultipleWithDifferentShardKeyNoId(): Unit = {
+    val executor = buildBlockingExecutorWithOptionalShardKey(Some("int"))
+    val record1ShardKeyValue = 3
+    val record1 = OptionalIdRecord(id = None, int = Some(record1ShardKeyValue))
+    executor.count(OptionalIdRecord).unwrap must_== 0
+    executor.save(record1)
+    executor.count(OptionalIdRecord).unwrap must_== 1
+
+    val record2ShardKeyValue = 4
+    val record2 = OptionalIdRecord(id = None, int = Some(record2ShardKeyValue))
+    executor.save(record2)
+    executor.count(OptionalIdRecord).unwrap must_== 2
+    val results = executor
+      .fetch(
+        OptionalIdRecord.where(_.int in Vector(record1ShardKeyValue, record2ShardKeyValue))
+      )
+      .unwrap
+
+    results.size must_== 2
+    results.map(_.flatMap(_.id) must_!= None)
+  }
+
+  @Test
+  def testBlockingSave(): Unit = {
     val duplicateId = new ObjectId
     val noIdInt = 24601
     val noIdRecord = OptionalIdRecord(int = Some(noIdInt))
@@ -467,7 +640,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncInsert: Unit = {
+  def testAsyncInsert(): Unit = {
     val duplicateId = new ObjectId
 
     val testFutures = Future.join(
@@ -502,7 +675,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingInsert: Unit = {
+  def testBlockingInsert(): Unit = {
     val duplicateId = new ObjectId
 
     testSingleBlockingInsert(SimpleRecord())
@@ -553,7 +726,7 @@ class TrivialORMQueryTest
     *     should the underlying driver behavior change.
     */
   @Test
-  def testAsyncInsertAll: Unit = {
+  def testAsyncInsertAll(): Unit = {
     val emptyInsertFuture = for {
       _ <- asyncQueryExecutor.insertAll(Seq.empty[SimpleRecord])
       count <- asyncQueryExecutor.count(SimpleRecord)
@@ -639,7 +812,7 @@ class TrivialORMQueryTest
     *     should the underlying driver behavior change.
     */
   @Test
-  def testBlockingInsertAll: Unit = {
+  def testBlockingInsertAll(): Unit = {
     blockingQueryExecutor.insertAll(Seq.empty[SimpleRecord])
     blockingQueryExecutor.count(SimpleRecord).unwrap must_== 0
 
@@ -674,7 +847,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncCount: Unit = {
+  def testAsyncCount(): Unit = {
     val numInserts = 10
     val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(_ => {
       asyncQueryExecutor.insert(SimpleRecord())
@@ -697,7 +870,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingCount: Unit = {
+  def testBlockingCount(): Unit = {
     val numInserts = 10
     for (_ <- 1 to numInserts) {
       blockingQueryExecutor.insert(SimpleRecord())
@@ -714,7 +887,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncDistinct: Unit = {
+  def testAsyncDistinct(): Unit = {
     val numInserts = 10
     val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
       asyncQueryExecutor.insert(newTestRecord(i))
@@ -760,7 +933,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingDistinct: Unit = {
+  def testBlockingDistinct(): Unit = {
     val numInserts = 10
     for (i <- 1 to numInserts) {
       blockingQueryExecutor.insert(newTestRecord(i))
@@ -793,7 +966,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncCountDistinct: Unit = {
+  def testAsyncCountDistinct(): Unit = {
     val numInserts = 10
     val insertFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
       asyncQueryExecutor.insert(newTestRecord(i))
@@ -826,7 +999,28 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingCountDistinct: Unit = {
+  def testBlockingExplain(): Unit = {
+    val staticId = new ObjectId
+    blockingQueryExecutor.insert(SimpleRecord(staticId))
+    val explainDoc = blockingQueryExecutor.explain(SimpleRecord.where(_.id eqs staticId)).unwrap
+    explainDoc.get("executionStats").asInstanceOf[Document].get("nReturned") must_== 1
+  }
+
+  @Test
+  def testAsyncExplain(): Unit = {
+    val staticId = new ObjectId
+    val staticIdTestFuture = asyncQueryExecutor
+      .insert(SimpleRecord(staticId))
+      .flatMap(_ => {
+        val explainDocF = asyncQueryExecutor.explain(SimpleRecord.where(_.id eqs staticId))
+        explainDocF.map(_.get("executionStats").asInstanceOf[Document].get("nReturned")).map(_ must_== 1)
+      })
+
+    Await.result(staticIdTestFuture, Duration.fromSeconds(5))
+  }
+
+  @Test
+  def testBlockingCountDistinct(): Unit = {
     val numInserts = 10
     for (i <- 1 to numInserts) {
       blockingQueryExecutor.insert(newTestRecord(i))
@@ -850,7 +1044,7 @@ class TrivialORMQueryTest
   // TODO(jacob): These fetch/fetchOne/foreach tests are basically all doing the same
   //    thing, cut down on the logic duplication here.
   @Test
-  def testAsyncFetch: Unit = {
+  def testAsyncFetch(): Unit = {
     val numInserts = 10
     val insertedFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
       asyncQueryExecutor.insert(newTestRecord(i))
@@ -885,7 +1079,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingFetch: Unit = {
+  def testBlockingFetch(): Unit = {
     val numInserts = 10
     val inserted = for (i <- 1 to numInserts) yield {
       blockingQueryExecutor.insert(newTestRecord(i)).unwrap
@@ -909,7 +1103,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncFetchOne: Unit = {
+  def testAsyncFetchOne(): Unit = {
     val numInserts = 10
     val insertedFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
       asyncQueryExecutor.insert(newTestRecord(i))
@@ -940,7 +1134,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingFetchOne: Unit = {
+  def testBlockingFetchOne(): Unit = {
     val numInserts = 10
     val inserted = for (i <- 1 to numInserts) yield {
       blockingQueryExecutor.insert(newTestRecord(i)).unwrap
@@ -969,7 +1163,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncForeach: Unit = {
+  def testAsyncForeach(): Unit = {
     val numInserts = 10
     val insertedFuture = Futures.groupedCollect(1 to numInserts, numInserts)(i => {
       asyncQueryExecutor.insert(newTestRecord(i))
@@ -1007,7 +1201,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingForeach: Unit = {
+  def testBlockingForeach(): Unit = {
     val numInserts = 10
     val inserted = for (i <- 1 to numInserts) yield {
       blockingQueryExecutor.insert(newTestRecord(i)).unwrap
@@ -1027,7 +1221,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncFetchBatch: Unit = {
+  def testAsyncFetchBatch(): Unit = {
     val numInserts = 20
     val evenBatchSize = 5
     val oddBatchSize = 7
@@ -1076,7 +1270,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingFetchBatch: Unit = {
+  def testBlockingFetchBatch(): Unit = {
     val numInserts = 20
     val evenBatchSize = 5
     val oddBatchSize = 7
@@ -1122,7 +1316,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncRemove: Unit = {
+  def testAsyncRemove(): Unit = {
     val emptyRecord = SimpleRecord()
     val fullRecord1 = newTestRecord(1)
     val modifiedFullRecord1 = fullRecord1.copy(int = Some(5))
@@ -1185,7 +1379,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncBulkDelete: Unit = {
+  def testAsyncBulkDelete(): Unit = {
     val emptyRecord = SimpleRecord()
     val testRecords = Seq.tabulate(5)(newTestRecord)
     val testRecordIds = testRecords.map(_.id)
@@ -1218,7 +1412,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingBulkDelete: Unit = {
+  def testBlockingBulkDelete(): Unit = {
     val emptyRecord = SimpleRecord()
     val testRecords = Seq.tabulate(5)(newTestRecord)
     val testRecordIds = testRecords.map(_.id)
@@ -1242,7 +1436,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncUpdateOne: Unit = {
+  def testAsyncUpdateOne(): Unit = {
     val testRecord = newTestRecord(0)
 
     val serialTestFutures = Future.join(
@@ -1305,7 +1499,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingUpdateOne: Unit = {
+  def testBlockingUpdateOne(): Unit = {
     val testRecord = newTestRecord(0)
 
     // update on non-existant record
@@ -1363,7 +1557,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncUpdateMany: Unit = {
+  def testAsyncUpdateMany(): Unit = {
     val testRecord = newTestRecord(0)
 
     val serialTestFutures = Future.join(
@@ -1426,7 +1620,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingUpdateMany: Unit = {
+  def testBlockingUpdateMany(): Unit = {
     val testRecord = newTestRecord(0)
 
     // update on non-existant record
@@ -1484,7 +1678,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncUpsertOne: Unit = {
+  def testAsyncUpsertOne(): Unit = {
     val testRecord = newTestRecord(0)
 
     val serialTestFutures = Future.join(
@@ -1551,7 +1745,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingUpsertOne: Unit = {
+  def testBlockingUpsertOne(): Unit = {
     val testRecord = newTestRecord(0)
 
     // insert new record with only id/modified fields
@@ -1613,7 +1807,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncFindAndUpdateOne: Unit = {
+  def testAsyncFindAndUpdateOne(): Unit = {
     val testRecord = newTestRecord(0)
     val updatedTestRecord = testRecord.copy(int = testRecord.int.map(_ + 10))
     val otherRecord = newTestRecord(1)
@@ -1701,7 +1895,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingFindAndUpdateOne: Unit = {
+  def testBlockingFindAndUpdateOne(): Unit = {
     val testRecord = newTestRecord(0)
     val updatedTestRecord = testRecord.copy(int = testRecord.int.map(_ + 10))
     val otherRecord = newTestRecord(1)
@@ -1779,7 +1973,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncFindAndUpsertOne: Unit = {
+  def testAsyncFindAndUpsertOne(): Unit = {
     val testRecord = newTestRecord(0)
     val updatedTestRecord = testRecord.copy(int = testRecord.int.map(_ + 10))
     val otherRecord = newTestRecord(1)
@@ -1872,7 +2066,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingFindAndUpsertOne: Unit = {
+  def testBlockingFindAndUpsertOne(): Unit = {
     val testRecord = newTestRecord(0)
     val updatedTestRecord = testRecord.copy(int = testRecord.int.map(_ + 10))
     val otherRecord = newTestRecord(1)
@@ -1955,7 +2149,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncFindAndDeleteOne: Unit = {
+  def testAsyncFindAndDeleteOne(): Unit = {
     val testRecords = Array(
       newTestRecord(0),
       newTestRecord(1),
@@ -1989,7 +2183,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingFindAndDeleteOne: Unit = {
+  def testBlockingFindAndDeleteOne(): Unit = {
     val testRecords = Array(
       newTestRecord(0),
       newTestRecord(1),
@@ -2045,7 +2239,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncIterate: Unit = {
+  def testAsyncIterate(): Unit = {
     val numInserts = 10
     val testRecords = Seq.tabulate(numInserts)(newTestRecord)
 
@@ -2177,7 +2371,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingIterate: Unit = {
+  def testBlockingIterate(): Unit = {
     val numInserts = 10
     val testRecords = Seq.tabulate(numInserts)(newTestRecord)
     blockingQueryExecutor.insertAll(testRecords)
@@ -2296,7 +2490,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingCreateIndexes: Unit = {
+  def testBlockingCreateIndexes(): Unit = {
     val coll = blockingCollectionFactory.getMongoCollectionFromMetaRecord(SimpleRecord)
     blockingQueryExecutor.createIndexes(SimpleRecord)(
       MongoIndex.builder(SimpleRecord).index(_.int, Asc),
@@ -2307,7 +2501,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncCreateIndexes: Unit = {
+  def testAsyncCreateIndexes(): Unit = {
     val coll = asyncCollectionFactory.getMongoCollectionFromMetaRecord(SimpleRecord)
     val testFuture = for {
       _ <- asyncQueryExecutor.createIndexes(SimpleRecord)(
@@ -2329,7 +2523,7 @@ class TrivialORMQueryTest
   //      query.
 
   @Test
-  def testBulkOperationOrdering: Unit = {
+  def testBulkOperationOrdering(): Unit = {
     val testRecord = newTestRecord(0)
 
     try {
@@ -2396,7 +2590,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncBulkOperationInsertOne: Unit = {
+  def testAsyncBulkOperationInsertOne(): Unit = {
     val duplicateId = new ObjectId
 
     val insertFutures = Future.join(
@@ -2453,7 +2647,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingBulkOperationInsertOne: Unit = {
+  def testBlockingBulkOperationInsertOne(): Unit = {
     val duplicateId = new ObjectId
 
     testSingleBlockingBulkInsertOne(
@@ -2501,7 +2695,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncBulkOperationRemoveOne: Unit = {
+  def testAsyncBulkOperationRemoveOne(): Unit = {
     val testRecords = Array(
       newTestRecord(0),
       newTestRecord(1),
@@ -2546,7 +2740,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingBulkOperationRemoveOne: Unit = {
+  def testBlockingBulkOperationRemoveOne(): Unit = {
     val testRecords = Array(
       newTestRecord(0),
       newTestRecord(1),
@@ -2587,7 +2781,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncBulkOperationRemove: Unit = {
+  def testAsyncBulkOperationRemove(): Unit = {
     val emptyRecord = SimpleRecord()
     val testRecords = Seq.tabulate(5)(newTestRecord)
     val testRecordIds = testRecords.map(_.id)
@@ -2655,7 +2849,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingBulkOperationRemove: Unit = {
+  def testBlockingBulkOperationRemove(): Unit = {
     val emptyRecord = SimpleRecord()
     val testRecords = Seq.tabulate(5)(newTestRecord)
     val testRecordIds = testRecords.map(_.id)
@@ -2728,7 +2922,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncBulkOperationReplaceOne: Unit = {
+  def testAsyncBulkOperationReplaceOne(): Unit = {
     val testRecords = Seq.tabulate(4)(i => OptionalIdRecord(id = Some(new ObjectId), int = Some(i)))
 
     val serialTestFutures = for {
@@ -2818,7 +3012,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingBulkOperationReplaceOne: Unit = {
+  def testBlockingBulkOperationReplaceOne(): Unit = {
     val testRecords = Seq.tabulate(4)(i => OptionalIdRecord(id = Some(new ObjectId), int = Some(i)))
 
     // replace on non-existant record
@@ -2895,7 +3089,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncBulkOperationUpdateOne: Unit = {
+  def testAsyncBulkOperationUpdateOne(): Unit = {
     val testRecord = newTestRecord(0)
     val extraRecord = newTestRecord(1)
 
@@ -3001,7 +3195,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingBulkOperationUpdateOne: Unit = {
+  def testBlockingBulkOperationUpdateOne(): Unit = {
     val testRecord = newTestRecord(0)
     val extraRecord = newTestRecord(1)
 
@@ -3097,7 +3291,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testAsyncBulkOperationUpdateMany: Unit = {
+  def testAsyncBulkOperationUpdateMany(): Unit = {
     val testRecord = newTestRecord(0)
     val extraRecord = newTestRecord(1)
 
@@ -3203,7 +3397,7 @@ class TrivialORMQueryTest
   }
 
   @Test
-  def testBlockingBulkOperationUpdateMany: Unit = {
+  def testBlockingBulkOperationUpdateMany(): Unit = {
     val testRecord = newTestRecord(0)
     val extraRecord = newTestRecord(1)
 
@@ -3296,5 +3490,49 @@ class TrivialORMQueryTest
         Vector(BulkUpdateMany(SimpleRecord.modify(_.boolean setTo true), upsert = false))
       )
       .unwrap must_== bulkUpdateResult(2, 2)
+  }
+
+  @Test
+  def testParseShardKey(): Unit = {
+    val expected = 2
+    val record = OptionalIdRecord(int = Some(expected))
+    val shardKeyValue = blockingClientAdapter.parseShardKeyValue(OptionalIdRecord.toDocument(record), Vector("int"))
+    Assert.assertEquals(expected, shardKeyValue)
+  }
+
+  @Test
+  def testParseShardKeyNested(): Unit = {
+    val expected = new ObjectId()
+    val idRecord = OptionalIdRecord(
+      Some(new ObjectId()),
+      int = None,
+      nestedMap = Some(Map("a" -> Map("1" -> new ObjectId(), "2" -> expected)))
+    )
+    val shardKeyValue =
+      blockingClientAdapter.parseShardKeyValue(OptionalIdRecord.toDocument(idRecord), Vector("nested_map", "a", "2"))
+    Assert.assertEquals(expected, shardKeyValue)
+  }
+
+  private def buildBlockingExecutorWithOptionalShardKey(
+    shardKeyOpt: Option[String]
+  ): QueryExecutor[
+    MongoDatabase,
+    BlockingMongoCollection,
+    Object,
+    Document,
+    TrivialORMMetaRecord[_],
+    TrivialORMRecord,
+    BlockingResult
+  ] = {
+    val collectionFactory = new TrivialORMMongoCollectionFactory(blockingClientManager) {
+      override def getShardKeyNameFromRecord[R <: TrivialORMRecord](record: R): Option[String] = shardKeyOpt
+    }
+    val adapter = new BlockingMongoClientAdapter(
+      collectionFactory,
+      new DefaultQueryUtilities[BlockingResult]
+    )
+    new QueryExecutor(adapter, queryOptimizer, serializer) {
+      override def defaultWriteConcern: WriteConcern = WriteConcern.W1
+    }
   }
 }

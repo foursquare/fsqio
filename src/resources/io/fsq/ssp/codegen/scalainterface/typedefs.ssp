@@ -8,37 +8,37 @@
 
 object ${baseName}Typedefs {
 #for (typedef <- typedefs)
-#if (typedef.newType)
-<%-- Dummy trait used to tag the new subtype --%>
-  trait __${typedef.typeAlias}Tag
-#if (typedef.renderType.hasOrdering)
-  object __${typedef.typeAlias}Tag {
-    implicit val ordering: _root_.scala.math.Ordering[${typedef.typeAlias}]
-    implicit val comparator: _root_.java.util.Comparator[${typedef.typeAlias}]
-  }
-#end
-  type ${typedef.typeAlias} = _root_.io.fsq.spindle.runtime.Id[${typedef.renderType.boxedText}, __${typedef.typeAlias}Tag]
-  def ${typedef.typeAlias}(x: ${typedef.renderType.boxedText}): ${typedef.typeAlias}
-#else
-  type ${typedef.typeAlias} = ${typedef.renderType.text}
-#end
+  #if (typedef.newType)
+    <%-- Dummy trait used to tag the new subtype --%>
+    trait __${typedef.typeAlias}Tag
+    #if (typedef.renderType.hasOrdering)
+      object __${typedef.typeAlias}Tag {
+      implicit val ordering: _root_.scala.math.Ordering[${typedef.typeAlias}]
+      implicit val comparator: _root_.java.util.Comparator[${typedef.typeAlias}]
+      }
+    #end
+    type ${typedef.typeAlias} = _root_.io.fsq.spindle.runtime.Id[${typedef.renderType.boxedText}, __${typedef.typeAlias}Tag]
+    def ${typedef.typeAlias}(x: ${typedef.renderType.boxedText}): ${typedef.typeAlias}
+  #else
+    type ${typedef.typeAlias} = ${typedef.renderType.text}
+  #end
 #end
 }
 
 trait ${baseName}TypedefImplicits {
 #for (typedef <- typedefs)
-#if (typedef.newType)
-  implicit val ${typedef.typeAlias}Ordering: _root_.scala.math.Ordering[${baseName}Typedefs.${typedef.typeAlias}]
-  implicit val ${typedef.typeAlias}Comparator: _root_.java.util.Comparator[${baseName}Typedefs.${typedef.typeAlias}]
-#if (typedef.renderType.boxedText == "org.bson.types.ObjectId")
-  implicit def stringTo${typedef.typeAlias}(x: String): ${baseName}Typedefs.${typedef.typeAlias}
-#elseif (typedef.renderType.boxedText == "String")
-  implicit def stringTo${typedef.typeAlias}(x: String): ${baseName}Typedefs.${typedef.typeAlias}
-#elseif (typedef.renderType.boxedText == "java.lang.Long")
-  implicit def intTo${typedef.typeAlias}(x: Int): ${baseName}Typedefs.${typedef.typeAlias}
-  implicit def longTo${typedef.typeAlias}(x: Long): ${baseName}Typedefs.${typedef.typeAlias}
-#end
-#end
+  #if (typedef.newType)
+    implicit val ${typedef.typeAlias}Ordering: _root_.scala.math.Ordering[${baseName}Typedefs.${typedef.typeAlias}]
+    implicit val ${typedef.typeAlias}Comparator: _root_.java.util.Comparator[${baseName}Typedefs.${typedef.typeAlias}]
+    #if (typedef.renderType.boxedText == "org.bson.types.ObjectId")
+      implicit def stringTo${typedef.typeAlias}(x: String): ${baseName}Typedefs.${typedef.typeAlias}
+    #elseif (typedef.renderType.boxedText == "String")
+      implicit def stringTo${typedef.typeAlias}(x: String): ${baseName}Typedefs.${typedef.typeAlias}
+    #elseif (typedef.renderType.boxedText == "java.lang.Long")
+      implicit def intTo${typedef.typeAlias}(x: Int): ${baseName}Typedefs.${typedef.typeAlias}
+      implicit def longTo${typedef.typeAlias}(x: Long): ${baseName}Typedefs.${typedef.typeAlias}
+    #end
+  #end
 #end
 }
 object ${baseName}TypedefImplicits extends ${baseName}TypedefImplicits

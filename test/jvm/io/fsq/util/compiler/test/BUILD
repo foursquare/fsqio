@@ -7,8 +7,8 @@ scala_library(
     'opensource',
   ],
   dependencies = [
+    '3rdparty:junit',
     '3rdparty:reflections',
     '3rdparty:scalac',
-    '3rdparty:specs2',
   ],
 )

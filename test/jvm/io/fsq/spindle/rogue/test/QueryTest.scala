@@ -7,7 +7,8 @@ import io.fsq.field.Field
 import io.fsq.rogue.{BSONType, MongoType, Query, QueryField, QueryOptimizer}
 import io.fsq.spindle.rogue.SpindleQuery
 import io.fsq.spindle.rogue.SpindleRogue._
-import io.fsq.spindle.rogue.test.gen.{
+import io.fsq.spindle.rogue.testlib.Models
+import io.fsq.spindle.rogue.testlib.gen.{
   ThriftClaimStatus,
   ThriftComment,
   ThriftConsumerPrivilege,
@@ -22,7 +23,7 @@ import io.fsq.spindle.rogue.test.gen.{
   ThriftVenueMeta,
   ThriftVenueStatus
 }
-import io.fsq.spindle.rogue.test.gen.IdsTypedefs.VenueId
+import io.fsq.spindle.rogue.testlib.gen.IdsTypedefs.VenueId
 import io.fsq.spindle.runtime.{MetaRecord, Record}
 import io.fsq.util.compiler.test.CompilerForNegativeTests
 import java.util.regex.Pattern
@@ -352,27 +353,27 @@ class QueryTest extends JUnitMustMatchers {
     // select case queries
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
-      .selectCase(_.legacyid, V1)
+      .selectCase(_.legacyid, Models.V1)
       .toString() must_== """db.venues.find({"mayor": NumberLong("1")}, {"legid": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
-      .selectCase(_.legacyid, _.userid, V2)
+      .selectCase(_.legacyid, _.userid, Models.V2)
       .toString() must_== """db.venues.find({"mayor": NumberLong("1")}, {"legid": 1, "userid": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
-      .selectCase(_.legacyid, _.userid, _.mayor, V3)
+      .selectCase(_.legacyid, _.userid, _.mayor, Models.V3)
       .toString() must_== """db.venues.find({"mayor": NumberLong("1")}, {"legid": 1, "userid": 1, "mayor": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
-      .selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, V4)
+      .selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, Models.V4)
       .toString() must_== """db.venues.find({"mayor": NumberLong("1")}, {"legid": 1, "userid": 1, "mayor": 1, "mayor_count": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
-      .selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, V5)
+      .selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, Models.V5)
       .toString() must_== """db.venues.find({"mayor": NumberLong("1")}, {"legid": 1, "userid": 1, "mayor": 1, "mayor_count": 1, "closed": 1})"""
     Q(ThriftVenue)
       .where(_.mayor eqs 1)
-      .selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags, V6)
+      .selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags, Models.V6)
       .toString() must_== """db.venues.find({"mayor": NumberLong("1")}, {"legid": 1, "userid": 1, "mayor": 1, "mayor_count": 1, "closed": 1, "tags": 1})"""
 
     // select subfields
@@ -563,11 +564,12 @@ class QueryTest extends JUnitMustMatchers {
 
     // Enumeration
 
-    val query2 = """db.venueclaims.update({"uid": 1}, """
+    val query2 = """db.venueclaims.update({"uid": NumberLong("1")}, """
 
-    // TODO(Tansy) fails with:
-    // value userid is not a member of io.fsq.spindle.rogue.test.gen.ThriftVenueClaimMeta
-    // Q(ThriftVenueClaim).where(_.userid eqs 1).modify(_.status setTo ThriftClaimStatus.approved).toString() must_== query2 + """{"$set": {"status": "Approved"}}""" + suffix
+    Q(ThriftVenueClaim)
+      .where(_.userId eqs 1)
+      .modify(_.status setTo ThriftClaimStatus.approved)
+      .toString() must_== query2 + """{"$set": {"status": 1}}""" + suffix
 
     Q(ThriftVenueClaim)
       .modify(_.reason setTo ThriftRejectReason.cheater)
@@ -582,12 +584,10 @@ class QueryTest extends JUnitMustMatchers {
       .modify(_.last_updated setTo d1)
       .toString() must_== query + """{"$set": {"last_updated": {"$date": 1272672000000}}}""" + suffix
 
-    // TODO(Tansy) fails with:
-    // overloaded method value setTo with alternatives:
-    //      (vOpt: Option[org.joda.time.DateTime])io.fsq.rogue.ModifyClause <and> (v: org.joda.time.DateTime)io.fsq.rogue.ModifyClause
-    //      cannot be applied to (java.util.Date)
-
-    // Q(ThriftVenue).where(_.legacyid eqs 1).modify(_.last_updated setTo d1.toDate).toString() must_== query + """{"$set": {"last_updated": {"$date": 1272672000000}}}""" + suffix
+    Q(ThriftVenue)
+      .where(_.legacyid eqs 1)
+      .modify(_.last_updated setTo d1)
+      .toString() must_== query + """{"$set": {"last_updated": {"$date": 1272672000000}}}""" + suffix
 
     // LatLong
     val ll = List(37.4, -73.9)
@@ -607,8 +607,8 @@ class QueryTest extends JUnitMustMatchers {
       .toString() must_== query + """{"$push": {"popularity": 5}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
-      .modify(_.tags pushAll List("a", "b"))
-      .toString() must_== query + """{"$pushAll": {"tags": ["a", "b"]}}""" + suffix
+      .modify(_.tags push List("a", "b"))
+      .toString() must_== query + """{"$push": {"tags": {"$each": ["a", "b"]}}}""" + suffix
     Q(ThriftVenue)
       .where(_.legacyid eqs 1)
       .modify(_.tags addToSet "a")
@@ -875,12 +875,9 @@ class QueryTest extends JUnitMustMatchers {
     Q(ThriftVenue)
       .where(_.lastClaim.sub.enumIntField(_.status) in Seq(ThriftClaimStatus.approved))
       .toString() must_== """db.venues.find({"last_claim.status": {"$in": [1]}})"""
-
-    // TODO(dan): Fix this.
-    // Fails with:
-    // value eqs is not a member of io.fsq.rogue.DummyField[io.fsq.spindle.rogue.test.gen.ThriftConsumerPrivilege,io.fsq.spindle.rogue.test.gen.ThriftOAuthConsumerMeta]
-
-    // Q(ThriftOAuthConsumer).where(_.privileges at 0 eqs ThriftConsumerPrivilege.awardBadges).signature() must_== """db.oauthconsumers.find({"privileges.0": 0})"""
+    Q(ThriftOAuthConsumer)
+      .where(_.privileges at 0 eqs ThriftConsumerPrivilege.awardBadges)
+      .signature() must_== """db.oauthconsumers.find({"privileges.0": 0})"""
 
     // Field type
     Q(ThriftVenue)
@@ -1038,17 +1035,11 @@ class QueryTest extends JUnitMustMatchers {
 
     val someEnum = Some(ThriftVenueStatus.open)
 
-    // TODO(Tansy) Fails with:
-    // type Value is not a member of object io.fsq.spindle.rogue.test.gen.ThriftVenueStatus
-    // restore the two tests below when this is fixed.
-
-    // val noEnum: Option[ThriftVenueStatus.type#Value] = None
+    val noEnum: Option[ThriftVenueStatus] = None
 
     Q(ThriftVenue).whereOpt(someEnum)(_.status eqs _).toString() must_== """db.venues.find({"status": 0})"""
 
-    // val noEnum is defined above, but does not compile.
-
-    // Q(ThriftVenue).whereOpt(noEnum)(_.status eqs _).toString() must_== """db.venues.find({})"""
+    Q(ThriftVenue).whereOpt(noEnum)(_.status eqs _).toString() must_== """db.venues.find({})"""
 
     // whereOpt: date
     val someDate = Some(new DateTime(2010, 5, 1, 0, 0, 0, 0, DateTimeZone.UTC))
@@ -1106,10 +1097,7 @@ class QueryTest extends JUnitMustMatchers {
     q.modifyOpt(noId)(_.legacyid setTo _).toString() must_== prefix + """{}""" + suffix
 
     q.modifyOpt(someEnum)(_.status setTo _).toString() must_== prefix + """{"$set": {"status": 0}}""" + suffix
-
-    // val noEnum is defined above, but does not compile.
-
-    // q.modifyOpt(noEnum)(_.status setTo _).toString() must_== prefix + """{}""" + suffix
+    q.modifyOpt(noEnum)(_.status setTo _).toString() must_== prefix + """{}""" + suffix
 
   }
 
@@ -1132,31 +1120,12 @@ class QueryTest extends JUnitMustMatchers {
       .allShards
       .noop()
       .toString() must_== """db.likes.update({"userid": NumberLong("123")}, {}, false, false)"""
-    // TODO(Tansy) Fails with:
-    // type mismatch;
-    // [error]  found   : io.fsq.rogue.EqClause[Long,Nothing]
-    // [error]  required: io.fsq.rogue.QueryClause[?] with io.fsq.rogue.ShardKeyClause
-
-    // Q(ThriftLike).withShardKey(_.userid eqs 123).toString() must_== """db.likes.find({"userid": 123})"""
-
-    // TODO(Tansy) Fails with:
-    // No implicit view available from List[Int] => Traversable[Long].
-
-    // Q(ThriftLike).withShardKey(_.userid in List(123, 456)).toString() must_== """db.likes.find({"userid": {"$in": [123, 456]}})"""
-
-    // TODO(Tansy) Fails with:
-    // type mismatch;
-    // [error]  found   : io.fsq.rogue.EqClause[Long,Nothing]
-    // [error]  required: io.fsq.rogue.QueryClause[?] with io.fsq.rogue.ShardKeyClause
-
-    // Q(ThriftLike).withShardKey(_.userid eqs 123).and(_.checkin eqs 1).toString() must_== """db.likes.find({"userid": 123, "checkin": 1})"""
-
-    // TODO(Tansy) Fails with:
-    // type mismatch;
-    // [error]  found   : io.fsq.rogue.EqClause[Long,Nothing]
-    // [error]  required: io.fsq.rogue.QueryClause[?] with io.fsq.rogue.ShardKeyClause
-    // Q(ThriftLike).where(_.checkin eqs 1).withShardKey(_.userid eqs 123).toString() must_== """db.likes.find({"checkin": 1, "userid": 123})"""
-
+    /* TODO(jacob): It appears shard key aware queries were never implemented for spindle?
+    Q(ThriftLike).withShardKey(_.userid eqs 123).toString() must_== """db.likes.find({"userid": 123})"""
+    Q(ThriftLike).withShardKey(_.userid in List(123, 456)).toString() must_== """db.likes.find({"userid": {"$in": [123, 456]}})"""
+    Q(ThriftLike).withShardKey(_.userid eqs 123).and(_.checkin eqs 1).toString() must_== """db.likes.find({"userid": 123, "checkin": 1})"""
+    Q(ThriftLike).where(_.checkin eqs 1).withShardKey(_.userid eqs 123).toString() must_== """db.likes.find({"checkin": 1, "userid": 123})"""
+   */
   }
   @Test
   def testCommonSuperclassForPhantomTypes {
@@ -1213,27 +1182,23 @@ class QueryTest extends JUnitMustMatchers {
   @Test
   def thingsThatShouldntCompile {
     val compiler = new CompilerForNegativeTests(
-      List(
-        """io.fsq.rogue._""",
-        """io.fsq.roguev2._""",
-        """io.fsq.roguev2.{Query => Q}""",
-        """import io.fsq.rogue.LiftRogue._""",
-        """import io.fsq.spindle.rogue.test.gen.ThriftVenueClaim""",
-        """org.bson.types.ObjectId""",
-        """org.joda.time.DateTime"""
+      Vector(
+        "io.fsq.spindle.rogue.{SpindleQuery => Q}",
+        "io.fsq.spindle.rogue.SpindleRogue._",
+        "io.fsq.spindle.rogue.testlib.gen.{ThriftVenueClaim, ThriftVenue}",
+        "org.bson.types.ObjectId",
+        "org.joda.time.DateTime"
       )
     )
 
-    def check(code: String, expectedErrorREOpt: Option[String] = Some("")): Unit =
+    def check(code: String, expectedErrorREOpt: Option[String] = Some("")): Unit = {
       compiler.check(code, expectedErrorREOpt)
+    }
 
     // For sanity
     Q(ThriftVenue).where(_.legacyid eqs 3)
 
-    // TODO(Tansy) Does not pass
-    // error: not found: value Q
-
-    // check("""Q(ThriftVenue).where(_.legacyid eqs 3)""", None)
+    check("""Q(ThriftVenue).where(_.legacyid eqs 3)""", None)
 
     // Basic operator and operand type matching
     check("""Q(ThriftVenue).where(_.legacyid eqs "hi")""")
@@ -1258,19 +1223,16 @@ class QueryTest extends JUnitMustMatchers {
 
     // Foreign keys
     // first make sure that each type-safe foreign key works as expected
-
-    // TODO(Tansy) These all do not pass. All with 'not found: value Q'
-
-    // check("""Q(ThriftVenueClaim).where(_.venueId eqs Q(ThriftVenue).createRecord)""", None)
-    // check("""Q(ThriftVenueClaim).where(_.venueId neqs Q(ThriftVenue).createRecord)""", None)
-    // check("""Q(ThriftVenueClaim).where(_.venueId in List(Q(ThriftVenue).createRecord))""", None)
-    // check("""Q(ThriftVenueClaim).where(_.venueId nin List(Q(ThriftVenue).createRecord))""", None)
+    check("""Q(ThriftVenueClaim).where(_.venueId eqs ThriftVenue.createRecord.id)""", None)
+    check("""Q(ThriftVenueClaim).where(_.venueId neqs ThriftVenue.createRecord.id)""", None)
+    check("""Q(ThriftVenueClaim).where(_.venueId in List(ThriftVenue.createRecord.id))""", None)
+    check("""Q(ThriftVenueClaim).where(_.venueId nin List(ThriftVenue.createRecord.id))""", None)
 
     // now check that they reject invalid args
-    check("""Q(ThriftVenueClaim).where(_.venueId eqs Q(ThriftTip).createRecord)""")
-    check("""Q(ThriftVenueClaim).where(_.venueId neqs Q(ThriftTip).createRecord)""")
-    check("""Q(ThriftVenueClaim).where(_.venueId in List(Q(ThriftTip).createRecord))""")
-    check("""Q(ThriftVenueClaim).where(_.venueId nin List(Q(ThriftTip).createRecord))""")
+    check("""Q(ThriftVenueClaim).where(_.venueId eqs ThriftTip.createRecord.id)""")
+    check("""Q(ThriftVenueClaim).where(_.venueId neqs ThriftTip.createRecord.id)""")
+    check("""Q(ThriftVenueClaim).where(_.venueId in List(ThriftTip.createRecord.id))""")
+    check("""Q(ThriftVenueClaim).where(_.venueId nin List(ThriftTip.createRecord.id))""")
 
     // Can't select array index
     check("""Q(ThriftVenue).where(_.legacyid eqs 1).select(_.tags at 0)""")
@@ -1316,6 +1278,7 @@ class QueryTest extends JUnitMustMatchers {
     check("""Q(ThriftLike).where(_.userid eqs 123).fetch()""")
     check("""Q(ThriftLike).where(_.userid eqs 123).bulkDelete_!!!()""")
     check("""Q(ThriftLike).where(_.userid eqs 123).paginate(10)""")
+    /* TODO(jacob): It appears shard key aware queries were never implemented for spindle?
     check("""Q(ThriftLike).withShardKey(_.userid lt 123)""")
     check("""Q(ThriftLike).withShardKey(_.checkin eqs 123)""")
     check("""Q(ThriftLike).where(_.checkin eqs 444).allShards.modify(_.checkin setTo 112).updateOne()""")
@@ -1326,55 +1289,68 @@ class QueryTest extends JUnitMustMatchers {
     check(
       """Q(ThriftLike).where(_.checkin eqs 444).allShards.findAndModify(_.checkin setTo 112).and(_.tip unset).updateOne()"""
     )
+     */
 
     // Indexes
+    // TODO(jacob): We got rid of useIndex it seems
+    // // Can't say useIndex and then not use that field.
 
-    // These tests all fail with either "java.lang.Exception: the value is false" when the test is checking for
-    // a compile error, or "error: not found: value Q", when the test is checking that the compile succeeds.
-
-    // Can't say useIndex and then not use that field.
-
-    // check("""Q(ThriftVenue).useIndex(Q(ThriftVenue).idIdx).where(_.legacyid eqs 4)""",
-    //       Some("found.*EqClause.*required.*_id"))
+    // check(
+    //   """Q(ThriftVenue).useIndex(Q(ThriftVenue).idIdx).where(_.legacyid eqs 4)""",
+    //   Some("found.*EqClause.*required.*_id")
+    // )
 
     // // Can't use where with an IndexScan'ing operation.
 
-    // check("""Q(ThriftVenue).useIndex(Q(ThriftVenue).idIdx).where(_.id)(_ after new DateTime())""",
-    //       Some("do not conform to method where.*io.fsq.rogue.Indexable"))
+    // check(
+    //   """Q(ThriftVenue).useIndex(Q(ThriftVenue).idIdx).where(_.id)(_ after new DateTime())""",
+    //   Some("do not conform to method where.*io.fsq.rogue.Indexable")
+    // )
 
-    // But you can use iscan with an IndexScan'ing operation.
+    // // But you can use iscan with an IndexScan'ing operation.
 
-    // check("""Q(ThriftVenue).useIndex(Q(ThriftVenue).idIdx).iscan(_.id)(_ after new DateTime())""",
-    //       None)
-
-    // // Can't skip past the first field in an index.
-
-    // check("""Q(ThriftVenue).useIndex(Q(ThriftVenue).idIdx).rangeScan(_.id)""",
-    //       Some("(could not find implicit value for parameter ev|Cannot prove that).*io.fsq.rogue.UsedIndex"))
+    // check("""Q(ThriftVenue).useIndex(Q(ThriftVenue).idIdx).iscan(_.id)(_ after new DateTime())""", None)
 
     // // Can't skip past the first field in an index.
 
-    // check("""Q(ThriftVenue).useIndex(Q(ThriftVenue).mayorIdIdx).rangeScan(_.mayor).iscan(_.id)(_ eqs new ObjectId())""",
-    //       Some("(could not find implicit value for parameter ev|Cannot prove that).*io.fsq.rogue.UsedIndex"))
+    // check(
+    //   """Q(ThriftVenue).useIndex(Q(ThriftVenue).idIdx).rangeScan(_.id)""",
+    //   Some("(could not find implicit value for parameter ev|Cannot prove that).*io.fsq.rogue.UsedIndex")
+    // )
+
+    // // Can't skip past the first field in an index.
+
+    // check(
+    //   """Q(ThriftVenue).useIndex(Q(ThriftVenue).mayorIdIdx).rangeScan(_.mayor).iscan(_.id)(_ eqs new ObjectId())""",
+    //   Some("(could not find implicit value for parameter ev|Cannot prove that).*io.fsq.rogue.UsedIndex")
+    // )
 
     // // If first column is index-scanned, other fields must be marked as iscan too.
 
-    // check("""Q(ThriftVenue).useIndex(Q(ThriftVenue).mayorIdIdx).iscan(_.mayor)(_ lt 10).where(_.id)(_ eqs new ObjectId())""",
-    //       Some("(could not find implicit value for parameter ev|Cannot prove that).*io.fsq.rogue.Indexable"))
+    // check(
+    //   """Q(ThriftVenue).useIndex(Q(ThriftVenue).mayorIdIdx).iscan(_.mayor)(_ lt 10).where(_.id)(_ eqs new ObjectId())""",
+    //   Some("(could not find implicit value for parameter ev|Cannot prove that).*io.fsq.rogue.Indexable")
+    // )
 
     // // Query should compile fine when the second clause is marked as iscan.
 
-    // check("""Q(ThriftVenue).useIndex(Q(ThriftVenue).mayorIdIdx).iscan(_.mayor)(_ lt 10).iscan(_.id)(_ eqs new ObjectId())""",
-    //       None)
+    // check(
+    //   """Q(ThriftVenue).useIndex(Q(ThriftVenue).mayorIdIdx).iscan(_.mayor)(_ lt 10).iscan(_.id)(_ eqs new ObjectId())""",
+    //   None
+    // )
 
     // // If you rangeScan past a column, you must iscan all index fields after.
 
-    // check("""Q(ThriftVenue).useIndex(Q(ThriftVenue).mayorIdClosedIdx).where(_.mayor)(_ eqs 10).rangeScan(_.id).where(_.closed)(_ eqs true)""",
-    //       Some("(could not find implicit value for parameter ev|Cannot prove that).*io.fsq.rogue.Indexable"))
+    // check(
+    //   """Q(ThriftVenue).useIndex(Q(ThriftVenue).mayorIdClosedIdx).where(_.mayor)(_ eqs 10).rangeScan(_.id).where(_.closed)(_ eqs true)""",
+    //   Some("(could not find implicit value for parameter ev|Cannot prove that).*io.fsq.rogue.Indexable")
+    // )
 
     // // Version of the above with an iscan of later fields.
 
-    // check("""Q(ThriftVenue).useIndex(Q(ThriftVenue).mayorIdClosedIdx).where(_.mayor)(_ eqs 10).rangeScan(_.id).iscan(_.closed)(_ eqs true)""",
-    //       None)
+    // check(
+    //   """Q(ThriftVenue).useIndex(Q(ThriftVenue).mayorIdClosedIdx).where(_.mayor)(_ eqs 10).rangeScan(_.id).iscan(_.closed)(_ eqs true)""",
+    //   None
+    // )
   }
 }

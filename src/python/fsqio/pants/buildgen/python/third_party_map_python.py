@@ -3,11 +3,12 @@
 
 from __future__ import absolute_import, division, print_function
 
-import distutils
+import distutils.sysconfig
 import glob
 import os
 import pkgutil
 import sys
+import sysconfig
 
 from typing import Tuple
 
@@ -24,7 +25,7 @@ def is_importable(root, name, exts=()):
   return False
 
 
-def get_third_party_modules(venv_root, dep_map):
+def get_third_party_modules(site_packages_root, dep_map):
 
   def walk_module_tree(dep, root, import_path, routes=None):
     # Recursively walk a file tree, mapping the relpath(root, directory) of every matched directory to the passed dep.
@@ -42,10 +43,9 @@ def get_third_party_modules(venv_root, dep_map):
   allowed_import_prefixes = {}
   import_map = {}
 
-  if venv_root:
-    site_packages_root = os.path.join(venv_root, 'site-packages')
+  if site_packages_root:
     if not os.path.isdir(site_packages_root):
-      raise Exception("There is no site-packages dir at: {}".format(venv_root))
+      raise Exception("There is no site-packages dir at: {}".format(site_packages_root))
     for dep in dep_map:
 
       if '.' in dep:
@@ -86,8 +86,9 @@ def get_system_modules():
   modules = {module for _, module, package in list(pkgutil.iter_modules()) if package is False}
 
   # Gather the import names from the site-packages installed in the pants-virtualenv.
-  module_names = glob.iglob(os.path.join(os.path.dirname(os.__file__), 'site-packages', '*-*', 'top_level.txt'))
-  site_packages = [map(str.strip, open(txt).readlines()) for txt in list(module_names)]
+  module_names = set(glob.iglob(os.path.join(sysconfig.get_path('purelib'), '*-*', 'top_level.txt')))
+  module_names.update(glob.iglob(os.path.join(sysconfig.get_path('platlib'), '*-*', 'top_level.txt')))
+  site_packages = [map(str.strip, open(txt).readlines()) for txt in module_names]
 
   for packages in site_packages:
     modules -= set(packages)
@@ -96,16 +97,19 @@ def get_system_modules():
   system_modules = set(sys.builtin_module_names)
 
   # Get the top-level packages from the python install (email, logging, xml, some others).
-  _, top_level_libs, _ = list(os.walk(distutils.sysconfig.get_python_lib(standard_lib=True)))[0]
+  # NOTE(jeffreyc): newer virtualenvs no longer include distutils. Python's distutils behaves differently than
+  # virtualenv's. We emulate the old virtualenv behavior by specifying a prefix (virtualenv's distutils overrode
+  # `prefix` with `sys.real_path`).
+  _, top_level_libs, _ = list(os.walk(distutils.sysconfig.get_python_lib(standard_lib=True, prefix=sys.real_prefix)))[0]
   return sorted(top_level_libs + list(modules | system_modules))
 
 
 # TODO(mateo): This has outgrown its roots as a simple python script. Productionize into a task or class.
-def get_venv_map(venv_roots, dep_map):
+def get_venv_map(site_packages_roots, dep_map):
   venv_map = {}
   venv_map['python_modules'] = get_system_modules()
   site_map = {}
-  for venv in venv_roots:
-    site_map.update(get_third_party_modules(venv, dep_map))
+  for site_packages_root in site_packages_roots:
+    site_map.update(get_third_party_modules(site_packages_root, dep_map))
   venv_map['third_party'] = site_map
   return venv_map

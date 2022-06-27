@@ -151,7 +151,7 @@ function geocode(query) {
     maxInterpretations = 0;
   }
 
-  var url = 'http://' + window.location.host + '/?debug=1'
+  var url = 'https://' + window.location.host + '/?debug=1'
     + '&responseIncludes=EVERYTHING,WKT_GEOMETRY_SIMPLIFIED,WKB_GEOMETRY_SIMPLIFIED'
 
   var queryParams = ''
@@ -331,7 +331,7 @@ function success(data, bulkInputs) {
       var s2Covering = feature.geometry.s2Covering;
       if (s2Covering) {
         var req = { "cellIdsAsStrings": s2Covering };
-        var s2InfoUrl = 'http://' + window.location.host + '/private/getS2CellInfos?json=' + JSON.stringify(req);
+        var s2InfoUrl = 'https://' + window.location.host + '/private/getS2CellInfos?json=' + JSON.stringify(req);
         $.getJSON(s2InfoUrl,
             function(data) {
               return successS2Info(data, map, 'red')
@@ -342,7 +342,7 @@ function success(data, bulkInputs) {
       var s2Interior = feature.geometry.s2Interior;
       if (s2Interior) {
         var req = { "cellIdsAsStrings": s2Interior };
-        var s2InfoUrl = 'http://' + window.location.host + '/private/getS2CellInfos?json=' + JSON.stringify(req);
+        var s2InfoUrl = 'https://' + window.location.host + '/private/getS2CellInfos?json=' + JSON.stringify(req);
         $.getJSON(s2InfoUrl,
             function(data) {
               return successS2Info(data, map, 'green')

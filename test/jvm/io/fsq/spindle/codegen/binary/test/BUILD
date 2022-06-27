@@ -13,5 +13,5 @@ junit_tests(
   ],
   tags=[
     'spindle_codegen',
-   ]
+   ],
 )

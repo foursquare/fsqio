@@ -3,7 +3,7 @@
 package io.fsq.twofishes.indexer.mongo
 
 import com.mongodb.{BasicDBObject, ErrorCategory, MongoClient, MongoClientURI, MongoWriteException}
-import com.mongodb.client.MongoCollection
+import com.mongodb.client.{MongoCollection, MongoDatabase}
 import io.fsq.common.scala.Identity._
 import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.rogue.QueryOptimizer
@@ -26,6 +26,7 @@ import scala.collection.JavaConverters._
 // Singleton is gross, but convenient :D
 object IndexerQueryExecutor {
   type ExecutorT = QueryExecutor[
+    MongoDatabase,
     MongoCollection,
     Object,
     BasicDBObject,
@@ -65,7 +66,7 @@ object IndexerQueryExecutor {
       case None => new MongoClient() // Connect on default host and port
     }
 
-    clientManager.defineDb(mongoIdentifier, mongoClient, "geocoder")
+    clientManager.defineDb(mongoIdentifier, () => mongoClient, "geocoder")
 
     ensureMongoVersionOrEmitHelpfulErrorMessage()
 

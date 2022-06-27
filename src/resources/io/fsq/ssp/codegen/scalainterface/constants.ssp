@@ -7,7 +7,7 @@
 
 object ${baseName}Constants {
   #for (const <- constants)
-  <% val value = const.valueOption.map{v => "val %s: %s = %s".format(const.name, const.renderType.text, v)} %>
-  <%=value.getOrElse("// %s not rendered, %s not a supported const type".format(const.name, const.renderType.text)) %>
+  <% val value = const.valueOption.map{v => "val %s: %s = %s".format(const.name, const.renderType.textUnscoped, v)} %>
+  <%=value.getOrElse("// %s not rendered, %s not a supported const type".format(const.name, const.renderType.textUnscoped)) %>
   #end
 }

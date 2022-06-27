@@ -7,6 +7,7 @@ import com.twitter.util.{Await, Future, Throw, Try}
 import io.fsq.common.testing.matchers.{FoursquareMatchers => FM}
 import io.fsq.rogue.RogueException
 import io.fsq.rogue.adapter.twitter.TwitterBaseSubscriber
+import org.hamcrest.MatcherAssert
 import org.junit.{Assert, Test}
 
 class TwitterAsyncUtilTest {
@@ -51,13 +52,13 @@ class TwitterAsyncUtilTest {
 
     val successCallback = new TwitterSingleElemSubscriber[Integer]
     val successFuture = successCallback.promise
-    Assert.assertThat(successFuture.poll, FM.isNone[Try[Integer]])
+    MatcherAssert.assertThat(successFuture.poll, FM.isNone[Try[Integer]])
     successCallback.onNext(testValue)
     Assert.assertEquals(testValue, Await.result(successFuture))
 
     val errorCallback = new TwitterSingleElemSubscriber[Integer]
     val errorFuture = errorCallback.promise
-    Assert.assertThat(errorFuture.poll, FM.isNone[Try[Integer]])
+    MatcherAssert.assertThat(errorFuture.poll, FM.isNone[Try[Integer]])
     errorCallback.onError(testException)
     Assert.assertEquals(Throw(testException), Await.result(errorFuture.liftToTry))
   }

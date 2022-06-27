@@ -156,4 +156,32 @@ class OutcomeTest {
     A.assertEquals(Failure("foo"), (Success(Failure("foo"))).flatten)
     A.assertEquals(Failure("foo"), Failure("foo").flatten)
   }
+
+  @Test
+  def testMapFailure(): Unit = {
+    val succ = Success[String, String]("success")
+    val fail = Failure[String, String]("fail")
+
+    A.assertEquals(Success[String, Int]("success"), succ.mapFailure(_.length))
+    A.assertEquals(Success[Int, String](7), succ.map(_.length))
+    A.assertEquals(Failure[String, Int](4), fail.mapFailure(_.length))
+    A.assertEquals(Failure[Int, String]("fail"), fail.map(_.length))
+
+    A.assertEquals(
+      Failure[Boolean, String]("true"),
+      succ.flatMap(v => if (v.length <= 4) Success(false) else Failure("true"))
+    )
+    A.assertEquals(
+      Success[Boolean, String](false),
+      succ.flatMap(v => if (v.length > 4) Success(false) else Failure("true"))
+    )
+    A.assertEquals(
+      Failure[String, String]("fail"),
+      fail.flatMap(v => if (v.length <= 4) Success(false) else Failure("true"))
+    )
+    A.assertEquals(
+      Failure[String, String]("fail"),
+      fail.flatMap(v => if (v.length > 4) Success(false) else Failure("true"))
+    )
+  }
 }

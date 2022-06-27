@@ -5,5 +5,5 @@
 <%@ val cls: StructLike %>
 trait ${cls.name}LiftAdapterMutable extends Mutable${cls.name} {
   self: ${cls.name}LiftAdapter =>
-  def underlyingLift: _root_.io.fsq.spindle.runtime.LiftAdapter[${cls.primaryKeyField.get.renderType.text}]
+  def underlyingLift: runtime.LiftAdapter[${cls.primaryKeyField.get.renderType.textUnscoped}]
 }

@@ -11,6 +11,7 @@ scala_library(
     'src/jvm/io/fsq/rogue/adapter',
     'src/jvm/io/fsq/rogue/connection',
     'src/jvm/io/fsq/rogue/index',
+    'src/jvm/io/fsq/rogue/shard',
   ],
   provides=scala_artifact(
     org='io.fsq',

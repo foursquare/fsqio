@@ -19,7 +19,7 @@ object MongoHelpers extends Rogue {
 
   sealed case class MongoModify(clauses: List[ModifyClause])
 
-  sealed case class MongoSelect[M, R](fields: List[SelectField[_, M]], transformer: List[Any] => R)
+  sealed case class MongoSelect[R, CC](fields: List[SelectField[_, R]], transformer: List[Any] => CC)
 
   object MongoBuilder {
     def buildCondition(cond: AndCondition, signature: Boolean = false): DBObject = {

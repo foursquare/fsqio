@@ -5,5 +5,5 @@ ssp_template(
   sources = globs('*.ssp'),
   entry_point = 'record.ssp',
   dependencies = [
-  ]
+  ],
 )

@@ -22,20 +22,20 @@ trait MongoTest {
   val asyncClientManager = new AsyncMongoClientManager {
     override def defineDb(
       name: MongoIdentifier,
-      client: AsyncMongoClient,
+      clientFn: () => AsyncMongoClient,
       dbName: String
-    ): Option[(AsyncMongoClient, String)] = {
-      super.defineDb(name, client, getDbName(dbName))
+    ): Unit = {
+      super.defineDb(name, clientFn, getDbName(dbName))
     }
   }
 
   val blockingClientManager = new BlockingMongoClientManager {
     override def defineDb(
       name: MongoIdentifier,
-      client: BlockingMongoClient,
+      clientFn: () => BlockingMongoClient,
       dbName: String
-    ): Option[(BlockingMongoClient, String)] = {
-      super.defineDb(name, client, getDbName(dbName))
+    ): Unit = {
+      super.defineDb(name, clientFn, getDbName(dbName))
     }
   }
 

@@ -4,6 +4,7 @@
   import _root_.io.fsq.spindle.codegen.runtime.StructLike
 %>
 <%@ val cls: StructLike %>
+<%@ val pkg: String %>
   def copy(
-      ${cls.fields.map(field => "%s: %s = %sOrNull".format(field.escapedName, field.renderType.boxedText, field.name)).mkString(",\n      ")}
+    ${cls.fields.map(field => "%s: %s = %sOrNull".format(field.escapedName, field.textUnscoped(pkg), field.name)).mkString(",\n    ")}
   ): Raw${cls.name}

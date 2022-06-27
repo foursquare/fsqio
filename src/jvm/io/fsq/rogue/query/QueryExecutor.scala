@@ -36,6 +36,7 @@ import scala.util.Success
   *     option to send down a read preference, and just use the one on the query.
   */
 class QueryExecutor[
+  MongoDatabase,
   MongoCollection[_],
   DocumentValue,
   Document <: MongoClientAdapter.BaseDocument[DocumentValue],
@@ -43,7 +44,7 @@ class QueryExecutor[
   Record,
   Result[_]
 ](
-  adapter: MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, Result],
+  adapter: MongoClientAdapter[MongoDatabase, MongoCollection, DocumentValue, Document, MetaRecord, Record, Result],
   optimizer: QueryOptimizer,
   serializer: RogueSerializer[MetaRecord, Record, Document]
 ) extends Rogue {
@@ -103,6 +104,16 @@ class QueryExecutor[
     } else {
       adapter.distinct(query, field(query.meta).name, resultTransformer, readPreferenceOpt)
     }
+  }
+
+  def explain[M <: MetaRecord, State](
+    query: Query[M, _, State],
+    readPreferenceOpt: Option[ReadPreference] = None
+  )(
+    implicit ev: ShardingOk[M, State],
+    ev2: M !<:< MongoDisallowed
+  ): Result[Document] = {
+    adapter.explain(query, readPreferenceOpt)
   }
 
   // TODO(jacob): Checking the MongoDisallowed trait against the record itself is broken.

@@ -4,5 +4,6 @@
   import _root_.io.fsq.spindle.codegen.runtime.ScalaField
 %>
 <%@ val field: ScalaField %>
-  def ${field.escapedName}_=(x: ${field.renderType.text}): Unit
+<%@ val pkg: String %>
+  def ${field.escapedName}_=(x: ${field.textUnscoped(pkg)}): Unit
   def ${field.name}Unset(): Unit

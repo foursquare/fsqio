@@ -246,6 +246,13 @@ object Lists {
         override val array: Array[AnyRef] = xs.asInstanceOf[Array[AnyRef]]
       })
 
+    implicit def array2FSTraversableOnce[T <: AnyRef](
+      xs: Array[T]
+    ): FSTraversableOnce[T, ArraySeq] =
+      new FSTraversableOnce[T, ArraySeq](new ArraySeq[T](xs.size) {
+        override val array: Array[AnyRef] = xs.asInstanceOf[Array[AnyRef]]
+      })
+
     // Option extensions
     implicit def opt2FSOpt[T](o: Option[T]): FSOption[T] = new FSOption(o)
     implicit def fsopt2Opt[T](fso: FSOption[T]): Option[T] = fso.opt

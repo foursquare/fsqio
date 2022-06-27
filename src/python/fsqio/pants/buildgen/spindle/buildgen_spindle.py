@@ -8,6 +8,7 @@ import re
 
 from pants.backend.jvm.targets.scala_library import ScalaLibrary
 
+from fsqio.pants.buildgen.core.subsystems.publish_subsystem import PublishSubsystem
 from fsqio.pants.buildgen.jvm.scala.buildgen_scala import BuildgenScala
 
 
@@ -61,6 +62,10 @@ class BuildgenSpindle(BuildgenScala):
       'buildgen_spindle',
     ]
 
+  @classmethod
+  def subsystem_dependencies(cls):
+    return super(BuildgenSpindle, cls).subsystem_dependencies() + (PublishSubsystem.scoped(cls),)
+
   @property
   def _concrete_target_to_derivatives(self):
     return self.context.products.get_data('concrete_target_to_derivatives')
@@ -84,6 +89,7 @@ class BuildgenSpindle(BuildgenScala):
       t for t in self._concrete_target_to_derivatives[spindle_target]
       if isinstance(t, ScalaLibrary)
     )
+
     if len(synthetic_scala_targets) != 1:
       raise ValueError(
         'Could not find synthetic scala codegen target while attempting'

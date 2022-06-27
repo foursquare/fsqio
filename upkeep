@@ -4,6 +4,11 @@
 # Pass variables to children
 set -eao pipefail
 
+if [[ $(arch) = "arm64" ]]
+then
+  exec arch -arch x86_64 $0 $@
+fi
+
 export BUILD_ROOT="${BUILD_ROOT:-$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )}"
 export UPKEEPROOT="${BUILD_ROOT}/build-support"
 

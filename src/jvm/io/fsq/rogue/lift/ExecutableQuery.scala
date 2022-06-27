@@ -3,7 +3,7 @@
 package io.fsq.rogue.lift
 
 import com.mongodb.{BasicDBObject, WriteConcern}
-import com.mongodb.client.MongoCollection
+import com.mongodb.client.{MongoCollection, MongoDatabase}
 import io.fsq.field.Field
 import io.fsq.rogue.{
   AddLimit,
@@ -30,7 +30,7 @@ import io.fsq.rogue.query.QueryExecutor
 
 case class ExecutableQuery[MB, M <: MB, RB, R, State](
   query: Query[M, R, State],
-  executor: QueryExecutor[MongoCollection, Object, BasicDBObject, MB, RB, BlockingResult]
+  executor: QueryExecutor[MongoDatabase, MongoCollection, Object, BasicDBObject, MB, RB, BlockingResult]
 )(
   implicit ev: ShardingOk[M, State]
 ) extends BlockingResult.Implicits {
@@ -166,7 +166,7 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
 
 case class ExecutableModifyQuery[MB, M <: MB, RB, State](
   query: ModifyQuery[M, State],
-  executor: QueryExecutor[MongoCollection, Object, BasicDBObject, MB, RB, BlockingResult]
+  executor: QueryExecutor[MongoDatabase, MongoCollection, Object, BasicDBObject, MB, RB, BlockingResult]
 ) extends BlockingResult.Implicits {
 
   def updateMulti(): Unit = {
@@ -196,7 +196,7 @@ case class ExecutableModifyQuery[MB, M <: MB, RB, State](
 
 case class ExecutableFindAndModifyQuery[MB, M <: MB, RB, R](
   query: FindAndModifyQuery[M, R],
-  executor: QueryExecutor[MongoCollection, Object, BasicDBObject, MB, RB, BlockingResult]
+  executor: QueryExecutor[MongoDatabase, MongoCollection, Object, BasicDBObject, MB, RB, BlockingResult]
 ) extends BlockingResult.Implicits {
 
   def updateOne(returnNew: Boolean = false): Option[R] = {
@@ -210,7 +210,7 @@ case class ExecutableFindAndModifyQuery[MB, M <: MB, RB, R](
 
 class PaginatedQuery[MB, M <: MB, RB, R, +State <: Unlimited with Unskipped](
   q: Query[M, R, State],
-  executor: QueryExecutor[MongoCollection, Object, BasicDBObject, MB, RB, BlockingResult],
+  executor: QueryExecutor[MongoDatabase, MongoCollection, Object, BasicDBObject, MB, RB, BlockingResult],
   val countPerPage: Int,
   val pageNum: Int = 1
 )(

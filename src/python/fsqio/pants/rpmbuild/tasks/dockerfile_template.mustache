@@ -4,13 +4,23 @@ FROM {{{image}}}
 {{{command}}}
 {{/setup_commands}}
 
+{{!
+  If you encounter:
+    http://mirror.prod.foursquare.com/centos-synced/7/os/aarch64/repodata/repomd.xml:
+      [Errno 14] HTTP Error 404 - Not Found
+  and are confused, it is because you are running Docker on an M1 and it is
+  attempting to build an ARM Docker container and not an x86_64 container. The
+  simplest solution is to rerun this on your dev box.
+}}
 RUN yum clean metadata && \
     rm -rf /var/cache/yum/* && \
+    rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY* && \
+    yum install -y shadow-utils && \
     useradd rpmuser && \
     mkdir -p /home/rpmuser/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS} && \
     echo '%_topdir /home/rpmuser/rpmbuild' > /home/rpmuser/.rpmmacros && \
-    rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY* && \
-    chown -R rpmuser.rpmuser /home/rpmuser
+    chown -R rpmuser.rpmuser /home/rpmuser && \
+    chown -R rpmuser.rpmuser /usr/local/ # this is a hack for freeling spec, bad idea to install as root but no other option
 
 RUN mkdir -p /home/rpmuser/local_rpms
 {{#rpm_dependencies}}
@@ -25,8 +35,6 @@ RUN rpm --rebuilddb && \
     yum install -y --nogpgcheck {{{reqs}}}
 {{/build_reqs}}
 
-COPY {{{spec_basename}}} /home/rpmuser/rpmbuild/SPECS/{{{spec_basename}}}
-
 {{#local_sources}}
 COPY {{{basename}}} /home/rpmuser/rpmbuild/SOURCES/{{{basename}}}
 {{/local_sources}}
@@ -34,6 +42,8 @@ COPY {{{basename}}} /home/rpmuser/rpmbuild/SOURCES/{{{basename}}}
 {{#remote_sources}}
 RUN curl --fail -L "{{{url}}}" -o "/home/rpmuser/rpmbuild/SOURCES/{{{basename}}}"
 {{/remote_sources}}
+
+COPY {{{spec_basename}}} /home/rpmuser/rpmbuild/SPECS/{{{spec_basename}}}
 
 USER rpmuser
 COPY build_rpm.sh /home/rpmuser/build_rpm.sh

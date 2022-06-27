@@ -21,12 +21,12 @@ class HarnessTest extends RogueMongoTest {
   override def initClientManagers(): Unit = {
     asyncClientManager.defineDb(
       HarnessTest.mongoIdentifier,
-      asyncMongoClient,
+      () => asyncMongoClient,
       HarnessTest.dbName
     )
     blockingClientManager.defineDb(
       HarnessTest.mongoIdentifier,
-      blockingMongoClient,
+      () => blockingMongoClient,
       HarnessTest.dbName
     )
   }
@@ -50,12 +50,12 @@ class HarnessTest extends RogueMongoTest {
 
     asyncClientManager.defineDb(
       firstMongoIdentifier,
-      asyncMongoClient,
+      () => asyncMongoClient,
       firstDbName
     )
     asyncClientManager.defineDb(
       otherMongoIdentifier,
-      asyncMongoClient,
+      () => asyncMongoClient,
       otherDbName
     )
 

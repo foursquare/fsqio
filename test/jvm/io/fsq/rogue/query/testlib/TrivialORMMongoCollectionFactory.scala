@@ -13,6 +13,7 @@ import org.bson.codecs.configuration.CodecRegistry
 class TrivialORMMongoCollectionFactory[MongoClient, MongoDatabase, MongoCollection[_]](
   clientManager: MongoClientManager[MongoClient, MongoDatabase, MongoCollection]
 ) extends MongoCollectionFactory[
+    MongoDatabase,
     MongoCollection,
     Object,
     Document,
@@ -29,6 +30,8 @@ class TrivialORMMongoCollectionFactory[MongoClient, MongoDatabase, MongoCollecti
   ): CodecRegistry = {
     clientManager.getCodecRegistryOrThrow(query.meta.mongoIdentifier)
   }
+
+  override def getShardKeyNameFromRecord[R <: TrivialORMRecord](record: R): Option[String] = None
 
   override def getMongoCollectionFromQuery[M <: TrivialORMMetaRecord[_]](
     query: Query[M, _, _],
@@ -72,6 +75,12 @@ class TrivialORMMongoCollectionFactory[MongoClient, MongoDatabase, MongoCollecti
       readPreferenceOpt = readPreferenceOpt,
       writeConcernOpt = writeConcernOpt
     )
+  }
+
+  def getMongoDatabaseFromQuery[M <: TrivialORMMetaRecord[_]](
+    query: Query[M, _, _]
+  ): MongoDatabase = {
+    clientManager.use(query.meta.mongoIdentifier)(identity)
   }
 
   override def getInstanceNameFromQuery[M <: TrivialORMMetaRecord[_]](

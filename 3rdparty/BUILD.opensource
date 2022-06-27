@@ -1,6 +1,6 @@
 # Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
 
-scala_version = '2.11.8'
+scala_version = '2.11.12'
 HADOOP_VERSION = '2.8.5'
 
 
@@ -55,6 +55,7 @@ managed_jar_dependencies(
     ':mongodb-driver',
     ':mongodb-driver-reactivestreams',
     ':netty',
+    ':netty4',
     ':janino-compiler',
     ':reflections',
     ':scalacheck',
@@ -542,30 +543,6 @@ jar_library(
   ],
 )
 
-# A new version of jackson with different org and fully qualified class names. It won't conflict with other jackson.
-# The reason for two jacksons. The former is UNUSED, but is necessary for using Finatra.
-# 2.9.10 breaks EMR usage. 2.6.7 breaks finatra.
-# Jackson is currently pinned meaning we can only have 1 version of it in our repo.
-# The goal is to pin 2.9.10 somehow without breaking EMR.
-# This is a placeholder for now and to allow for development of finatra services
-# while the dependency issue is being resolved. (@jwlodarczyk)
-# jackson_finatra_rev = '2.9.10'
-# jar_library(
-#   name = 'jackson-scala',
-#   jars = [
-#     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-annotations', rev = jackson_finatra_rev),
-#     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-core', rev = jackson_finatra_rev),
-#     jar(org = 'com.fasterxml.jackson.core', name = 'jackson-databind', rev = '2.9.10.1'),
-#     # NOTE(iant): 2.6.7.1 for 2.12 support; should be jackson_rev in the future
-#     scala_jar(org = 'com.fasterxml.jackson.module', name = 'jackson-module-scala', rev = jackson_finatra_rev),
-#     jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-joda', rev = jackson_finatra_rev),
-#     jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-guava', rev = jackson_finatra_rev),
-#     jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jdk8', rev = jackson_finatra_rev),
-#     jar(org = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jsr310', rev = jackson_finatra_rev),
-#     jar(org = 'com.fasterxml.jackson.dataformat', name = 'jackson-dataformat-cbor', rev = jackson_finatra_rev),
-#   ],
-# )
-
 jackson_rev = '2.6.7'
 jar_library(
   name = 'jackson-scala',
@@ -706,8 +683,7 @@ jar_library(
     'fscommon',
   ],
   jars = [
-    jar(org = 'junit', name = 'junit', rev = '4.12'),
-    jar(org = 'com.novocode', name = 'junit-interface', rev = '0.11'),
+    jar(org = 'junit', name = 'junit', rev = '4.13.2'),
   ],
 )
 
@@ -1039,10 +1015,54 @@ jar_library(
   ]
 )
 
+    # NOTE(jacob): Depending on the monolithic netty jar rather than its individual
+    #   modules causes all kinds of headaches with other libraries that try to do the
+    #   right thing and only pull in what they need. There is some talk in the netty
+    #   project of making the monolith an empty wrapper that pulls in all the module jars
+    #   (see https://github.com/netty/netty/issues/4671 for details), but for now it
+    #   bundles duplicate classes and we have to sort out the conflict. Our dep report
+    #   lists spark as the only problem child pulling this in, but just one is enough.
+    #
+    #   What we do here is exclude the monolith, and instead declare a jar_library
+    #   containing the individual netty modules we need. If you add a new 3rdparty jar
+    #   with a dependency on netty-all, you may see classloading issues if it uses code
+    #   from a module we aren't pulling in. It is up to you to identify the missing
+    #   module, add it to our netty4 jar_library, and then add a dependency from your
+    #   new jar_library to our netty4 jar_library.
+    #
+    #   This also holds for libraries depending on netty modules we haven't yet declared.
+    #   We will transitively pull them in, but they won't be pinned at the proper version
+    #   and you may see classloading issues until you add them to this jar_library.
+    #
+    #   Note also included on the netty-all jar exclude in pants.ini.
+netty4_rev = '4.1.43.Final'
 jar_library(
   name = 'netty4',
+  tags = [
+    'opensource',
+    'fscommon',
+  ],
   jars = [
-    jar(org = 'io.netty', name = 'netty-all', rev = '4.1.45.Final'),
+    jar(org = 'io.netty', name = 'netty-buffer', rev = netty4_rev),
+    jar(org = 'io.netty', name = 'netty-codec', rev = netty4_rev),
+    jar(org = 'io.netty', name = 'netty-codec-dns', rev = netty4_rev),
+    jar(org = 'io.netty', name = 'netty-codec-http', rev = netty4_rev),
+    jar(org = 'io.netty', name = 'netty-codec-http2', rev = netty4_rev),
+    jar(org = 'io.netty', name = 'netty-codec-socks', rev = netty4_rev),
+    jar(org = 'io.netty', name = 'netty-common', rev = netty4_rev),
+    jar(org = 'io.netty', name = 'netty-handler', rev = netty4_rev),
+    jar(org = 'io.netty', name = 'netty-handler-proxy', rev = netty4_rev),
+    jar(org = 'io.netty', name = 'netty-resolver', rev = netty4_rev),
+    jar(org = 'io.netty', name = 'netty-resolver-dns', rev = netty4_rev),
+    jar(org = 'io.netty', name = 'netty-tcnative-boringssl-static', rev = '2.0.26.Final'),
+    jar(org = 'io.netty', name = 'netty-transport', rev = netty4_rev),
+    jar(
+      org = 'io.netty',
+      name = 'netty-transport-native-epoll',
+      classifier = 'linux-x86_64',
+      rev = netty4_rev,
+    ),
+    jar(org = 'io.netty', name = 'netty-transport-native-unix-common', rev = netty4_rev),
   ],
   managed_dependencies=':fsqio-management',
 )

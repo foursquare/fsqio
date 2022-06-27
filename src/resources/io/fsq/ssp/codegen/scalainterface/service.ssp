@@ -7,6 +7,7 @@ import _root_.io.fsq.spindle.__shaded_for_spindle_bootstrap__.descriptors.{Annot
 %>
 <%@ val service: ScalaService %>
 <%@ val resolver: TypeReferenceResolver %>
+<%@ val pkg: String %>
 <%
 val parentServiceName = service.parentServiceName.getOrElse("")
 %>\
@@ -14,102 +15,86 @@ trait Has${service.name} {
   def get${service.name}: ${service.name}.ServiceIface
 }
 
-object ${service.name} extends _root_.io.fsq.spindle.runtime.ServiceDescriptor {
+object ${service.name} extends runtime.ServiceDescriptor {
+  import com.twitter.finagle
+  import com.twitter.util
 <%--  Synchronous client interface --%>
   trait Iface #if (parentServiceName != "")extends ${parentServiceName}.Iface #(end){
 #for (function <- service.functions)
-    <% render("service_funcsig.ssp", Map("function" -> function, "resolver" -> resolver)) %>
+<% render("service_funcsig.ssp", Map("function" -> function, "resolver" -> resolver, "pkg" -> pkg)) %>
 #end
   }
 
 <%-- Asynchronous client interface --%>
   trait AsyncIface #if (parentServiceName != "")extends ${parentServiceName}.AsyncIface #(end){
 #for (function <- service.functions)
-    <% render("service_funcsig.ssp", Map(
-         "function" -> function,
-         "resolver" -> resolver,
-         "addResultHandlerArg" -> true,
-         "forceReturnTypeToUnit" -> true,
-         "checkedExceptions" -> Seq("org.apache.thrift.TException"))) %>
-
+<% render("service_funcsig.ssp", Map(
+     "function" -> function,
+     "resolver" -> resolver,
+     "addResultHandlerArg" -> true,
+     "forceReturnTypeToUnit" -> true,
+     "checkedExceptions" -> Seq("thrift.TException"),
+     "pkg" -> pkg)) %>
 #end
   }
 
 <%-- Service interface (uses com.twitter.util.Future). --%>
   trait ServiceIface #if (parentServiceName != "")extends ${parentServiceName}.ServiceIface #(end){
 #for (function <- service.functions)
-    <% render("service_funcsig.ssp", Map(
-         "function" -> function,
-         "resolver" -> resolver,
-         "wrapReturnTypeInFuture" -> true)) %>
-
+<% render("service_funcsig.ssp", Map(
+          "function" -> function,
+          "resolver" -> resolver,
+          "wrapReturnTypeInFuture" -> true,
+          "pkg" -> pkg)) %>
 #end
   }
 
 <%-- Client implementation that can call this service. --%>
-  class Client(iprot: org.apache.thrift.protocol.TProtocol, oprot: org.apache.thrift.protocol.TProtocol) extends #if (parentServiceName != "")${parentServiceName}.Client#(else)org.apache.thrift.TServiceClient#(end)(iprot, oprot) with Iface {
-    def this(prot: org.apache.thrift.protocol.TProtocol) = this(prot, prot)
+  class Client(iprot: thrift.protocol.TProtocol, oprot: thrift.protocol.TProtocol) extends #if (parentServiceName != "")${parentServiceName}.Client#(else)thrift.TServiceClient#(end)(iprot, oprot) with Iface {
+    def this(prot: thrift.protocol.TProtocol) = this(prot, prot)
   }
 
   object Client {
-    class Factory extends org.apache.thrift.TServiceClientFactory[Client] {
+    class Factory extends thrift.TServiceClientFactory[Client] {
     }
   }
 
 <%-- Asynchronous client --%>
   class AsyncClient(
-      protocolFactory: org.apache.thrift.protocol.TProtocolFactory,
-      clientManager: org.apache.thrift.async.TAsyncClientManager,
-      transport: org.apache.thrift.transport.TNonblockingTransport
-  ) extends #if (parentServiceName != "")${parentServiceName}.AsyncClient#(else)org.apache.thrift.async.TAsyncClient#(end)(protocolFactory, clientManager, transport) with AsyncIface
+    protocolFactory: thrift.protocol.TProtocolFactory,
+    clientManager: thrift.async.TAsyncClientManager,
+    transport: thrift.transport.TNonblockingTransport
+  ) extends #if (parentServiceName != "")${parentServiceName}.AsyncClient#(else)thrift.async.TAsyncClient#(end)(protocolFactory, clientManager, transport) with AsyncIface
 
   object AsyncClient {
     class Factory(
-      clientManager: org.apache.thrift.async.TAsyncClientManager,
-      protocolFactory: org.apache.thrift.protocol.TProtocolFactory
-    ) extends org.apache.thrift.async.TAsyncClientFactory[AsyncClient] {
-      def getAsyncClient(transport: org.apache.thrift.transport.TNonblockingTransport): AsyncClient
+      clientManager: thrift.async.TAsyncClientManager,
+      protocolFactory: thrift.protocol.TProtocolFactory
+    ) extends thrift.async.TAsyncClientFactory[AsyncClient] {
+      def getAsyncClient(transport: thrift.transport.TNonblockingTransport): AsyncClient
     }
   }
 
-<%-- ServiceToClient adapter --%>\
   class ServiceToClient(
-      service: com.twitter.finagle.Service[com.twitter.finagle.thrift.ThriftClientRequest, Array[Byte]],
-      protocolFactory: org.apache.thrift.protocol.TProtocolFactory,
-      deserializationPoolOpt: Option[com.twitter.util.FuturePool]
-  ) extends #if (parentServiceName != "")${parentServiceName}.ServiceToClient(service, protocolFactory) with ServiceIface #(else)ServiceIface#(end) {
-    <%-- Note: Can't use default param because Twitter's
-    finagle Thrift Iface constructor finder expects 2 args  --%>
-    def this(
-      service: com.twitter.finagle.Service[com.twitter.finagle.thrift.ThriftClientRequest, Array[Byte]],
-      protocolFactory: org.apache.thrift.protocol.TProtocolFactory
-    ) = this(service, protocolFactory, None)
-  }
+    service: finagle.Service[finagle.thrift.ThriftClientRequest, Array[Byte]],
+    protocolFactory: thrift.protocol.TProtocolFactory,
+    deserializationPoolOpt: Option[util.FuturePool] = None
+  ) extends #if (parentServiceName != "")${parentServiceName}.ServiceToClient(service, protocolFactory) with ServiceIface #(else)ServiceIface#(end)
 
-<%-- ServiceToProtocolClient adapter --%>\
   class ServiceToProtocolClient(
-      service: com.twitter.finagle.Service[(org.apache.thrift.protocol.TMessage, org.apache.thrift.TBase[_, _], Boolean), org.apache.thrift.protocol.TProtocol],
-      deserializationPoolOpt: Option[com.twitter.util.FuturePool]
+    service: finagle.Service[(thrift.protocol.TMessage, thrift.TBase[_, _], Boolean), thrift.protocol.TProtocol],
+    deserializationPoolOpt: Option[util.FuturePool]
   ) extends #if (parentServiceName != "")${parentServiceName}.ServiceToProtocolClient(service, deserializationPoolOpt) with ServiceIface #(else)ServiceIface#(end)
 
 <%-- Processor - processes requests --%>
-  class Processor[I <: Iface] protected (
-      iface: I,
-      processMap: java.util.Map[java.lang.String, org.apache.thrift.ProcessFunction[I, _ <: org.apache.thrift.TBase[_ <: org.apache.thrift.TBase[_, _], _ <: org.apache.thrift.TFieldIdEnum]]]
-  ) extends #if (parentServiceName != "")${parentServiceName}.Processor[I]#(else)org.apache.thrift.TBaseProcessor[I]#(end)(iface, processMap) with org.apache.thrift.TProcessor {
-<%-- NOTE: Thrift compiler includes a LOGGER member here, but it appears to be unused. I omitted it. --%>
-
-    def this(iface: I) = {
-      this(iface, Processor.getProcessMap(new java.util.HashMap[java.lang.String,org.apache.thrift.ProcessFunction[I, _ <: org.apache.thrift.TBase[_ <: org.apache.thrift.TBase[_, _], _ <: org.apache.thrift.TFieldIdEnum]]]()))
-    }
-  }
+  class Processor[I <: Iface](iface: I)
+    extends #if (parentServiceName != "")${parentServiceName}.Processor[I]#(else)thrift.TBaseProcessor[I]#(end)(iface, processMap)
+    with thrift.TProcessor
 
   object Processor {
-    protected[Processor] def getProcessMap[I <: Iface](processMap: java.util.Map[java.lang.String,org.apache.thrift.ProcessFunction[I, _ <: org.apache.thrift.TBase[_ <: org.apache.thrift.TBase[_, _], _ <: org.apache.thrift.TFieldIdEnum]]]): java.util.Map[java.lang.String,org.apache.thrift.ProcessFunction[I, _ <: org.apache.thrift.TBase[_ <: org.apache.thrift.TBase[_, _], _ <: org.apache.thrift.TFieldIdEnum]]]
-
-<%-- Generate an org.apache.thrift.ProcessFunction for each of the service's functions. --%>
+<%-- Generate an thrift.ProcessFunction for each of the service's functions. --%>
 #for (function <- service.functions)
-    class ${function.name}[I <: Iface] extends org.apache.thrift.ProcessFunction[I, ${service.name}_${function.name}_args]("${function.name}")
+    class ${function.name}[I <: Iface] extends thrift.ProcessFunction[I, ${service.name}_${function.name}_args]("${function.name}")
 #end
   }
 
@@ -118,10 +103,16 @@ object ${service.name} extends _root_.io.fsq.spindle.runtime.ServiceDescriptor {
      easy enough in Scala to use match.
 --%>
   class Service(
-      iface: ServiceIface,
-      protocolFactory: org.apache.thrift.protocol.TProtocolFactory
-  ) extends #if (parentServiceName != "")${parentServiceName}.Service(iface, protocolFactory)#(else)com.twitter.finagle.Service[Array[Byte], Array[Byte]]#(end) with _root_.io.fsq.spindle.runtime.ServiceDescriptor {
-  override def serviceName = ${service.name}.serviceName
-  override def functionDescriptors: Seq[_root_.io.fsq.spindle.runtime.FunctionDescriptor[_,_]] = ${service.name}.functionDescriptors
+    iface: ServiceIface,
+    protocolFactory: thrift.protocol.TProtocolFactory
+#if (parentServiceName != "")
+  ) extends ${parentServiceName}.Service(iface, protocolFactory)
+#else
+  ) extends finagle.Service[Array[Byte], Array[Byte]]
+#end
+    with runtime.ServiceDescriptor {
+
+    override def serviceName = ${service.name}.serviceName
+    override def functionDescriptors: Seq[runtime.FunctionDescriptor[_,_]] = ${service.name}.functionDescriptors
   }
 }

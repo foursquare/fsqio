@@ -4,12 +4,14 @@
   import io.fsq.spindle.codegen.runtime.ScalaField
 %>
 <%@ val field: ScalaField %>
+<%@ val pkg: String %>
 #if (field.isForeignKey && field.renderType.isInstanceOf[io.fsq.spindle.codegen.runtime.Container1RenderType])
 <% val elem = field.renderType.asInstanceOf[io.fsq.spindle.codegen.runtime.Container1RenderType].elem %>
-  def ${field.name}Fks[R <: _root_.io.fsq.spindle.runtime.Record[R] with _root_.io.fsq.spindle.runtime.HasPrimaryKey[${elem.text}, R]](meta: _root_.io.fsq.spindle.runtime.MetaRecord[R, _]): Seq[R]
-  def ${field.name}UntypedFks(meta: _root_.io.fsq.spindle.runtime.UntypedMetaRecord): Seq[_root_.io.fsq.spindle.runtime.UntypedRecord with _root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]]
-  def ${field.name}GetObj: Seq[_root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]]
-  def ${field.name}SetObj(x: Seq[_root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${elem.text}]]): Unit
+<% val elemText = field.textUnscoped(pkg) %>
+  def ${field.name}Fks[R <: runtime.Record[R] with runtime.HasPrimaryKey[${elemText}, R]](meta: runtime.MetaRecord[R, _]): Seq[R]
+  def ${field.name}UntypedFks(meta: runtime.UntypedMetaRecord): Seq[runtime.UntypedRecord with runtime.SemitypedHasPrimaryKey[${elemText}]]
+  def ${field.name}GetObj: Seq[runtime.SemitypedHasPrimaryKey[${elemText}]]
+  def ${field.name}SetObj(x: Seq[runtime.SemitypedHasPrimaryKey[${elemText}]]): Unit
   def ${field.name}AlternateFks: Seq[AnyRef]
   def ${field.name}SetAlternateObj(x: Seq[AnyRef]): Unit
 #end

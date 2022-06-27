@@ -4,15 +4,16 @@ package io.fsq.common.algorithm.test
 
 import io.fsq.common.algorithm.ExponentialMovingAverageCounter
 import io.fsq.common.testing.matchers.{FoursquareMatchers => FM}
+import org.hamcrest.MatcherAssert
 import org.junit.{Assert => A, Test}
 
 class ExponentialMovingAverageCounterTest {
   @Test
   def testNoAverage(): Unit = {
     val counter = new ExponentialMovingAverageCounter(0.5)
-    A.assertThat(counter.getAverage(), FM.isNone[Double])
+    MatcherAssert.assertThat(counter.getAverage(), FM.isNone[Double])
     counter.increment()
-    A.assertThat(counter.getAverage(), FM.isNone[Double]) // Still None until you call startNewInterval().
+    MatcherAssert.assertThat(counter.getAverage(), FM.isNone[Double]) // Still None until you call startNewInterval().
   }
 
   @Test
@@ -37,7 +38,7 @@ class ExponentialMovingAverageCounterTest {
   @Test
   def testMultipleIntervals(): Unit = {
     val counter = new ExponentialMovingAverageCounter(0.5)
-    A.assertThat(counter.getAverage(), FM.isNone[Double])
+    MatcherAssert.assertThat(counter.getAverage(), FM.isNone[Double])
 
     (0 until 5).foreach(_ => counter.increment())
     counter.startNewInterval()

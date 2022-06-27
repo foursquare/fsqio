@@ -6,5 +6,5 @@ junit_tests(
     'src/jvm/io/fsq/spindle/common/thrift/json',
     'test/thrift/io/fsq/spindle/common/thrift/json/test',  # java-buildgen
   ],
-  sources = globs('*.java')
+  sources = globs('*.java'),
 )

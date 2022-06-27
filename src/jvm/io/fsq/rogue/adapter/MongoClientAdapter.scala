@@ -55,10 +55,36 @@ object MongoClientAdapter {
   type BaseDocument[BaseValue] = Bson with java.util.Map[String, BaseValue]
 }
 
+trait AdapterUtil[DocumentValue, Document <: MongoClientAdapter.BaseDocument[DocumentValue]] {
+
+  /** Given a MongoDB document and MongoDB shard key field name, recursively parses and returns the raw MongoDB shard
+    * key value.
+    *
+    * @param document raw MongoDB document to parse
+    * @param shardKeyFieldNames sequence representing each component of the shard key field name; e.g. if the shard key
+    *                           is a nested field such as `_id.u`, passed in argument would be `Seq["_id", "u"]`
+    * @return MongoDB DocumentValue of the shard key field
+    */
+  def parseShardKeyValue(document: Document, shardKeyFieldNames: Seq[String]): DocumentValue = {
+    val valueOpt = Option(document.get(shardKeyFieldNames(0)))
+    valueOpt
+      .map(value => {
+        shardKeyFieldNames.drop(1) match {
+          case Seq() => value
+          case remainingKeys => parseShardKeyValue(value.asInstanceOf[Document], remainingKeys)
+        }
+      })
+      .getOrElse(document)
+      .asInstanceOf[DocumentValue]
+  }
+
+}
+
 /** TODO(jacob): All of the collection methods implemented here should get rid of the
   *     option to send down a read preference, and just use the one on the query.
   */
 abstract class MongoClientAdapter[
+  MongoDatabase,
   MongoCollection[_],
   DocumentValue,
   Document <: MongoClientAdapter.BaseDocument[DocumentValue],
@@ -66,9 +92,16 @@ abstract class MongoClientAdapter[
   Record,
   Result[_]
 ](
-  collectionFactory: MongoCollectionFactory[MongoCollection, DocumentValue, Document, MetaRecord, Record],
+  collectionFactory: MongoCollectionFactory[
+    MongoDatabase,
+    MongoCollection,
+    DocumentValue,
+    Document,
+    MetaRecord,
+    Record
+  ],
   val queryHelpers: QueryUtilities[Result]
-) {
+) extends AdapterUtil[DocumentValue, Document] {
 
   /** The type of cursor used by find query processors. This is FindIterable[Document]
     * for both adapters, but they are different types.
@@ -362,22 +395,78 @@ abstract class MongoClientAdapter[
     distinctRunner(fieldsBuilder.result(): Seq[FieldType], appender)(query, fieldName, readPreferenceOpt)
   }
 
+  def explainImpl[M <: MetaRecord](
+    database: MongoDatabase,
+    command: Bson,
+    readPreference: ReadPreference
+  ): Result[Document]
+
+  def explain[M <: MetaRecord](
+    query: Query[M, _, _],
+    readPreferenceOpt: Option[ReadPreference]
+  ): Result[Document] = {
+    val queryClause = queryHelpers.transformer.transformQuery(query)
+    queryHelpers.validator.validateQuery(
+      queryClause,
+      collectionFactory.getIndexes(queryClause.meta)
+    )
+    val database = collectionFactory.getMongoDatabaseFromQuery(query)
+    val filter = MongoBuilder
+      .buildCondition(queryClause.condition)
+      .asInstanceOf[Bson]
+      .toBsonDocument(collectionFactory.documentClass, collectionFactory.getCodecRegistryFromQuery(query))
+    val command = new BsonDocument()
+      .append("find", new BsonString(query.collectionName))
+      .append("filter", filter)
+    val params = new BsonDocument()
+      .append("explain", command)
+
+    // The mongo java driver defaults to primary read preference
+    explainImpl(database, params, readPreferenceOpt.getOrElse(ReadPreference.primary()))
+  }
+
+  /** Saves a record by either calling replaceOne with upsert=true if the unique `_id` field exists in the given record,
+    * otherwise calls insert to save as a new record.
+    *
+    * NOTE(ali): When calling replaceOne with upsert, MongoDB 4.2 requires us to specify the shard key so we add it
+    * to the filter if it's not already included in the unique `_id` field.
+    *
+    * Release notes: https://docs.mongodb.com/manual/release-notes/4.2/#sharded-collections-and-replace-documents)
+    * ReplaceOne with upsert docs: https://docs.mongodb.com/v4.2/reference/method/db.collection.replaceOne/#upsert
+    * Insert docs: https://docs.mongodb.com/v4.2/reference/method/db.collection.insert/
+    *
+    * @param record rogue record to insert/replace
+    * @param document serialized record as a MongoDB document
+    * @param writeConcernOpt optional MongoDB write concern: https://docs.mongodb.com/manual/reference/write-concern/
+    * @tparam R represents either a Thrift UntypedRecord or Lift MongoRecord
+    * @return the newly inserted/replaced record wrapped in either an async or blocking `Result`
+    */
   def save[R <: Record](
     record: R,
     document: Document,
     writeConcernOpt: Option[WriteConcern]
   ): Result[R] = {
-    val collection = collectionFactory.getMongoCollectionFromRecord(record, writeConcernOpt = writeConcernOpt)
-    val collectionName = getCollectionNamespace(collection).getCollectionName
-    val instanceName = collectionFactory.getInstanceNameFromRecord(record)
+    val collection: MongoCollection[Document] =
+      collectionFactory.getMongoCollectionFromRecord(record, writeConcernOpt = writeConcernOpt)
+    val collectionName: String = getCollectionNamespace(collection).getCollectionName
+    val instanceName: String = collectionFactory.getInstanceNameFromRecord(record)
 
+    val idFieldName = "_id"
     // NOTE(jacob): This emulates the legacy behavior of DBCollection: either a replace
     //    upsert by id or an insert if there is no id present.
     def run: Result[R] = {
-      Option(document.get("_id"))
+      Option(document.get(idFieldName))
         .map(id => {
           val filter = collectionFactory.documentClass.newInstance
-          filter.put("_id", id)
+          filter.put(idFieldName, id)
+          val shardKeyNameOpt: Option[String] = collectionFactory.getShardKeyNameFromRecord(record)
+          shardKeyNameOpt.map(name => {
+            // NOTE(ali): Upsert fails if shard key is added to the filter twice.
+            if (!name.startsWith(idFieldName)) {
+              val result: DocumentValue = parseShardKeyValue(document, name.split('.'))
+              filter.put(name, result)
+            }
+          })
           val options = new ReplaceOptions().upsert(true)
           upsertWithDuplicateKeyRetry(
             replaceOneImpl(collection)(record, filter, document, options)

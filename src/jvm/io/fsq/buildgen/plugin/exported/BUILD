@@ -10,7 +10,7 @@ scalac_plugin(
     repo=oss_sonatype_repo,
       publication_metadata=io_fsq_library("""
         Scala compiler plugin that emits a text file of the symbols exported.
-    """)
+    """),
   ),
   sources = [
     'EmitExportedSymbolsPlugin.scala',

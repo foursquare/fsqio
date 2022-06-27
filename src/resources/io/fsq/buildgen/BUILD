@@ -2,5 +2,5 @@
 
 resources(
   sources = globs('*.ini'),
-  tags = ['buildgen']
+  tags = ['buildgen'],
 )

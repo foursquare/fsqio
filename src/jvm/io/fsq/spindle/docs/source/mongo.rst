@@ -34,8 +34,8 @@ Rogue queries
 
 There are two main differences between Lift Record and Spindle when it comes to creating and executing Rogue queries.
 First, queries are not created by calling Rogue methods on a model. Queries must be created explicitly by wrapping a
-model in a ``SpindleQuery`` (which we recommend aliasing to ``Q``). Second, queries are not executed by called an
-execution method on the query, the query must be sent to a ``SpindleDatabaseService`` object to execute it.
+model in a ``SpindleQuery`` (which we recommend aliasing to ``Q``). Second, queries can't be executed by an
+execution method on the query, the query must be sent to a ``QueryExecutor`` object to execute it.
 
 For example::
 
@@ -45,31 +45,40 @@ For example::
     val q = Q(Checkin).where(_.userId eqs 646).and(_.photoCount > 0)
     val checkins = db.fetch(q)
 
-Here is a basic ``SpindleDatabaseService`` implementation::
+Here is a basic ``QueryExecutor`` implementation::
 
-    import io.fsq.spindle.rogue.{SpindleDBCollectionFactory, SpindleDatabaseService}
-    import io.fsq.spindle.runtime.UntypedMetaRecord
-    import com.mongodb.{DB, Mongo, MongoClient, MongoURI}
+    import com.mongodb.MongoClient
+    import io.fsq.rogue.QueryOptimizer
+    import io.fsq.rogue.adapter.BlockingMongoClientAdapter
+    import io.fsq.rogue.adapter.BlockingResult.Implicits._
+    import io.fsq.rogue.connection.{BlockingMongoClientManager, MongoIdentifier}
+    import io.fsq.rogue.query.QueryExecutor
+    import io.fsq.rogue.util.DefaultQueryUtilities
+    import io.fsq.spindle.rogue.adapter.SpindleMongoCollectionFactory
+    import io.fsq.spindle.rogue.query.SpindleRogueSerializer
 
-    object db extends SpindleDatabaseService(ConcreteDBCollectionFactory)
+    val clientManager = new BlockingMongoClientManager
+    val clientAdapter = new BlockingMongoClientAdapter(
+      new SpindleMongoCollectionFactory(clientManager),
+      new DefaultQueryUtilities
+    )
 
-    object ConcreteDBCollectionFactory extends SpindleDBCollectionFactory {
-      lazy val db: DB = {
-        val mongoUrl = System.getenv("MONGOHQ_URL")
-        if (mongoUrl == null) {
-          // For local testing
-          new MongoClient("localhost", 27017).getDB("mydatabase")
-        } else {
-          // Connect using the MongoHQ connection string
-          val mongoURI = new MongoURI(mongoUrl)
-          val mongo = mongoURI.connectDB
-          if (mongoURI.getUsername != null && mongoURI.getUsername.nonEmpty) {
-            mongo.authenticate(mongoURI.getUsername, mongoURI.getPassword)
-          }
-          mongo
-        }
-      }
-      override def getPrimaryDB(meta: UntypedMetaRecord) = db
-      override def indexCache = None
+    val db = new QueryExecutor(
+      clientAdapter,
+      new QueryOptimizer,
+      new SpindleRogueSerializer
+    )
+
+    def initConnection(): Unit = {
+      val client = new MongoClient("localhost", 27017)
+
+      // These correspond to the `mongo_identifier` annotations on Spindle structs
+      val ids = Vector(
+        MongoIdentifier("foursquare")
+      )
+
+      // This example assumes a single backing mongo instance, rather than each id
+      // corresponding to a separate cluster/client.
+      ids.foreach(id => clientManager.defineDb(id, () => client, "myDatabase"))
     }
 

@@ -15,6 +15,7 @@ import com.twitter.util.{
   Timer,
   Try
 }
+import io.fsq.common.scala.Lists.Implicits._
 import io.fsq.macros.StackElement
 import java.util.concurrent.{ArrayBlockingQueue, TimeoutException}
 import scala.collection.JavaConverters.asJavaCollectionConverter
@@ -204,6 +205,42 @@ object Futures {
       // pull another param from the queue and start it on its merry way without waiting
       // for the entire batch to finish.
       initial.foreach({ case (param, index) => compute(param, index) })
+      Future.collect(results)
+    }
+  }
+
+  /**
+    * If we generate a large list of futures at once, we risk overloading the future pool. This
+    * allows us to generate futures in small groups and chain them together.
+    */
+  def groupedCollect[T, U, V](params: Map[T, U], limit: Int)(f: U => Future[V]): Future[Map[T, V]] = {
+    if (params.isEmpty) {
+      Future.value(Map.empty[T, V])
+    } else if (params.size <= limit) {
+      Future.collect(params.mappedValues(f(_)))
+    } else {
+      val (initial, others) = params.toVector.zipWithIndex.splitAt(limit)
+      val othersQueue = new ArrayBlockingQueue(others.size, false, others.asJavaCollection)
+      val results = params.mappedValues(_ => new Promise[V])
+      @volatile var exceptional = false
+
+      def compute(param: (T, U)): Unit = results(param._1).become({
+        f(param._2)
+          .onFailure(_ => exceptional = true)
+          .onSuccess(
+            _ =>
+              if (!exceptional) {
+                Option(othersQueue.poll()).foreach({
+                  case (nextParam, nextIndex) => compute(nextParam)
+                })
+              }
+          )
+      })
+
+      // Kick off our initial batch of computation. Upon completion, each Future will
+      // pull another param from the queue and start it on its merry way without waiting
+      // for the entire batch to finish.
+      initial.foreach({ case (param, index) => compute(param) })
       Future.collect(results)
     }
   }

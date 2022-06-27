@@ -45,6 +45,13 @@ class Tagger(Task):
       default={},
       advanced=True,
     )
+    register(
+      '--by-tag',
+      type=dict,
+      fingerprint=True,
+      default={},
+      advanced=True,
+    )
 
   @classmethod
   def product_types(cls):
@@ -53,13 +60,18 @@ class Tagger(Task):
   def execute(self):
     basenames = self.get_options().by_basename
     prefixes = self.get_options().by_prefix
-    if prefixes or basenames:
+    tags = self.get_options().by_tag
+
+    if prefixes or basenames or tags:
       for target in self.context.targets():
         this_basename = os.path.basename(target.address.spec_path)
         target._tags |= set(basenames.get(this_basename, []))
-        for prefix in prefixes:
+        for prefix, p_tags in prefixes.items():
           if target.address.spec.startswith(prefix):
-            target._tags |= set(prefixes[prefix])
+            target._tags |= set(p_tags)
+        for tag, t_tags in tags.items():
+          if tag in target._tags:
+            target._tags |= set(t_tags)
 
 
 class BuildGraphRuleViolation(object):
@@ -192,7 +204,14 @@ class Validate(Task):
     if('fscommon' in target.tags and 'should_remove_fscommon_tag' not in target.tags):
       path = target.address.spec_path
       # TODO:Jamie untangle resources, but ignore for now
-      allowed = ['com/foursquare/common', 'io/fsq', 'src/resources', 'test/resources', 'src/webapp']
+      allowed = [
+        'com/foursquare/common',
+        'com/twitter/finagle',
+        'io/fsq',
+        'src/resources',
+        'src/webapp',
+        'test/resources',
+      ]
       if not any(sub in target.address.spec_path for sub in allowed):
           yield FSCommonViolation(target, dep=None, tag='fscommon')
 

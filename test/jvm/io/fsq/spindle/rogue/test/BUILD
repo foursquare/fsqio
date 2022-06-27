@@ -14,10 +14,10 @@ junit_tests(
     'src/jvm/io/fsq/rogue/index',
     'src/jvm/io/fsq/rogue/indexchecker',
     'src/jvm/io/fsq/spindle/rogue',
+    'src/jvm/io/fsq/spindle/rogue/adapter',
     'src/jvm/io/fsq/spindle/runtime',
-    'test/jvm/io/fsq/rogue/test',
+    'test/jvm/io/fsq/spindle/rogue/testlib',
     'test/jvm/io/fsq/util/compiler/test',
-    'test/thrift/io/fsq/spindle/rogue/test',
+    'test/thrift/io/fsq/spindle/rogue/testlib',
   ],
-  concurrency="SERIAL",
 )

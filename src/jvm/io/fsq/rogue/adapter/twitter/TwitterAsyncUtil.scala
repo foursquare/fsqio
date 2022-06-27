@@ -114,7 +114,7 @@ object TwitterAsyncUtil {
     sub.promise
   }
 
-  def seqResult[T](op: Publisher[T]): Future[Vector[T]] = {
+  def seqResult[T](op: Publisher[T]): Future[Seq[T]] = {
     val b = Vector.newBuilder[T]
     forEachResult[T](op, elem => b += elem).map(_ => b.result())
   }

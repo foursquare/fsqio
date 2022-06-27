@@ -9,7 +9,6 @@ scala_library(
     '3rdparty:mongodb-drivers',
     'src/jvm/io/fsq/field',
     'src/jvm/io/fsq/rogue/index',
-    'src/jvm/io/fsq/rogue/types',
   ],
   provides=scala_artifact(
     org='io.fsq',

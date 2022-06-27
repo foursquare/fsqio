@@ -4,17 +4,17 @@
   import _root_.io.fsq.spindle.codegen.runtime.ScalaField
 %>
 <%@ val field: ScalaField %>
-
+<%@ val pkg: String %>
 #if (field.defaultValueIsSet || field.builderRequired)
-def ${field.escapedName}: ${field.renderType.text}
+  def ${field.escapedName}: ${field.textUnscoped(pkg)}
 #end
-def ${field.name}Option: Option[${field.renderType.text}]
+  def ${field.name}Option: Option[${field.textUnscoped(pkg)}]
 #if (field.defaultValueIsSet)
-  def ${field.name}OrDefault: ${field.renderType.text}
+  def ${field.name}OrDefault: ${field.textUnscoped(pkg)}
 #end
-def ${field.name}OrNull: ${field.renderType.text}
-def ${field.name}OrThrow: ${field.renderType.text}
-def ${field.isSetName}: Boolean
+  def ${field.name}OrNull: ${field.textUnscoped(pkg)}
+  def ${field.name}OrThrow: ${field.textUnscoped(pkg)}
+  def ${field.isSetName}: Boolean
 #if (field.isForeignKey)
 <% render("def_fk.ssp", Map("field" -> field)) %>
 #end

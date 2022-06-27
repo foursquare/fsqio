@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.adapter.twitter
 
-import com.mongodb.{DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException}
+import com.mongodb.{DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException, ReadPreference}
 import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.client.model.{
   BulkWriteOptions,
@@ -14,7 +14,7 @@ import com.mongodb.client.model.{
   UpdateOptions,
   WriteModel
 }
-import com.mongodb.reactivestreams.client.{FindPublisher, MongoCollection}
+import com.mongodb.reactivestreams.client.{FindPublisher, MongoCollection, MongoDatabase}
 import com.twitter.util.{Future, Try => TwitterTry}
 import io.fsq.rogue.{Iter, Query, RogueException}
 import io.fsq.rogue.adapter.{MongoClientAdapter, MongoCollectionFactory}
@@ -33,6 +33,7 @@ object AsyncMongoClientAdapter {
     MetaRecord,
     Record
   ] = MongoCollectionFactory[
+    MongoDatabase,
     MongoCollection,
     DocumentValue,
     Document,
@@ -49,7 +50,7 @@ class AsyncMongoClientAdapter[
 ](
   collectionFactory: AsyncMongoClientAdapter.CollectionFactory[DocumentValue, Document, MetaRecord, Record],
   queryHelpers: QueryUtilities[Future]
-) extends MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, Future](
+) extends MongoClientAdapter[MongoDatabase, MongoCollection, DocumentValue, Document, MetaRecord, Record, Future](
     collectionFactory,
     queryHelpers
   ) {
@@ -154,6 +155,14 @@ class AsyncMongoClientAdapter[
         accumulator
       )
       .map(_ => resultAccessor)
+  }
+
+  override def explainImpl[M <: MetaRecord](
+    database: MongoDatabase,
+    command: Bson,
+    readPreference: ReadPreference
+  ): Future[Document] = {
+    TwitterAsyncUtil.singleResult(database.runCommand(command, readPreference, collectionFactory.documentClass))
   }
 
   override protected def forEachProcessor[T](

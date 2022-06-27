@@ -33,11 +33,6 @@ Copyright 2015 Foursquare Labs Inc. All Rights Reserved.
                m2compatible="true"
                usepoms="true"
                root="https://maven.twttr.com/"/>
-      <!-- Publishes an s2 jar publicly. Thank you! -->
-      <ibiblio name="jnegre"
-               m2compatible="true"
-               usepoms="true"
-               root="https://bintray.com/artifact/download/jnegre/maven"/>
       <!-- Cascading specific maven repo -->
       <ibiblio name="conjars"
                m2compatible="true"

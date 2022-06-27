@@ -9,6 +9,7 @@ class NotImplementedException(s: String) extends Exception(s)
 
 trait RenderType {
   def text: String
+  def textUnscoped: String = text
   def boxedText: String
   def defaultText: String
   def compareTemplate: String
@@ -154,6 +155,7 @@ case class ExceptionRenderType(override val text: String) extends RefRenderType 
 trait ContainerRenderType extends RefRenderType {
   def container: String
   def emptyContainer: String = container // In cases where a SubClass is preferred for creating an empty container
+  def containerUnscoped: String = container
   override def fieldDefTemplate: String = "field/def_container.ssp"
   override def fieldImplTemplate: String = "field/impl_container.ssp"
   override def fieldProxyTemplate: String = "field/proxy_container.ssp"
@@ -165,9 +167,11 @@ trait ContainerRenderType extends RefRenderType {
 abstract class Container1RenderType(
   override val container: String,
   override val emptyContainer: String,
+  override val containerUnscoped: String,
   val elem: RenderType
 ) extends ContainerRenderType {
   override def text: String = "%s[%s]".format(container, elem.text)
+  override def textUnscoped: String = "%s[%s]".format(containerUnscoped, elem.textUnscoped)
 }
 
 // TODO: Make this immutable.Seq
@@ -175,6 +179,7 @@ case class SeqRenderType(e1: RenderType)
   extends Container1RenderType(
     "scala.collection.Seq",
     "scala.collection.immutable.Vector",
+    "Seq",
     e1
   ) {
   override def ttype: TType = TType.LIST
@@ -202,6 +207,7 @@ case class SetRenderType(e1: RenderType)
   extends Container1RenderType(
     "scala.collection.immutable.Set",
     "scala.collection.immutable.Set",
+    "Set",
     e1
   ) {
   override def ttype: TType = TType.SET
@@ -211,13 +217,18 @@ case class SetRenderType(e1: RenderType)
   override def underlying: SetRenderType = SetRenderType(e1.underlying)
 }
 
-abstract class Container2RenderType(override val container: String, val elem1: RenderType, val elem2: RenderType)
-  extends ContainerRenderType {
+abstract class Container2RenderType(
+  override val container: String,
+  override val containerUnscoped: String,
+  val elem1: RenderType,
+  val elem2: RenderType
+) extends ContainerRenderType {
   override def text: String = "%s[%s, %s]".format(container, elem1.text, elem2.text)
+  override def textUnscoped: String = "%s[%s, %s]".format(containerUnscoped, elem1.textUnscoped, elem2.textUnscoped)
 }
 
 case class MapRenderType(e1: RenderType, e2: RenderType)
-  extends Container2RenderType("scala.collection.immutable.Map", e1, e2) {
+  extends Container2RenderType("scala.collection.immutable.Map", "Map", e1, e2) {
   override def ttype: TType = TType.MAP
   override def compareTemplate: String = "compare/map.ssp"
   override def fieldWriteTemplate: String = "write/map.ssp"

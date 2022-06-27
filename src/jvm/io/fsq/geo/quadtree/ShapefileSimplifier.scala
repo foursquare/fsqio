@@ -150,7 +150,6 @@ object ShapefileSimplifier {
     val saveStore = storeFactory.createNewDataStore(create.asJava)
     val oldSchema = originalSource.getSchema
     val descriptorList: java.util.List[AttributeDescriptor] = new java.util.ArrayList[AttributeDescriptor]()
-    var index: Int = 0
     descriptorList.add(oldSchema.getGeometryDescriptor)
 
     // Rename the key attribute, if applicable

@@ -4,6 +4,7 @@ python_library(
   sources = globs('*.py'),
   dependencies = [
     '3rdparty/python:pantsbuild.pants',
+    'src/python/fsqio/pants/buildgen/core/subsystems',
     'src/python/fsqio/pants/buildgen/jvm/scala',
   ],
   tags = [
@@ -28,6 +29,6 @@ python_library(
       'Programming Language :: Python',
       'Topic :: Software Development :: Build Tools',
       'Topic :: Software Development :: Testing',
-    ]
-  )
+    ],
+  ),
 )

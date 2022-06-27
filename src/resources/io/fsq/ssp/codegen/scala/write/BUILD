@@ -4,5 +4,5 @@ ssp_template(
   name = 'write',
   sources = globs('*.ssp'),
   dependencies = [
-  ]
+  ],
 )

@@ -38,6 +38,8 @@ class MypyTask(ResolveRequirementsTaskBase):
              help='Determines if Pants stops due to error.')
     register('--ignore-missing-imports', type=bool, default=True,
              help='Ignore missing type stubs if not found. Useful for mostly untyped code bases.')
+    register('--site-packages', type=bool, default=False,
+             help='Enable searching for PEP 561 compliant packages.')
     register('--config-file', type=file_option, fingerprint=True,
              help='Path to MyPy config (in ini format).')
 
@@ -97,6 +99,9 @@ class MypyTask(ResolveRequirementsTaskBase):
 
     if self.get_options().ignore_missing_imports:
       mypy_options.append('--ignore-missing-imports')
+
+    if not self.get_options().site_packages:
+      mypy_options.append('--no-site-packages')
 
     cmd = [py3_interpreter, '-m', 'mypy'] + mypy_options + self.get_passthru_args() + sources
     self.context.log.debug('mypy command: {}'.format(' '.join(cmd)))

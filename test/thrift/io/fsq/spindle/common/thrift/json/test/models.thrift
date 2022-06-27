@@ -46,3 +46,9 @@ struct ListOfListsOfLists {
 struct MapOfLists {
   1: optional map<string, list<string>> mapHolder
 }
+
+enum TestEnum {
+  zero = 0 (string_value="zero")
+  one = 1 (string_value="one")
+  two = 2 (string_value="two")
+}

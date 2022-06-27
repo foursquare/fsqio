@@ -13,6 +13,9 @@ class ScalaField(
 ) extends FieldProxy
   with HasAnnotations {
   val escapedName: String = CodegenUtil.escapeScalaFieldName(name)
+  def textUnscoped(pkg: String): String = {
+    renderType.textUnscoped.replaceAll(s"$pkg\\.", "")
+  }
   val wireNameOpt: Option[String] = annotations.get("wire_name")
   val wireName: String = wireNameOpt.getOrElse(name)
   val varName: String = "_" + name

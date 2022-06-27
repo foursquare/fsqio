@@ -107,4 +107,27 @@ class FuturesTest {
     blockingBarrier.await()
     Await.result(completedF)
   }
+
+  @Test
+  def testGroupedCollectMap(): Unit = {
+    val params = Map("A" -> 1, "B" -> 2, "C" -> 3, "D" -> 4, "E" -> 5)
+    val results = Map("A" -> "1", "B" -> "2", "C" -> "3", "D" -> "4", "E" -> "5")
+
+    for {
+      size <- Vector(1, 3, 7, 7, 8, 9, 20)
+    } {
+      val whoops = new Exception("whoops")
+      def execute(i: Int) = Future.value(i.toString)
+      def throwsOn5(i: Int) = if (i == 5) Future.exception(whoops) else execute(i)
+
+      A.assertEquals(results, Await.result(Futures.groupedCollect(params, size)(execute)))
+      try {
+        Await.result(Futures.groupedCollect(params, size)(throwsOn5))
+        A.fail("the closure should have thrown an exception")
+      } catch {
+        case e: Exception =>
+          A.assertEquals(whoops, e)
+      }
+    }
+  }
 }
