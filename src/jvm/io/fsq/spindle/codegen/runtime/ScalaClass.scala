@@ -71,6 +71,10 @@ class ScalaClass(
     }
   }
 
+  // Check shard key annotation is valid and field in shard key annotations actually exist
+  val shardKeyAnnotationOpt: Option[String] = this.annotations.get("shard_key")
+  shardKeyAnnotationOpt.foreach(Validator.validateShardKeyAnnotations(_, this.fields.map(_.name), this.name))
+
   // Check that index annotations parse and indexed fields actually exist
   {
     IndexParser.parse(this.annotations) match {

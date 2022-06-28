@@ -37,7 +37,6 @@ object ModOps extends Enumeration {
   val SetOnInsert: Op = Value("$setOnInsert")
   val Unset: Op = Value("$unset")
   val Push: Op = Value("$push")
-  val PushAll: Op = Value("$pushAll")
   val AddToSet: Op = Value("$addToSet")
   val Pop: Op = Value("$pop")
   val Pull: Op = Value("$pull")
@@ -469,6 +468,9 @@ abstract class AbstractListModifyField[V, DB, M, CC[X] <: Iterable[X]](val field
   def setTo(vs: Traversable[V]) =
     new ModifyClause(ModOps.Set, field.name -> QueryHelpers.list(valuesToDB(vs)))
 
+  def setOnInsertTo(vs: Traversable[V]): ModifyClause =
+    new ModifyClause(ModOps.SetOnInsert, field.name -> QueryHelpers.list(valuesToDB(vs)))
+
   def push(v: V) =
     new ModifyClause(ModOps.Push, field.name -> valueToDB(v))
 
@@ -477,9 +479,6 @@ abstract class AbstractListModifyField[V, DB, M, CC[X] <: Iterable[X]](val field
 
   def push(vs: Traversable[V], slice: Int) =
     new ModifyPushEachSliceClause(field.name, slice, valuesToDB(vs))
-
-  def pushAll(vs: Traversable[V]) =
-    new ModifyClause(ModOps.PushAll, field.name -> QueryHelpers.list(valuesToDB(vs)))
 
   def addToSet(v: V) =
     new ModifyClause(ModOps.AddToSet, field.name -> valueToDB(v))

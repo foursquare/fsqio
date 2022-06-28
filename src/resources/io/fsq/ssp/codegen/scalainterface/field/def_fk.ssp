@@ -4,9 +4,10 @@
   import _root_.io.fsq.spindle.codegen.runtime.ScalaField
 %>
 <%@ val field: ScalaField %>
-  def ${field.name}Fk[R <: _root_.io.fsq.spindle.runtime.Record[R] with _root_.io.fsq.spindle.runtime.HasPrimaryKey[${field.renderType.text}, R]](meta: _root_.io.fsq.spindle.runtime.MetaRecord[R, _]): Option[R]
-  def ${field.name}UntypedFk(meta: _root_.io.fsq.spindle.runtime.UntypedMetaRecord): Option[_root_.io.fsq.spindle.runtime.UntypedRecord with _root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${field.renderType.text}]]
-  def ${field.name}GetObj: Option[_root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${field.renderType.text}]]
-  def ${field.name}SetObj(x: _root_.io.fsq.spindle.runtime.SemitypedHasPrimaryKey[${field.renderType.text}]): Unit
+<%@ val pkg: String %>
+  def ${field.name}Fk[R <: runtime.Record[R] with runtime.HasPrimaryKey[${field.textUnscoped(pkg)}, R]](meta: runtime.MetaRecord[R, _]): Option[R]
+  def ${field.name}UntypedFk(meta: runtime.UntypedMetaRecord): Option[runtime.UntypedRecord with runtime.SemitypedHasPrimaryKey[${field.textUnscoped(pkg)}]]
+  def ${field.name}GetObj: Option[runtime.SemitypedHasPrimaryKey[${field.textUnscoped(pkg)}]]
+  def ${field.name}SetObj(x: runtime.SemitypedHasPrimaryKey[${field.textUnscoped(pkg)}]): Unit
   def ${field.name}AlternateFk: Option[AnyRef]
   def ${field.name}SetAlternateObj(x: AnyRef): Unit

@@ -9,9 +9,10 @@ import io.fsq.rogue.Rogue
 import io.fsq.spindle.common.thrift.bson.TBSONObjectProtocol
 import io.fsq.spindle.rogue.{SpindleQuery => Q, SpindleRogue}
 import io.fsq.spindle.rogue.query.SpindleRogueSerializer
-import io.fsq.spindle.rogue.query.test.gen.{SerdeTestRecord, SerdeTestRecordMeta}
+import io.fsq.spindle.rogue.query.testlib.gen.{SerdeTestRecord, SerdeTestRecordMeta}
 import io.fsq.spindle.runtime.FieldDescriptor
 import org.bson.types.ObjectId
+import org.hamcrest.MatcherAssert
 import org.junit.{Assert, Test}
 import scala.math.max
 import scala.util.Random
@@ -408,7 +409,7 @@ class SpindleRogueSerializerTest extends Rogue with SpindleRogue {
         }
       }
 
-      Assert.assertThat(
+      MatcherAssert.assertThat(
         tupleResult.productIterator.toVector.asInstanceOf[Vector[Option[Any]]],
         FoursquareMatchers.equalsCollection(selectedFields.map(_.getter(testRecord)))
       )

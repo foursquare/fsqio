@@ -1,6 +1,6 @@
 # Copyright 2016 Foursquare Labs Inc. All Rights Reserved.
 
-junit_tests(
+scala_library(
   name = 'specs2',
   sources = globs('*.scala'),
   dependencies = [

@@ -7,6 +7,7 @@ import io.fsq.rogue.Query
 import io.fsq.rogue.adapter.MongoCollectionFactory
 import io.fsq.rogue.connection.{MongoClientManager, MongoIdentifier}
 import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
+import io.fsq.rogue.shard.ShardedCollection
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
 import org.bson.codecs.configuration.CodecRegistry
 
@@ -26,6 +27,7 @@ class LiftMongoCollectionFactory[
 ](
   clientManager: MongoClientManager[MongoClient, MongoDatabase, MongoCollection]
 ) extends MongoCollectionFactory[
+    MongoDatabase,
     MongoCollection,
     Object,
     BasicDBObject,
@@ -63,6 +65,13 @@ class LiftMongoCollectionFactory[
     )
   }
 
+  override def getShardKeyNameFromRecord[R <: MongoRecord[_]](record: R): Option[String] = {
+    record.meta match {
+      case meta: ShardedCollection[_] => Some(meta.shardKey)
+      case _ => None
+    }
+  }
+
   override def getMongoCollectionFromMetaRecord[M <: MongoRecord[_] with MongoMetaRecord[_]](
     meta: M,
     readPreferenceOpt: Option[ReadPreference] = None,
@@ -93,6 +102,10 @@ class LiftMongoCollectionFactory[
     )(
       identity
     )
+  }
+
+  def getMongoDatabaseFromQuery[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): MongoDatabase = {
+    clientManager.use(getIdentifier(query.meta))(identity)
   }
 
   override def getInstanceNameFromQuery[M <: MongoRecord[_] with MongoMetaRecord[_]](

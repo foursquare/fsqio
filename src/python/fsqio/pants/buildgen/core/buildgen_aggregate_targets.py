@@ -16,7 +16,7 @@ class BuildgenAggregateTargets(BuildgenTask):
 
   def __init__(self, context, workdir):
     super(BuildgenAggregateTargets, self).__init__(context, workdir)
-    self._target_alias_whitelist = {'buildgen_target_bag'}
+    self._target_alias_allowlist = {'buildgen_target_bag'}
 
   def generate_target_type(self, build_graph, target_alias, source_tree, target_bag, additional_generated_targets=None,
                            ignored_targets_regex=None):
@@ -33,7 +33,7 @@ class BuildgenAggregateTargets(BuildgenTask):
     self.adjust_target_build_file(
       build_graph.get_target(Address.parse(target_bag)),
       generated_deps,
-      whitelist=self._target_alias_whitelist,
+      allowlist=self._target_alias_allowlist,
     )
 
   def execute(self):

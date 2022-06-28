@@ -3,7 +3,8 @@
   import _root_.io.fsq.spindle.codegen.runtime.StructLike
 %>
 <%@ val cls: StructLike %>
-abstract ${cls.name}LiftAdapter(
-  val underlyingLift: _root_.io.fsq.spindle.runtime.LiftAdapter[${cls.primaryKeyField.get.renderType.text}]
+<%@ val pkg: String %>
+abstract class ${cls.name}LiftAdapter(
+  val underlyingLift: runtime.LiftAdapter[${cls.primaryKeyField.get.textUnscoped(pkg)}]
 ) extends ${cls.name} {
 }

@@ -23,6 +23,7 @@ class SpindleMongoCollectionFactory[
 ](
   clientManager: MongoClientManager[MongoClient, MongoDatabase, MongoCollection]
 ) extends MongoCollectionFactory[
+    MongoDatabase,
     MongoCollection,
     Object,
     BasicDBObject,
@@ -64,6 +65,20 @@ class SpindleMongoCollectionFactory[
     )
   }
 
+  override def getShardKeyNameFromRecord[R <: UntypedRecord](record: R): Option[String] = {
+    val meta = record.meta
+    // annotation looks like: `shard_key="id.userId:hashed"
+    val shardKeyOpt: Option[String] = meta.annotations.get("shard_key").flatMap(_.split(':').headOption)
+    // parts from above example: `Vector(id, userId)`
+    val partsOpt: Option[Seq[String]] = shardKeyOpt.map(_.split('.'))
+    partsOpt.map(
+      parts =>
+        fieldNameToWireName(meta, parts).getOrElse(
+          throw new Exception(s"Struct $meta declares a shard key on non-existent field $parts")
+        )
+    )
+  }
+
   override def getMongoCollectionFromMetaRecord[M <: UntypedMetaRecord](
     meta: M,
     readPreferenceOpt: Option[ReadPreference] = None,
@@ -90,6 +105,10 @@ class SpindleMongoCollectionFactory[
       readPreferenceOpt = readPreferenceOpt,
       writeConcernOpt = writeConcernOpt
     )
+  }
+
+  def getMongoDatabaseFromQuery[M <: UntypedMetaRecord](query: Query[M, _, _]): MongoDatabase = {
+    clientManager.use(getIdentifier(query.meta))(identity)
   }
 
   override def getInstanceNameFromQuery[M <: UntypedMetaRecord](

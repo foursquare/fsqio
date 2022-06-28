@@ -10,15 +10,16 @@ import _root_.io.fsq.spindle.codegen.runtime.{RenderType, ScalaFunction, TypeRef
 <%@ val forceReturnTypeToUnit: Boolean = false %>
 <%@ val addResultHandlerArg: Boolean = false %>
 <%@ val checkedExceptions: Seq[String] = Seq.empty[String] %>
+<%@ val pkg: String = "" %>
 <%
 val arguments = function.argz.map(arg => (arg.name, arg.renderType.text)) ++
   (if (addResultHandlerArg)
-    Seq(("resultHandler", "org.apache.thrift.async.AsyncMethodCallback[AsyncClient.%s_call]" format function.name))
+    Seq(("resultHandler", "thrift.async.AsyncMethodCallback[AsyncClient.%s_call]" format function.name))
    else
      Seq.empty
   )
 
-val argumentsText = arguments.map { case (n, t) => "%s: %s" format (n, t) }.mkString(", ")
+val argumentsText = arguments.map { case (n, t) => "%s: %s" format (n, t) }.mkString(", ").replaceAll(s"$pkg\\.", "")
 
 val returnRenderType: Option[RenderType] = (function
   .returnTypeIdOption
@@ -27,7 +28,7 @@ val returnRenderType: Option[RenderType] = (function
   .flatMap(resolver.resolveType(_).right.toOption)
   .map(RenderType(_, Annotations.empty)))
 
-val returnTypeText = {
+val returnTypeText = ({
  if (wrapReturnTypeInFuture) {
    if (returnRenderType.isDefined && !function.oneWayOption.exists(x => x)) {
      ": _Future[%s]" format returnRenderType.map(_.text).getOrElse(throw new IllegalStateException("Unexpected None value"))
@@ -41,9 +42,9 @@ val returnTypeText = {
      ""
    }
  }
-}
+}).replaceAll(s"$pkg\\.", "")
 %>
 #if (checkedExceptions.nonEmpty)
-@throws(<%= checkedExceptions.map(x => "classOf[%s]" format x).mkString(", ") %>)
+    @throws(<%= checkedExceptions.map(x => "classOf[%s]" format x).mkString(", ") %>)
 #end
-def ${namePrefix}${function.name}(${argumentsText})${returnTypeText}
+    def ${namePrefix}${function.name}(${argumentsText})${returnTypeText}

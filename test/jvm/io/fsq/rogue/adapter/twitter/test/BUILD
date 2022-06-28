@@ -4,6 +4,7 @@ junit_tests(
   name = 'test',
   sources = globs('*.scala'),
   dependencies = [
+    '3rdparty:hamcrest-core',
     '3rdparty:junit',
     '3rdparty:mongodb-drivers',
     '3rdparty:twitter-util',

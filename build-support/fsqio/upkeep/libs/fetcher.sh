@@ -28,7 +28,7 @@ function cached_download() {
     if [[ ${FSQ_RUNNING_ON_OSX} == "True" ]] && [[ ! -f ${FS_WGET_BINARY} ]]; then
       (curl "-fL${FSQ_CURL_PROGRESS}" ${FS_CURL_EXTRA_PARAMS} "${url}" >"${download_path}") || _fetch_failed="True"
     else
-      (${FS_WGET_BINARY} ${FS_WGET_EXTRA_PARAMS} -O ${download_path} ${url}) || _fetch_failed="True"
+      (${FS_WGET_BINARY} ${FS_WGET_EXTRA_PARAMS} -nc -O ${download_path} ${url}) || _fetch_failed="True"
     fi
     (
       [[ -z ${_fetch_failed} ]] &&

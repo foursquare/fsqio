@@ -5,6 +5,7 @@
   import _root_.io.fsq.spindle.__shaded_for_spindle_bootstrap__.descriptors.Struct
 %>
 <%@ val cls: StructLike %>
+<%@ val pkg: String %>
 <%@ val resolver: TypeReferenceResolver %>
 object ${cls.name} {
 <%
@@ -14,7 +15,7 @@ object ${cls.name} {
     override val generateProxy: Boolean = true
   }
   val clsContainer = cls.name
-  render("class.ssp", Map("cls" -> argsStruct, "clsContainer" -> clsContainer))
+  render("class.ssp", Map("cls" -> argsStruct, "clsContainer" -> clsContainer, "pkg" -> pkg))
 %>
 
   def createRawRecord: ${cls.name}

@@ -6,8 +6,10 @@ import io.fsq.rogue.Query
 import io.fsq.rogue.Rogue._
 import io.fsq.rogue.indexchecker.MongoIndexChecker
 import io.fsq.spindle.rogue.SpindleQuery
-import io.fsq.spindle.rogue.test.gen.{MutuallyRecursive1, ThriftIndexTestModel}
-import io.fsq.spindle.rogue.test.gen.IdsTypedefs.IndexTestId
+import io.fsq.spindle.rogue.adapter.SpindleMongoCollectionFactory
+import io.fsq.spindle.rogue.testlib.SpindleMongoTest
+import io.fsq.spindle.rogue.testlib.gen.{MutuallyRecursive1, ThriftIndexTestModel}
+import io.fsq.spindle.rogue.testlib.gen.IdsTypedefs.IndexTestId
 import io.fsq.spindle.runtime.UntypedMetaRecord
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
@@ -18,28 +20,28 @@ import scala.collection.immutable.ListMap
 /**
   * Test spindle index annotations.
   */
-class MongoIndexCheckerTest extends JUnitMustMatchers {
+class MongoIndexCheckerTest extends SpindleMongoTest with JUnitMustMatchers {
   type IndexModelType = ThriftIndexTestModel
-  val db = new TestDatabaseService
+  val collectionFactory = new SpindleMongoCollectionFactory(blockingClientManager)
   val Q = SpindleQuery
 
   @Test
   def testGetIndexes {
-    val indexesOpt = db.dbCollectionFactory.getIndexes(Q(ThriftIndexTestModel))
+    val indexesOpt = collectionFactory.getIndexes(ThriftIndexTestModel)
 
     indexesOpt.map(_.map(_.asListMap)) must_== Some(
-      List(
-        ListMap("_id" -> "1"),
-        ListMap("a" -> "1", "b" -> "1", "c" -> "1"),
-        ListMap("m" -> "1", "a" -> "1"),
-        ListMap("l" -> "1"),
-        ListMap("ll" -> "2d", "b" -> "1"),
-        ListMap("e.i" -> "-1")
+      Vector(
+        ListMap("_id" -> 1),
+        ListMap("a" -> 1, "b" -> 1, "c" -> 1),
+        ListMap("m" -> 1, "a" -> 1),
+        ListMap("l" -> 1),
+        ListMap("ll" -> "2d", "b" -> 1),
+        ListMap("e.i" -> -1)
       )
     )
 
     indexesOpt.map(_.map(_.toString)) must_== Some(
-      List(
+      Vector(
         "_id:1",
         "a:1, b:1, c:1",
         "m:1, a:1",
@@ -52,9 +54,9 @@ class MongoIndexCheckerTest extends JUnitMustMatchers {
 
   @Test
   def testGetIndexesWithMutuallyRecursiveStructs {
-    val indexesOpt = db.dbCollectionFactory.getIndexes(Q(MutuallyRecursive1))
+    val indexesOpt = collectionFactory.getIndexes(MutuallyRecursive1)
     indexesOpt.map(_.map(_.toString)) must_== Some(
-      List(
+      Vector(
         "_id:1",
         "m2.m1:1"
       )
@@ -64,7 +66,7 @@ class MongoIndexCheckerTest extends JUnitMustMatchers {
   @Test
   def testIndexExpectations {
     def test[M <: UntypedMetaRecord](query: Query[M, _, _]) = {
-      val indexesOpt = db.dbCollectionFactory.getIndexes(query)
+      val indexesOpt = collectionFactory.getIndexes(query.meta)
       indexesOpt.forall(indexes => MongoIndexChecker.validateIndexExpectations(query, indexes))
     }
 
@@ -117,7 +119,7 @@ class MongoIndexCheckerTest extends JUnitMustMatchers {
   def testMatchesIndex {
     def test[M <: UntypedMetaRecord](query: Query[M, _, _]) = {
       val q = query.asInstanceOf[Query[_, _, _]]
-      val indexesOpt = db.dbCollectionFactory.getIndexes(query)
+      val indexesOpt = collectionFactory.getIndexes(query.meta)
       indexesOpt.forall(
         indexes =>
           MongoIndexChecker.validateIndexExpectations(q, indexes) &&

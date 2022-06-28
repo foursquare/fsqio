@@ -102,7 +102,7 @@ class BuildFileManipulator(object):
     return guess or DEFAULT_INDENT
 
   @classmethod
-  def load(cls, address, target_aliases):
+  def load(cls, address, target_aliases, artifact_type=None, provides=None):
     """A BuildFileManipulator factory class method.
 
     Note that BuildFileManipulator requires a very strict formatting of target declaration.
@@ -115,6 +115,9 @@ class BuildFileManipulator(object):
     :param name: The name of the target (without the spec path or colon) to operate on.
     :target aliases: The callables injected into the build file context that we should treat
       as target declarations.
+    :provides list[string]: A list of provides lines provided by the buildgen task.
+      Will be codegen into the target unless an existing provides is preceded by a comment string.
+      Additional opt-outs by target type or path are offered by the task options.
     """
     name = address.target_name
     with open(address.rel_path, 'r') as f:
@@ -196,7 +199,7 @@ class BuildFileManipulator(object):
     target_source_lines = source_lines[target_start:target_end]
 
     # TODO(pl): This would be good logging
-    # print(astpp.dump(target_call))
+    # print(ast.dump(target_call))
     # print("Target source lines")
     # for line in target_source_lines:
     #   print(line)
@@ -343,6 +346,52 @@ class BuildFileManipulator(object):
       deps_start = -1
       deps_end = -1
 
+    ######
+    # Provides support injected here.
+    ######
+
+    # Finding a comment above an existing provides toggles this to True - buildgen will
+    # overwrite the provides when forced.
+    provides_forced = False
+
+    # If the task provides a list of provides lines (inferred from target address),
+    # look for existing provides lines in case there already are provides forced with a comment.
+    if provides:
+      def get_provides_node(target_call):
+        for keyword in target_call.keywords:
+          if keyword.arg == 'provides':
+            return keyword.value
+        return None
+
+      provides_node = get_provides_node(target_call)
+      if provides_node:
+        # NOTE(mateo): Only support buildgen opt-out comments directly before an existing provides.
+        # Opting out entirely requires adding the target address to the blocklist in the options.
+        last_provides_lineno = provides_node.lineno
+
+        # Peek up and grab any whitespace/comments above us
+        provides_peek_lineno = provides_node.lineno - 1
+        provides_comment = []
+        provides_peek_str = source_lines[provides_peek_lineno - 1].strip()
+        if provides_peek_str.startswith('#'):
+          provides_comment.insert(0, provides_peek_str.lstrip(' #'))
+          provides_forced = True
+
+        provides_interval_index = target_call_intervals.index(
+          provides_node.lineno - target_call.lineno
+        )
+        provides_start = target_call_intervals[provides_interval_index]
+        provides_end = target_call_intervals[provides_interval_index + 1]
+
+        while is_ignored_line(target_source_lines[provides_end - 1]):
+          provides_end -= 1
+      else:
+        provides_start = -1
+        provides_end = -1
+    else:
+      provides_start = -1
+      provides_end = -1
+
     return cls(name=name,
                address=address,
                build_file_source_lines=source_lines,
@@ -350,6 +399,9 @@ class BuildFileManipulator(object):
                target_interval=(target_start, target_end),
                dependencies=dependencies,
                dependencies_interval=(deps_start, deps_end),
+               provides=provides,
+               provides_interval=(provides_start, provides_end),
+               provides_forced=provides_forced,
                indent=indent)
 
   def __init__(self,
@@ -360,15 +412,22 @@ class BuildFileManipulator(object):
                target_interval,
                dependencies,
                dependencies_interval,
+               provides,
+               provides_interval=None,
+               provides_forced=None,
                indent=2):
     """See BuildFileManipulator.load() for how to construct one as a user."""
     self.name = name
     self.target_address = address
+    self.provides_forced = provides_forced
+
     self._build_file_source_lines = build_file_source_lines
     self._target_source_lines = target_source_lines
     self._target_interval = target_interval
     self._dependencies_interval = dependencies_interval
     self._dependencies_by_address = {}
+    self._provides = provides
+    self._provides_interval = provides_interval
     self._indent = indent
 
     for dep in dependencies:
@@ -423,6 +482,29 @@ class BuildFileManipulator(object):
       yield '{}],'.format(' ' * self._indent)
     return list(dep_lines()) if deps else []
 
+  def provides_lines(self):
+
+    provides = self._provides
+
+    # The target's provides text will be constructed in the buildgen_target's class.
+    # It can read its own config to identify artifact type, spec_path and so on.
+    def formatted_provides():
+      yield '{}provides = {}('.format(' ' * self._indent, "scala_artifact")
+      for line in provides:
+        yield '{}{}'.format(' ' * self._indent * 2, line.strip())
+      yield '{}),'.format(' ' * self._indent)
+    return list(formatted_provides())
+
+  def get_provides_lines(self):
+    # If forced with a comment, use the pre-existing provides call from the BUILD file.
+    # Otherwise, use the provides passed by the buildgen task.
+    if self.provides_forced:
+      provides_begin, provides_end = self._provides_interval
+      provides_lines = self._target_source_lines[provides_begin:provides_end]
+    else:
+      provides_lines = self.provides_lines()
+    return provides_lines
+
   def target_lines(self):
     """The formatted target_type(...) lines for this target.
 
@@ -432,6 +514,9 @@ class BuildFileManipulator(object):
     target_lines = self._target_source_lines[:]
     deps_begin, deps_end = self._dependencies_interval
     target_lines[deps_begin:deps_end] = self.dependency_lines()
+    if self._provides:
+      provides_begin, provides_end = self._provides_interval
+      target_lines[provides_begin:provides_end] = self.get_provides_lines()
     return target_lines
 
   def build_file_lines(self):

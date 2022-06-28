@@ -18,25 +18,24 @@ def escapeQuotes(str: String): String = str.replace("\"", "\\\"")
 // exhaustiveness checking when pattern matching on the enumeration.
 --%>
 sealed abstract class ${enum.name} private (
-    override val id: Int,
-    override val name: String,
-    override val stringValue: String
-) extends _root_.io.fsq.spindle.runtime.Enum[${enum.name}]
-  with org.apache.thrift.TEnum {
+  override val id: Int,
+  override val name: String,
+  override val stringValue: String
+) extends runtime.Enum[${enum.name}] with thrift.TEnum {
   override def meta = ${enum.name}
 }
 
-object ${enum.name} extends _root_.io.fsq.spindle.runtime.EnumMeta[${enum.name}] {
+object ${enum.name} extends runtime.EnumMeta[${enum.name}] {
 <%--
 // Making enumeration instances case objects provides exhaustiveness checking
 // when pattern matching on the enumeration.
 --%>
 #for (elem <- enum.elements)
-  <% val alt = elem.alternateValue.getOrElse(elem.name) %>
+<% val alt = elem.alternateValue.getOrElse(elem.name) %>
   object ${elem.name} extends ${enum.name}(${elem.value.toString}, "${elem.name}", "${alt}")
 #end
   final case class UnknownWireValue(val v: Any) extends ${enum.name}(-1, "?", "?")
 
-  implicit val __$ordering: _root_.scala.math.Ordering[${enum.name}]
-  implicit val __$comparator: _root_.java.util.Comparator[${enum.name}]
+  implicit val __$ordering: Ordering[${enum.name}]
+  implicit val __$comparator: java.util.Comparator[${enum.name}]
 }

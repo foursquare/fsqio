@@ -1,13 +1,14 @@
 # coding=utf-8
 # Copyright 2014 Foursquare Labs Inc. All Rights Reserved.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import, division, print_function
 
 from collections import defaultdict
 from hashlib import sha1
 import json
 import logging
 import os
+import sysconfig
 from textwrap import dedent
 
 from pants.base.build_environment import get_buildroot
@@ -172,12 +173,16 @@ class BuildgenPython(BuildgenTask):
     # type: () -> List[str]
     """Return the standard_lib directory of any configured virtualenv."""
     # Additional venvs can be passed as options but this falls back to using the pants virtualenv.
-    pantsenv = os.path.join(os.path.dirname(os.__file__))
+    pantsenv = sysconfig.get_path("purelib") or ""  # HACK(jeffreyc): thanks, mypy.
     virtualenvs = [pantsenv]
+    platlib = sysconfig.get_path("platlib") or ""  # HACK(jeffreyc): thanks, mypy.
+    if pantsenv != platlib:
+      virtualenvs.append(platlib)
     user_envs = self.get_options().additional_virtualenv_roots
-    if user_envs:
-      virtualenvs.extend(user_envs)
-    return virtualenvs
+    for user_env in user_envs:
+      # HACK(jeffreyc): append `site-packages` for API compatibility.
+      virtualenvs.append(os.path.join(user_env, "site-packages"))
+    return [ve for ve in virtualenvs if ve]
 
   @memoized_property
   def venv_modules(self):
@@ -232,12 +237,6 @@ class BuildgenPython(BuildgenTask):
     hasher = sha1()
     reqs_hash = stable_json_hash([sorted(list(reqs))])
     hasher.update(reqs_hash)
-
-    # This adds the python version to the hash.
-    venv_version_file = os.path.join(os.path.dirname(os.__file__), 'orig-prefix.txt')
-    with open(venv_version_file, 'rb') as f:
-      version_string = f.read()
-      hasher.update(version_string)
 
     # Add virtualenv roots to the hash. Analysis should be redone if pointed at a new venv, even if all else the same.
     for venv in self.python_virtual_envs:

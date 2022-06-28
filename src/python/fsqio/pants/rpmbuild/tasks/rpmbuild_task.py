@@ -32,6 +32,9 @@ DEFAULT_PLATFORMS = {
   'centos7': {
     'base': 'centos:7',
   },
+  'amazonlinux2': {
+    'base': 'amazonlinux:2',
+  },
 }
 
 
@@ -250,6 +253,11 @@ class RpmbuildTask(Task):
         build_dir,
       ])
       with self.docker_workunit(name='build-image', cmd=build_image_cmd) as workunit:
+        # NOTE(jeffreyc): Did you stumble upon this comment trying to build an
+        # RPM on your M1 Mac? Did you think "I know, I can fix this by adding
+        # `--platform linux/amd64`"? Were you sad when that didn't work? ARM
+        # Docker under Rosetta does not appear to support the `--platform` arg.
+        # Life will be simpler if you run this on your dev box, instead.
         self.context.log.debug('Executing: {}'.format(' '.join(build_image_cmd)))
         proc = subprocess.Popen(build_image_cmd, stdout=workunit.output('stdout'), stderr=subprocess.STDOUT)
         returncode = proc.wait()
@@ -287,6 +295,10 @@ class RpmbuildTask(Task):
       with self.docker_workunit(name='extract-rpms', cmd=extract_rpms_cmd) as workunit:
         proc = subprocess.Popen(extract_rpms_cmd, stdout=subprocess.PIPE, stderr=None)
         with tarfile.open(fileobj=proc.stdout, mode='r|*') as tar:
+          # NOTE(jeffreyc): if you end up here because of `Exception message: 'utf8' codec can't decode byte 0x80 in
+          # position 4: invalid start byte`, this is a known bug due to encountering a non-ASCII filename in the tar
+          # file. The RPMs should still be generated. As a workaround, you can copy the files out of
+          # `dist/rpmbuild/RPMS/x86_64`.
           for entry in tar:
             name = entry.name
             if (name.startswith('home/rpmuser/rpmbuild/RPMS/') or name.startswith('home/rpmuser/rpmbuild/SRPMS/')) and name.endswith('.rpm'):

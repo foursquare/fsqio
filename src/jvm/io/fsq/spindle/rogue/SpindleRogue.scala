@@ -4,6 +4,7 @@ package io.fsq.spindle.rogue
 
 import io.fsq.field.Field
 import io.fsq.rogue.{BSONType, Rogue}
+import io.fsq.spindle.rogue.query.SpindleRogueSerializer
 import io.fsq.spindle.runtime.{Enum, EnumIntField, EnumStringField, MetaRecord, Record}
 
 trait SpindleRogue {
@@ -100,8 +101,8 @@ trait SpindleRogue {
   ): SpindleEmbeddedRecordListModifyField[R, MM] = new SpindleEmbeddedRecordListModifyField(f)
 
   class SpindleRecordIsBSONType[R <: Record[R]] extends BSONType[R] {
-    private val serializer = new SpindleRogueWriteSerializer
-    override def asBSONObject(v: R): AnyRef = serializer.toDBObject(v)
+    private val serializer = new SpindleRogueSerializer
+    override def asBSONObject(v: R): AnyRef = serializer.writeToDocument(v)
   }
 
   object _SpindleRecordIsBSONType extends SpindleRecordIsBSONType[Nothing]

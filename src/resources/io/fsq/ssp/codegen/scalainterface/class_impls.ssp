@@ -4,12 +4,8 @@
 %>
 <%@ val cls: StructLike %>
 <%@ val clsContainer: String %>
-final class Raw${cls.name} 
-  extends _root_.io.fsq.spindle.runtime.MutableRecord[${cls.name}]
-#if(cls.generateMutable)
-    with Mutable${cls.name} {
-#else
-    with ${cls.name} {
-#end
-<% render("class_impls_getsetfields.ssp", Map("cls" -> cls)) %>
+<% val trayt = if (cls.generateMutable) s"Mutable${cls.name}" else cls.name %>
+final class Raw${cls.name}
+  extends runtime.MutableRecord[${cls.name}] with ${trayt} {
+  def getSetFields: Seq[Any]
 }

@@ -8,74 +8,48 @@
 <%@ val source: ProgramSource %>
 <%@ val templatePath: String %>
 <%@ val version: String %>
-
+<% val pkg = program.pkg.getOrElse("") %>
 #if (program.pkg.isDefined)
-package ${program.pkg}
+package ${pkg}
 #else
 // WARNING: No package statement because no java namespace specified in Thrift file.
 #end
 
 <%
   val importsToAdd = new scala.collection.mutable.HashSet[String]()
+  importsToAdd.add("io.fsq.spindle.runtime")
+  importsToAdd.add("org.apache.thrift")
   if (program.services.nonEmpty) {
     importsToAdd.add("com.twitter.util.{Future => _Future}")
   }
   if (program.structs.nonEmpty) {
     importsToAdd.add("org.apache.thrift.protocol.{TField => _TField}")
     importsToAdd.add("org.apache.thrift.{TFieldIdEnum => _TFieldIdEnum}")
-
-    program.structs.foreach { cls =>
-      cls.fields.foreach { field =>
-        if (field.isForeignKey && field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.Container1RenderType]) {
-          importsToAdd.add("_root_.io.fsq.spindle.runtime.{ForeignKeySeqFieldDescriptor => _FKSeqFieldDesc}")
-        } else if (field.isForeignKey && !field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.ContainerRenderType]) {
-          importsToAdd.add("_root_.io.fsq.spindle.runtime.{ForeignKeyFieldDescriptor => _FKFieldDesc}")
-        } else if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.BitfieldStructRenderType]) {
-          importsToAdd.add("_root_.io.fsq.spindle.runtime.{BitfieldFieldDescriptor => _BitFieldDesc}")
-        } else if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.ExceptionRenderType]) {
-          importsToAdd.add("_root_.io.fsq.spindle.runtime.{ExceptionFieldDescriptor => _ExceptionFieldDesc}")
-        } else if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.StructRenderType]) {
-          importsToAdd.add("_root_.io.fsq.spindle.runtime.{StructFieldDescriptor => _StructFieldDesc}")
-        } else if (field.renderType.isInstanceOf[_root_.io.fsq.spindle.codegen.runtime.EnumRenderType]) {
-          importsToAdd.add("_root_.io.fsq.spindle.runtime.{OptionalFieldDescriptor => _OptFieldDesc}")
-        } else {
-          importsToAdd.add("_root_.io.fsq.spindle.runtime.{OptionalFieldDescriptor => _OptFieldDesc}")
-        }
-      }
-    }
   }
   val orderedInputs = importsToAdd.toVector.sorted
 %>
-
 #for (input <- orderedInputs)
-  import ${input}
+import ${input}
 #end
-
 #if (program.constants.nonEmpty)
 <% render("constants.ssp", Map("constants" -> program.constants, "baseName" -> source.capitalizedBaseName)) %>
 #end
-
 #for (enum <- program.enums)
-<% render("enum.ssp", Map("enum" -> enum)) %>
+<% render("enum.ssp", Map("enum" -> enum, "pkg" -> pkg)) %>
 #end
-
 #if (program.typedefs.nonEmpty)
 <% render("typedefs.ssp", Map("typedefs" -> program.typedefs, "baseName" -> source.capitalizedBaseName)) %>
 #end
-
 #for (cls <- program.structs)
-<% render("class.ssp", Map("cls" -> cls, "clsContainer" -> "")) %>
+<% render("class.ssp", Map("cls" -> cls, "clsContainer" -> "", "pkg" -> pkg)) %>
 #end
-
 #for (union <- program.unions)
 <%-- /* TODO: make this support real unions */ --%>
-<% render("class.ssp", Map("cls" -> union, "clsContainer" -> "")) %>
+<% render("class.ssp", Map("cls" -> union, "clsContainer" -> "", "pkg" -> pkg)) %>
 #end
-
 #for (exception <- program.exceptions)
-<% render("exception.ssp", Map("cls" -> exception, "resolver" -> program.resolver)) %>
+<% render("exception.ssp", Map("cls" -> exception, "resolver" -> program.resolver, "pkg" -> pkg)) %>
 #end
-
 #for (service <- program.services)
-<% render("service.ssp", Map("service" -> service, "resolver" -> program.resolver)) %>
+<% render("service.ssp", Map("service" -> service, "resolver" -> program.resolver, "pkg" -> pkg)) %>
 #end

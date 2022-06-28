@@ -8,6 +8,7 @@ import io.fsq.rogue.{
   AbstractListQueryField,
   AbstractModifyField,
   AbstractQueryField,
+  DummyField,
   SelectableDummyField
 }
 import io.fsq.spindle.common.thrift.bson.TBSONObjectProtocol
@@ -22,6 +23,11 @@ class SpindleEnumIntQueryField[M, E <: Enum[E]](field: Field[E, M] with EnumIntF
 
 class SpindleEnumIntListQueryField[M, E <: Enum[E]](field: Field[Seq[E], M] with EnumIntField)
   extends AbstractListQueryField[E, E, Int, M, Seq](field) {
+
+  override def at(i: Int): DummyField[E, M] with EnumIntField = {
+    new DummyField[E, M](field.name + "." + i.toString, field.owner) with EnumIntField
+  }
+
   override def valueToDB(e: E): Int = e.id
 }
 
@@ -52,6 +58,11 @@ class SpindleEnumStringQueryField[M, E <: Enum[E]](field: Field[E, M] with EnumS
 
 class SpindleEnumStringListQueryField[M, E <: Enum[E]](field: Field[Seq[E], M] with EnumStringField)
   extends AbstractListQueryField[E, E, String, M, Seq](field) {
+
+  override def at(i: Int): DummyField[E, M] with EnumStringField = {
+    new DummyField[E, M](field.name + "." + i.toString, field.owner) with EnumStringField
+  }
+
   override def valueToDB(e: E): String = e.stringValue
 }
 

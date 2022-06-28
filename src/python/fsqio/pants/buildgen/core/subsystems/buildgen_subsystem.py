@@ -31,7 +31,7 @@ class BuildgenSubsystem(object):
         help="Source directory that holds targets to buildgen - defaults to the configured source roots.",
       )
       register(
-        '--target-whitelist',
+        '--target-allowlist',
         default=['target'],
         advanced=True,
         type=list,
@@ -69,7 +69,7 @@ class BuildgenSubsystem(object):
       return BuildgenSubsystem(
         options.source_dirs,
         options.test_dirs,
-        options.target_whitelist,
+        options.target_allowlist,
         options.managed_dependency_aliases,
         options.buildgen_target_bags,
         options.dry_run,
@@ -80,7 +80,7 @@ class BuildgenSubsystem(object):
     self,
     source_dirs,
     test_dirs,
-    target_whitelist,
+    target_allowlist,
     managed_dependency_aliases,
     buildgen_target_bags,
     dry_run,
@@ -88,7 +88,7 @@ class BuildgenSubsystem(object):
   ):
     self.source_dirs = source_dirs
     self.test_dirs = test_dirs
-    self.target_alias_whitelist = target_whitelist
+    self.target_alias_allowlist = target_allowlist
     self.managed_dependency_aliases = managed_dependency_aliases
     self.buildgen_target_bags = buildgen_target_bags
     self.dry_run = dry_run

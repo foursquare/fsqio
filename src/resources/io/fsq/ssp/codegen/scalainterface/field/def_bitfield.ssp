@@ -8,7 +8,6 @@
   val renderType = field.renderType.asInstanceOf[BitfieldStructRenderType]
   render("../" + renderType.ref.fieldDefTemplate, Map("field" -> field))
 %>
-
   def ${field.escapedName}: Int
   def ${field.name}Option: Option[Int]
   def ${field.name}OrDefault: Int

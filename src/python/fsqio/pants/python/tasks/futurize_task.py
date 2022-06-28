@@ -78,28 +78,38 @@ class FuturizeTask(ResolveRequirementsTaskBase):
       self.context.log.debug('No Python sources to check.')
       return
 
-    futurize_opts = ['-j8']
+    futurize_opts = [
+      '-j8',
+    ]
 
-    if opts.stage == 1:
-      futurize_opts.append('-1')
-    elif opts.stage == 2:
-      futurize_opts.append('-2')
+    if opts.stage in (0, 1, 2):
+      futurize_opts.append('-{}'.format(opts.stage))
     else:
-      raise TaskError('--stage can only have a value of 1 or 2, not {}'.format(opts.stage))
+      raise TaskError('--stage can only have a value of 0, 1 or 2, not {}'.format(opts.stage))
+
+    if opts.stage in (0, 2):
+      futurize_opts.extend(['-p', '-u'])
 
     if not opts.check:
       futurize_opts.extend(['-w', '-n', '--no-diff'])
 
-    cmd = ['.pvenvs/fs/bin/futurize'] + futurize_opts + self.get_passthru_args() + sources
+    cmd = ['.pvenvs/fs3/bin/futurize'] + futurize_opts + self.get_passthru_args() + sources
     self.context.log.debug('futurize command: {}'.format(' '.join(cmd)))
 
     with self.context.new_workunit(
-      name='check',
+      name='check' if opts.check else 'apply',
       labels=[WorkUnitLabel.TOOL, WorkUnitLabel.RUN],
       log_config=WorkUnit.LogConfig(level=self.get_options().level, colors=self.get_options().colors),
       cmd=' '.join(cmd)) as workunit:
-      proc = subprocess.Popen(cmd, stdout=workunit.output('stdout'), stderr=subprocess.STDOUT)
-      return_code = proc.wait()
+      proc = subprocess.Popen(cmd, stdout=workunit.output('stdout'), stderr=subprocess.PIPE)
+      _, stderr = proc.communicate()
+      refactor_count = stderr.count('RefactoringTool: Refactored')
 
-      if return_code != 0:
-        raise TaskError('futurize failed: code={}'.format(return_code))
+      if not opts.check:
+        workunit.output('stdout').write('Refactored {} source files.'.format(refactor_count))
+
+    if proc.returncode != 0:
+      raise TaskError('futurize failed: code={}'.format(proc.returncode))
+
+    if opts.check and refactor_count:
+      raise TaskError('futurize would have applied changes to {} files.'.format(refactor_count))

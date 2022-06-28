@@ -1,9 +1,13 @@
 # Rogue
 
 Rogue is a type-safe internal Scala DSL for constructing and executing find and modify commands against
-MongoDB in the Lift web framework. It is fully expressive with respect to the basic options provided
+MongoDB. It is fully expressive with respect to the basic options provided
 by MongoDB's native query language, but in a type-safe manner, building on the record types specified in
-your Lift models. An example:
+your models. While originally written for use with the [Lift framework](https://github.com/lift/framework),
+Rogue is model-agnostic and includes bundled support for thrift models via [Spindle](../spindle/docs/source/mongo.rst),
+as well as examples with vanilla Scala case classes in the [test suite](../../../../../test/jvm/io/fsq/rogue/query/test/TrivialORMQueryTest.scala).
+
+An example:
 
     Venue.where(_.mayor eqs 1234).and(_.tags contains "Thai").fetch(10)
 
@@ -33,37 +37,51 @@ are in place to prevent you from accidentally doing things you don't want to do 
 
 ## Installation
 
-Because Rogue is designed to work with several versions of lift-mongodb-record,
-you'll want to declare your dependency on Rogue as `intransitive` and declare an explicit dependency
-on the version of Lift you want to target. In sbt, that would look like the following:
-
-    val rogueField      = "com.foursquare" %% "rogue-field"         % "2.5.0" intransitive()
-    val rogueCore       = "com.foursquare" %% "rogue-core"          % "2.5.1" intransitive()
-    val rogueLift       = "com.foursquare" %% "rogue-lift"          % "2.5.1" intransitive()
-    val rogueIndex      = "com.foursquare" %% "rogue-index"         % "2.5.1" intransitive()
-    val liftMongoRecord = "net.liftweb"    %% "lift-mongodb-record" % "2.6"
-
-Rogue 2.5.x requires Lift 2.6-RC1 or later. For support for earlier versions of Lift, use Rogue 2.4.0 or earlier.
-If you encounter problems using Rogue with other versions of Lift, please let us know.
-
-Join the [rogue-users google group](http://groups.google.com/group/rogue-users) for help, bug reports,
-feature requests, and general discussion on Rogue.
+Jars are published on an as needed basis and can be found on maven central [here](https://search.maven.org/search?q=g:io.fsq%20rogue).
 
 ## Setup
 
-Define your record classes in Lift like you would normally (see [TestModels.scala](https://github.com/foursquare/rogue/blob/master/rogue-lift/src/test/scala/com/foursquare/rogue/TestModels.scala) for examples).
+### Lift
+
+Define your record classes in Lift like you would normally (see the [test models](../../../../../test/jvm/io/fsq/rogue/lift/testlib/Models.scala) for examples).
 
 Then anywhere you want to use rogue queries against these records, import the following:
 
     import com.foursquare.rogue.LiftRogue._
 
-See [EndToEndTest.scala](https://github.com/foursquare/rogue/blob/master/rogue-lift/src/test/scala/com/foursquare/rogue/EndToEndTest.scala) for a complete working example.
+See [EndToEndTest.scala](../../../../../test/jvm/io/fsq/rogue/lift/test/EndToEndTest.scala) for a complete working example.
+
+### Spindle
+
+See [Spindle docs](../spindle/docs/source/mongo.rst).
+
+## Async Clients
+
+Rogue supports both the async and blocking versions of the mongo java driver clients. There is a bundled
+async client adapter using [twitter-util Futures](https://github.com/twitter/util#futures):
+
+    val clientManager = new AsyncMongoClientManager
+    val clientAdapter = new AsyncMongoClientAdapter(
+      new SpindleMongoCollectionFactory(clientManager),
+      new DefaultQueryUtilities
+    )
+
+    val db = new QueryExecutor(
+      clientAdapter,
+      new QueryOptimizer,
+      new SpindleRogueSerializer
+    )
 
 ## More Examples
 
-[QueryTest.scala](https://github.com/foursquare/rogue/blob/master/rogue-lift/src/test/scala/com/foursquare/rogue/QueryTest.scala) contains sample Records and examples of every kind of query supported by Rogue.
-It also indicates what each query translates to in MongoDB's JSON query language.
-It's a good place to look when getting started using Rogue.
+### Query Tests
+
+[Lift](../../../../../test/jvm/io/fsq/rogue/lift/test/QueryTest.scala)
+[Spindle](../../../../../test/jvm/io/fsq/spindle/rogue/test/QueryTest.scala)
+
+The query tests contain sample Records and examples of every kind of query supported by Rogue, and indicate
+what each query translates to in MongoDB's JSON query language. They're a good place to look when getting
+started using Rogue.
 
 NB: The examples in QueryTest only construct query objects; none are actually executed.
 Once you have a query object, the following operations are supported (listed here because
@@ -99,22 +117,23 @@ for "findAndModify" query objects
     modify.updateOne(returnNew = ...)
     modify.upsertOne(returnNew = ...)
 
+### End to End Tests
+
+[Lift](../../../../../test/jvm/io/fsq/rogue/lift/test/EndToEndTest.scala)
+[Spindle](../../../../../test/jvm/io/fsq/spindle/rogue/test/EndToEndTest.scala)
+
+### TrivialORM Query Tests
+
+[TrivialORMQueryTest.scala](../../../../../test/jvm/io/fsq/rogue/query/test/TrivialORMQueryTest.scala)
+is a proof of concept test suite using vanilla Scala case classes.
+
 ## Releases
 
-The latest release is 2.5.1. See the [changelog](https://github.com/foursquare/rogue/blob/master/CHANGELOG.md) for more details.
-
-## Dependencies
-
-lift-mongodb-record, mongodb, joda-time, junit. These dependencies are managed by the build system.
+We currently push updates here and publish artifacts on an as needed basis. Please open an issue to request an update.
 
 ## Maintainers
 
 Rogue was initially developed by Foursquare Labs for internal use --
-nearly all of the MongoDB queries in foursquare's code base go through this library.
-The current maintainers are:
-
-- Jason Liszka jliszka@foursquare.com
-- Jorge Ortiz jorge@foursquare.com
-- Neil Sanchala nsanch@foursquare.com
+nearly all of the MongoDB queries in foursquare's codebase go through this library.
 
 Contributions welcome!

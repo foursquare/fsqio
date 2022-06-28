@@ -9,6 +9,25 @@ import io.fsq.rogue.adapter.lift.LiftMongoCollectionFactory
 import io.fsq.rogue.connection.testlib.RogueMongoTest
 import io.fsq.rogue.lift.LiftRogue
 import io.fsq.rogue.lift.LiftRogue._
+import io.fsq.rogue.lift.testlib.{
+  CalendarFld,
+  CalendarInner,
+  ClaimStatus,
+  Like,
+  RogueLiftTestMetaRecord,
+  RogueTestMongoIdentifier,
+  Tip,
+  V1,
+  V2,
+  V3,
+  V4,
+  V5,
+  V6,
+  Venue,
+  VenueClaim,
+  VenueClaimBson,
+  VenueStatus
+}
 import io.fsq.rogue.query.QueryExecutor
 import io.fsq.rogue.query.lift.LiftRogueSerializer
 import io.fsq.rogue.util.DefaultQueryUtilities
@@ -81,7 +100,7 @@ class EndToEndTest extends RogueMongoTest with JUnitMustMatchers with BlockingRe
 
     blockingClientManager.defineDb(
       RogueTestMongoIdentifier,
-      blockingMongoClient,
+      () => blockingMongoClient,
       "rogue-lift-EndToEndTest"
     )
     RogueLiftTestMetaRecord.clientManager = blockingClientManager

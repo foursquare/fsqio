@@ -30,6 +30,6 @@ python_library(
       'Programming Language :: Python',
       'Topic :: Software Development :: Build Tools',
       'Topic :: Software Development :: Testing',
-    ]
-  )
+    ],
+  ),
 )

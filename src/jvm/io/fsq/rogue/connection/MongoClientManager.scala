@@ -15,8 +15,23 @@ import scala.collection.concurrent.{Map => ConcurrentMap}
   */
 abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]] {
 
-  private val dbs: ConcurrentMap[MongoIdentifier, (MongoClient, String)] = {
-    new ConcurrentHashMap[MongoIdentifier, (MongoClient, String)].asScala
+  class LazyClient(
+    clientFn: () => MongoClient,
+    val db: String
+  ) {
+    @volatile private var instantiatedClientOpt: Option[MongoClient] = None
+    def client: MongoClient = this.synchronized {
+      instantiatedClientOpt.getOrElse({
+        val cl = clientFn()
+        instantiatedClientOpt = Some(cl)
+        cl
+      })
+    }
+    def get: Option[MongoClient] = instantiatedClientOpt
+  }
+
+  private val dbs: ConcurrentMap[MongoIdentifier, LazyClient] = {
+    new ConcurrentHashMap[MongoIdentifier, LazyClient].asScala
   }
 
   /** Close a client connection, without removing it from the internal map. */
@@ -42,16 +57,22 @@ abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]
 
   def defineDb(
     name: MongoIdentifier,
-    client: MongoClient,
+    clientFn: () => MongoClient,
     dbName: String
-  ): Option[(MongoClient, String)] = {
-    dbs.put(name, (client, dbName))
+  ): Unit = {
+    dbs.put(name, new LazyClient(clientFn, dbName))
   }
 
-  def getClient(name: MongoIdentifier): Option[(MongoClient, String)] = dbs.get(name)
+  def getClient(name: MongoIdentifier): Option[(MongoClient, String)] = {
+    dbs
+      .get(name)
+      .map(lazyClient => {
+        lazyClient.client -> lazyClient.db
+      })
+  }
 
   def getClientOrThrow(name: MongoIdentifier): (MongoClient, String) = {
-    dbs.get(name).getOrElse(throw new MongoException(s"Mongo not found: $name"))
+    getClient(name).getOrElse(throw new MongoException(s"Mongo not found: $name"))
   }
 
   def getCodecRegistryOrThrow(name: MongoIdentifier): CodecRegistry = {
@@ -104,8 +125,8 @@ abstract class MongoClientManager[MongoClient, MongoDatabase, MongoCollection[_]
 
   /** Close all clients and clear the internal map. */
   def closeAll(): Unit = {
-    dbs.valuesIterator.foreach({
-      case (client, _) => closeClient(client)
+    dbs.valuesIterator.foreach(lazyClient => {
+      lazyClient.get.foreach(closeClient)
     })
     dbs.clear()
   }

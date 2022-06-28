@@ -14,6 +14,9 @@ trait IndexCheckerLogger {
   def logIndexHit(query: Query[_, _, _], index: UntypedMongoIndex): Unit
 }
 
+// TODO(jacob): A good chunk of this should be deleted in favor of their io.fsq.rogue.util
+//    replacements. We need to do a bit of package refactoring to make that really doable
+//    to avoid a circular dep.
 object QueryHelpers {
 
   trait QueryLogger extends IndexCheckerLogger {

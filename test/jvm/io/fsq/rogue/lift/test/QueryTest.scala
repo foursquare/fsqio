@@ -5,6 +5,25 @@ package io.fsq.rogue.lift.test
 import com.mongodb.ReadPreference
 import io.fsq.rogue.{BSONType, Degrees, LatLong, MongoType, Query, QueryOptimizer, Radians}
 import io.fsq.rogue.lift.LiftRogue._
+import io.fsq.rogue.lift.testlib.{
+  ClaimStatus,
+  Comment,
+  ConsumerPrivilege,
+  Like,
+  OAuthConsumer,
+  RejectReason,
+  Tip,
+  V1,
+  V2,
+  V3,
+  V4,
+  V5,
+  V6,
+  Venue,
+  VenueClaim,
+  VenueClaimBson,
+  VenueStatus
+}
 import io.fsq.util.compiler.test.CompilerForNegativeTests
 import java.util.regex.Pattern
 import net.liftweb.mongodb.record._
@@ -621,12 +640,16 @@ class QueryTest extends JUnitMustMatchers {
       .toString() must_== query + """{"$set": {"popularity": [NumberLong("5")]}}""" + suffix
     Venue
       .where(_.legacyid eqs 1)
+      .modify(_.popularity setOnInsertTo List(5))
+      .toString() must_== query + """{"$setOnInsert": {"popularity": [NumberLong("5")]}}""" + suffix
+    Venue
+      .where(_.legacyid eqs 1)
       .modify(_.popularity push 5)
       .toString() must_== query + """{"$push": {"popularity": NumberLong("5")}}""" + suffix
     Venue
       .where(_.legacyid eqs 1)
-      .modify(_.tags pushAll List("a", "b"))
-      .toString() must_== query + """{"$pushAll": {"tags": ["a", "b"]}}""" + suffix
+      .modify(_.tags push List("a", "b"))
+      .toString() must_== query + """{"$push": {"tags": {"$each": ["a", "b"]}}}""" + suffix
     Venue
       .where(_.legacyid eqs 1)
       .modify(_.tags addToSet "a")
@@ -1214,10 +1237,9 @@ class QueryTest extends JUnitMustMatchers {
   @Test
   def thingsThatShouldntCompile {
     val compiler = new CompilerForNegativeTests(
-      List(
+      Vector(
         "io.fsq.rogue._",
-        "io.fsq.rogue.lift._",
-        "io.fsq.rogue.lift.test._",
+        "io.fsq.rogue.lift.testlib._",
         "io.fsq.rogue.lift.LiftRogue._",
         "org.bson.types.ObjectId",
         "org.joda.time.DateTime"

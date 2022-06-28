@@ -3,5 +3,5 @@
 
 resources(
   name='plugin',
-  sources=['plugin.py']
+  sources=['plugin.py'],
 )

@@ -1,6 +1,24 @@
 # Copyright 2016 Foursquare Labs Inc. All Rights Reserved.
 
-scala_version = '2.11.8'
+scala_version = '2.11.12'
+
+
+# NOTE(jacob): We have some tests for pants plugin functionality that need the pants
+#   runner script and a few core BUILD files available in the working directory. These
+#   will otherwise succeed locally, but fail when run under a chroot in ci unless we
+#   explicitly pull them in.
+files(
+  name = 'pants',
+  sources = [
+    '3rdparty/BUILD',
+    'BUILD.tools',
+    'pants',
+  ],
+  scope = "runtime",
+  tags = [
+    'opensource',
+  ]
+)
 
 
 # NOTE: Now that we have full use of Ivy and target scopes, this should probably be adjusted.

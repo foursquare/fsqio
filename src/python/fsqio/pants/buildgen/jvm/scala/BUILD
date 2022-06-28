@@ -4,6 +4,7 @@ python_library(
   dependencies = [
     '3rdparty/python:pantsbuild.pants',
     'src/python/fsqio/pants/buildgen/core',
+    'src/python/fsqio/pants/buildgen/core/subsystems',
     'src/resources/io/fsq/buildgen',
   ],
   tags = [

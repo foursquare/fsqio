@@ -15,7 +15,8 @@ import io.fsq.rogue.{
 }
 import io.fsq.spindle.rogue.SpindleQuery
 import io.fsq.spindle.rogue.SpindleRogue._
-import io.fsq.spindle.rogue.test.gen.{
+import io.fsq.spindle.rogue.testlib.{Models, SpindleMongoTest}
+import io.fsq.spindle.rogue.testlib.gen.{
   ThriftClaimStatus,
   ThriftLike,
   ThriftTip,
@@ -24,17 +25,17 @@ import io.fsq.spindle.rogue.test.gen.{
   ThriftVenueClaimBson,
   ThriftVenueStatus
 }
-import io.fsq.spindle.rogue.test.gen.IdsTypedefs.{LikeId, TipId, VenueClaimId, VenueId}
+import io.fsq.spindle.rogue.testlib.gen.IdsTypedefs.{LikeId, TipId, VenueClaimId, VenueId}
 import java.util.regex.Pattern
 import org.bson.types.ObjectId
-import org.junit.{After, Assert, Test}
+import org.junit.{Assert, Test}
 import org.specs2.matcher.JUnitMustMatchers
 
 /**
   * Contains tests that test the interaction of Rogue with a real mongo.
   */
-class EndToEndTest extends JUnitMustMatchers {
-  val db = new TestDatabaseService
+class EndToEndTest extends SpindleMongoTest with JUnitMustMatchers {
+  lazy val db = queryExecutor
   val Q = SpindleQuery
 
   def baseTestVenue(): ThriftVenue = {
@@ -74,18 +75,6 @@ class EndToEndTest extends JUnitMustMatchers {
       .result()
   }
 
-  @After
-  def cleanupTestData: Unit = {
-    db.bulkDelete_!!(Q(ThriftVenue))
-    db.count(Q(ThriftVenue)) must_== 0
-
-    db.bulkDelete_!!(Q(ThriftVenueClaim))
-    db.count(Q(ThriftVenueClaim)) must_== 0
-
-    db.bulkDelete_!!(Q(ThriftLike)) //TODO(rogue-shards): should have shards and be an allShards.bulkDelete_!!!
-    db.count(Q(ThriftLike)) must_== 0
-  }
-
   @Test
   def testInsertAll {
     val v1 = baseTestVenue
@@ -96,7 +85,7 @@ class EndToEndTest extends JUnitMustMatchers {
     } catch {
       case e: Throwable =>
     }
-    db.count(Q(ThriftVenue)) must_== 2
+    db.count(Q(ThriftVenue)).unwrap must_== 2
   }
 
   @Test
@@ -148,18 +137,18 @@ class EndToEndTest extends JUnitMustMatchers {
     val v = db.insert(baseTestVenue())
 
     val base = Q(ThriftVenue).where(_.id eqs v.id)
-    db.fetch(base.select(_.legacyid)) must_== Vector(v.legacyidOption)
-    db.fetch(base.select(_.legacyid, _.userid)) must_== Vector((v.legacyidOption, v.useridOption))
-    db.fetch(base.select(_.legacyid, _.userid, _.mayor)) must_== Vector(
+    db.fetch(base.select(_.legacyid)).unwrap must_== Vector(v.legacyidOption)
+    db.fetch(base.select(_.legacyid, _.userid)).unwrap must_== Vector((v.legacyidOption, v.useridOption))
+    db.fetch(base.select(_.legacyid, _.userid, _.mayor)).unwrap must_== Vector(
       (v.legacyidOption, v.useridOption, v.mayorOption)
     )
-    db.fetch(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count)) must_== Vector(
+    db.fetch(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count)).unwrap must_== Vector(
       (v.legacyidOption, v.useridOption, v.mayorOption, v.mayor_countOption)
     )
-    db.fetch(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed)) must_== Vector(
+    db.fetch(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed)).unwrap must_== Vector(
       (v.legacyidOption, v.useridOption, v.mayorOption, v.mayor_countOption, v.closedOption)
     )
-    db.fetch(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags)) must_== Vector(
+    db.fetch(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags)).unwrap must_== Vector(
       (v.legacyidOption, v.useridOption, v.mayorOption, v.mayor_countOption, v.closedOption, v.tagsOption)
     )
   }
@@ -167,7 +156,7 @@ class EndToEndTest extends JUnitMustMatchers {
   @Test
   def selectEnum: Unit = {
     val v = db.insert(baseTestVenue())
-    db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.status)) must_== Vector(Some(ThriftVenueStatus.open))
+    db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.status)).unwrap must_== Vector(Some(ThriftVenueStatus.open))
   }
 
   @Test
@@ -175,19 +164,22 @@ class EndToEndTest extends JUnitMustMatchers {
     val v = db.insert(baseTestVenue())
 
     val base = Q(ThriftVenue).where(_.id eqs v.id)
-    db.fetch(base.selectCase(_.legacyid, V1)) must_== Vector(V1(v.legacyidOption))
-    db.fetch(base.selectCase(_.legacyid, _.userid, V2)) must_== Vector(V2(v.legacyidOption, v.useridOption))
-    db.fetch(base.selectCase(_.legacyid, _.userid, _.mayor, V3)) must_== Vector(
-      V3(v.legacyidOption, v.useridOption, v.mayorOption)
+    db.fetch(base.selectCase(_.legacyid, Models.V1)).unwrap must_== Vector(Models.V1(v.legacyidOption))
+    db.fetch(base.selectCase(_.legacyid, _.userid, Models.V2)).unwrap must_== Vector(
+      Models.V2(v.legacyidOption, v.useridOption)
     )
-    db.fetch(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, V4)) must_== Vector(
-      V4(v.legacyidOption, v.useridOption, v.mayorOption, v.mayor_countOption)
+    db.fetch(base.selectCase(_.legacyid, _.userid, _.mayor, Models.V3)).unwrap must_== Vector(
+      Models.V3(v.legacyidOption, v.useridOption, v.mayorOption)
     )
-    db.fetch(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, V5)) must_== Vector(
-      V5(v.legacyidOption, v.useridOption, v.mayorOption, v.mayor_countOption, v.closedOption)
+    db.fetch(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, Models.V4)).unwrap must_== Vector(
+      Models.V4(v.legacyidOption, v.useridOption, v.mayorOption, v.mayor_countOption)
     )
-    db.fetch(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags, V6)) must_== Vector(
-      V6(v.legacyidOption, v.useridOption, v.mayorOption, v.mayor_countOption, v.closedOption, v.tagsOption)
+    db.fetch(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, Models.V5)).unwrap must_== Vector(
+      Models.V5(v.legacyidOption, v.useridOption, v.mayorOption, v.mayor_countOption, v.closedOption)
+    )
+    db.fetch(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags, Models.V6))
+      .unwrap must_== Vector(
+      Models.V6(v.legacyidOption, v.useridOption, v.mayorOption, v.mayor_countOption, v.closedOption, v.tagsOption)
     )
   }
 
@@ -197,25 +189,26 @@ class EndToEndTest extends JUnitMustMatchers {
     val t = db.insert(baseTestTip())
 
     // Sub-select on map
-    db.fetch(Q(ThriftTip).where(_.id eqs t.id).select(_.counts at "foo")) must_== Vector(Some(1))
+    db.fetch(Q(ThriftTip).where(_.id eqs t.id).select(_.counts at "foo")).unwrap must_== Vector(Some(1))
     // Sub-select on embedded record
-    db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.lastClaim.sub.select(_.status))) must_== Vector(
+    db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.lastClaim.sub.select(_.status))).unwrap must_== Vector(
       Some(ThriftClaimStatus.approved)
     )
-    db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.lastClaim.unsafeField[ThriftClaimStatus]("status"))) must_== Vector(
+    db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.lastClaim.unsafeField[ThriftClaimStatus]("status")))
+      .unwrap must_== Vector(
       Some(ThriftClaimStatus.approved)
     )
     // Sub-select on embedded record
-    db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.claims.sub.select(_.status))) must_== Vector(
+    db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.claims.sub.select(_.status))).unwrap must_== Vector(
       Some(Vector(Some(ThriftClaimStatus.pending), Some(ThriftClaimStatus.approved)))
     )
 
     val subuserids: Seq[Option[Seq[Option[Long]]]] =
-      db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.claims.sub.select(_.userid)))
+      db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.claims.sub.select(_.userid))).unwrap
     subuserids must_== Vector(Some(Vector(Some(1234), Some(5678))))
 
     val subclaims: Seq[Option[Seq[ThriftVenueClaimBson]]] =
-      db.fetch(Q(ThriftVenue).where(_.claims.sub.field(_.userid) eqs 1234).select(_.claims.$$))
+      db.fetch(Q(ThriftVenue).where(_.claims.sub.field(_.userid) eqs 1234).select(_.claims.$$)).unwrap
     subclaims.size must_== 1
     subclaims.head.isEmpty must_== false
     subclaims.head.get.size must_== 1
@@ -226,27 +219,27 @@ class EndToEndTest extends JUnitMustMatchers {
     // have one element in the List for the one Venue, but an Empty for that
     // Venue since there's no list of claims there.
     db.updateOne(Q(ThriftVenue).where(_.id eqs v.id).modify(_.claims unset).and(_.lastClaim unset))
-    db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.lastClaim.sub.select(_.userid))) must_== List(None)
-    db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.claims.sub.select(_.userid))) must_== List(None)
+    db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.lastClaim.sub.select(_.userid))).unwrap must_== List(None)
+    db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.claims.sub.select(_.userid))).unwrap must_== List(None)
   }
 
   def testSelectEnumSubfield: Unit = {
     val v = db.insert(baseTestVenue())
 
     val statuses: Seq[Option[ThriftClaimStatus]] =
-      db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.lastClaim.sub.select(_.status)))
+      db.fetch(Q(ThriftVenue).where(_.id eqs v.id).select(_.lastClaim.sub.select(_.status))).unwrap
 
     statuses must_== Vector(Some(ThriftClaimStatus.approved))
 
     // TODO(rogue-sub-on-listfield)
 
-    val subuseridsAndStatuses
-      : Seq[(Option[Seq[Option[Long]]], Option[Seq[Option[io.fsq.spindle.rogue.test.gen.ThriftClaimStatus]]])] =
+    val subuseridsAndStatuses: Seq[(Option[Seq[Option[Long]]], Option[Seq[Option[ThriftClaimStatus]]])] =
       db.fetch(
-        Q(ThriftVenue)
-          .where(_.id eqs v.id)
-          .select(_.claims.sub.select(_.userid), _.claims.sub.select(_.status))
-      )
+          Q(ThriftVenue)
+            .where(_.id eqs v.id)
+            .select(_.claims.sub.select(_.userid), _.claims.sub.select(_.status))
+        )
+        .unwrap
 
     subuseridsAndStatuses must_== List(
       (Some(List(1234, 5678)), Some(List(ThriftClaimStatus.pending, ThriftClaimStatus.approved)))
@@ -272,46 +265,57 @@ class EndToEndTest extends JUnitMustMatchers {
 
   @Test
   def testFindAndModify {
-    val v1 = db.findAndUpsertOne(
-      Q(ThriftVenue).where(_.venuename eqs "v1").findAndModify(_.userid setTo 5),
-      returnNew = false
-    )
+    val v1 = db
+      .findAndUpsertOne(
+        Q(ThriftVenue).where(_.venuename eqs "v1").findAndModify(_.userid setTo 5),
+        returnNew = false
+      )
+      .unwrap
     v1 must_== None
 
-    val v2 = db.findAndUpsertOne(
-      Q(ThriftVenue).where(_.venuename eqs "v2").findAndModify(_.userid setTo 5),
-      returnNew = true
-    )
+    val v2 = db
+      .findAndUpsertOne(
+        Q(ThriftVenue).where(_.venuename eqs "v2").findAndModify(_.userid setTo 5),
+        returnNew = true
+      )
+      .unwrap
     v2.map(_.userid) must_== Some(5)
 
-    val v3 = db.findAndUpsertOne(
-      Q(ThriftVenue).where(_.venuename eqs "v2").findAndModify(_.userid setTo 6),
-      returnNew = false
-    )
+    val v3 = db
+      .findAndUpsertOne(
+        Q(ThriftVenue).where(_.venuename eqs "v2").findAndModify(_.userid setTo 6),
+        returnNew = false
+      )
+      .unwrap
     v3.map(_.userid) must_== Some(5)
 
-    val v4 = db.findAndUpsertOne(
-      Q(ThriftVenue).where(_.venuename eqs "v2").findAndModify(_.userid setTo 7),
-      returnNew = true
-    )
+    val v4 = db
+      .findAndUpsertOne(
+        Q(ThriftVenue).where(_.venuename eqs "v2").findAndModify(_.userid setTo 7),
+        returnNew = true
+      )
+      .unwrap
     v4.map(_.userid) must_== Some(7)
   }
 
   @Test
   def testRegexQuery {
     val v = db.insert(baseTestVenue())
-    db.count(Q(ThriftVenue).where(_.id eqs v.id).and(_.venuename startsWith "test v")) must_== 1
-    db.count(Q(ThriftVenue).where(_.id eqs v.id).and(_.venuename matches ".es. v".r)) must_== 1
-    db.count(Q(ThriftVenue).where(_.id eqs v.id).and(_.venuename matches "Tes. v".r)) must_== 0
+    db.count(Q(ThriftVenue).where(_.id eqs v.id).and(_.venuename startsWith "test v")).unwrap must_== 1
+    db.count(Q(ThriftVenue).where(_.id eqs v.id).and(_.venuename matches ".es. v".r)).unwrap must_== 1
+    db.count(Q(ThriftVenue).where(_.id eqs v.id).and(_.venuename matches "Tes. v".r)).unwrap must_== 0
     db.count(
-      Q(ThriftVenue).where(_.id eqs v.id).and(_.venuename matches Pattern.compile("Tes. v", Pattern.CASE_INSENSITIVE))
-    ) must_== 1
+        Q(ThriftVenue).where(_.id eqs v.id).and(_.venuename matches Pattern.compile("Tes. v", Pattern.CASE_INSENSITIVE))
+      )
+      .unwrap must_== 1
     db.count(
-      Q(ThriftVenue).where(_.id eqs v.id).and(_.venuename matches "test .*".r).and(_.legacyid in List(v.legacyid))
-    ) must_== 1
+        Q(ThriftVenue).where(_.id eqs v.id).and(_.venuename matches "test .*".r).and(_.legacyid in List(v.legacyid))
+      )
+      .unwrap must_== 1
     db.count(
-      Q(ThriftVenue).where(_.id eqs v.id).and(_.venuename matches "test .*".r).and(_.legacyid nin List(v.legacyid))
-    ) must_== 0
+        Q(ThriftVenue).where(_.id eqs v.id).and(_.venuename matches "test .*".r).and(_.legacyid nin List(v.legacyid))
+      )
+      .unwrap must_== 0
   }
 
   @Test
@@ -354,7 +358,7 @@ class EndToEndTest extends JUnitMustMatchers {
 
     items2.map(_.legacyid) must_== Vector(1, 4, 7)
 
-    def findIndexOfWithLimit(id: Long, limit: Int) = {
+    def findIndexOfWithLimit(id: Long, limit: Int): Int = {
       db.iterate(Q(ThriftVenue).where(_.id in ids), 1) {
         case (idx, event) => {
           if (idx >= limit) {
@@ -384,8 +388,8 @@ class EndToEndTest extends JUnitMustMatchers {
     val l4 = db.insert(ThriftLike.newBuilder.id(LikeId(new ObjectId)).userid(2).checkin(444).result())
 
     // Find
-    db.count(Q(ThriftLike).where(_.checkin eqs 111).allShards) must_== 2
-    /* TODO(rogue-shards)
+    db.count(Q(ThriftLike).where(_.checkin eqs 111).allShards).unwrap must_== 2
+    /* TODO(jacob): It appears shard key aware queries were never implemented for spindle?
     db.count(Q(ThriftLike).where(_.checkin eqs 111).withShardKey(_.userid eqs 1)) must_== 1
     db.count(Q(ThriftLike).withShardKey(_.userid eqs 1).where(_.checkin eqs 111)) must_== 1
     db.count(Q(ThriftLike).withShardKey(_.userid eqs 1)) must_== 1
@@ -413,31 +417,31 @@ class EndToEndTest extends JUnitMustMatchers {
     val q = Q(ThriftVenue).select(_.id)
     db.fetch(q.limit(10)).length must_== 10
     db.fetch(q.limit(-10)).length must_== 10
-    db.fetchBatch(q, 20)(x => Vector(x.length)) must_== Vector(20, 20, 10)
-    db.fetchBatch(q.limit(35), 20)(x => Vector(x.length)) must_== Vector(20, 15)
-    db.fetchBatch(q.limit(-35), 20)(x => Vector(x.length)) must_== Vector(20, 15)
+    db.fetchBatch(q, 20)(x => Vector(x.length)).unwrap must_== Vector(20, 20, 10)
+    db.fetchBatch(q.limit(35), 20)(x => Vector(x.length)).unwrap must_== Vector(20, 15)
+    db.fetchBatch(q.limit(-35), 20)(x => Vector(x.length)).unwrap must_== Vector(20, 15)
   }
 
   @Test
   def testCount {
     db.insertAll(List.fill(10)(baseTestVenue()))
     val q = Q(ThriftVenue).select(_.id)
-    db.count(q) must_== 10
-    db.count(q.limit(3)) must_== 3
-    db.count(q.limit(15)) must_== 10
-    db.count(q.skip(5)) must_== 5
-    db.count(q.skip(12)) must_== 0
-    db.count(q.skip(3).limit(5)) must_== 5
-    db.count(q.skip(8).limit(4)) must_== 2
+    db.count(q).unwrap must_== 10
+    db.count(q.limit(3)).unwrap must_== 3
+    db.count(q.limit(15)).unwrap must_== 10
+    db.count(q.skip(5)).unwrap must_== 5
+    db.count(q.skip(12)).unwrap must_== 0
+    db.count(q.skip(3).limit(5)).unwrap must_== 5
+    db.count(q.skip(8).limit(4)).unwrap must_== 2
   }
 
   @Test
   def testSlice {
     db.insert(baseTestVenue().toBuilder.tags(List("1", "2", "3", "4")).result())
     /* TODO(rogue-select-option-option): This should probably not return an option[option[list]] */
-    db.fetchOne(Q(ThriftVenue).select(_.tags.slice(2))) must_== Some(Some(Vector("1", "2")))
-    db.fetchOne(Q(ThriftVenue).select(_.tags.slice(-2))) must_== Some(Some(Vector("3", "4")))
-    db.fetchOne(Q(ThriftVenue).select(_.tags.slice(1, 2))) must_== Some(Some(Vector("2", "3")))
+    db.fetchOne(Q(ThriftVenue).select(_.tags.slice(2))).unwrap must_== Some(Some(Vector("1", "2")))
+    db.fetchOne(Q(ThriftVenue).select(_.tags.slice(-2))).unwrap must_== Some(Some(Vector("3", "4")))
+    db.fetchOne(Q(ThriftVenue).select(_.tags.slice(1, 2))).unwrap must_== Some(Some(Vector("2", "3")))
   }
 
   @Test
@@ -448,7 +452,7 @@ class EndToEndTest extends JUnitMustMatchers {
     mutable.tags_=(List("a", "bbbb"))
     db.save(mutable)
 
-    db.count(Q(ThriftVenue).where(_.tags contains "bbbb")) must_== 1
+    db.count(Q(ThriftVenue).where(_.tags contains "bbbb")).unwrap must_== 1
   }
 
   @Test
@@ -457,10 +461,10 @@ class EndToEndTest extends JUnitMustMatchers {
     db.insertAll((1 to 5).map(_ => baseTestVenue().toBuilder.userid(2).result()))
     db.insertAll((1 to 5).map(_ => baseTestVenue().toBuilder.userid(3).result()))
     db.distinct(Q(ThriftVenue).where(_.mayor eqs 789))(_.userid).length must_== 3
-    db.countDistinct(Q(ThriftVenue).where(_.mayor eqs 789))(_.userid) must_== 3
+    db.countDistinct(Q(ThriftVenue).where(_.mayor eqs 789))(_.userid).unwrap must_== 3
 
     db.insertAll((1 to 10).map(i => baseTestVenue().toBuilder.userid(222).venuename("test " + (i % 3)).result()))
-    val names = db.distinct(Q(ThriftVenue).where(_.userid eqs 222))(_.venuename)
+    val names = db.distinct(Q(ThriftVenue).where(_.userid eqs 222))(_.venuename).unwrap
     names.sorted must_== Vector("test 0", "test 1", "test 2")
   }
 
@@ -470,10 +474,10 @@ class EndToEndTest extends JUnitMustMatchers {
     db.insertAll((1 to 5).map(_ => baseTestVenue().toBuilder.userid(2).result()))
     db.insertAll((1 to 5).map(_ => baseTestVenue().toBuilder.userid(3).result()))
 
-    val vs: Seq[ThriftVenue] = db.fetch(Q(ThriftVenue).where(_.mayor eqs 789))
+    val vs: Seq[ThriftVenue] = db.fetch(Q(ThriftVenue).where(_.mayor eqs 789)).unwrap
     vs.size must_== 15
 
-    val ids: Seq[VenueId] = db.fetchBatch(Q(ThriftVenue).where(_.mayor eqs 789), 3)(b => b.map(_.id))
+    val ids: Seq[VenueId] = db.fetchBatch(Q(ThriftVenue).where(_.mayor eqs 789), 3)(b => b.map(_.id)).unwrap
     ids.size must_== 15
   }
 
@@ -484,7 +488,7 @@ class EndToEndTest extends JUnitMustMatchers {
     val clauses = venues.map(v => BulkInsertOne(ThriftVenue, v))
     db.bulk(clauses)
 
-    db.count(Q(ThriftVenue).where(_.id in venueIds)) must_== venues.length
+    db.count(Q(ThriftVenue).where(_.id in venueIds)).unwrap must_== venues.length
   }
 
   @Test
@@ -500,8 +504,8 @@ class EndToEndTest extends JUnitMustMatchers {
     val clauses = venuesToRemove.map(v => BulkRemoveOne(Q(ThriftVenue).where(_.id eqs v.id)))
     db.bulk(clauses)
 
-    db.count(Q(ThriftVenue).where(_.id in venuesToRemove.map(_.id))) must_== 0
-    db.count(Q(ThriftVenue).where(_.id in venuesToKeep.map(_.id))) must_== venuesToKeep.length
+    db.count(Q(ThriftVenue).where(_.id in venuesToRemove.map(_.id))).unwrap must_== 0
+    db.count(Q(ThriftVenue).where(_.id in venuesToKeep.map(_.id))).unwrap must_== venuesToKeep.length
   }
 
   @Test
@@ -517,8 +521,8 @@ class EndToEndTest extends JUnitMustMatchers {
     val clauses = Vector(BulkRemove(Q(ThriftVenue).where(_.id in venuesToRemove.map(_.id))))
     db.bulk(clauses)
 
-    db.count(Q(ThriftVenue).where(_.id in venuesToRemove.map(_.id))) must_== 0
-    db.count(Q(ThriftVenue).where(_.id in venuesToKeep.map(_.id))) must_== venuesToKeep.length
+    db.count(Q(ThriftVenue).where(_.id in venuesToRemove.map(_.id))).unwrap must_== 0
+    db.count(Q(ThriftVenue).where(_.id in venuesToKeep.map(_.id))).unwrap must_== venuesToKeep.length
   }
 
   @Test
@@ -534,7 +538,7 @@ class EndToEndTest extends JUnitMustMatchers {
     Assert.assertEquals(
       "Record to replace not in the database after being inserted",
       1,
-      db.count(Q(ThriftVenue).where(_.id eqs venueToReplace.id))
+      db.count(Q(ThriftVenue).where(_.id eqs venueToReplace.id)).unwrap
     )
 
     val clauses = Vector(
@@ -545,12 +549,12 @@ class EndToEndTest extends JUnitMustMatchers {
     Assert.assertEquals(
       "Record to replace still in the database",
       0,
-      db.count(Q(ThriftVenue).where(_.userid eqs VenueUserIdToReplace))
+      db.count(Q(ThriftVenue).where(_.userid eqs VenueUserIdToReplace)).unwrap
     )
     Assert.assertEquals(
       "Replacement id not found",
       1,
-      db.count(Q(ThriftVenue).where(_.userid eqs ReplacementVenueUserId))
+      db.count(Q(ThriftVenue).where(_.userid eqs ReplacementVenueUserId)).unwrap
     )
 
     val upsertVenue = baseTestVenue().toBuilder().result()
@@ -561,7 +565,7 @@ class EndToEndTest extends JUnitMustMatchers {
 
     Thread.sleep(3000)
 
-    Assert.assertEquals("Upsert did not insert", 1, db.count(Q(ThriftVenue).where(_.id eqs upsertVenue.id)))
+    Assert.assertEquals("Upsert did not insert", 1, db.count(Q(ThriftVenue).where(_.id eqs upsertVenue.id)).unwrap)
   }
 
   @Test
@@ -581,17 +585,17 @@ class EndToEndTest extends JUnitMustMatchers {
     Assert.assertEquals(
       "Original venue still has original value",
       0,
-      db.count(Q(ThriftVenue).where(_.id eqs original1.id).and(_.userid eqs 1))
+      db.count(Q(ThriftVenue).where(_.id eqs original1.id).and(_.userid eqs 1)).unwrap
     )
     Assert.assertEquals(
       "Original venue does not have updated value",
       1,
-      db.count(Q(ThriftVenue).where(_.id eqs original1.id).and(_.userid eqs 999))
+      db.count(Q(ThriftVenue).where(_.id eqs original1.id).and(_.userid eqs 999)).unwrap
     )
     Assert.assertEquals(
       "Non-upsert update inserted a new venue",
       0,
-      db.count(Q(ThriftVenue).where(_.id eqs nonExistantId))
+      db.count(Q(ThriftVenue).where(_.id eqs nonExistantId)).unwrap
     )
 
     val upsertVenue1 = baseTestVenue().toBuilder().result()
@@ -608,13 +612,13 @@ class EndToEndTest extends JUnitMustMatchers {
     Assert.assertEquals(
       "Upsert did not insert both venues",
       2,
-      db.count(Q(ThriftVenue).where(_.id in Vector(upsertVenue1.id, upsertVenue2.id)))
+      db.count(Q(ThriftVenue).where(_.id in Vector(upsertVenue1.id, upsertVenue2.id))).unwrap
     )
 
     Assert.assertEquals(
       "Upsert did not update the existing venue",
       1,
-      db.count(Q(ThriftVenue).where(_.id eqs original2.id).and(_.userid eqs 3141591))
+      db.count(Q(ThriftVenue).where(_.id eqs original2.id).and(_.userid eqs 3141591)).unwrap
     )
   }
 
@@ -631,12 +635,12 @@ class EndToEndTest extends JUnitMustMatchers {
     Assert.assertEquals(
       "Wrong number of un-updated records",
       venuesToNotUpdate.length,
-      db.count(Q(ThriftVenue).where(_.userid eqs 1))
+      db.count(Q(ThriftVenue).where(_.userid eqs 1)).unwrap
     )
     Assert.assertEquals(
       "Wrong number of updated records",
       venuesToUpdate.length,
-      db.count(Q(ThriftVenue).where(_.userid eqs 999))
+      db.count(Q(ThriftVenue).where(_.userid eqs 999)).unwrap
     )
 
     val upsertVenue = baseTestVenue().toBuilder().result()
@@ -644,6 +648,6 @@ class EndToEndTest extends JUnitMustMatchers {
       BulkUpdateMany(Q(ThriftVenue).where(_.id eqs upsertVenue.id).modify(_.userid setTo 999), upsert = true)
     }
     db.bulk(Vector(upsertClause))
-    Assert.assertEquals("Upsert did not insert", 1, db.count(Q(ThriftVenue).where(_.id eqs upsertVenue.id)))
+    Assert.assertEquals("Upsert did not insert", 1, db.count(Q(ThriftVenue).where(_.id eqs upsertVenue.id)).unwrap)
   }
 }

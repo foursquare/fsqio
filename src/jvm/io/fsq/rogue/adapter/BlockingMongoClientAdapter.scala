@@ -2,9 +2,9 @@
 
 package io.fsq.rogue.adapter
 
-import com.mongodb.{DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException}
+import com.mongodb.{DuplicateKeyException, ErrorCategory, MongoNamespace, MongoWriteException, ReadPreference}
 import com.mongodb.bulk.BulkWriteResult
-import com.mongodb.client.{FindIterable, MongoCollection}
+import com.mongodb.client.{FindIterable, MongoCollection, MongoDatabase}
 import com.mongodb.client.model.{
   BulkWriteOptions,
   CountOptions,
@@ -47,6 +47,7 @@ object BlockingMongoClientAdapter {
     MetaRecord,
     Record
   ] = MongoCollectionFactory[
+    MongoDatabase,
     MongoCollection,
     DocumentValue,
     Document,
@@ -63,7 +64,15 @@ class BlockingMongoClientAdapter[
 ](
   collectionFactory: BlockingMongoClientAdapter.CollectionFactory[DocumentValue, Document, MetaRecord, Record],
   queryHelpers: QueryUtilities[BlockingResult]
-) extends MongoClientAdapter[MongoCollection, DocumentValue, Document, MetaRecord, Record, BlockingResult](
+) extends MongoClientAdapter[
+    MongoDatabase,
+    MongoCollection,
+    DocumentValue,
+    Document,
+    MetaRecord,
+    Record,
+    BlockingResult
+  ](
     collectionFactory,
     queryHelpers
   )
@@ -163,6 +172,14 @@ class BlockingMongoClientAdapter[
   ): BlockingResult[T] = {
     collection.distinct(fieldName, filter, classOf[BsonValue]).forEach(accumulator)
     resultAccessor
+  }
+
+  override def explainImpl[M <: MetaRecord](
+    database: MongoDatabase,
+    command: Bson,
+    readPreference: ReadPreference
+  ): BlockingResult[Document] = {
+    wrap(database.runCommand(command, readPreference, collectionFactory.documentClass))
   }
 
   override protected def forEachProcessor[T](

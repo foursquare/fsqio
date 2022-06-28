@@ -4,7 +4,7 @@ package io.fsq.spindle.rogue.test
 
 import io.fsq.rogue.index.{Asc, Desc, Hashed, MongoIndex}
 import io.fsq.spindle.rogue.SpindleIndexSubField
-import io.fsq.spindle.rogue.test.gen.{ThriftVenue, ThriftVenueClaimBson, ThriftVenueMeta}
+import io.fsq.spindle.rogue.testlib.gen.{ThriftVenue, ThriftVenueClaimBson, ThriftVenueMeta}
 import org.junit.Test
 import org.specs2.matcher.JUnitMustMatchers
 

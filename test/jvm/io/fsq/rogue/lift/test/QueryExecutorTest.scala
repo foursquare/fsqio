@@ -2,24 +2,66 @@
 
 package io.fsq.rogue.lift.test
 
-import io.fsq.rogue.{InitialState, Query, RogueException}
-import io.fsq.rogue.MongoHelpers.AndCondition
-import io.fsq.rogue.lift.{LiftAdapter, ObjectIdKey}
+import com.mongodb.WriteConcern
+import io.fsq.rogue.{InitialState, MongoHelpers, Query, RogueException}
+import io.fsq.rogue.adapter.{BlockingMongoClientAdapter, BlockingResult}
+import io.fsq.rogue.adapter.lift.LiftMongoCollectionFactory
+import io.fsq.rogue.lift.ObjectIdKey
+import io.fsq.rogue.lift.testlib.{LiftMongoTest, RogueTestMongoIdentifier}
+import io.fsq.rogue.query.QueryExecutor
+import io.fsq.rogue.util.{DefaultQueryLogger, DefaultQueryUtilities}
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
-import org.junit.{Ignore, Test}
-import org.specs2.matcher.JUnitMustMatchers
+import net.liftweb.util.ConnectionIdentifier
+import org.junit.{Assert, Test}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{spy, when}
 
-class LegacyQueryExecutorTest extends JUnitMustMatchers {
+class QueryExecutorTest extends LiftMongoTest {
 
   class Dummy extends MongoRecord[Dummy] with ObjectIdKey[Dummy] {
     def meta = Dummy
   }
 
-  object Dummy extends Dummy with MongoMetaRecord[Dummy] {}
+  object Dummy extends Dummy with MongoMetaRecord[Dummy] {
+    override def connectionIdentifier: ConnectionIdentifier = RogueTestMongoIdentifier
+  }
 
-  @Test @Ignore("TODO(mateo): The public version of lift 2.6.2 causes an infinite recursion. FIXME")
-  // Test ignored because it is broken when using OSS version of lift.
-  def testExceptionInRunCommandIsDecorated {
+  @Test
+  def testExceptionInRunCommandIsDecorated(): Unit = {
+    val underlyingException = new Exception("oops")
+
+    val queryExecutor = {
+      val collectionFactory = new LiftMongoCollectionFactory(blockingClientManager)
+
+      val clientAdapter = {
+        val queryUtilities = {
+          val logger = new DefaultQueryLogger[BlockingResult] {
+            // have to subclass and override due to the call-by-name params here
+            override def onExecuteQuery[T](
+              query: Query[_, _, _],
+              instanceName: String,
+              msg: => String,
+              f: => BlockingResult[T]
+            ): BlockingResult[T] = throw underlyingException
+          }
+
+          val spied = spy(new DefaultQueryUtilities[BlockingResult])
+          when(spied.logger).thenReturn(logger)
+          spied
+        }
+
+        new BlockingMongoClientAdapter(collectionFactory, queryUtilities)
+      }
+
+      new QueryExecutor(
+        clientAdapter,
+        LiftMongoTest.queryOptimizer,
+        LiftMongoTest.serializer
+      ) {
+        override def defaultWriteConcern: WriteConcern = WriteConcern.W1
+      }
+    }
+
     val query = Query[Dummy.type, Dummy, InitialState](
       Dummy,
       "Dummy",
@@ -27,15 +69,20 @@ class LegacyQueryExecutorTest extends JUnitMustMatchers {
       None,
       None,
       None,
-      AndCondition(Nil, None),
+      MongoHelpers.AndCondition(Nil, None),
       None,
       None,
       None
     )
-    (LiftAdapter.runCommand(() => "hello", query) {
-      throw new RuntimeException("bang")
-      "hi"
-    }) must throwA[RogueException]
+
+    try {
+      queryExecutor.fetch(query)
+      Assert.fail("Expected to see a RogueException, but nothing was thrown.")
+    } catch {
+      case re: RogueException => {
+        Assert.assertEquals(underlyingException, re.getCause)
+      }
+    }
   }
 
 }

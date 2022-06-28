@@ -78,7 +78,7 @@ export PANTS_PYTHON_SETUP_WHEEL_VERSION="${PANTS_PYTHON_SETUP_WHEEL_VERSION:-$FS
 #   * '--test-pytest-prep-requirements': Accepts a list of additional requirements respected during resolve.
 
 export PANTS_PYTEST_REQUIREMENTS=${PANTS_PYTEST_REQUIREMENTS:-"pytest==$FS_PYTEST_VERS"}
-pytest_prep_defaults="['more-itertools<6.0.0', 'attrs<19.2.0', 'setuptools==$PANTS_PYTHON_SETUP_SETUPTOOLS_VERSION']"
+pytest_prep_defaults="['attrs<19.2.0', 'coverage>=4.5,<4.6', 'more-itertools<6.0.0', 'setuptools==$PANTS_PYTHON_SETUP_SETUPTOOLS_VERSION']"
 export PANTS_TEST_PYTEST_PREP_REQUIREMENTS=${PANTS_TEST_PYTEST_PREP_REQUIREMENTS:-$pytest_prep_defaults}
 export PANTS_PYTEST_COV_REQUIREMENTS=${PANTS_PYTEST_COV_REQUIREMENTS:-"pytest-cov>=2.5,<2.6"}
 

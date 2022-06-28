@@ -9,9 +9,8 @@ scala_library(
     '3rdparty:thrift',
     'src/jvm/io/fsq/field',
     'src/jvm/io/fsq/rogue',
-    'src/jvm/io/fsq/rogue/index',
-    'src/jvm/io/fsq/rogue/types',
     'src/jvm/io/fsq/spindle/common/thrift/bson',
+    'src/jvm/io/fsq/spindle/rogue/query',
     'src/jvm/io/fsq/spindle/runtime',
   ],
   provides=scala_artifact(

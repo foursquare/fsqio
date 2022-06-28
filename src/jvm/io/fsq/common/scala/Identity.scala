@@ -19,6 +19,7 @@ final class Identity[A](val _value: A) extends AnyVal {
   def ifOption[B](pred: A => Boolean)(f: A => B): Option[B] = if (pred(_value)) Some(f(_value)) else None
 
   def applyIf[B >: A](pred: Boolean, f: A => B): B = if (pred) f(_value) else _value
+  def applyIfElse[B](pred: Boolean, f: A => B, g: A => B): B = if (pred) f(_value) else g(_value)
   def applyIfFn[B >: A](predFn: B => Boolean, f: A => B): B = if (predFn(_value)) f(_value) else _value
   def applyOpt[B](opt: Option[B])(f: (A, B) => A): A = opt.map(b => f(_value, b)).getOrElse(_value)
 

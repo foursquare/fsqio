@@ -3,13 +3,13 @@
 package io.fsq.util.compiler.test
 
 import java.io.PrintWriter
+import org.junit.Assert
 import org.reflections.util.ClasspathHelper
-import org.specs2.matcher.JUnitMustMatchers
 import scala.collection.JavaConverters._
 import scala.tools.nsc.Settings
 import scala.tools.nsc.interpreter.{IMain, Results}
 
-class CompilerForNegativeTests(imports: Seq[String]) extends JUnitMustMatchers {
+class CompilerForNegativeTests(imports: Seq[String]) {
   private val settings = new Settings
   settings.usejavacp.value = true
   settings.deprecation.value = true // enable detailed deprecation warnings
@@ -32,7 +32,13 @@ class CompilerForNegativeTests(imports: Seq[String]) extends JUnitMustMatchers {
   private val stringWriter = new java.io.StringWriter()
   private val interpreter = new IMain(settings, new PrintWriter(stringWriter))
 
-  imports.foreach(pkg => interpreter.interpret(s"import $pkg"))
+  imports.foreach(pkg => {
+    interpreter.interpret(s"import $pkg") match {
+      case Results.Success => ()
+      case Results.Error => throw new IllegalArgumentException(s"Error importing '$pkg'")
+      case Results.Incomplete => throw new IllegalArgumentException(s"'$pkg' is an incomplete import?")
+    }
+  })
 
   def typeCheck(code: String): Option[String] = {
     stringWriter.getBuffer.delete(0, stringWriter.getBuffer.length)
@@ -45,10 +51,26 @@ class CompilerForNegativeTests(imports: Seq[String]) extends JUnitMustMatchers {
   }
 
   def check(code: String, expectedErrorREOpt: Option[String] = Some("")): Unit = {
-    (expectedErrorREOpt, typeCheck(code)) aka "'%s' compiles or fails with the right message!".format(code) must beLike {
-      case (Some(expectedErrorRE), Some(actualError)) =>
-        expectedErrorRE.r.findFirstIn(actualError.replaceAll("\n", "")).isDefined must beTrue
-      case (None, None) => true must beTrue
+    (expectedErrorREOpt, typeCheck(code)) match {
+      case (Some(expectedErrorRE), Some(actualError)) => {
+        val msg =
+          s"Expected\n'$code'\nto fail with an error matching\n'$expectedErrorRE'\nbut it failed with\n'$actualError'"
+        Assert.assertTrue(
+          msg,
+          expectedErrorRE.r.findFirstIn(actualError.replaceAll("\n", "")).isDefined
+        )
+      }
+      case (Some(expectedErrorRE), None) => {
+        Assert.fail(
+          s"Expected\n'$code'\nto fail with an error matching\n'$expectedErrorRE'\nbut it succeeded."
+        )
+      }
+      case (None, Some(actualError)) => {
+        Assert.fail(
+          s"Expected\n'$code'\nto compile successfully, but it failed with\n'$actualError'"
+        )
+      }
+      case (None, None) => ()
     }
   }
 }

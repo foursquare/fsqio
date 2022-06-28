@@ -9,9 +9,20 @@ if [[ -z "${BUILD_ROOT+x}" ]]; then
   exit 1
 fi
 
+function which_python {
+  found_python="$(which python2.7 || echo "")"
+  if [[ -z "${found_python}" ]]
+  then
+    echo 'fsqio requires python2.7, please install it or set the $PYTHON env variable to point at a valid python executable'
+    exit 1
+  else
+    echo "${found_python}"
+  fi
+}
+
 # Transitive song and dance in order to enforce priority order of CANONICAL_PYTHON -> PYTHON -> $(which python2.7)
 CANONICAL_PYTHON=${CANONICAL_PYTHON:-${PYTHON}}
-PYTHON=${CANONICAL_PYTHON:-$(which python2.7)}
+PYTHON=${CANONICAL_PYTHON:-$(which_python)}
 
 PANTS_BOOTSTRAP="${FSQIO_VENV_BOOTSTRAP}/bootstrap"
 

@@ -4,10 +4,12 @@ scala_library(
   name = 'lift',
   sources = globs('*.scala'),
   dependencies = [
+    '3rdparty:bson',
+    '3rdparty:lift-common',
     '3rdparty:lift-mongo',
+    '3rdparty:lift-record',
     '3rdparty:mongodb-drivers',
     'src/jvm/io/fsq/rogue',
-    'src/jvm/io/fsq/rogue/lift',
     'src/jvm/io/fsq/rogue/query',
   ],
    provides=scala_artifact(

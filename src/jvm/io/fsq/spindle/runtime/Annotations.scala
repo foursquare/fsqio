@@ -2,7 +2,7 @@
 
 package io.fsq.spindle.runtime
 
-class Annotations(val toSeq: Seq[(String, String)]) {
+class Annotations(val toSeq: Seq[(String, String)]) extends Serializable {
   def contains(key: String): Boolean = toSeq.exists(_._1 == key)
 
   def getAll(key: String): Seq[String] = toSeq.filter(_._1 == key).map(_._2)

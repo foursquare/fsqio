@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from copy import deepcopy
 from itertools import chain
 
+from pants.base.exceptions import TaskError
 from pants.util.memo import memoized_property
 
 from fsqio.pants.buildgen.core.build_file_manipulator import BuildFileManipulator
@@ -25,11 +26,11 @@ class BuildgenTask(BuildgenBase):
     return self.buildgen_subsystem.dry_run
 
   @memoized_property
-  def target_alias_whitelist(self):
-    return self.buildgen_subsystem.target_alias_whitelist
+  def target_alias_allowlist(self):
+    return self.buildgen_subsystem.target_alias_allowlist
 
   @memoized_property
-  def target_alias_blacklist(self):
+  def target_alias_blocklist(self):
     """Subclasses may implement to list target aliases that should not be managed by that task.
 
     For example, a buildgem task may understand JvmLibrary but not its subclass ScalaLibrary.
@@ -56,6 +57,16 @@ class BuildgenTask(BuildgenBase):
     merge_map(merged_map, self.get_options().additional_third_party_map)
     return merged_map
 
+  def get_provides(self, target):
+    """Returns publication configuration gathered from target context."""
+    # Subclasses must implement support.
+    return None
+
+  @property
+  def artifact_type(self):
+    """Returns desired publication artifact type as a string."""
+    return None
+
   def filtered_target_addresses(self, addresses):
     for address in addresses:
       target = self.context.build_graph.get_target(address)
@@ -69,10 +80,23 @@ class BuildgenTask(BuildgenBase):
     ))
     return {addr for addr in included_addresses if addr != target.address}
 
-  def adjust_target_build_file(self, target, computed_dep_addresses, whitelist=None):
+  def adjust_target_build_file(self, target, computed_dep_addresses, allowlist=None):
     """Makes a BuildFileManipulator and adjusts the BUILD file to reflect the computed addresses"""
-    alias_whitelist = whitelist or self.buildgen_subsystem.target_alias_whitelist
-    manipulator = BuildFileManipulator.load(target.address, alias_whitelist)
+    alias_allowlist = allowlist or self.buildgen_subsystem.target_alias_allowlist
+
+    # Tasks can add publication support by overriding `get_provides` and `artifact_type`,
+    # otherwise set to None.
+    # The manipulator needed a bigger rework to do this more gracefully.
+    provides = self.get_provides(target)
+
+    if provides and self.artifact_type is None:
+      raise TaskError
+    manipulator = BuildFileManipulator.load(
+      target.address,
+      alias_allowlist,
+      artifact_type=self.artifact_type,
+      provides=provides
+    )
 
     existing_dep_addresses = manipulator.get_dependency_addresses()
     for address in existing_dep_addresses:
@@ -102,11 +126,11 @@ class BuildgenTask(BuildgenBase):
         # TODO(mateo): Rework these type checks now that they have all settled on string comparisons.
         # NOTE: For instance - can we combine 'supported_target_aliases' and 'managed_dependency_aliases'?
         # Probably the best compromise would be to go to labels, i.e. 'if t.is_scala or (t.is_java && t.is_test)'
-        # while supporting the blacklisting of a given type_aliases as needed.
+        # while supporting the blocklisting of a given type_aliases as needed.
         # Using labels would allow us to avoid importing arbitrary target types, continue to set these values in config,
         # while also giving us the benefit of the type system managing subclasses and so forth.
 
-        if target.type_alias in self.supported_target_aliases and target.type_alias not in self.target_alias_blacklist:
+        if target.type_alias in self.supported_target_aliases and target.type_alias not in self.target_alias_blocklist:
           yield target
     targets = sorted(list(task_targets()))
     if self.get_options().level == 'debug':

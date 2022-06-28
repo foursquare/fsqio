@@ -1,18 +1,18 @@
 <%
-  // Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
-  import _root_.io.fsq.spindle.codegen.runtime.StructLike
+    // Copyright 2017 Foursquare Labs Inc. All Rights Reserved.
+    import _root_.io.fsq.spindle.codegen.runtime.StructLike
 %>
 <%@ val cls: StructLike %>
-  val ${cls.tstructName}: org.apache.thrift.protocol.TStruct
+val ${cls.tstructName}: org.apache.thrift.protocol.TStruct
 #for (field <- cls.fields)
-  val ${field.tfieldName}: _TField
+    val ${field.tfieldName}: _TField
 #end
-  val UNKNOWN_FIELD: _TField
-  val wireNameToTField: Map[String, _TField]
-  object _Fields {
+val UNKNOWN_FIELD: _TField
+val wireNameToTField: Map[String, _TField]
+object _Fields {
 #for (field <- cls.fields)
     case object ${field.escapedName} extends _Fields(${field.identifier}, "${field.name}")
 #end
-  }
-  sealed abstract class _Fields private (id: Short, name: String) extends _TFieldIdEnum
-  val idToTFieldIdEnum: Map[Short, _TFieldIdEnum]
+}
+sealed abstract class _Fields private (id: Short, name: String) extends _TFieldIdEnum
+val idToTFieldIdEnum: Map[Short, _TFieldIdEnum]

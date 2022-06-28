@@ -3,7 +3,7 @@
 package io.fsq.rogue.lift
 
 import com.mongodb.BasicDBObject
-import com.mongodb.client.MongoCollection
+import com.mongodb.client.{MongoCollection, MongoDatabase}
 import io.fsq.field.{Field => RField, OptionalField => ROptionalField}
 import io.fsq.rogue.{
   BSONType,
@@ -344,6 +344,7 @@ trait LiftRogue {
 
 object LiftRogue extends Rogue with LiftRogue {
   type Executor = QueryExecutor[
+    MongoDatabase,
     MongoCollection,
     Object,
     BasicDBObject,
